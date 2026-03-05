@@ -44,93 +44,91 @@ db.close();
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { background: #0a0a0f; color: #b8b8d0; font-family: 'DM Mono', monospace; min-height: 100vh; }
-
-    .layout { display: grid; grid-template-columns: 210px 1fr; grid-template-rows: 54px 1fr; min-height: 100vh; }
-
-    /* Topbar */
-    .topbar {
-      grid-column: 1 / -1;
-      background: #12121a;
-      border-bottom: 1px solid #1c1c28;
-      display: flex; align-items: center;
-      padding: 0 22px; gap: 0;
+    :root {
+      --bg0:#f5f2ec; --bg1:#faf8f3; --bg2:#ffffff; --bg3:#edeae3;
+      --line:#e0dbd0; --line2:rgba(0,0,0,0.04);
+      --muted:#a09890; --mid:#706860; --text:#3a3228; --heading:#1a1510;
+      --gold:#9a6e30; --gold-bg:rgba(154,110,48,0.08);
+      --jade:#1e6b50; --jade-bg:rgba(30,107,80,0.07);
+      --accent:#3d4fa8; --accent-bg:rgba(61,79,168,0.06);
+      --shadow:0 1px 3px rgba(0,0,0,0.08);
+      --serif:"Noto Serif JP",serif; --mono:"DM Mono",monospace;
     }
-    .logo { font-family: 'Noto Serif JP', serif; font-weight: 200; font-size: 17px; color: #e8e8f2; display: flex; align-items: center; gap: 9px; letter-spacing: 0.1em; }
-    .logo-mark { width: 22px; height: 22px; border: 1px solid #c8a86b; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #c8a86b; font-family: 'DM Mono', monospace; }
-    .logo-kana { font-size: 10px; color: #3a3a50; font-family: 'Noto Serif JP', serif; margin-left: 2px; }
-    .topbar-site { margin-left: 24px; font-size: 11px; color: #3a3a50; }
-    .topbar-pod { margin-left: auto; font-size: 10px; color: #3a3a50; display: flex; align-items: center; gap: 6px; }
-    .pod-dot { width: 5px; height: 5px; border-radius: 50%; background: #2d8b6a; animation: pulse 2.5s ease-in-out infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-    /* Sidebar */
-    .sidebar { background: #12121a; border-right: 1px solid #1c1c28; padding: 24px 0; display: flex; flex-direction: column; }
-    .nav-section { font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: #3a3a50; padding: 0 18px; margin: 20px 0 6px; }
-    .nav-section:first-child { margin-top: 0; }
-    .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 18px; font-size: 11.5px; color: #6868a0; cursor: pointer; position: relative; text-decoration: none; transition: color 0.15s; }
-    .nav-item:hover { color: #b8b8d0; background: rgba(255,255,255,0.02); }
-    .nav-item.active { color: #e8e8f2; background: rgba(123,140,222,0.06); }
-    .nav-item.active::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: #c8a86b; }
-    .nav-icon { width: 13px; text-align: center; font-size: 10px; opacity: 0.6; }
-    .nav-badge { margin-left: auto; font-size: 9px; background: #1c1c28; color: #6868a0; padding: 1px 6px; border: 1px solid #252535; }
-    .sidebar-pod { margin-top: auto; padding: 14px 18px; border-top: 1px solid #1c1c28; font-size: 10px; color: #3a3a50; }
-    .sidebar-pod-name { color: #b8b8d0; font-size: 11px; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
-    .sidebar-pod-name::before { content: '◆'; font-size: 6px; color: #c8a86b; }
-
-    /* Main */
-    .main { padding: 32px 40px; background: #0a0a0f; overflow-y: auto; position: relative; }
-    .kanji { position: absolute; right: 32px; bottom: 24px; font-family: 'Noto Serif JP', serif; font-size: 130px; color: #e8e8f2; opacity: 0.018; pointer-events: none; }
-
-    .main-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px; padding-bottom: 18px; border-bottom: 1px solid #1c1c28; }
-    .main-title { font-family: 'Noto Serif JP', serif; font-weight: 200; font-size: 26px; color: #e8e8f2; letter-spacing: 0.05em; }
-    .main-title-jp { font-size: 10px; color: #3a3a50; font-family: 'Noto Serif JP', serif; font-weight: 200; letter-spacing: 0.1em; margin-top: 5px; }
-    .main-date { font-size: 10px; color: #3a3a50; text-align: right; line-height: 1.9; }
-
-    /* Stats */
-    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
-    .stat { background: #12121a; border: 1px solid #1c1c28; padding: 18px 20px; position: relative; overflow: hidden; transition: border-color 0.2s; }
-    .stat:hover { border-color: #c8a86b; }
-    .stat-label { font-size: 9px; letter-spacing: 0.28em; text-transform: uppercase; color: #3a3a50; margin-bottom: 8px; }
-    .stat-value { font-size: 30px; font-weight: 200; font-family: 'Noto Serif JP', serif; color: #e8e8f2; line-height: 1; margin-bottom: 5px; }
-    .stat-sub { font-size: 10px; color: #2d8b6a; }
-    .stat-sub.gold { color: #c8a86b; }
-    .stat-deco { position: absolute; bottom: 8px; right: 12px; font-family: 'Noto Serif JP', serif; font-size: 26px; opacity: 0.04; color: #e8e8f2; pointer-events: none; }
-
-    /* Content grid */
-    .content-grid { display: grid; grid-template-columns: 1fr 280px; gap: 20px; }
-
-    /* Panel */
-    .panel { background: #12121a; border: 1px solid #1c1c28; }
-    .panel-header { padding: 12px 18px; border-bottom: 1px solid #1c1c28; display: flex; align-items: center; justify-content: space-between; }
-    .panel-title { font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: #b8b8d0; display: flex; align-items: center; gap: 8px; }
-    .panel-title::before { content: '—'; color: #c8a86b; }
-    .panel-action { font-size: 10px; color: #7b8cde; text-decoration: none; }
-    .panel-action:hover { color: #e8e8f2; }
-
-    /* Entry rows */
-    .entry-row { display: grid; grid-template-columns: 1fr 100px 70px 72px; align-items: center; padding: 11px 18px; border-bottom: 1px solid rgba(255,255,255,0.02); text-decoration: none; transition: background 0.12s; }
-    .entry-row:hover { background: rgba(255,255,255,0.02); }
-    .entry-row:last-child { border-bottom: none; }
-    .entry-title { font-size: 11.5px; color: #b8b8d0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .entry-coll { font-size: 9.5px; color: #3a3a50; margin-top: 2px; }
-    .entry-date { font-size: 10px; color: #3a3a50; }
-    .pill { font-size: 9px; padding: 2px 7px; text-align: center; }
-    .pill.published { color: #2d8b6a; background: rgba(45,139,106,0.1); }
-    .pill.draft { color: #c8a86b; background: rgba(200,168,107,0.1); }
-
-    /* Side panels */
-    .side-panels { display: flex; flex-direction: column; gap: 14px; }
-
-    .coll-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.02); text-decoration: none; transition: background 0.12s; }
-    .coll-item:hover { background: rgba(255,255,255,0.02); }
-    .coll-item:last-child { border-bottom: none; }
-    .coll-name { font-size: 12px; color: #b8b8d0; }
-    .coll-counts { font-size: 10px; color: #3a3a50; text-align: right; line-height: 1.8; }
-    .coll-counts span { color: #2d8b6a; }
-
-    .new-btn { display: block; margin: 14px 18px 16px; padding: 9px; background: transparent; border: 1px solid #c8a86b; color: #c8a86b; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; cursor: pointer; text-transform: uppercase; text-align: center; text-decoration: none; transition: all 0.2s; }
-    .new-btn:hover { background: #c8a86b; color: #0a0a0f; }
+    html,body { background:var(--bg0); color:var(--text); font-family:var(--mono); font-size:13px; line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
+    .layout { display:grid; grid-template-columns:210px 1fr; grid-template-rows:54px 1fr; min-height:100vh; }
+    .topbar { grid-column:1/-1; background:var(--bg2); border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 22px; }
+    .logo { font-family:var(--serif); font-weight:200; font-size:17px; color:var(--heading); display:flex; align-items:center; gap:9px; letter-spacing:0.1em; text-decoration:none; flex-shrink:0; }
+    .logo-mark { width:22px; height:22px; border:1px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:9px; color:var(--gold); font-family:var(--mono); }
+    .logo-kana { font-size:10px; color:var(--muted); font-family:var(--serif); font-weight:200; margin-left:2px; }
+    .breadcrumb { margin-left:20px; font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+    .breadcrumb a { color:var(--mid); text-decoration:none; }
+    .breadcrumb a:hover { color:var(--heading); }
+    .breadcrumb .sep { color:var(--line); }
+    .breadcrumb .current { color:var(--text); }
+    .topbar-site { margin-left:24px; font-size:11px; color:var(--muted); }
+    .topbar-right { margin-left:auto; display:flex; align-items:center; gap:14px; }
+    .topbar-pod { margin-left:auto; font-size:10px; color:var(--jade); display:flex; align-items:center; gap:6px; }
+    .pod-status { font-size:10px; color:var(--jade); display:flex; align-items:center; gap:5px; }
+    .pod-dot { width:5px; height:5px; border-radius:50%; background:var(--jade); animation:pulse 2.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    .sidebar { background:var(--bg1); border-right:1px solid var(--line); padding:20px 0; display:flex; flex-direction:column; }
+    .nav-section { font-size:9px; letter-spacing:0.3em; text-transform:uppercase; color:var(--muted); padding:0 16px; margin:18px 0 5px; }
+    .nav-section:first-child { margin-top:0; }
+    .nav-item { display:flex; align-items:center; gap:9px; padding:7px 16px; font-size:12px; color:var(--mid); text-decoration:none; position:relative; transition:color 0.12s,background 0.12s; }
+    .nav-item:hover { color:var(--heading); background:var(--line2); }
+    .nav-item.active { color:var(--heading); background:var(--accent-bg); }
+    .nav-item.active::before { content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--gold); }
+    .nav-icon { width:13px; text-align:center; font-size:10px; opacity:0.5; flex-shrink:0; }
+    .nav-badge { margin-left:auto; font-size:9px; color:var(--muted); background:var(--bg3); border:1px solid var(--line); padding:1px 6px; }
+    .sidebar-pod { margin-top:auto; padding:12px 16px; border-top:1px solid var(--line); font-size:10px; color:var(--muted); }
+    .sidebar-pod-name { color:var(--text); font-size:11px; margin-bottom:2px; display:flex; align-items:center; gap:5px; }
+    .sidebar-pod-name::before { content:"◆"; font-size:6px; color:var(--gold); }
+    .main { padding:32px 40px; background:var(--bg0); overflow-y:auto; position:relative; }
+    .kanji { position:absolute; right:32px; bottom:24px; font-family:var(--serif); font-size:130px; color:var(--heading); opacity:0.04; pointer-events:none; user-select:none; }
+    .main-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:28px; padding-bottom:18px; border-bottom:1px solid var(--line); }
+    .main-title { font-family:var(--serif); font-weight:200; font-size:26px; color:var(--heading); letter-spacing:0.05em; line-height:1; }
+    .main-title-jp { font-size:10px; color:var(--muted); font-family:var(--serif); font-weight:200; letter-spacing:0.08em; margin-top:5px; }
+    .main-date { font-size:10px; color:var(--muted); text-align:right; line-height:1.9; }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
+    .stat { background:var(--bg2); border:1px solid var(--line); padding:16px 18px; position:relative; overflow:hidden; transition:border-color 0.15s,box-shadow 0.15s; }
+    .stat:hover { border-color:var(--gold); box-shadow:var(--shadow); }
+    .stat-label { font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+    .stat-value { font-size:30px; font-weight:200; font-family:var(--serif); color:var(--heading); line-height:1; margin-bottom:5px; }
+    .stat-sub { font-size:10px; color:var(--jade); }
+    .stat-sub.gold { color:var(--gold); }
+    .stat-deco { position:absolute; bottom:8px; right:12px; font-family:var(--serif); font-size:26px; opacity:0.06; color:var(--heading); pointer-events:none; }
+    .panel { background:var(--bg2); border:1px solid var(--line); }
+    .panel-header { padding:11px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
+    .panel-title { font-size:9px; letter-spacing:0.25em; text-transform:uppercase; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .panel-title::before { content:"—"; color:var(--gold); }
+    .panel-action { font-size:10px; color:var(--accent); text-decoration:none; }
+    .panel-action:hover { color:var(--heading); }
+    .entry-row { display:grid; grid-template-columns:1fr 100px 72px; align-items:center; gap:12px; padding:11px 16px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; }
+    .entry-row:hover { background:var(--line2); }
+    .entry-row:last-child { border-bottom:none; }
+    .entry-title { font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .entry-coll { font-size:10px; color:var(--muted); margin-top:2px; }
+    .entry-date { font-size:10px; color:var(--muted); }
+    .pill { font-size:9px; padding:2px 7px; letter-spacing:0.06em; text-align:center; }
+    .pill.published { color:var(--jade); background:var(--jade-bg); }
+    .pill.draft { color:var(--gold); background:var(--gold-bg); }
+    .btn-gold { display:inline-block; padding:7px 16px; background:transparent; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:10px; letter-spacing:0.13em; text-transform:uppercase; cursor:pointer; text-decoration:none; transition:all 0.15s; }
+    .btn-gold:hover { background:var(--gold); color:var(--bg0); }
+    .btn-block { display:block; width:calc(100% - 32px); margin:12px 16px 14px; padding:9px; text-align:center; }
+    .new-btn { display:block; margin:12px 16px 14px; padding:9px; background:transparent; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:10px; letter-spacing:0.14em; cursor:pointer; text-transform:uppercase; text-align:center; text-decoration:none; transition:all 0.2s; }
+    .new-btn:hover { background:var(--gold); color:var(--bg0); }
+    .coll-item { display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; }
+    .coll-item:hover { background:var(--line2); }
+    .coll-item:last-child { border-bottom:none; }
+    .coll-name { font-size:12px; color:var(--text); }
+    .coll-counts { font-size:10px; color:var(--muted); text-align:right; line-height:1.8; }
+    .coll-counts span { color:var(--jade); }
+    .content-grid { display:grid; grid-template-columns:1fr 280px; gap:16px; }
+    .side-panels { display:flex; flex-direction:column; gap:12px; }
+    .field-input,.field-select,.field-textarea { width:100%; background:var(--bg0); border:1px solid var(--line); padding:6px 9px; color:var(--heading); font-family:var(--mono); font-size:11px; outline:none; appearance:none; transition:border-color 0.15s; }
+    .field-input:focus,.field-select:focus,.field-textarea:focus { border-color:var(--accent); }
+    .coming-soon { margin-top:20px; padding:16px 18px; background:var(--bg2); border:1px solid var(--line); border-left:2px solid var(--accent); font-size:11px; color:var(--muted); line-height:1.8; }
+    .coming-soon span { color:var(--accent); }
   </style>
 </head>
 <body>
@@ -140,7 +138,7 @@ db.close();
     <div class="topbar">
       <div class="logo">
         <div class="logo-mark">OR</div>
-        Orbiter<span class="logo-kana">オービター</span>
+        Orbiter
       </div>
       <div class="topbar-site">{meta.siteName}</div>
       <div class="topbar-pod">
@@ -172,12 +170,12 @@ db.close();
 
     <!-- Main -->
     <div class="main">
-      <div class="kanji">星</div>
+      
 
       <div class="main-header">
         <div>
           <div class="main-title">Overview</div>
-          <div class="main-title-jp">概要 — 管理ダッシュボード</div>
+          
         </div>
         <div class="main-date">
           <div>{new Date().toLocaleDateString('de-AT', { weekday: 'long' })}</div>
@@ -191,25 +189,25 @@ db.close();
           <div class="stat-label">Total Entries</div>
           <div class="stat-value">{totalEntries}</div>
           <div class="stat-sub">{collections.length} collections</div>
-          <div class="stat-deco">文</div>
+          
         </div>
         <div class="stat">
           <div class="stat-label">Published</div>
           <div class="stat-value">{totalPublished}</div>
           <div class="stat-sub">{Math.round(totalPublished / (totalEntries || 1) * 100)}% of total</div>
-          <div class="stat-deco">開</div>
+          
         </div>
         <div class="stat">
           <div class="stat-label">Drafts</div>
           <div class="stat-value">{totalEntries - totalPublished}</div>
           <div class="stat-sub gold">unpublished</div>
-          <div class="stat-deco">草</div>
+          
         </div>
         <div class="stat">
           <div class="stat-label">Media Assets</div>
           <div class="stat-value">{mediaCount}</div>
           <div class="stat-sub">in .pod file</div>
-          <div class="stat-deco">像</div>
+          
         </div>
       </div>
 

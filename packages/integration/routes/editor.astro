@@ -1,94 +1,209 @@
 ---
-/**
- * /orbiter/[collection]/[slug] — Content Editor
- * Phase 2 — Full editor coming in Bridge phase
- */
 import { podPath } from 'orbiter:db';
 import { openPod } from '@orbiter/core';
 
 const { collection: collectionId, slug } = Astro.params;
 
+// ── Helpers ──────────────────────────────────────────────────────────
+const sqliteNow = () => new Date().toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, '');
+
+// ── Handle POST (save) ───────────────────────────────────────────────
+if (Astro.request.method === 'POST') {
+  const form       = await Astro.request.formData();
+  const title      = form.get('title')?.toString() ?? '';
+  const body       = form.get('body')?.toString() ?? '';
+  const newSlug    = form.get('slug')?.toString().trim().toLowerCase().replace(/\s+/g, '-') ?? slug;
+  const status     = form.get('status')?.toString() ?? 'draft';
+  const isNew      = slug === 'new';
+
+  const db  = openPod(podPath);
+  const col = db.getCollection(collectionId);
+  if (!col) return Astro.redirect('/orbiter');
+
+  const data = JSON.stringify({ title, body });
+  const now  = sqliteNow();
+
+  if (isNew) {
+    const id = crypto.randomUUID();
+    db.db.prepare(`
+      INSERT INTO _entries (id, collection_id, slug, status, data, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(id, collectionId, newSlug, status, data, now, now);
+
+    // Version snapshot
+    db.db.prepare(`
+      INSERT INTO _versions (id, entry_id, data, created_at)
+      VALUES (?, ?, ?, ?)
+    `).run(crypto.randomUUID(), id, data, now);
+  } else {
+    const existing = db.getEntry(collectionId, slug);
+    if (existing) {
+      db.db.prepare(`
+        UPDATE _entries SET slug=?, status=?, data=?, updated_at=? WHERE id=?
+      `).run(newSlug, status, data, now, existing.id);
+
+      // Version snapshot
+      db.db.prepare(`
+        INSERT INTO _versions (id, entry_id, data, created_at)
+        VALUES (?, ?, ?, ?)
+      `).run(crypto.randomUUID(), existing.id, data, now);
+    }
+  }
+
+  db.close();
+  return Astro.redirect(`/orbiter/${collectionId}/${newSlug}?saved=1`);
+}
+
+// ── GET ──────────────────────────────────────────────────────────────
 const db    = openPod(podPath);
 const col   = db.getCollection(collectionId);
-const entry = slug === 'new' ? null : db.getEntry(collectionId, slug);
-
 if (!col) return Astro.redirect('/orbiter');
+
+const isNew  = slug === 'new';
+const entry  = isNew ? null : db.getEntry(collectionId, slug);
+const saved  = Astro.url.searchParams.get('saved') === '1';
 
 const versions = entry
   ? db.db.prepare('SELECT * FROM _versions WHERE entry_id = ? ORDER BY created_at DESC').all(entry.id)
   : [];
-
+const allCollections = db.getCollections().map(c => ({
+  id: c.id, label: c.label, total: db.getEntries(c.id).length,
+}));
 db.close();
 
-const isNew = slug === 'new';
-const title = isNew ? `New ${col.label.slice(0, -1)}` : (entry?.data?.title ?? slug);
+const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? slug);
 ---
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Orbiter — {title}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { background: #0a0a0f; color: #b8b8d0; font-family: 'DM Mono', monospace; min-height: 100vh; }
-    .layout { display: grid; grid-template-columns: 210px 1fr 280px; grid-template-rows: 54px 1fr; min-height: 100vh; }
-    .topbar { grid-column: 1 / -1; background: #12121a; border-bottom: 1px solid #1c1c28; display: flex; align-items: center; padding: 0 22px; gap: 0; }
-    .logo { font-family: 'Noto Serif JP', serif; font-weight: 200; font-size: 17px; color: #e8e8f2; display: flex; align-items: center; gap: 9px; text-decoration: none; }
-    .logo-mark { width: 22px; height: 22px; border: 1px solid #c8a86b; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #c8a86b; }
-    .breadcrumb { margin-left: 20px; font-size: 11px; color: #3a3a50; display: flex; align-items: center; gap: 6px; }
-    .breadcrumb a { color: #6868a0; text-decoration: none; }
-    .breadcrumb a:hover { color: #b8b8d0; }
-    .breadcrumb .sep { color: #252535; }
-    .breadcrumb .current { color: #b8b8d0; }
-    .status-badge { margin-left: 12px; font-size: 9px; padding: 2px 8px; border: 1px solid rgba(45,139,106,0.4); color: #2d8b6a; letter-spacing: 0.1em; }
-    .status-badge.draft { border-color: rgba(200,168,107,0.4); color: #c8a86b; }
-    .sidebar { background: #12121a; border-right: 1px solid #1c1c28; padding: 24px 0; display: flex; flex-direction: column; }
-    .nav-section { font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: #3a3a50; padding: 0 18px; margin: 20px 0 6px; }
-    .nav-section:first-child { margin-top: 0; }
-    .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 18px; font-size: 11.5px; color: #6868a0; text-decoration: none; position: relative; transition: color 0.15s; }
-    .nav-item:hover { color: #b8b8d0; }
-    .nav-item.active { color: #e8e8f2; background: rgba(123,140,222,0.06); }
-    .nav-item.active::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: #c8a86b; }
-    .nav-icon { width: 13px; text-align: center; font-size: 10px; opacity: 0.6; }
-    .sidebar-pod { margin-top: auto; padding: 14px 18px; border-top: 1px solid #1c1c28; font-size: 10px; color: #3a3a50; }
-    .sidebar-pod-name { color: #b8b8d0; font-size: 11px; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
-    .sidebar-pod-name::before { content: '◆'; font-size: 6px; color: #c8a86b; }
-    .editor-main { padding: 32px 44px; background: #0a0a0f; border-right: 1px solid #1c1c28; overflow-y: auto; }
-    .editor-toolbar { display: flex; align-items: center; gap: 3px; padding-bottom: 16px; margin-bottom: 24px; border-bottom: 1px solid #1c1c28; }
-    .tool-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid transparent; color: #6868a0; font-family: 'DM Mono', monospace; font-size: 10.5px; cursor: pointer; transition: all 0.12s; }
-    .tool-btn:hover { border-color: #1c1c28; color: #b8b8d0; }
-    .tool-sep { width: 1px; height: 18px; background: #1c1c28; margin: 0 5px; }
-    .editor-title { width: 100%; background: transparent; border: none; outline: none; font-family: 'Noto Serif JP', serif; font-weight: 200; font-size: 30px; color: #e8e8f2; letter-spacing: 0.03em; margin-bottom: 6px; line-height: 1.2; }
-    .editor-slug { font-size: 10px; color: #3a3a50; margin-bottom: 28px; display: flex; align-items: center; gap: 6px; }
-    .editor-slug span { color: #7b8cde; }
-    .editor-body { width: 100%; min-height: 320px; background: transparent; border: none; outline: none; font-family: 'Noto Serif JP', serif; font-weight: 300; font-size: 14.5px; color: #b8b8d0; line-height: 1.85; letter-spacing: 0.01em; resize: none; }
-    .coming-soon { margin-top: 24px; padding: 20px; background: #12121a; border: 1px solid #1c1c28; border-left: 2px solid #7b8cde; font-size: 11px; color: #3a3a50; line-height: 1.8; }
-    .coming-soon span { color: #7b8cde; }
-    .meta-panel { padding: 24px 20px; background: #12121a; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-    .meta-section { border-bottom: 1px solid #1c1c28; padding-bottom: 18px; }
-    .meta-section:last-child { border-bottom: none; }
-    .meta-label { font-size: 9px; letter-spacing: 0.28em; text-transform: uppercase; color: #3a3a50; margin-bottom: 10px; }
-    .meta-field { margin-bottom: 10px; }
-    .field-label { font-size: 10px; color: #6868a0; margin-bottom: 4px; }
-    .field-input, .field-select { width: 100%; background: #0a0a0f; border: 1px solid #1c1c28; padding: 6px 9px; color: #e8e8f2; font-family: 'DM Mono', monospace; font-size: 11px; outline: none; appearance: none; transition: border-color 0.15s; }
-    .field-input:focus, .field-select:focus { border-color: #7b8cde; }
-    .publish-row { display: flex; gap: 7px; }
-    .btn-draft { flex: 1; padding: 8px; background: transparent; border: 1px solid #252535; color: #6868a0; font-family: 'DM Mono', monospace; font-size: 10px; cursor: pointer; transition: all 0.15s; }
-    .btn-draft:hover { border-color: #3a3a50; color: #b8b8d0; }
-    .btn-publish { flex: 2; padding: 8px; background: #0a0a0f; border: 1px solid #c8a86b; color: #c8a86b; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; cursor: pointer; transition: all 0.15s; }
-    .btn-publish:hover { background: #c8a86b; color: #0a0a0f; }
-    .version-row { display: flex; align-items: center; gap: 9px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.02); cursor: pointer; }
-    .v-dot { width: 5px; height: 5px; background: #3a3a50; border-radius: 50%; flex-shrink: 0; }
-    .v-dot.cur { background: #c8a86b; }
-    .v-hash { font-size: 10px; color: #6868a0; }
-    .v-time { font-size: 10px; color: #3a3a50; margin-left: auto; }
+    :root {
+      --bg0:#f5f2ec; --bg1:#faf8f3; --bg2:#ffffff; --bg3:#edeae3;
+      --line:#e0dbd0; --line2:rgba(0,0,0,0.04);
+      --muted:#a09890; --mid:#706860; --text:#3a3228; --heading:#1a1510;
+      --gold:#9a6e30; --gold-bg:rgba(154,110,48,0.08);
+      --jade:#1e6b50; --jade-bg:rgba(30,107,80,0.07);
+      --accent:#3d4fa8; --accent-bg:rgba(61,79,168,0.06);
+      --shadow:0 1px 3px rgba(0,0,0,0.08);
+      --serif:"Noto Serif JP",serif; --mono:"DM Mono",monospace;
+    }
+    html,body { background:var(--bg0); color:var(--text); font-family:var(--mono); font-size:13px; line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
+
+    /* Layout */
+    .layout { display:grid; grid-template-columns:210px 1fr; grid-template-rows:54px 1fr; min-height:100vh; }
+
+    /* Topbar */
+    .topbar { grid-column:1/-1; background:var(--bg2); border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 22px; gap:0; z-index:10; }
+    .logo { font-family:var(--serif); font-weight:200; font-size:17px; color:var(--heading); display:flex; align-items:center; gap:9px; letter-spacing:0.1em; text-decoration:none; flex-shrink:0; }
+    .logo-mark { width:22px; height:22px; border:1px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:9px; color:var(--gold); font-family:var(--mono); }
+    .breadcrumb { margin-left:20px; font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+    .breadcrumb a { color:var(--mid); text-decoration:none; }
+    .breadcrumb a:hover { color:var(--heading); }
+    .breadcrumb .sep { color:var(--line); }
+    .breadcrumb .current { color:var(--text); }
+    .topbar-right { margin-left:auto; display:flex; align-items:center; gap:12px; }
+    .pod-status { font-size:10px; color:var(--jade); display:flex; align-items:center; gap:5px; }
+    .pod-dot { width:5px; height:5px; border-radius:50%; background:var(--jade); animation:pulse 2.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    .status-chip { font-size:9px; padding:2px 8px; border:1px solid currentColor; letter-spacing:0.08em; }
+    .status-chip.published { color:var(--jade); }
+    .status-chip.draft { color:var(--gold); }
+
+    /* Sidebar */
+    .sidebar { background:var(--bg1); border-right:1px solid var(--line); padding:20px 0; display:flex; flex-direction:column; }
+    .nav-section { font-size:9px; letter-spacing:0.3em; text-transform:uppercase; color:var(--muted); padding:0 16px; margin:18px 0 5px; }
+    .nav-section:first-child { margin-top:0; }
+    .nav-item { display:flex; align-items:center; gap:9px; padding:7px 16px; font-size:12px; color:var(--mid); text-decoration:none; position:relative; transition:color 0.12s,background 0.12s; }
+    .nav-item:hover { color:var(--heading); background:var(--line2); }
+    .nav-item.active { color:var(--heading); background:var(--accent-bg); }
+    .nav-item.active::before { content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--gold); }
+    .nav-icon { width:13px; text-align:center; font-size:10px; opacity:0.5; flex-shrink:0; }
+    .nav-badge { margin-left:auto; font-size:9px; color:var(--muted); background:var(--bg3); border:1px solid var(--line); padding:1px 6px; }
+    .sidebar-pod { margin-top:auto; padding:12px 16px; border-top:1px solid var(--line); font-size:10px; color:var(--muted); }
+    .sidebar-pod-name { color:var(--text); font-size:11px; margin-bottom:2px; display:flex; align-items:center; gap:5px; }
+    .sidebar-pod-name::before { content:"◆"; font-size:6px; color:var(--gold); }
+
+    /* Editor layout */
+    .editor-shell { display:grid; grid-template-columns:1fr 260px; height:calc(100vh - 54px); overflow:hidden; }
+    .editor-main { display:flex; flex-direction:column; overflow:hidden; background:var(--bg0); }
+
+    /* Toolbar */
+    .editor-toolbar { display:flex; align-items:center; gap:2px; padding:10px 32px; border-bottom:1px solid var(--line); background:var(--bg1); flex-shrink:0; }
+    .tool-btn { height:26px; min-width:26px; padding:0 6px; display:flex; align-items:center; justify-content:center; background:transparent; border:1px solid transparent; color:var(--mid); font-family:var(--mono); font-size:10px; cursor:pointer; transition:all 0.12s; border-radius:2px; }
+    .tool-btn:hover { border-color:var(--line); color:var(--heading); background:var(--bg2); }
+    .tool-sep { width:1px; height:16px; background:var(--line); margin:0 5px; }
+
+    /* Writing area */
+    .editor-scroll { flex:1; overflow-y:auto; padding:40px 64px 80px; }
+    .editor-title-input {
+      width:100%; background:transparent; border:none; outline:none;
+      font-family:var(--serif); font-weight:200; font-size:32px;
+      color:var(--heading); letter-spacing:0.02em; line-height:1.2;
+      margin-bottom:8px; resize:none; overflow:hidden;
+    }
+    .editor-title-input::placeholder { color:var(--line); }
+    .editor-slug-line { font-size:10px; color:var(--muted); margin-bottom:32px; padding-bottom:20px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:5px; }
+    .editor-slug-line span { color:var(--accent); }
+    .editor-body-input {
+      width:100%; background:transparent; border:none; outline:none;
+      font-family:var(--serif); font-weight:300; font-size:15px;
+      color:var(--text); line-height:1.9; resize:none;
+      min-height:400px; letter-spacing:0.01em;
+    }
+    .editor-body-input::placeholder { color:var(--line); }
+
+    /* Saved banner */
+    .saved-banner { background:var(--jade-bg); border-bottom:1px solid rgba(30,107,80,0.2); padding:8px 32px; font-size:11px; color:var(--jade); display:flex; align-items:center; gap:6px; flex-shrink:0; }
+    .saved-banner::before { content:"✓"; font-size:12px; }
+
+    /* Meta panel */
+    .meta-panel { background:var(--bg1); border-left:1px solid var(--line); display:flex; flex-direction:column; overflow-y:auto; }
+    .meta-section { padding:18px 18px 16px; border-bottom:1px solid var(--line); }
+    .meta-section:last-child { border-bottom:none; }
+    .meta-label { font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); margin-bottom:12px; }
+    .meta-field { margin-bottom:10px; }
+    .field-label { font-size:10px; color:var(--mid); margin-bottom:4px; }
+    .field-input,.field-select { width:100%; background:var(--bg0); border:1px solid var(--line); padding:6px 9px; color:var(--heading); font-family:var(--mono); font-size:11px; outline:none; appearance:none; transition:border-color 0.15s; }
+    .field-input:focus,.field-select:focus { border-color:var(--accent); }
+
+    /* Publish buttons */
+    .publish-row { display:flex; gap:6px; }
+    .btn-draft { flex:1; padding:8px; background:transparent; border:1px solid var(--line); color:var(--mid); font-family:var(--mono); font-size:10px; cursor:pointer; transition:all 0.12s; }
+    .btn-draft:hover { border-color:var(--mid); color:var(--text); }
+    .btn-publish { flex:2; padding:8px; background:var(--gold); border:1px solid var(--gold); color:var(--bg0); font-family:var(--mono); font-size:10px; letter-spacing:0.1em; cursor:pointer; transition:all 0.12s; }
+    .btn-publish:hover { background:#7a5520; border-color:#7a5520; }
+
+    /* Version history */
+    .version-row { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--line2); cursor:pointer; }
+    .version-row:last-child { border-bottom:none; }
+    .v-dot { width:5px; height:5px; background:var(--muted); border-radius:50%; flex-shrink:0; }
+    .v-dot.cur { background:var(--gold); }
+    .v-hash { font-size:10px; color:var(--mid); font-family:var(--mono); }
+    .v-time { font-size:10px; color:var(--muted); margin-left:auto; }
+
+    /* Pill */
+    .pill { font-size:9px; padding:2px 7px; letter-spacing:0.06em; }
+    .pill.published { color:var(--jade); background:var(--jade-bg); }
+    .pill.draft { color:var(--gold); background:var(--gold-bg); }
+
+    /* Word count */
+    .word-count { font-size:10px; color:var(--muted); margin-top:24px; padding-top:16px; border-top:1px solid var(--line2); }
   </style>
 </head>
 <body>
   <div class="layout">
+
+    <!-- Topbar -->
     <div class="topbar">
-      <a href="/orbiter" class="logo"><div class="logo-mark">OR</div>Orbiter</a>
+      <a href="/orbiter" class="logo">
+        <div class="logo-mark">OR</div>
+        Orbiter
+      </a>
       <div class="breadcrumb">
         <a href="/orbiter">Dashboard</a>
         <span class="sep">/</span>
@@ -96,17 +211,22 @@ const title = isNew ? `New ${col.label.slice(0, -1)}` : (entry?.data?.title ?? s
         <span class="sep">/</span>
         <span class="current">{isNew ? 'New' : slug}</span>
       </div>
-      {!isNew && (
-        <span class={`status-badge ${entry?.status}`}>{entry?.status?.toUpperCase()}</span>
-      )}
+      <div class="topbar-right">
+        {!isNew && entry && <span class={`status-chip ${entry.status}`}>{entry.status.toUpperCase()}</span>}
+        <div class="pod-status"><div class="pod-dot"></div>pod synced</div>
+      </div>
     </div>
 
+    <!-- Sidebar -->
     <div class="sidebar">
       <div class="nav-section">Content</div>
       <a href="/orbiter" class="nav-item"><span class="nav-icon">◈</span>Dashboard</a>
-      <a href={`/orbiter/${collectionId}`} class="nav-item active">
-        <span class="nav-icon">▤</span>{col.label}
-      </a>
+      {allCollections.map(c => (
+        <a href={`/orbiter/${c.id}`} class={`nav-item ${c.id === collectionId ? 'active' : ''}`}>
+          <span class="nav-icon">▤</span>{c.label}
+          <span class="nav-badge">{c.total}</span>
+        </a>
+      ))}
       <div class="nav-section">Assets</div>
       <a href="/orbiter/media" class="nav-item"><span class="nav-icon">⊞</span>Media</a>
       <div class="nav-section">System</div>
@@ -117,80 +237,201 @@ const title = isNew ? `New ${col.label.slice(0, -1)}` : (entry?.data?.title ?? s
       </div>
     </div>
 
-    <div class="editor-main">
-      <div class="editor-toolbar">
-        <button class="tool-btn">B</button>
-        <button class="tool-btn" style="font-style:italic;">I</button>
-        <button class="tool-btn" style="text-decoration:underline;">U</button>
-        <div class="tool-sep"></div>
-        <button class="tool-btn">H2</button>
-        <button class="tool-btn">H3</button>
-        <div class="tool-sep"></div>
-        <button class="tool-btn">❝</button>
-        <button class="tool-btn">&lt;/&gt;</button>
-        <button class="tool-btn">⊞</button>
-      </div>
+    <!-- Editor -->
+    <div class="editor-shell">
+      <form method="POST" id="editor-form" style="display:contents;">
+        <input type="hidden" name="status" id="status-input" value={entry?.status ?? 'draft'} />
 
-      <input
-        class="editor-title"
-        value={entry?.data?.title ?? ''}
-        placeholder="Untitled..."
-        spellcheck="false"
-      />
+        <div class="editor-main">
+          {saved && <div class="saved-banner">Entry saved successfully</div>}
 
-      <div class="editor-slug">
-        orbiter/{collectionId}/<span>{isNew ? 'new-entry' : slug}</span>
-      </div>
+          <!-- Toolbar -->
+          <div class="editor-toolbar">
+            <button type="button" class="tool-btn" onmousedown="event.preventDefault()" onclick="fmt('bold')"><b>B</b></button>
+            <button type="button" class="tool-btn" onmousedown="event.preventDefault()" onclick="fmt('italic')"><i>I</i></button>
+            <button type="button" class="tool-btn" onmousedown="event.preventDefault()" onclick="fmt('underline')"><u>U</u></button>
+            <div class="tool-sep"></div>
+            <button type="button" class="tool-btn" onmousedown="event.preventDefault()" onclick="insertMd('## ')">H2</button>
+            <button type="button" class="tool-btn" onmousedown="event.preventDefault()" onclick="insertMd('### ')">H3</button>
+            <div class="tool-sep"></div>
+            <button type="button" class="tool-btn" onmousedown="event.preventDefault()" onclick="insertMd('> ')">❝</button>
+            <button type="button" class="tool-btn" onmousedown="event.preventDefault()" onclick="insertMd('`')"><code style="font-size:9px;">&lt;/&gt;</code></button>
+            <div style="margin-left:auto; font-size:10px; color:var(--muted);" id="wc">— words</div>
+          </div>
 
-      <textarea
-        class="editor-body"
-        placeholder="Start writing..."
-        spellcheck="false"
-      >{entry?.data?.body ?? ''}</textarea>
+          <!-- Writing area -->
+          <div class="editor-scroll">
+            <textarea
+              name="title"
+              class="editor-title-input"
+              placeholder="Untitled"
+              rows="1"
+              spellcheck="false"
+              id="title-input"
+              oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';updateWc()"
+            >{entry?.data?.title ?? ''}</textarea>
 
-      <div class="coming-soon">
-        <span>◆ Phase 2 — Bridge</span><br/>
-        Full block editor, live preview, and autosave coming in the next phase.
-      </div>
-    </div>
-
-    <div class="meta-panel">
-      <div class="meta-section">
-        <div class="meta-label">Status &amp; Publish</div>
-        <div class="publish-row">
-          <button class="btn-draft">Draft</button>
-          <button class="btn-publish">↑ Publish</button>
-        </div>
-      </div>
-
-      <div class="meta-section">
-        <div class="meta-label">Metadata</div>
-        <div class="meta-field">
-          <div class="field-label">Slug</div>
-          <input class="field-input" value={isNew ? '' : slug} placeholder="entry-slug" />
-        </div>
-        <div class="meta-field">
-          <div class="field-label">Status</div>
-          <select class="field-select">
-            <option selected={entry?.status === 'draft'}>draft</option>
-            <option selected={entry?.status === 'published'}>published</option>
-          </select>
-        </div>
-      </div>
-
-      {versions.length > 0 && (
-        <div class="meta-section">
-          <div class="meta-label">Version History 版歴</div>
-          {versions.slice(0, 5).map((v, i) => (
-            <div class="version-row">
-              <div class={`v-dot ${i === 0 ? 'cur' : ''}`}></div>
-              <div class="v-hash">{v.id.slice(0, 6)}</div>
-              <div class="v-time">{new Date(v.created_at).toLocaleDateString('de-AT')}</div>
+            <div class="editor-slug-line">
+              /{collectionId}/<span id="slug-preview">{isNew ? '' : slug}</span>
             </div>
-          ))}
+
+            <textarea
+              name="body"
+              class="editor-body-input"
+              placeholder="Start writing..."
+              spellcheck="false"
+              id="body-input"
+              oninput="autoResize(this);updateWc()"
+            >{entry?.data?.body ?? ''}</textarea>
+
+            <div class="word-count" id="word-count-display"></div>
+          </div>
         </div>
-      )}
+
+        <!-- Meta panel -->
+        <div class="meta-panel">
+          <div class="meta-section">
+            <div class="meta-label">Publish</div>
+            <div class="publish-row">
+              <button type="submit" class="btn-draft" onclick="setStatus('draft')">Save Draft</button>
+              <button type="submit" class="btn-publish" onclick="setStatus('published')">↑ Publish</button>
+            </div>
+          </div>
+
+          <div class="meta-section">
+            <div class="meta-label">Metadata</div>
+            <div class="meta-field">
+              <div class="field-label">Slug</div>
+              <input class="field-input" name="slug" id="slug-input" value={isNew ? '' : slug} placeholder="entry-slug" oninput="updateSlugPreview(this.value)" />
+            </div>
+            <div class="meta-field">
+              <div class="field-label">Status</div>
+              <select class="field-select" id="status-select" onchange="document.getElementById('status-input').value=this.value">
+                <option value="draft" selected={!entry || entry.status === 'draft'}>draft</option>
+                <option value="published" selected={entry?.status === 'published'}>published</option>
+              </select>
+            </div>
+            {!isNew && entry && (
+              <div class="meta-field">
+                <div class="field-label">Updated</div>
+                <input class="field-input" value={new Date(entry.updated_at).toLocaleDateString('de-AT')} readonly style="color:var(--muted);" />
+              </div>
+            )}
+          </div>
+
+          {versions.length > 0 && (
+            <div class="meta-section">
+              <div class="meta-label">Version History</div>
+              {versions.slice(0, 8).map((v, i) => (
+                <div class="version-row">
+                  <div class={`v-dot ${i === 0 ? 'cur' : ''}`}></div>
+                  <div class="v-hash">{v.id.slice(0, 7)}</div>
+                  <div class="v-time">{new Date(v.created_at).toLocaleDateString('de-AT')}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </form>
     </div>
+
   </div>
+
+  <script>
+    // Auto-resize textareas on load
+    document.querySelectorAll('textarea').forEach(t => {
+      t.style.height = 'auto';
+      t.style.height = t.scrollHeight + 'px';
+    });
+
+    window.autoResize = function(el) {
+      el.style.height = 'auto';
+      el.style.height = el.scrollHeight + 'px';
+    }
+
+    // Track last known selection in body textarea
+    let lastSel = { start: 0, end: 0 };
+    const bodyInput = document.getElementById('body-input');
+
+    ['keyup', 'mouseup', 'selectionchange', 'focus'].forEach(evt => {
+      bodyInput.addEventListener(evt, () => {
+        lastSel = { start: bodyInput.selectionStart, end: bodyInput.selectionEnd };
+      });
+    });
+
+    // Word count
+    window.updateWc = function() {
+      const body  = bodyInput.value;
+      const title = document.getElementById('title-input').value;
+      const words = [body, title].join(' ').trim().split(/\s+/).filter(w => w).length;
+      document.getElementById('wc').textContent = words + ' words';
+      document.getElementById('word-count-display').textContent = words + ' words';
+    }
+    updateWc();
+
+    // Slug preview from title
+    document.getElementById('title-input').addEventListener('input', e => {
+      const slugInput = document.getElementById('slug-input');
+      if (!slugInput.dataset.manual) {
+        const s = e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        slugInput.value = s;
+        updateSlugPreview(s);
+      }
+    });
+
+    document.getElementById('slug-input').addEventListener('input', e => {
+      e.target.dataset.manual = '1';
+      updateSlugPreview(e.target.value);
+    });
+
+    window.updateSlugPreview = function(val) {
+      document.getElementById('slug-preview').textContent = val || '…';
+    }
+
+    // Set status before submit
+    window.setStatus = function(s) {
+      document.getElementById('status-input').value = s;
+      document.getElementById('status-select').value = s;
+    }
+
+    // Insert markdown using saved selection
+    window.insertMd = function(prefix) {
+      const ta    = bodyInput;
+      const s     = lastSel.start;
+      const e     = lastSel.end;
+      const sel   = ta.value.substring(s, e);
+      const ins   = prefix + sel;
+      ta.value    = ta.value.substring(0, s) + ins + ta.value.substring(e);
+      ta.selectionStart = ta.selectionEnd = s + ins.length;
+      ta.focus();
+      lastSel = { start: ta.selectionStart, end: ta.selectionEnd };
+      autoResize(ta);
+      updateWc();
+    }
+
+    window.fmt = function(cmd) {
+      const ta   = bodyInput;
+      const s    = lastSel.start;
+      const e    = lastSel.end;
+      const sel  = ta.value.substring(s, e);
+      const wrap = cmd === 'bold' ? '**' : cmd === 'italic' ? '_' : '__';
+      const ins  = wrap + sel + wrap;
+      ta.value   = ta.value.substring(0, s) + ins + ta.value.substring(e);
+      ta.selectionStart = s + wrap.length;
+      ta.selectionEnd   = e + wrap.length;
+      ta.focus();
+      lastSel = { start: ta.selectionStart, end: ta.selectionEnd };
+      updateWc();
+    }
+
+    // Cmd+S to save
+    document.addEventListener('keydown', e => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        setStatus(document.getElementById('status-select').value);
+        document.getElementById('editor-form').submit();
+      }
+    });
+  </script>
 </body>
 </html>

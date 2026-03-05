@@ -1,84 +1,122 @@
 ---
-/**
- * /orbiter/[collection] — Collection Entry List
- */
 import { podPath } from 'orbiter:db';
 import { openPod } from '@orbiter/core';
+import adminCss from 'orbiter:admin-css';
 
 const { collection: collectionId } = Astro.params;
 
 const db  = openPod(podPath);
 const col = db.getCollection(collectionId);
+if (!col) return Astro.redirect('/orbiter');
 
-if (!col) {
-  return Astro.redirect('/orbiter');
-}
-
-const entries     = db.getEntries(collectionId);
-const published   = entries.filter(e => e.status === 'published');
-const drafts      = entries.filter(e => e.status === 'draft');
-const collections = db.getCollections();
-
+const entries        = db.getEntries(collectionId);
+const published      = entries.filter(e => e.status === 'published');
+const drafts         = entries.filter(e => e.status === 'draft');
+const allCollections = db.getCollections().map(c => ({
+  id: c.id, label: c.label, total: db.getEntries(c.id).length,
+}));
 db.close();
 ---
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Orbiter — {col.label}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style set:html={adminCss} />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { background: #0a0a0f; color: #b8b8d0; font-family: 'DM Mono', monospace; min-height: 100vh; }
-    .layout { display: grid; grid-template-columns: 210px 1fr; grid-template-rows: 54px 1fr; min-height: 100vh; }
-    .topbar { grid-column: 1 / -1; background: #12121a; border-bottom: 1px solid #1c1c28; display: flex; align-items: center; padding: 0 22px; }
-    .logo { font-family: 'Noto Serif JP', serif; font-weight: 200; font-size: 17px; color: #e8e8f2; display: flex; align-items: center; gap: 9px; letter-spacing: 0.1em; text-decoration: none; }
-    .logo-mark { width: 22px; height: 22px; border: 1px solid #c8a86b; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #c8a86b; }
-    .breadcrumb { margin-left: 20px; font-size: 11px; color: #3a3a50; display: flex; align-items: center; gap: 6px; }
-    .breadcrumb a { color: #6868a0; text-decoration: none; }
-    .breadcrumb a:hover { color: #b8b8d0; }
-    .breadcrumb .sep { color: #252535; }
-    .breadcrumb .current { color: #b8b8d0; }
-    .sidebar { background: #12121a; border-right: 1px solid #1c1c28; padding: 24px 0; display: flex; flex-direction: column; }
-    .nav-section { font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: #3a3a50; padding: 0 18px; margin: 20px 0 6px; }
-    .nav-section:first-child { margin-top: 0; }
-    .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 18px; font-size: 11.5px; color: #6868a0; text-decoration: none; position: relative; transition: color 0.15s; }
-    .nav-item:hover { color: #b8b8d0; background: rgba(255,255,255,0.02); }
-    .nav-item.active { color: #e8e8f2; background: rgba(123,140,222,0.06); }
-    .nav-item.active::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: #c8a86b; }
-    .nav-icon { width: 13px; text-align: center; font-size: 10px; opacity: 0.6; }
-    .nav-badge { margin-left: auto; font-size: 9px; background: #1c1c28; color: #6868a0; padding: 1px 6px; border: 1px solid #252535; }
-    .sidebar-pod { margin-top: auto; padding: 14px 18px; border-top: 1px solid #1c1c28; font-size: 10px; color: #3a3a50; }
-    .sidebar-pod-name { color: #b8b8d0; font-size: 11px; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
-    .sidebar-pod-name::before { content: '◆'; font-size: 6px; color: #c8a86b; }
-    .main { padding: 32px 40px; }
-    .main-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px; padding-bottom: 18px; border-bottom: 1px solid #1c1c28; }
-    .main-title { font-family: 'Noto Serif JP', serif; font-weight: 200; font-size: 26px; color: #e8e8f2; letter-spacing: 0.05em; }
-    .main-title-jp { font-size: 10px; color: #3a3a50; margin-top: 5px; }
-    .header-actions { display: flex; gap: 10px; }
-    .filter-pills { display: flex; gap: 5px; margin-bottom: 20px; }
-    .fpill { padding: 5px 14px; font-size: 10px; border: 1px solid #1c1c28; color: #3a3a50; cursor: pointer; text-decoration: none; transition: all 0.15s; }
-    .fpill:hover { border-color: #252535; color: #6868a0; }
-    .fpill.active { border-color: #c8a86b; color: #c8a86b; }
-    .new-btn { padding: 7px 18px; background: transparent; border: 1px solid #c8a86b; color: #c8a86b; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.13em; text-decoration: none; transition: all 0.2s; }
-    .new-btn:hover { background: #c8a86b; color: #0a0a0f; }
-    .entries { display: flex; flex-direction: column; gap: 2px; }
-    .entry-card { display: grid; grid-template-columns: 1fr 120px 80px 72px 40px; align-items: center; gap: 16px; padding: 14px 18px; background: #12121a; border: 1px solid #1c1c28; text-decoration: none; transition: border-color 0.15s; }
-    .entry-card:hover { border-color: #252535; }
-    .entry-title { font-size: 12px; color: #e8e8f2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .entry-slug { font-size: 10px; color: #3a3a50; margin-top: 3px; }
-    .entry-date { font-size: 10px; color: #3a3a50; }
-    .pill { font-size: 9px; padding: 2px 7px; }
-    .pill.published { color: #2d8b6a; background: rgba(45,139,106,0.1); }
-    .pill.draft { color: #c8a86b; background: rgba(200,168,107,0.1); }
-    .entry-edit { font-size: 11px; color: #3a3a50; text-align: center; }
-    .entry-edit:hover { color: #7b8cde; }
-    .empty { padding: 48px; text-align: center; background: #12121a; border: 1px solid #1c1c28; }
-    .empty-text { font-size: 12px; color: #3a3a50; margin-bottom: 16px; }
+    :root {
+      --bg0:#f5f2ec; --bg1:#faf8f3; --bg2:#ffffff; --bg3:#edeae3;
+      --line:#e0dbd0; --line2:rgba(0,0,0,0.04);
+      --muted:#a09890; --mid:#706860; --text:#3a3228; --heading:#1a1510;
+      --gold:#9a6e30; --gold-bg:rgba(154,110,48,0.08);
+      --jade:#1e6b50; --jade-bg:rgba(30,107,80,0.07);
+      --accent:#3d4fa8; --accent-bg:rgba(61,79,168,0.06);
+      --shadow:0 1px 3px rgba(0,0,0,0.08);
+      --serif:"Noto Serif JP",serif; --mono:"DM Mono",monospace;
+    }
+    html,body { background:var(--bg0); color:var(--text); font-family:var(--mono); font-size:13px; line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
+    .layout { display:grid; grid-template-columns:210px 1fr; grid-template-rows:54px 1fr; min-height:100vh; }
+    .topbar { grid-column:1/-1; background:var(--bg2); border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 22px; }
+    .logo { font-family:var(--serif); font-weight:200; font-size:17px; color:var(--heading); display:flex; align-items:center; gap:9px; letter-spacing:0.1em; text-decoration:none; flex-shrink:0; }
+    .logo-mark { width:22px; height:22px; border:1px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:9px; color:var(--gold); font-family:var(--mono); }
+    .logo-kana { font-size:10px; color:var(--muted); font-family:var(--serif); font-weight:200; margin-left:2px; }
+    .breadcrumb { margin-left:20px; font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+    .breadcrumb a { color:var(--mid); text-decoration:none; }
+    .breadcrumb a:hover { color:var(--heading); }
+    .breadcrumb .sep { color:var(--line); }
+    .breadcrumb .current { color:var(--text); }
+    .topbar-site { margin-left:24px; font-size:11px; color:var(--muted); }
+    .topbar-right { margin-left:auto; display:flex; align-items:center; gap:14px; }
+    .topbar-pod { margin-left:auto; font-size:10px; color:var(--jade); display:flex; align-items:center; gap:6px; }
+    .pod-status { font-size:10px; color:var(--jade); display:flex; align-items:center; gap:5px; }
+    .pod-dot { width:5px; height:5px; border-radius:50%; background:var(--jade); animation:pulse 2.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    .sidebar { background:var(--bg1); border-right:1px solid var(--line); padding:20px 0; display:flex; flex-direction:column; }
+    .nav-section { font-size:9px; letter-spacing:0.3em; text-transform:uppercase; color:var(--muted); padding:0 16px; margin:18px 0 5px; }
+    .nav-section:first-child { margin-top:0; }
+    .nav-item { display:flex; align-items:center; gap:9px; padding:7px 16px; font-size:12px; color:var(--mid); text-decoration:none; position:relative; transition:color 0.12s,background 0.12s; }
+    .nav-item:hover { color:var(--heading); background:var(--line2); }
+    .nav-item.active { color:var(--heading); background:var(--accent-bg); }
+    .nav-item.active::before { content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--gold); }
+    .nav-icon { width:13px; text-align:center; font-size:10px; opacity:0.5; flex-shrink:0; }
+    .nav-badge { margin-left:auto; font-size:9px; color:var(--muted); background:var(--bg3); border:1px solid var(--line); padding:1px 6px; }
+    .sidebar-pod { margin-top:auto; padding:12px 16px; border-top:1px solid var(--line); font-size:10px; color:var(--muted); }
+    .sidebar-pod-name { color:var(--text); font-size:11px; margin-bottom:2px; display:flex; align-items:center; gap:5px; }
+    .sidebar-pod-name::before { content:"◆"; font-size:6px; color:var(--gold); }
+    .main { padding:32px 40px; background:var(--bg0); overflow-y:auto; position:relative; }
+    .kanji { position:absolute; right:32px; bottom:24px; font-family:var(--serif); font-size:130px; color:var(--heading); opacity:0.04; pointer-events:none; user-select:none; }
+    .main-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:28px; padding-bottom:18px; border-bottom:1px solid var(--line); }
+    .main-title { font-family:var(--serif); font-weight:200; font-size:26px; color:var(--heading); letter-spacing:0.05em; line-height:1; }
+    .main-title-jp { font-size:10px; color:var(--muted); font-family:var(--serif); font-weight:200; letter-spacing:0.08em; margin-top:5px; }
+    .main-date { font-size:10px; color:var(--muted); text-align:right; line-height:1.9; }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
+    .stat { background:var(--bg2); border:1px solid var(--line); padding:16px 18px; position:relative; overflow:hidden; transition:border-color 0.15s,box-shadow 0.15s; }
+    .stat:hover { border-color:var(--gold); box-shadow:var(--shadow); }
+    .stat-label { font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+    .stat-value { font-size:30px; font-weight:200; font-family:var(--serif); color:var(--heading); line-height:1; margin-bottom:5px; }
+    .stat-sub { font-size:10px; color:var(--jade); }
+    .stat-sub.gold { color:var(--gold); }
+    .stat-deco { position:absolute; bottom:8px; right:12px; font-family:var(--serif); font-size:26px; opacity:0.06; color:var(--heading); pointer-events:none; }
+    .panel { background:var(--bg2); border:1px solid var(--line); }
+    .panel-header { padding:11px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
+    .panel-title { font-size:9px; letter-spacing:0.25em; text-transform:uppercase; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .panel-title::before { content:"—"; color:var(--gold); }
+    .panel-action { font-size:10px; color:var(--accent); text-decoration:none; }
+    .panel-action:hover { color:var(--heading); }
+    .entry-row { display:grid; grid-template-columns:1fr 100px 72px; align-items:center; gap:12px; padding:11px 16px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; }
+    .entry-row:hover { background:var(--line2); }
+    .entry-row:last-child { border-bottom:none; }
+    .entry-title { font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .entry-coll { font-size:10px; color:var(--muted); margin-top:2px; }
+    .entry-date { font-size:10px; color:var(--muted); }
+    .pill { font-size:9px; padding:2px 7px; letter-spacing:0.06em; text-align:center; }
+    .pill.published { color:var(--jade); background:var(--jade-bg); }
+    .pill.draft { color:var(--gold); background:var(--gold-bg); }
+    .btn-gold { display:inline-block; padding:7px 16px; background:transparent; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:10px; letter-spacing:0.13em; text-transform:uppercase; cursor:pointer; text-decoration:none; transition:all 0.15s; }
+    .btn-gold:hover { background:var(--gold); color:var(--bg0); }
+    .btn-block { display:block; width:calc(100% - 32px); margin:12px 16px 14px; padding:9px; text-align:center; }
+    .new-btn { display:block; margin:12px 16px 14px; padding:9px; background:transparent; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:10px; letter-spacing:0.14em; cursor:pointer; text-transform:uppercase; text-align:center; text-decoration:none; transition:all 0.2s; }
+    .new-btn:hover { background:var(--gold); color:var(--bg0); }
+    .coll-item { display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; }
+    .coll-item:hover { background:var(--line2); }
+    .coll-item:last-child { border-bottom:none; }
+    .coll-name { font-size:12px; color:var(--text); }
+    .coll-counts { font-size:10px; color:var(--muted); text-align:right; line-height:1.8; }
+    .coll-counts span { color:var(--jade); }
+    .content-grid { display:grid; grid-template-columns:1fr 280px; gap:16px; }
+    .side-panels { display:flex; flex-direction:column; gap:12px; }
+    .field-input,.field-select,.field-textarea { width:100%; background:var(--bg0); border:1px solid var(--line); padding:6px 9px; color:var(--heading); font-family:var(--mono); font-size:11px; outline:none; appearance:none; transition:border-color 0.15s; }
+    .field-input:focus,.field-select:focus,.field-textarea:focus { border-color:var(--accent); }
+    .coming-soon { margin-top:20px; padding:16px 18px; background:var(--bg2); border:1px solid var(--line); border-left:2px solid var(--accent); font-size:11px; color:var(--muted); line-height:1.8; }
+    .coming-soon span { color:var(--accent); }
   </style>
 </head>
 <body>
   <div class="layout">
+
     <div class="topbar">
       <a href="/orbiter" class="logo">
         <div class="logo-mark">OR</div>
@@ -89,15 +127,18 @@ db.close();
         <span class="sep">/</span>
         <span class="current">{col.label}</span>
       </div>
+      <div class="topbar-right">
+        <div class="pod-status"><div class="pod-dot"></div>pod synced</div>
+      </div>
     </div>
 
     <div class="sidebar">
       <div class="nav-section">Content</div>
       <a href="/orbiter" class="nav-item"><span class="nav-icon">◈</span>Dashboard</a>
-      {collections.map(c => (
+      {allCollections.map(c => (
         <a href={`/orbiter/${c.id}`} class={`nav-item ${c.id === collectionId ? 'active' : ''}`}>
           <span class="nav-icon">▤</span>{c.label}
-          <span class="nav-badge">{db.getEntries ? '' : ''}</span>
+          <span class="nav-badge">{c.total}</span>
         </a>
       ))}
       <div class="nav-section">Assets</div>
@@ -116,38 +157,37 @@ db.close();
           <div class="main-title">{col.label}</div>
           <div class="main-title-jp">{entries.length} entries — {published.length} published, {drafts.length} drafts</div>
         </div>
-        <div class="header-actions">
-          <a href={`/orbiter/${collectionId}/new`} class="new-btn">+ New {col.label.slice(0,-1)}</a>
-        </div>
+        <a href={`/orbiter/${collectionId}/new`} class="btn-gold">+ New Entry</a>
       </div>
 
-      <div class="filter-pills">
-        <a href="#" class="fpill active">All ({entries.length})</a>
-        <a href="#" class="fpill">Published ({published.length})</a>
-        <a href="#" class="fpill">Drafts ({drafts.length})</a>
+      <div style="display:flex;gap:6px;margin-bottom:18px;">
+        <span class="pill published" style="padding:4px 12px;border:1px solid currentColor;">All ({entries.length})</span>
+        <span class="pill published" style="padding:4px 12px;border:1px solid currentColor;">Published ({published.length})</span>
+        <span class="pill draft" style="padding:4px 12px;border:1px solid currentColor;">Drafts ({drafts.length})</span>
       </div>
 
       {entries.length === 0 ? (
-        <div class="empty">
-          <div class="empty-text">No entries yet.</div>
-          <a href={`/orbiter/${collectionId}/new`} class="new-btn">+ Create first entry</a>
+        <div style="padding:48px;text-align:center;background:var(--bg2);border:1px solid var(--line);">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">No entries yet.</div>
+          <a href={`/orbiter/${collectionId}/new`} class="btn-gold">+ Create first entry</a>
         </div>
       ) : (
-        <div class="entries">
+        <div>
           {entries.map(entry => (
             <a href={`/orbiter/${collectionId}/${entry.slug}`} class="entry-card">
               <div>
-                <div class="entry-title">{entry.data?.title ?? entry.slug}</div>
-                <div class="entry-slug">/{collectionId}/{entry.slug}</div>
+                <div style="font-size:12px;color:var(--heading);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{entry.data?.title ?? entry.slug}</div>
+                <div style="font-size:10px;color:var(--muted);margin-top:2px;">/{collectionId}/{entry.slug}</div>
               </div>
-              <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString('de-AT')}</div>
+              <div style="font-size:10px;color:var(--muted);">{new Date(entry.updated_at).toLocaleDateString('de-AT')}</div>
               <div class={`pill ${entry.status}`}>{entry.status}</div>
-              <div class="entry-edit">✎</div>
+              <div style="font-size:11px;color:var(--muted);text-align:center;">✎</div>
             </a>
           ))}
         </div>
       )}
     </div>
+
   </div>
 </body>
 </html>

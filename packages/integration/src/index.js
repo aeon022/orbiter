@@ -4,17 +4,25 @@
  * Astro integration that:
  * 1. Opens the .pod file at build/dev time
  * 2. Injects virtual module `orbiter:collections`
- * 3. Injects admin routes under /orbiter
+ * 3. Injects virtual module `orbiter:db`
+ * 4. Injects virtual module `orbiter:admin-css`
+ * 5. Injects admin routes under /orbiter
  */
 import { openPod } from '@orbiter/core';
 import { fileURLToPath } from 'node:url';
 import { resolve, dirname } from 'node:path';
+import { readFileSync } from 'node:fs';
 
-const VIRTUAL_MODULE_ID = 'orbiter:collections';
-const RESOLVED_ID = `\0${VIRTUAL_MODULE_ID}`;
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const VIRTUAL_COLLECTIONS_ID = 'orbiter:collections';
+const RESOLVED_COLLECTIONS_ID = `\0${VIRTUAL_COLLECTIONS_ID}`;
 
 const VIRTUAL_DB_ID = 'orbiter:db';
 const RESOLVED_DB_ID = `\0${VIRTUAL_DB_ID}`;
+
+const VIRTUAL_CSS_ID = 'orbiter:admin-css';
+const RESOLVED_CSS_ID = `\0${VIRTUAL_CSS_ID}`;
 
 /**
  * @param {{ pod: string }} options
@@ -31,9 +39,6 @@ export default function orbiter(options = {}) {
         logger.info(`◆ Orbiter — loading pod: ${podPath}`);
 
         // ── Inject admin routes ──────────────────
-
-
-        const __dirname = dirname(fileURLToPath(import.meta.url));
         const routesDir = resolve(__dirname, '../routes');
 
         injectRoute({
@@ -64,8 +69,9 @@ export default function orbiter(options = {}) {
               {
                 name: 'orbiter-virtual',
                 resolveId(id) {
-                  if (id === VIRTUAL_MODULE_ID) return RESOLVED_ID;
-                  if (id === VIRTUAL_DB_ID) return RESOLVED_DB_ID;
+                  if (id === VIRTUAL_COLLECTIONS_ID) return RESOLVED_COLLECTIONS_ID;
+                  if (id === VIRTUAL_DB_ID)          return RESOLVED_DB_ID;
+                  if (id === VIRTUAL_CSS_ID)         return RESOLVED_CSS_ID;
                 },
                 load(id) {
                   const resolvedPodPath = resolve(
@@ -74,7 +80,7 @@ export default function orbiter(options = {}) {
                   );
 
                   // orbiter:collections — static snapshot for build
-                  if (id === RESOLVED_ID) {
+                  if (id === RESOLVED_COLLECTIONS_ID) {
                     const db = openPod(resolvedPodPath);
                     const collections = db.getCollections();
                     const snapshot = {};
@@ -99,9 +105,14 @@ export function getEntry(collection, slug) {
 
                   // orbiter:db — live db access for admin routes
                   if (id === RESOLVED_DB_ID) {
-                    return `
-export const podPath = ${JSON.stringify(resolvedPodPath)};
-`;
+                    return `export const podPath = ${JSON.stringify(resolvedPodPath)};`;
+                  }
+
+                  // orbiter:admin-css — shared admin styles
+                  if (id === RESOLVED_CSS_ID) {
+                    const cssPath = resolve(__dirname, '../styles/admin.css');
+                    const css = readFileSync(cssPath, 'utf-8');
+                    return `export default ${JSON.stringify(css)};`;
                   }
                 },
               },
