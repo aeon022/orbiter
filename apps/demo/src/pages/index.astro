@@ -1,37 +1,285 @@
 ---
 import { getCollection } from 'orbiter:collections';
 
-const posts = await getCollection('posts');
+const posts   = await getCollection('posts');
+const pages   = await getCollection('pages');
+const authors = await getCollection('authors');
 ---
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Orbiter Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbiter — Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'DM Mono', monospace; background: #0a0a0f; color: #b8b8d0; padding: 48px; }
-    h1   { font-family: 'Noto Serif JP', serif; font-weight: 200; font-size: 2rem; color: #e8e8f2; margin-bottom: 8px; }
-    .sub { font-size: 12px; color: #3a3a50; letter-spacing: 0.2em; margin-bottom: 48px; }
-    .posts { display: grid; gap: 2px; }
-    .post  { background: #12121a; border: 1px solid #1c1c28; padding: 20px 24px; }
-    .post:hover { border-color: #c8a86b; }
-    .post h2 { font-size: 14px; color: #e8e8f2; margin-bottom: 6px; }
-    .post p  { font-size: 12px; color: #6868a0; }
-    .tag { font-size: 10px; color: #c8a86b; border: 1px solid rgba(200,168,107,0.3); padding: 1px 8px; margin-right: 4px; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      font-family: 'DM Mono', monospace;
+      background: #0a0a0f;
+      color: #b8b8d0;
+      min-height: 100vh;
+    }
+
+    .wrap {
+      padding: 48px 64px;
+    }
+
+    header {
+      border-bottom: 1px solid #1c1c28;
+      padding-bottom: 24px;
+      margin-bottom: 48px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-family: 'Noto Serif JP', serif;
+      font-weight: 200;
+      font-size: 28px;
+      color: #e8e8f2;
+      letter-spacing: 0.08em;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-mark {
+      width: 28px; height: 28px;
+      border: 1px solid #c8a86b;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; color: #c8a86b; font-family: 'DM Mono', monospace;
+    }
+    .logo-sub {
+      font-size: 11px;
+      color: #3a3a50;
+      font-family: 'Noto Serif JP', serif;
+      font-weight: 200;
+      letter-spacing: 0.1em;
+      margin-left: 4px;
+    }
+    .header-meta {
+      font-size: 10px;
+      color: #3a3a50;
+      text-align: right;
+      line-height: 1.9;
+    }
+    .header-meta span { color: #2d8b6a; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 300px;
+      gap: 24px;
+    }
+
+    .section-label {
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: #3a3a50;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-label::before {
+      content: '—';
+      color: #c8a86b;
+    }
+
+    .card {
+      background: #12121a;
+      border: 1px solid #1c1c28;
+      padding: 18px 20px;
+      margin-bottom: 2px;
+      cursor: default;
+      transition: border-color 0.15s;
+    }
+    .card:hover { border-color: #252535; }
+
+    .card-title {
+      font-size: 12px;
+      color: #e8e8f2;
+      margin-bottom: 5px;
+      line-height: 1.4;
+    }
+    .card-excerpt {
+      font-size: 11px;
+      color: #6868a0;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .tags { display: flex; gap: 4px; flex-wrap: wrap; }
+    .tag {
+      font-size: 9px;
+      color: #c8a86b;
+      border: 1px solid rgba(200,168,107,0.25);
+      padding: 1px 7px;
+    }
+
+    .pill {
+      font-size: 9px;
+      padding: 1px 7px;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+    .pill.published { color: #2d8b6a; background: rgba(45,139,106,0.1); }
+    .pill.draft     { color: #c8a86b; background: rgba(200,168,107,0.1); }
+
+    .page-card {
+      background: #12121a;
+      border: 1px solid #1c1c28;
+      padding: 16px 20px;
+      margin-bottom: 2px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 12px;
+      transition: border-color 0.15s;
+    }
+    .page-card:hover { border-color: #252535; }
+    .page-slug {
+      font-size: 10px;
+      color: #6868a0;
+      margin-top: 3px;
+    }
+
+    .author-card {
+      background: #12121a;
+      border: 1px solid #1c1c28;
+      padding: 20px;
+      margin-bottom: 2px;
+    }
+    .author-name {
+      font-family: 'Noto Serif JP', serif;
+      font-weight: 300;
+      font-size: 14px;
+      color: #e8e8f2;
+      margin-bottom: 6px;
+    }
+    .author-bio {
+      font-size: 11px;
+      color: #6868a0;
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+    .author-email {
+      font-size: 10px;
+      color: #3a3a50;
+    }
+
+    .pod-info {
+      margin-top: 48px;
+      padding-top: 20px;
+      border-top: 1px solid #1c1c28;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      font-size: 10px;
+      color: #3a3a50;
+    }
+    .pod-info span { color: #6868a0; }
   </style>
 </head>
 <body>
-  <h1>Orbiter</h1>
-  <div class="sub">◆ DEMO — {posts.length} posts loaded from .pod</div>
-  <div class="posts">
-    {posts.map(post => (
-      <div class="post">
-        <h2>{post.data.title}</h2>
-        <p>{post.data.excerpt}</p>
-        <div style="margin-top: 10px;">
-          {(post.data.tags ?? []).map(tag => <span class="tag">{tag}</span>)}
+  <div class="wrap">
+
+    <header>
+      <div class="logo">
+        <div class="logo-mark">OR</div>
+        Orbiter
+        <span class="logo-sub">オービター</span>
+      </div>
+      <div class="header-meta">
+        <div>Demo Site</div>
+        <div><span>✓</span> demo.pod loaded</div>
+      </div>
+    </header>
+
+    <div class="grid">
+
+      <!-- Posts -->
+      <div>
+        <div class="section-label">Posts ({posts.length})</div>
+        {posts.map(post => (
+          <div class="card">
+            <div class="card-title">{post.data.title}</div>
+            <div class="card-excerpt">{post.data.excerpt}</div>
+            <div class="card-footer">
+              <div class="tags">
+                {(post.data.tags ?? []).map((tag: string) => (
+                  <span class="tag">{tag}</span>
+                ))}
+              </div>
+              <span class={`pill ${post.status}`}>{post.status}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <!-- Pages + Authors -->
+      <div>
+        <div class="section-label">Pages ({pages.length})</div>
+        {pages.map(page => (
+          <div class="page-card">
+            <div>
+              <div class="card-title">{page.data.title}</div>
+              <div class="page-slug">/{page.slug}</div>
+            </div>
+            <span class={`pill ${page.status}`}>{page.status}</span>
+          </div>
+        ))}
+
+        <div class="section-label" style="margin-top: 28px;">Authors ({authors.length})</div>
+        {authors.map(author => (
+          <div class="author-card">
+            <div class="author-name">{author.data.name}</div>
+            <div class="author-bio">{author.data.bio}</div>
+            <div class="author-email">{author.data.email}</div>
+          </div>
+        ))}
+      </div>
+
+      <!-- Pod stats -->
+      <div>
+        <div class="section-label">Pod Status</div>
+        <div class="card" style="padding: 20px;">
+          <div style="font-size: 10px; color: #3a3a50; margin-bottom: 16px; letter-spacing: 0.05em;">demo.pod</div>
+
+          {[
+            { label: 'Posts',   value: posts.length },
+            { label: 'Pages',   value: pages.length },
+            { label: 'Authors', value: authors.length },
+          ].map(stat => (
+            <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1c1c28;">
+              <span style="font-size: 10px; color: #6868a0;">{stat.label}</span>
+              <span style="font-size: 22px; font-family: 'Noto Serif JP', serif; font-weight: 200; color: #e8e8f2;">{stat.value}</span>
+            </div>
+          ))}
+
+          <div style="margin-top: 16px; font-size: 10px; color: #3a3a50; line-height: 1.8;">
+            <div>Format: SQLite (.pod)</div>
+            <div>Collections: 3</div>
+            <div style="color: #2d8b6a; margin-top: 8px;">◆ Admin UI — Phase 2</div>
+          </div>
         </div>
       </div>
-    ))}
+
+    </div>
+
+    <div class="pod-info">
+      <div>◆ Orbiter</div>
+      <div>ABTEILUNG83</div>
+      <div>Less Noise. Nice Data. <span>No Bloat.</span></div>
+    </div>
+
   </div>
 </body>
 </html>
