@@ -1,0 +1,196 @@
+---
+/**
+ * /orbiter/[collection]/[slug] — Content Editor
+ * Phase 2 — Full editor coming in Bridge phase
+ */
+import { podPath } from 'orbiter:db';
+import { openPod } from '@orbiter/core';
+
+const { collection: collectionId, slug } = Astro.params;
+
+const db    = openPod(podPath);
+const col   = db.getCollection(collectionId);
+const entry = slug === 'new' ? null : db.getEntry(collectionId, slug);
+
+if (!col) return Astro.redirect('/orbiter');
+
+const versions = entry
+  ? db.db.prepare('SELECT * FROM _versions WHERE entry_id = ? ORDER BY created_at DESC').all(entry.id)
+  : [];
+
+db.close();
+
+const isNew = slug === 'new';
+const title = isNew ? `New ${col.label.slice(0, -1)}` : (entry?.data?.title ?? slug);
+---
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Orbiter — {title}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: #0a0a0f; color: #b8b8d0; font-family: 'DM Mono', monospace; min-height: 100vh; }
+    .layout { display: grid; grid-template-columns: 210px 1fr 280px; grid-template-rows: 54px 1fr; min-height: 100vh; }
+    .topbar { grid-column: 1 / -1; background: #12121a; border-bottom: 1px solid #1c1c28; display: flex; align-items: center; padding: 0 22px; gap: 0; }
+    .logo { font-family: 'Noto Serif JP', serif; font-weight: 200; font-size: 17px; color: #e8e8f2; display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .logo-mark { width: 22px; height: 22px; border: 1px solid #c8a86b; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #c8a86b; }
+    .breadcrumb { margin-left: 20px; font-size: 11px; color: #3a3a50; display: flex; align-items: center; gap: 6px; }
+    .breadcrumb a { color: #6868a0; text-decoration: none; }
+    .breadcrumb a:hover { color: #b8b8d0; }
+    .breadcrumb .sep { color: #252535; }
+    .breadcrumb .current { color: #b8b8d0; }
+    .status-badge { margin-left: 12px; font-size: 9px; padding: 2px 8px; border: 1px solid rgba(45,139,106,0.4); color: #2d8b6a; letter-spacing: 0.1em; }
+    .status-badge.draft { border-color: rgba(200,168,107,0.4); color: #c8a86b; }
+    .sidebar { background: #12121a; border-right: 1px solid #1c1c28; padding: 24px 0; display: flex; flex-direction: column; }
+    .nav-section { font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: #3a3a50; padding: 0 18px; margin: 20px 0 6px; }
+    .nav-section:first-child { margin-top: 0; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 18px; font-size: 11.5px; color: #6868a0; text-decoration: none; position: relative; transition: color 0.15s; }
+    .nav-item:hover { color: #b8b8d0; }
+    .nav-item.active { color: #e8e8f2; background: rgba(123,140,222,0.06); }
+    .nav-item.active::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: #c8a86b; }
+    .nav-icon { width: 13px; text-align: center; font-size: 10px; opacity: 0.6; }
+    .sidebar-pod { margin-top: auto; padding: 14px 18px; border-top: 1px solid #1c1c28; font-size: 10px; color: #3a3a50; }
+    .sidebar-pod-name { color: #b8b8d0; font-size: 11px; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
+    .sidebar-pod-name::before { content: '◆'; font-size: 6px; color: #c8a86b; }
+    .editor-main { padding: 32px 44px; background: #0a0a0f; border-right: 1px solid #1c1c28; overflow-y: auto; }
+    .editor-toolbar { display: flex; align-items: center; gap: 3px; padding-bottom: 16px; margin-bottom: 24px; border-bottom: 1px solid #1c1c28; }
+    .tool-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid transparent; color: #6868a0; font-family: 'DM Mono', monospace; font-size: 10.5px; cursor: pointer; transition: all 0.12s; }
+    .tool-btn:hover { border-color: #1c1c28; color: #b8b8d0; }
+    .tool-sep { width: 1px; height: 18px; background: #1c1c28; margin: 0 5px; }
+    .editor-title { width: 100%; background: transparent; border: none; outline: none; font-family: 'Noto Serif JP', serif; font-weight: 200; font-size: 30px; color: #e8e8f2; letter-spacing: 0.03em; margin-bottom: 6px; line-height: 1.2; }
+    .editor-slug { font-size: 10px; color: #3a3a50; margin-bottom: 28px; display: flex; align-items: center; gap: 6px; }
+    .editor-slug span { color: #7b8cde; }
+    .editor-body { width: 100%; min-height: 320px; background: transparent; border: none; outline: none; font-family: 'Noto Serif JP', serif; font-weight: 300; font-size: 14.5px; color: #b8b8d0; line-height: 1.85; letter-spacing: 0.01em; resize: none; }
+    .coming-soon { margin-top: 24px; padding: 20px; background: #12121a; border: 1px solid #1c1c28; border-left: 2px solid #7b8cde; font-size: 11px; color: #3a3a50; line-height: 1.8; }
+    .coming-soon span { color: #7b8cde; }
+    .meta-panel { padding: 24px 20px; background: #12121a; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+    .meta-section { border-bottom: 1px solid #1c1c28; padding-bottom: 18px; }
+    .meta-section:last-child { border-bottom: none; }
+    .meta-label { font-size: 9px; letter-spacing: 0.28em; text-transform: uppercase; color: #3a3a50; margin-bottom: 10px; }
+    .meta-field { margin-bottom: 10px; }
+    .field-label { font-size: 10px; color: #6868a0; margin-bottom: 4px; }
+    .field-input, .field-select { width: 100%; background: #0a0a0f; border: 1px solid #1c1c28; padding: 6px 9px; color: #e8e8f2; font-family: 'DM Mono', monospace; font-size: 11px; outline: none; appearance: none; transition: border-color 0.15s; }
+    .field-input:focus, .field-select:focus { border-color: #7b8cde; }
+    .publish-row { display: flex; gap: 7px; }
+    .btn-draft { flex: 1; padding: 8px; background: transparent; border: 1px solid #252535; color: #6868a0; font-family: 'DM Mono', monospace; font-size: 10px; cursor: pointer; transition: all 0.15s; }
+    .btn-draft:hover { border-color: #3a3a50; color: #b8b8d0; }
+    .btn-publish { flex: 2; padding: 8px; background: #0a0a0f; border: 1px solid #c8a86b; color: #c8a86b; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; cursor: pointer; transition: all 0.15s; }
+    .btn-publish:hover { background: #c8a86b; color: #0a0a0f; }
+    .version-row { display: flex; align-items: center; gap: 9px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.02); cursor: pointer; }
+    .v-dot { width: 5px; height: 5px; background: #3a3a50; border-radius: 50%; flex-shrink: 0; }
+    .v-dot.cur { background: #c8a86b; }
+    .v-hash { font-size: 10px; color: #6868a0; }
+    .v-time { font-size: 10px; color: #3a3a50; margin-left: auto; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div class="topbar">
+      <a href="/orbiter" class="logo"><div class="logo-mark">OR</div>Orbiter</a>
+      <div class="breadcrumb">
+        <a href="/orbiter">Dashboard</a>
+        <span class="sep">/</span>
+        <a href={`/orbiter/${collectionId}`}>{col.label}</a>
+        <span class="sep">/</span>
+        <span class="current">{isNew ? 'New' : slug}</span>
+      </div>
+      {!isNew && (
+        <span class={`status-badge ${entry?.status}`}>{entry?.status?.toUpperCase()}</span>
+      )}
+    </div>
+
+    <div class="sidebar">
+      <div class="nav-section">Content</div>
+      <a href="/orbiter" class="nav-item"><span class="nav-icon">◈</span>Dashboard</a>
+      <a href={`/orbiter/${collectionId}`} class="nav-item active">
+        <span class="nav-icon">▤</span>{col.label}
+      </a>
+      <div class="nav-section">Assets</div>
+      <a href="/orbiter/media" class="nav-item"><span class="nav-icon">⊞</span>Media</a>
+      <div class="nav-section">System</div>
+      <a href="/orbiter/settings" class="nav-item"><span class="nav-icon">◎</span>Settings</a>
+      <div class="sidebar-pod">
+        <div class="sidebar-pod-name">content.pod</div>
+        <div>{isNew ? 'New entry' : `Editing ${slug}`}</div>
+      </div>
+    </div>
+
+    <div class="editor-main">
+      <div class="editor-toolbar">
+        <button class="tool-btn">B</button>
+        <button class="tool-btn" style="font-style:italic;">I</button>
+        <button class="tool-btn" style="text-decoration:underline;">U</button>
+        <div class="tool-sep"></div>
+        <button class="tool-btn">H2</button>
+        <button class="tool-btn">H3</button>
+        <div class="tool-sep"></div>
+        <button class="tool-btn">❝</button>
+        <button class="tool-btn">&lt;/&gt;</button>
+        <button class="tool-btn">⊞</button>
+      </div>
+
+      <input
+        class="editor-title"
+        value={entry?.data?.title ?? ''}
+        placeholder="Untitled..."
+        spellcheck="false"
+      />
+
+      <div class="editor-slug">
+        orbiter/{collectionId}/<span>{isNew ? 'new-entry' : slug}</span>
+      </div>
+
+      <textarea
+        class="editor-body"
+        placeholder="Start writing..."
+        spellcheck="false"
+      >{entry?.data?.body ?? ''}</textarea>
+
+      <div class="coming-soon">
+        <span>◆ Phase 2 — Bridge</span><br/>
+        Full block editor, live preview, and autosave coming in the next phase.
+      </div>
+    </div>
+
+    <div class="meta-panel">
+      <div class="meta-section">
+        <div class="meta-label">Status &amp; Publish</div>
+        <div class="publish-row">
+          <button class="btn-draft">Draft</button>
+          <button class="btn-publish">↑ Publish</button>
+        </div>
+      </div>
+
+      <div class="meta-section">
+        <div class="meta-label">Metadata</div>
+        <div class="meta-field">
+          <div class="field-label">Slug</div>
+          <input class="field-input" value={isNew ? '' : slug} placeholder="entry-slug" />
+        </div>
+        <div class="meta-field">
+          <div class="field-label">Status</div>
+          <select class="field-select">
+            <option selected={entry?.status === 'draft'}>draft</option>
+            <option selected={entry?.status === 'published'}>published</option>
+          </select>
+        </div>
+      </div>
+
+      {versions.length > 0 && (
+        <div class="meta-section">
+          <div class="meta-label">Version History 版歴</div>
+          {versions.slice(0, 5).map((v, i) => (
+            <div class="version-row">
+              <div class={`v-dot ${i === 0 ? 'cur' : ''}`}></div>
+              <div class="v-hash">{v.id.slice(0, 6)}</div>
+              <div class="v-time">{new Date(v.created_at).toLocaleDateString('de-AT')}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+</body>
+</html>

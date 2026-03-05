@@ -1,0 +1,98 @@
+---
+// /orbiter/media
+import { podPath } from 'orbiter:db';
+import { openPod } from '@orbiter/core';
+
+const db    = openPod(podPath);
+const media = db.db.prepare('SELECT id, filename, mime_type, size, alt, created_at FROM _media ORDER BY created_at DESC').all();
+db.close();
+---
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Orbiter — Media</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: #0a0a0f; color: #b8b8d0; font-family: 'DM Mono', monospace; min-height: 100vh; }
+    .layout { display: grid; grid-template-columns: 210px 1fr; grid-template-rows: 54px 1fr; min-height: 100vh; }
+    .topbar { grid-column: 1 / -1; background: #12121a; border-bottom: 1px solid #1c1c28; display: flex; align-items: center; padding: 0 22px; }
+    .logo { font-family: 'Noto Serif JP', serif; font-weight: 200; font-size: 17px; color: #e8e8f2; display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .logo-mark { width: 22px; height: 22px; border: 1px solid #c8a86b; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #c8a86b; }
+    .breadcrumb { margin-left: 20px; font-size: 11px; color: #3a3a50; display: flex; align-items: center; gap: 6px; }
+    .breadcrumb a { color: #6868a0; text-decoration: none; }
+    .breadcrumb .sep { color: #252535; }
+    .sidebar { background: #12121a; border-right: 1px solid #1c1c28; padding: 24px 0; display: flex; flex-direction: column; }
+    .nav-section { font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: #3a3a50; padding: 0 18px; margin: 20px 0 6px; }
+    .nav-section:first-child { margin-top: 0; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 18px; font-size: 11.5px; color: #6868a0; text-decoration: none; position: relative; transition: color 0.15s; }
+    .nav-item:hover { color: #b8b8d0; }
+    .nav-item.active { color: #e8e8f2; background: rgba(123,140,222,0.06); }
+    .nav-item.active::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: #c8a86b; }
+    .nav-icon { width: 13px; text-align: center; font-size: 10px; opacity: 0.6; }
+    .sidebar-pod { margin-top: auto; padding: 14px 18px; border-top: 1px solid #1c1c28; font-size: 10px; color: #3a3a50; }
+    .sidebar-pod-name { color: #b8b8d0; font-size: 11px; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
+    .sidebar-pod-name::before { content: '◆'; font-size: 6px; color: #c8a86b; }
+    .main { padding: 32px 40px; }
+    .main-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px; padding-bottom: 18px; border-bottom: 1px solid #1c1c28; }
+    .main-title { font-family: 'Noto Serif JP', serif; font-weight: 200; font-size: 26px; color: #e8e8f2; }
+    .main-title-jp { font-size: 10px; color: #3a3a50; margin-top: 5px; }
+    .upload-btn { padding: 7px 18px; background: transparent; border: 1px solid #c8a86b; color: #c8a86b; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.13em; cursor: pointer; transition: all 0.2s; }
+    .upload-btn:hover { background: #c8a86b; color: #0a0a0f; }
+    .media-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; }
+    .media-item { aspect-ratio: 1; background: #12121a; border: 1px solid #1c1c28; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: border-color 0.15s; padding: 12px; }
+    .media-item:hover { border-color: #252535; }
+    .media-type { font-size: 11px; color: #3a3a50; }
+    .media-name { font-size: 9px; color: #6868a0; text-align: center; word-break: break-all; }
+    .media-size { font-size: 9px; color: #3a3a50; }
+    .coming-soon { margin-top: 24px; padding: 20px; background: #12121a; border: 1px solid #1c1c28; border-left: 2px solid #7b8cde; font-size: 11px; color: #3a3a50; line-height: 1.8; }
+    .coming-soon span { color: #7b8cde; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div class="topbar">
+      <a href="/orbiter" class="logo"><div class="logo-mark">OR</div>Orbiter</a>
+      <div class="breadcrumb">
+        <a href="/orbiter">Dashboard</a>
+        <span class="sep">/</span>
+        <span>Media Library</span>
+      </div>
+    </div>
+    <div class="sidebar">
+      <div class="nav-section">Content</div>
+      <a href="/orbiter" class="nav-item"><span class="nav-icon">◈</span>Dashboard</a>
+      <div class="nav-section">Assets</div>
+      <a href="/orbiter/media" class="nav-item active"><span class="nav-icon">⊞</span>Media</a>
+      <div class="nav-section">System</div>
+      <a href="/orbiter/settings" class="nav-item"><span class="nav-icon">◎</span>Settings</a>
+      <div class="sidebar-pod">
+        <div class="sidebar-pod-name">content.pod</div>
+        <div>{media.length} assets</div>
+      </div>
+    </div>
+    <div class="main">
+      <div class="main-header">
+        <div>
+          <div class="main-title">Media Library</div>
+          <div class="main-title-jp">メディアライブラリ — {media.length} assets</div>
+        </div>
+        <button class="upload-btn">↑ Upload</button>
+      </div>
+      <div class="media-grid">
+        {media.map(m => (
+          <div class="media-item">
+            <div class="media-type">{m.mime_type.split('/')[1].toUpperCase()}</div>
+            <div class="media-name">{m.filename}</div>
+            <div class="media-size">{(m.size / 1024).toFixed(1)} KB</div>
+          </div>
+        ))}
+      </div>
+      <div class="coming-soon">
+        <span>◆ Phase 2 — Bridge</span><br/>
+        Full media upload, preview, and asset management coming next.
+      </div>
+    </div>
+  </div>
+</body>
+</html>

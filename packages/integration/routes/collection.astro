@@ -1,0 +1,153 @@
+---
+/**
+ * /orbiter/[collection] — Collection Entry List
+ */
+import { podPath } from 'orbiter:db';
+import { openPod } from '@orbiter/core';
+
+const { collection: collectionId } = Astro.params;
+
+const db  = openPod(podPath);
+const col = db.getCollection(collectionId);
+
+if (!col) {
+  return Astro.redirect('/orbiter');
+}
+
+const entries     = db.getEntries(collectionId);
+const published   = entries.filter(e => e.status === 'published');
+const drafts      = entries.filter(e => e.status === 'draft');
+const collections = db.getCollections();
+
+db.close();
+---
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Orbiter — {col.label}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: #0a0a0f; color: #b8b8d0; font-family: 'DM Mono', monospace; min-height: 100vh; }
+    .layout { display: grid; grid-template-columns: 210px 1fr; grid-template-rows: 54px 1fr; min-height: 100vh; }
+    .topbar { grid-column: 1 / -1; background: #12121a; border-bottom: 1px solid #1c1c28; display: flex; align-items: center; padding: 0 22px; }
+    .logo { font-family: 'Noto Serif JP', serif; font-weight: 200; font-size: 17px; color: #e8e8f2; display: flex; align-items: center; gap: 9px; letter-spacing: 0.1em; text-decoration: none; }
+    .logo-mark { width: 22px; height: 22px; border: 1px solid #c8a86b; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #c8a86b; }
+    .breadcrumb { margin-left: 20px; font-size: 11px; color: #3a3a50; display: flex; align-items: center; gap: 6px; }
+    .breadcrumb a { color: #6868a0; text-decoration: none; }
+    .breadcrumb a:hover { color: #b8b8d0; }
+    .breadcrumb .sep { color: #252535; }
+    .breadcrumb .current { color: #b8b8d0; }
+    .sidebar { background: #12121a; border-right: 1px solid #1c1c28; padding: 24px 0; display: flex; flex-direction: column; }
+    .nav-section { font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: #3a3a50; padding: 0 18px; margin: 20px 0 6px; }
+    .nav-section:first-child { margin-top: 0; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 18px; font-size: 11.5px; color: #6868a0; text-decoration: none; position: relative; transition: color 0.15s; }
+    .nav-item:hover { color: #b8b8d0; background: rgba(255,255,255,0.02); }
+    .nav-item.active { color: #e8e8f2; background: rgba(123,140,222,0.06); }
+    .nav-item.active::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: #c8a86b; }
+    .nav-icon { width: 13px; text-align: center; font-size: 10px; opacity: 0.6; }
+    .nav-badge { margin-left: auto; font-size: 9px; background: #1c1c28; color: #6868a0; padding: 1px 6px; border: 1px solid #252535; }
+    .sidebar-pod { margin-top: auto; padding: 14px 18px; border-top: 1px solid #1c1c28; font-size: 10px; color: #3a3a50; }
+    .sidebar-pod-name { color: #b8b8d0; font-size: 11px; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
+    .sidebar-pod-name::before { content: '◆'; font-size: 6px; color: #c8a86b; }
+    .main { padding: 32px 40px; }
+    .main-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px; padding-bottom: 18px; border-bottom: 1px solid #1c1c28; }
+    .main-title { font-family: 'Noto Serif JP', serif; font-weight: 200; font-size: 26px; color: #e8e8f2; letter-spacing: 0.05em; }
+    .main-title-jp { font-size: 10px; color: #3a3a50; margin-top: 5px; }
+    .header-actions { display: flex; gap: 10px; }
+    .filter-pills { display: flex; gap: 5px; margin-bottom: 20px; }
+    .fpill { padding: 5px 14px; font-size: 10px; border: 1px solid #1c1c28; color: #3a3a50; cursor: pointer; text-decoration: none; transition: all 0.15s; }
+    .fpill:hover { border-color: #252535; color: #6868a0; }
+    .fpill.active { border-color: #c8a86b; color: #c8a86b; }
+    .new-btn { padding: 7px 18px; background: transparent; border: 1px solid #c8a86b; color: #c8a86b; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.13em; text-decoration: none; transition: all 0.2s; }
+    .new-btn:hover { background: #c8a86b; color: #0a0a0f; }
+    .entries { display: flex; flex-direction: column; gap: 2px; }
+    .entry-card { display: grid; grid-template-columns: 1fr 120px 80px 72px 40px; align-items: center; gap: 16px; padding: 14px 18px; background: #12121a; border: 1px solid #1c1c28; text-decoration: none; transition: border-color 0.15s; }
+    .entry-card:hover { border-color: #252535; }
+    .entry-title { font-size: 12px; color: #e8e8f2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .entry-slug { font-size: 10px; color: #3a3a50; margin-top: 3px; }
+    .entry-date { font-size: 10px; color: #3a3a50; }
+    .pill { font-size: 9px; padding: 2px 7px; }
+    .pill.published { color: #2d8b6a; background: rgba(45,139,106,0.1); }
+    .pill.draft { color: #c8a86b; background: rgba(200,168,107,0.1); }
+    .entry-edit { font-size: 11px; color: #3a3a50; text-align: center; }
+    .entry-edit:hover { color: #7b8cde; }
+    .empty { padding: 48px; text-align: center; background: #12121a; border: 1px solid #1c1c28; }
+    .empty-text { font-size: 12px; color: #3a3a50; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div class="topbar">
+      <a href="/orbiter" class="logo">
+        <div class="logo-mark">OR</div>
+        Orbiter
+      </a>
+      <div class="breadcrumb">
+        <a href="/orbiter">Dashboard</a>
+        <span class="sep">/</span>
+        <span class="current">{col.label}</span>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="nav-section">Content</div>
+      <a href="/orbiter" class="nav-item"><span class="nav-icon">◈</span>Dashboard</a>
+      {collections.map(c => (
+        <a href={`/orbiter/${c.id}`} class={`nav-item ${c.id === collectionId ? 'active' : ''}`}>
+          <span class="nav-icon">▤</span>{c.label}
+          <span class="nav-badge">{db.getEntries ? '' : ''}</span>
+        </a>
+      ))}
+      <div class="nav-section">Assets</div>
+      <a href="/orbiter/media" class="nav-item"><span class="nav-icon">⊞</span>Media</a>
+      <div class="nav-section">System</div>
+      <a href="/orbiter/settings" class="nav-item"><span class="nav-icon">◎</span>Settings</a>
+      <div class="sidebar-pod">
+        <div class="sidebar-pod-name">content.pod</div>
+        <div>{entries.length} entries</div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="main-header">
+        <div>
+          <div class="main-title">{col.label}</div>
+          <div class="main-title-jp">{entries.length} entries — {published.length} published, {drafts.length} drafts</div>
+        </div>
+        <div class="header-actions">
+          <a href={`/orbiter/${collectionId}/new`} class="new-btn">+ New {col.label.slice(0,-1)}</a>
+        </div>
+      </div>
+
+      <div class="filter-pills">
+        <a href="#" class="fpill active">All ({entries.length})</a>
+        <a href="#" class="fpill">Published ({published.length})</a>
+        <a href="#" class="fpill">Drafts ({drafts.length})</a>
+      </div>
+
+      {entries.length === 0 ? (
+        <div class="empty">
+          <div class="empty-text">No entries yet.</div>
+          <a href={`/orbiter/${collectionId}/new`} class="new-btn">+ Create first entry</a>
+        </div>
+      ) : (
+        <div class="entries">
+          {entries.map(entry => (
+            <a href={`/orbiter/${collectionId}/${entry.slug}`} class="entry-card">
+              <div>
+                <div class="entry-title">{entry.data?.title ?? entry.slug}</div>
+                <div class="entry-slug">/{collectionId}/{entry.slug}</div>
+              </div>
+              <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString('de-AT')}</div>
+              <div class={`pill ${entry.status}`}>{entry.status}</div>
+              <div class="entry-edit">✎</div>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+</body>
+</html>

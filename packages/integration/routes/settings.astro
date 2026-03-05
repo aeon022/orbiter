@@ -1,0 +1,127 @@
+---
+// /orbiter/settings — Placeholder for Phase 3
+import { podPath } from 'orbiter:db';
+import { openPod } from '@orbiter/core';
+
+const db       = openPod(podPath);
+const siteName = db.getMeta('site.name') ?? 'Orbiter';
+const siteUrl  = db.getMeta('site.url')  ?? '';
+db.close();
+---
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Orbiter — Settings</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: #0a0a0f; color: #b8b8d0; font-family: 'DM Mono', monospace; min-height: 100vh; }
+    .layout { display: grid; grid-template-columns: 210px 1fr; grid-template-rows: 54px 1fr; min-height: 100vh; }
+    .topbar { grid-column: 1 / -1; background: #12121a; border-bottom: 1px solid #1c1c28; display: flex; align-items: center; padding: 0 22px; }
+    .logo { font-family: 'Noto Serif JP', serif; font-weight: 200; font-size: 17px; color: #e8e8f2; display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .logo-mark { width: 22px; height: 22px; border: 1px solid #c8a86b; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #c8a86b; }
+    .breadcrumb { margin-left: 20px; font-size: 11px; color: #3a3a50; display: flex; align-items: center; gap: 6px; }
+    .breadcrumb a { color: #6868a0; text-decoration: none; }
+    .breadcrumb .sep { color: #252535; }
+    .sidebar { background: #12121a; border-right: 1px solid #1c1c28; padding: 24px 0; display: flex; flex-direction: column; }
+    .nav-section { font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: #3a3a50; padding: 0 18px; margin: 20px 0 6px; }
+    .nav-section:first-child { margin-top: 0; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 18px; font-size: 11.5px; color: #6868a0; text-decoration: none; position: relative; transition: color 0.15s; }
+    .nav-item:hover { color: #b8b8d0; }
+    .nav-item.active { color: #e8e8f2; background: rgba(123,140,222,0.06); }
+    .nav-item.active::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: #c8a86b; }
+    .nav-icon { width: 13px; text-align: center; font-size: 10px; opacity: 0.6; }
+    .sidebar-pod { margin-top: auto; padding: 14px 18px; border-top: 1px solid #1c1c28; font-size: 10px; color: #3a3a50; }
+    .sidebar-pod-name { color: #b8b8d0; font-size: 11px; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
+    .sidebar-pod-name::before { content: '◆'; font-size: 6px; color: #c8a86b; }
+    .main { padding: 32px 40px; }
+    .main-header { margin-bottom: 28px; padding-bottom: 18px; border-bottom: 1px solid #1c1c28; }
+    .main-title { font-family: 'Noto Serif JP', serif; font-weight: 200; font-size: 26px; color: #e8e8f2; }
+    .main-title-jp { font-size: 10px; color: #3a3a50; margin-top: 5px; }
+    .settings-group { background: #12121a; border: 1px solid #1c1c28; margin-bottom: 20px; }
+    .group-header { padding: 12px 18px; border-bottom: 1px solid #1c1c28; font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: #b8b8d0; display: flex; align-items: center; gap: 8px; }
+    .group-header::before { content: '—'; color: #c8a86b; }
+    .setting-row { display: grid; grid-template-columns: 180px 1fr; align-items: center; gap: 20px; padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.02); }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-label { font-size: 11px; color: #b8b8d0; }
+    .setting-desc { font-size: 10px; color: #3a3a50; margin-top: 3px; }
+    .field-input { width: 100%; background: #0a0a0f; border: 1px solid #1c1c28; padding: 6px 9px; color: #e8e8f2; font-family: 'DM Mono', monospace; font-size: 11px; outline: none; transition: border-color 0.15s; }
+    .field-input:focus { border-color: #7b8cde; }
+    .coming-soon { padding: 20px; background: #12121a; border: 1px solid #1c1c28; border-left: 2px solid #7b8cde; font-size: 11px; color: #3a3a50; line-height: 1.8; }
+    .coming-soon span { color: #7b8cde; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div class="topbar">
+      <a href="/orbiter" class="logo"><div class="logo-mark">OR</div>Orbiter</a>
+      <div class="breadcrumb">
+        <a href="/orbiter">Dashboard</a>
+        <span class="sep">/</span>
+        <span>Settings</span>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="nav-section">Content</div>
+      <a href="/orbiter" class="nav-item"><span class="nav-icon">◈</span>Dashboard</a>
+      <div class="nav-section">Assets</div>
+      <a href="/orbiter/media" class="nav-item"><span class="nav-icon">⊞</span>Media</a>
+      <div class="nav-section">System</div>
+      <a href="/orbiter/settings" class="nav-item active"><span class="nav-icon">◎</span>Settings</a>
+      <div class="sidebar-pod">
+        <div class="sidebar-pod-name">content.pod</div>
+        <div>v1 format</div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="main-header">
+        <div class="main-title">Settings</div>
+        <div class="main-title-jp">設定 — Site configuration</div>
+      </div>
+
+      <div class="settings-group">
+        <div class="group-header">Site</div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Site Name</div>
+            <div class="setting-desc">Displayed in the admin header</div>
+          </div>
+          <input class="field-input" value={siteName} />
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Site URL</div>
+            <div class="setting-desc">Used for preview links</div>
+          </div>
+          <input class="field-input" value={siteUrl} />
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="group-header">Pod</div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Pod Path</div>
+            <div class="setting-desc">Location of the .pod file</div>
+          </div>
+          <input class="field-input" value="./demo.pod" readonly style="color: #3a3a50;" />
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Format Version</div>
+            <div class="setting-desc">Schema version</div>
+          </div>
+          <input class="field-input" value="v1" readonly style="color: #3a3a50;" />
+        </div>
+      </div>
+
+      <div class="coming-soon">
+        <span>◆ Phase 3 — Warp</span><br/>
+        Deploy webhooks, build triggers, and i18n config coming next.
+      </div>
+    </div>
+  </div>
+</body>
+</html>
