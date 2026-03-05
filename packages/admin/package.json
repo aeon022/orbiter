@@ -1,0 +1,7 @@
+{
+  "name": "@orbiter/admin",
+  "version": "0.0.1",
+  "description": "Admin UI — Japanese Futurism dashboard (Phase 2)",
+  "type": "module",
+  "main": "./src/index.js"
+}

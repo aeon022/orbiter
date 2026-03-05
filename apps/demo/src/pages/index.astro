@@ -1,0 +1,37 @@
+---
+import { getCollection } from 'orbiter:collections';
+
+const posts = await getCollection('posts');
+---
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Orbiter Demo</title>
+  <style>
+    body { font-family: 'DM Mono', monospace; background: #0a0a0f; color: #b8b8d0; padding: 48px; }
+    h1   { font-family: 'Noto Serif JP', serif; font-weight: 200; font-size: 2rem; color: #e8e8f2; margin-bottom: 8px; }
+    .sub { font-size: 12px; color: #3a3a50; letter-spacing: 0.2em; margin-bottom: 48px; }
+    .posts { display: grid; gap: 2px; }
+    .post  { background: #12121a; border: 1px solid #1c1c28; padding: 20px 24px; }
+    .post:hover { border-color: #c8a86b; }
+    .post h2 { font-size: 14px; color: #e8e8f2; margin-bottom: 6px; }
+    .post p  { font-size: 12px; color: #6868a0; }
+    .tag { font-size: 10px; color: #c8a86b; border: 1px solid rgba(200,168,107,0.3); padding: 1px 8px; margin-right: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Orbiter</h1>
+  <div class="sub">◆ DEMO — {posts.length} posts loaded from .pod</div>
+  <div class="posts">
+    {posts.map(post => (
+      <div class="post">
+        <h2>{post.data.title}</h2>
+        <p>{post.data.excerpt}</p>
+        <div style="margin-top: 10px;">
+          {(post.data.tags ?? []).map(tag => <span class="tag">{tag}</span>)}
+        </div>
+      </div>
+    ))}
+  </div>
+</body>
+</html>

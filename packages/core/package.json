@@ -1,0 +1,20 @@
+{
+  "name": "@orbiter/core",
+  "version": "0.0.1",
+  "description": "SQLite persistence layer — the .pod file engine",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "build": "echo 'No build step yet'"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.4.3",
+    "drizzle-orm": "^0.30.10"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.21.4"
+  }
+}

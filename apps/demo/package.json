@@ -1,0 +1,16 @@
+{
+  "name": "orbiter-demo",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev":   "astro dev",
+    "build": "astro build",
+    "seed":  "node scripts/seed.js"
+  },
+  "dependencies": {
+    "@orbiter/core":        "*",
+    "@orbiter/integration": "*",
+    "astro":                "^4.7.0"
+  }
+}

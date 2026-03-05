@@ -1,0 +1,21 @@
+{
+  "name": "orbiter",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Orbiter — Portable single-file CMS for Astro",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev":       "npm run dev --workspace=apps/demo",
+    "build":     "npm run build --workspace=apps/demo",
+    "build:all": "npm run build --workspaces --if-present",
+    "lint":      "npm run lint --workspaces --if-present",
+    "clean":     "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' + && find . -name 'dist' -type d -prune -exec rm -rf '{}' +"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm":  ">=10.0.0"
+  }
+}
