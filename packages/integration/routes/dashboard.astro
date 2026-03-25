@@ -33,6 +33,8 @@ const recent = collections
 // Media count
 const mediaCount = db.db.prepare('SELECT COUNT(*) as n FROM _media').get().n;
 
+const hasWebhook = !!(db.getMeta('build.webhook_url'));
+
 db.close();
 ---
 <html lang="en">
@@ -176,11 +178,18 @@ db.close();
       <div class="main-header">
         <div>
           <div class="main-title">Overview</div>
-          
         </div>
-        <div class="main-date">
-          <div>{new Date().toLocaleDateString('de-AT', { weekday: 'long' })}</div>
-          <div>{new Date().toLocaleDateString('de-AT')}</div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          {hasWebhook && (
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span id="deploy-status" style="font-size:10px;color:var(--muted);"></span>
+              <button class="btn-gold" id="deploy-btn" onclick="triggerDeploy()">↑ Deploy</button>
+            </div>
+          )}
+          <div class="main-date">
+            <div>{new Date().toLocaleDateString('de-AT', { weekday: 'long' })}</div>
+            <div>{new Date().toLocaleDateString('de-AT')}</div>
+          </div>
         </div>
       </div>
 
@@ -255,5 +264,34 @@ db.close();
     </div>
 
   </div>
+
+  <script>
+    window.triggerDeploy = async function() {
+      const btn    = document.getElementById('deploy-btn');
+      const status = document.getElementById('deploy-status');
+      btn.disabled = true;
+      btn.textContent = '↑ Deploying…';
+      status.textContent = '';
+      status.style.color = 'var(--muted)';
+      try {
+        const res  = await fetch('/orbiter/build', { method: 'POST' });
+        const json = await res.json();
+        if (json.ok) {
+          status.textContent = '✓ Build triggered';
+          status.style.color = 'var(--jade)';
+          btn.textContent = '↑ Deploy';
+        } else {
+          status.textContent = json.error ?? `Error ${json.status}`;
+          status.style.color = 'var(--crimson, #8b2635)';
+          btn.textContent = '↑ Deploy';
+        }
+      } catch (e) {
+        status.textContent = 'Network error';
+        status.style.color = 'var(--crimson, #8b2635)';
+        btn.textContent = '↑ Deploy';
+      }
+      btn.disabled = false;
+    }
+  </script>
 </body>
 </html>

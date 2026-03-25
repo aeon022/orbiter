@@ -1,0 +1,35 @@
+---
+/**
+ * /orbiter/build — Webhook trigger endpoint
+ * POST only — called by the Deploy button via fetch
+ */
+import { podPath } from 'orbiter:db';
+import { openPod } from '@orbiter/core';
+
+if (Astro.request.method !== 'POST') {
+  return new Response('Method Not Allowed', { status: 405 });
+}
+
+const db  = openPod(podPath);
+const url = db.getMeta('build.webhook_url') ?? '';
+db.close();
+
+if (!url) {
+  return new Response(JSON.stringify({ ok: false, error: 'No webhook URL configured' }), {
+    status: 400,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+try {
+  const res = await fetch(url, { method: 'POST' });
+  return new Response(JSON.stringify({ ok: res.ok, status: res.status }), {
+    headers: { 'Content-Type': 'application/json' },
+  });
+} catch (e) {
+  return new Response(JSON.stringify({ ok: false, error: e.message }), {
+    status: 502,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+---

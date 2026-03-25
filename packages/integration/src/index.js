@@ -65,6 +65,10 @@ export default function orbiter(options = {}) {
           pattern:    '/orbiter/settings',
           entrypoint: resolve(routesDir, 'settings.astro'),
         });
+        injectRoute({
+          pattern:    '/orbiter/build',
+          entrypoint: resolve(routesDir, 'build.astro'),
+        });
 
         // ── Vite virtual modules ─────────────────
         updateConfig({

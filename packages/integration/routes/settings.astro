@@ -7,10 +7,10 @@ if (Astro.request.method === 'POST') {
   const form = await Astro.request.formData();
   const db   = openPod(podPath);
 
-  const fields = ['site.name', 'site.url', 'site.description', 'site.locale'];
+  const fields = ['site.name', 'site.url', 'site.description', 'site.locale', 'build.webhook_url'];
   for (const key of fields) {
     const val = form.get(key)?.toString() ?? '';
-    if (val !== '') db.setMeta(key, val);
+    db.setMeta(key, val);
   }
 
   db.close();
@@ -24,6 +24,7 @@ const meta    = {
   url:         db.getMeta('site.url')         ?? '',
   description: db.getMeta('site.description') ?? '',
   locale:      db.getMeta('site.locale')      ?? '',
+  webhookUrl:  db.getMeta('build.webhook_url') ?? '',
 };
 const formatVersion = db.getMeta('format_version') ?? '1';
 const allCollections = db.getCollections().map(c => ({
@@ -194,6 +195,18 @@ const saved = Astro.url.searchParams.get('saved') === '1';
                 <div class="setting-desc">Default language code</div>
               </div>
               <input class="field-input" name="site.locale" value={meta.locale} placeholder="de" />
+            </div>
+          </div>
+
+          <!-- Build -->
+          <div class="settings-group" style="margin-top:16px;">
+            <div class="group-header">Build & Deploy</div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">Webhook URL</div>
+                <div class="setting-desc">POST-Target für Build-Trigger (Netlify, Vercel, etc.)</div>
+              </div>
+              <input class="field-input" name="build.webhook_url" value={meta.webhookUrl} placeholder="https://api.netlify.com/build/hook/…" />
             </div>
           </div>
 
