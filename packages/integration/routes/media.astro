@@ -1,14 +1,50 @@
 ---
 import { podPath } from 'orbiter:db';
 import { openPod } from '@orbiter/core';
-import adminCss from 'orbiter:admin-css';
 
+// ── Handle POST ───────────────────────────────────────────────────────
+if (Astro.request.method === 'POST') {
+  const form   = await Astro.request.formData();
+  const action = form.get('action')?.toString();
+  const db     = openPod(podPath);
+
+  if (action === 'delete') {
+    const id = form.get('id')?.toString();
+    if (id) db.db.prepare('DELETE FROM _media WHERE id = ?').run(id);
+    db.close();
+    return Astro.redirect('/orbiter/media?deleted=1');
+  }
+
+  // Upload
+  const file = form.get('file');
+  if (file && file.size > 0) {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const alt    = form.get('alt')?.toString() ?? '';
+    db.db.prepare(
+      'INSERT INTO _media (id, filename, mime_type, size, data, alt, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"))'
+    ).run(crypto.randomUUID(), file.name, file.type || 'application/octet-stream', file.size, buffer, alt);
+  }
+
+  db.close();
+  return Astro.redirect('/orbiter/media?uploaded=1');
+}
+
+// ── GET ───────────────────────────────────────────────────────────────
 const db    = openPod(podPath);
-const media = db.db.prepare('SELECT id, filename, mime_type, size, alt, created_at FROM _media ORDER BY created_at DESC').all();
+const media = db.db.prepare(
+  'SELECT id, filename, mime_type, size, alt, created_at FROM _media ORDER BY created_at DESC'
+).all();
 const allCollections = db.getCollections().map(c => ({
   id: c.id, label: c.label, total: db.getEntries(c.id).length,
 }));
 db.close();
+
+const uploaded = Astro.url.searchParams.get('uploaded') === '1';
+const deleted  = Astro.url.searchParams.get('deleted')  === '1';
+
+const fmtSize = (bytes) => bytes < 1024 * 1024
+  ? (bytes / 1024).toFixed(1) + ' KB'
+  : (bytes / 1024 / 1024).toFixed(1) + ' MB';
 ---
 <html lang="en">
 <head>
@@ -17,7 +53,6 @@ db.close();
   <title>Orbiter — Media</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
-  <style set:html={adminCss} />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -27,26 +62,28 @@ db.close();
       --gold:#9a6e30; --gold-bg:rgba(154,110,48,0.08);
       --jade:#1e6b50; --jade-bg:rgba(30,107,80,0.07);
       --accent:#3d4fa8; --accent-bg:rgba(61,79,168,0.06);
+      --crimson:#8b2635; --crimson-bg:rgba(139,38,53,0.07);
       --shadow:0 1px 3px rgba(0,0,0,0.08);
       --serif:"Noto Serif JP",serif; --mono:"DM Mono",monospace;
     }
     html,body { background:var(--bg0); color:var(--text); font-family:var(--mono); font-size:13px; line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
     .layout { display:grid; grid-template-columns:210px 1fr; grid-template-rows:54px 1fr; min-height:100vh; }
-    .topbar { grid-column:1/-1; background:var(--bg2); border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 22px; }
+
+    /* Topbar */
+    .topbar { grid-column:1/-1; background:var(--bg2); border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 22px; gap:0; }
     .logo { font-family:var(--serif); font-weight:200; font-size:17px; color:var(--heading); display:flex; align-items:center; gap:9px; letter-spacing:0.1em; text-decoration:none; flex-shrink:0; }
     .logo-mark { width:22px; height:22px; border:1px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:9px; color:var(--gold); font-family:var(--mono); }
-    .logo-kana { font-size:10px; color:var(--muted); font-family:var(--serif); font-weight:200; margin-left:2px; }
     .breadcrumb { margin-left:20px; font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; }
     .breadcrumb a { color:var(--mid); text-decoration:none; }
     .breadcrumb a:hover { color:var(--heading); }
     .breadcrumb .sep { color:var(--line); }
     .breadcrumb .current { color:var(--text); }
-    .topbar-site { margin-left:24px; font-size:11px; color:var(--muted); }
     .topbar-right { margin-left:auto; display:flex; align-items:center; gap:14px; }
-    .topbar-pod { margin-left:auto; font-size:10px; color:var(--jade); display:flex; align-items:center; gap:6px; }
     .pod-status { font-size:10px; color:var(--jade); display:flex; align-items:center; gap:5px; }
     .pod-dot { width:5px; height:5px; border-radius:50%; background:var(--jade); animation:pulse 2.5s ease-in-out infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+    /* Sidebar */
     .sidebar { background:var(--bg1); border-right:1px solid var(--line); padding:20px 0; display:flex; flex-direction:column; }
     .nav-section { font-size:9px; letter-spacing:0.3em; text-transform:uppercase; color:var(--muted); padding:0 16px; margin:18px 0 5px; }
     .nav-section:first-child { margin-top:0; }
@@ -59,57 +96,54 @@ db.close();
     .sidebar-pod { margin-top:auto; padding:12px 16px; border-top:1px solid var(--line); font-size:10px; color:var(--muted); }
     .sidebar-pod-name { color:var(--text); font-size:11px; margin-bottom:2px; display:flex; align-items:center; gap:5px; }
     .sidebar-pod-name::before { content:"◆"; font-size:6px; color:var(--gold); }
-    .main { padding:32px 40px; background:var(--bg0); overflow-y:auto; position:relative; }
-    .kanji { position:absolute; right:32px; bottom:24px; font-family:var(--serif); font-size:130px; color:var(--heading); opacity:0.04; pointer-events:none; user-select:none; }
-    .main-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:28px; padding-bottom:18px; border-bottom:1px solid var(--line); }
+
+    /* Main */
+    .main { background:var(--bg0); overflow-y:auto; display:flex; flex-direction:column; }
+    .banner { padding:10px 40px; font-size:11px; display:flex; align-items:center; gap:6px; flex-shrink:0; }
+    .banner.ok  { background:var(--jade-bg); border-bottom:1px solid rgba(30,107,80,0.2); color:var(--jade); }
+    .banner.ok::before { content:"✓"; font-size:12px; }
+    .banner.del { background:var(--crimson-bg); border-bottom:1px solid rgba(139,38,53,0.15); color:var(--crimson); }
+    .banner.del::before { content:"×"; font-size:12px; }
+    .main-inner { padding:32px 40px; }
+    .main-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; padding-bottom:18px; border-bottom:1px solid var(--line); }
     .main-title { font-family:var(--serif); font-weight:200; font-size:26px; color:var(--heading); letter-spacing:0.05em; line-height:1; }
-    .main-title-jp { font-size:10px; color:var(--muted); font-family:var(--serif); font-weight:200; letter-spacing:0.08em; margin-top:5px; }
-    .main-date { font-size:10px; color:var(--muted); text-align:right; line-height:1.9; }
-    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
-    .stat { background:var(--bg2); border:1px solid var(--line); padding:16px 18px; position:relative; overflow:hidden; transition:border-color 0.15s,box-shadow 0.15s; }
-    .stat:hover { border-color:var(--gold); box-shadow:var(--shadow); }
-    .stat-label { font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
-    .stat-value { font-size:30px; font-weight:200; font-family:var(--serif); color:var(--heading); line-height:1; margin-bottom:5px; }
-    .stat-sub { font-size:10px; color:var(--jade); }
-    .stat-sub.gold { color:var(--gold); }
-    .stat-deco { position:absolute; bottom:8px; right:12px; font-family:var(--serif); font-size:26px; opacity:0.06; color:var(--heading); pointer-events:none; }
-    .panel { background:var(--bg2); border:1px solid var(--line); }
-    .panel-header { padding:11px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
-    .panel-title { font-size:9px; letter-spacing:0.25em; text-transform:uppercase; color:var(--text); display:flex; align-items:center; gap:8px; }
-    .panel-title::before { content:"—"; color:var(--gold); }
-    .panel-action { font-size:10px; color:var(--accent); text-decoration:none; }
-    .panel-action:hover { color:var(--heading); }
-    .entry-row { display:grid; grid-template-columns:1fr 100px 72px; align-items:center; gap:12px; padding:11px 16px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; }
-    .entry-row:hover { background:var(--line2); }
-    .entry-row:last-child { border-bottom:none; }
-    .entry-title { font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .entry-coll { font-size:10px; color:var(--muted); margin-top:2px; }
-    .entry-date { font-size:10px; color:var(--muted); }
-    .pill { font-size:9px; padding:2px 7px; letter-spacing:0.06em; text-align:center; }
-    .pill.published { color:var(--jade); background:var(--jade-bg); }
-    .pill.draft { color:var(--gold); background:var(--gold-bg); }
-    .btn-gold { display:inline-block; padding:7px 16px; background:transparent; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:10px; letter-spacing:0.13em; text-transform:uppercase; cursor:pointer; text-decoration:none; transition:all 0.15s; }
-    .btn-gold:hover { background:var(--gold); color:var(--bg0); }
-    .btn-block { display:block; width:calc(100% - 32px); margin:12px 16px 14px; padding:9px; text-align:center; }
-    .new-btn { display:block; margin:12px 16px 14px; padding:9px; background:transparent; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:10px; letter-spacing:0.14em; cursor:pointer; text-transform:uppercase; text-align:center; text-decoration:none; transition:all 0.2s; }
-    .new-btn:hover { background:var(--gold); color:var(--bg0); }
-    .coll-item { display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; }
-    .coll-item:hover { background:var(--line2); }
-    .coll-item:last-child { border-bottom:none; }
-    .coll-name { font-size:12px; color:var(--text); }
-    .coll-counts { font-size:10px; color:var(--muted); text-align:right; line-height:1.8; }
-    .coll-counts span { color:var(--jade); }
-    .content-grid { display:grid; grid-template-columns:1fr 280px; gap:16px; }
-    .side-panels { display:flex; flex-direction:column; gap:12px; }
-    .field-input,.field-select,.field-textarea { width:100%; background:var(--bg0); border:1px solid var(--line); padding:6px 9px; color:var(--heading); font-family:var(--mono); font-size:11px; outline:none; appearance:none; transition:border-color 0.15s; }
-    .field-input:focus,.field-select:focus,.field-textarea:focus { border-color:var(--accent); }
-    .coming-soon { margin-top:20px; padding:16px 18px; background:var(--bg2); border:1px solid var(--line); border-left:2px solid var(--accent); font-size:11px; color:var(--muted); line-height:1.8; }
-    .coming-soon span { color:var(--accent); }
+
+    /* Upload area */
+    .upload-area { background:var(--bg2); border:1px dashed var(--line); padding:32px; text-align:center; margin-bottom:28px; transition:border-color 0.15s,background 0.15s; cursor:pointer; position:relative; }
+    .upload-area:hover,.upload-area.drag-over { border-color:var(--gold); background:var(--gold-bg); }
+    .upload-area input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+    .upload-icon { font-size:22px; color:var(--muted); margin-bottom:8px; }
+    .upload-label { font-size:12px; color:var(--mid); margin-bottom:4px; }
+    .upload-sub { font-size:10px; color:var(--muted); }
+    .upload-form-row { display:flex; gap:8px; margin-top:16px; align-items:center; justify-content:center; }
+    .field-input { background:var(--bg0); border:1px solid var(--line); padding:7px 10px; color:var(--heading); font-family:var(--mono); font-size:11px; outline:none; transition:border-color 0.15s; }
+    .field-input:focus { border-color:var(--accent); }
+    .btn-upload { padding:8px 20px; background:var(--gold); border:1px solid var(--gold); color:var(--bg0); font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+    .btn-upload:hover { background:#7a5520; border-color:#7a5520; }
+
+    /* Media grid */
+    .media-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:12px; }
+    .media-card { background:var(--bg2); border:1px solid var(--line); overflow:hidden; position:relative; transition:border-color 0.15s,box-shadow 0.15s; }
+    .media-card:hover { border-color:var(--gold); box-shadow:var(--shadow); }
+    .media-card:hover .media-delete { opacity:1; }
+    .media-thumb { width:100%; height:140px; object-fit:cover; display:block; background:var(--bg3); }
+    .media-thumb-placeholder { width:100%; height:140px; display:flex; align-items:center; justify-content:center; background:var(--bg3); font-size:10px; color:var(--muted); letter-spacing:0.1em; }
+    .media-info { padding:10px 12px; border-top:1px solid var(--line2); }
+    .media-name { font-size:10px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; }
+    .media-meta { font-size:9px; color:var(--muted); display:flex; justify-content:space-between; }
+    .media-delete { position:absolute; top:6px; right:6px; opacity:0; transition:opacity 0.15s; }
+    .btn-delete { background:rgba(0,0,0,0.55); border:none; color:#fff; font-size:10px; padding:3px 7px; cursor:pointer; font-family:var(--mono); transition:background 0.12s; }
+    .btn-delete:hover { background:var(--crimson); }
+
+    /* Empty state */
+    .empty { padding:48px; text-align:center; background:var(--bg2); border:1px solid var(--line); }
+    .empty-label { font-size:12px; color:var(--muted); }
   </style>
 </head>
 <body>
   <div class="layout">
 
+    <!-- Topbar -->
     <div class="topbar">
       <a href="/orbiter" class="logo">
         <div class="logo-mark">OR</div>
@@ -118,13 +152,14 @@ db.close();
       <div class="breadcrumb">
         <a href="/orbiter">Dashboard</a>
         <span class="sep">/</span>
-        <span class="current">Media Library</span>
+        <span class="current">Media</span>
       </div>
       <div class="topbar-right">
         <div class="pod-status"><div class="pod-dot"></div>pod synced</div>
       </div>
     </div>
 
+    <!-- Sidebar -->
     <div class="sidebar">
       <div class="nav-section">Content</div>
       <a href="/orbiter" class="nav-item"><span class="nav-icon">◈</span>Dashboard</a>
@@ -135,7 +170,10 @@ db.close();
         </a>
       ))}
       <div class="nav-section">Assets</div>
-      <a href="/orbiter/media" class="nav-item active"><span class="nav-icon">⊞</span>Media<span class="nav-badge">{media.length}</span></a>
+      <a href="/orbiter/media" class="nav-item active">
+        <span class="nav-icon">⊞</span>Media
+        <span class="nav-badge">{media.length}</span>
+      </a>
       <div class="nav-section">System</div>
       <a href="/orbiter/settings" class="nav-item"><span class="nav-icon">◎</span>Settings</a>
       <div class="sidebar-pod">
@@ -144,38 +182,88 @@ db.close();
       </div>
     </div>
 
+    <!-- Main -->
     <div class="main">
-      <div class="main-header">
-        <div>
+      {uploaded && <div class="banner ok">File uploaded successfully</div>}
+      {deleted  && <div class="banner del">Asset deleted</div>}
+
+      <div class="main-inner">
+        <div class="main-header">
           <div class="main-title">Media Library</div>
-          <div class="main-title-jp"> — {media.length} assets</div>
         </div>
-        <button class="btn-gold">↑ Upload</button>
-      </div>
 
-      {media.length === 0 ? (
-        <div style="padding:48px;text-align:center;background:var(--bg2);border:1px solid var(--line);">
-          <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">No media uploaded yet.</div>
-          <button class="btn-gold">↑ Upload first asset</button>
-        </div>
-      ) : (
-        <div class="media-grid">
-          {media.map(m => (
-            <div class="media-item">
-              <div class="media-type">{m.mime_type.split('/')[1].toUpperCase()}</div>
-              <div class="media-name">{m.filename}</div>
-              <div class="media-size">{(m.size / 1024).toFixed(1)} KB</div>
+        <!-- Upload form -->
+        <form method="POST" enctype="multipart/form-data" id="upload-form">
+          <input type="hidden" name="action" value="upload" />
+          <div class="upload-area" id="drop-zone">
+            <input type="file" name="file" id="file-input" accept="image/*,video/*,application/pdf" />
+            <div class="upload-icon">↑</div>
+            <div class="upload-label" id="upload-label">Drop file here or click to browse</div>
+            <div class="upload-sub">Images, PDFs, Videos — stored as BLOB in .pod</div>
+            <div class="upload-form-row">
+              <input class="field-input" name="alt" placeholder="Alt text (optional)" style="width:240px;" />
+              <button type="submit" class="btn-upload">Upload</button>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        </form>
 
-      <div class="coming-soon">
-        <span>◆ Phase 2 — Bridge</span><br/>
-        Full media upload, preview, and asset management coming next.
+        <!-- Grid -->
+        {media.length === 0 ? (
+          <div class="empty">
+            <div class="empty-label">No media uploaded yet.</div>
+          </div>
+        ) : (
+          <div class="media-grid">
+            {media.map(m => (
+              <div class="media-card">
+                {m.mime_type.startsWith('image/') ? (
+                  <img class="media-thumb" src={`/orbiter/media/${m.id}`} alt={m.alt ?? ''} loading="lazy" />
+                ) : (
+                  <div class="media-thumb-placeholder">{m.mime_type.split('/')[1].toUpperCase()}</div>
+                )}
+                <div class="media-info">
+                  <div class="media-name" title={m.filename}>{m.filename}</div>
+                  <div class="media-meta">
+                    <span>{fmtSize(m.size)}</span>
+                    <span>{new Date(m.created_at).toLocaleDateString('de-AT')}</span>
+                  </div>
+                </div>
+                <div class="media-delete">
+                  <form method="POST" onsubmit="return confirm('Delete this asset?')">
+                    <input type="hidden" name="action" value="delete" />
+                    <input type="hidden" name="id" value={m.id} />
+                    <button type="submit" class="btn-delete">✕</button>
+                  </form>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
 
   </div>
+
+  <script>
+    // Show selected filename
+    const fileInput  = document.getElementById('file-input');
+    const uploadLabel = document.getElementById('upload-label');
+    fileInput.addEventListener('change', () => {
+      uploadLabel.textContent = fileInput.files[0]?.name ?? 'Drop file here or click to browse';
+    });
+
+    // Drag & drop styling
+    const dropZone = document.getElementById('drop-zone');
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        uploadLabel.textContent = e.dataTransfer.files[0].name;
+      }
+    });
+  </script>
 </body>
 </html>

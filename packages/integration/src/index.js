@@ -58,6 +58,10 @@ export default function orbiter(options = {}) {
           entrypoint: resolve(routesDir, 'media.astro'),
         });
         injectRoute({
+          pattern:    '/orbiter/media/[id]',
+          entrypoint: resolve(routesDir, 'media-serve.astro'),
+        });
+        injectRoute({
           pattern:    '/orbiter/settings',
           entrypoint: resolve(routesDir, 'settings.astro'),
         });
