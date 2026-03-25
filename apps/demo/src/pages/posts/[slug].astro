@@ -1,0 +1,67 @@
+---
+import { podPath } from 'orbiter:db';
+import { openPod } from '@orbiter/core';
+
+const { slug } = Astro.params;
+const db    = openPod(podPath);
+const entry = db.getEntry('posts', slug);
+db.close();
+
+if (!entry) return Astro.redirect('/');
+---
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{entry.data.title ?? slug}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300;400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { font-family: 'DM Mono', monospace; background: #0a0a0f; color: #b8b8d0; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 48px 32px 96px; }
+    .back { font-size: 10px; color: #3a3a50; text-decoration: none; letter-spacing: 0.08em; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 48px; transition: color 0.12s; }
+    .back:hover { color: #c8a86b; }
+    .status { display: inline-block; font-size: 9px; padding: 2px 8px; letter-spacing: 0.08em; margin-bottom: 16px; }
+    .status.draft     { color: #c8a86b; border: 1px solid rgba(200,168,107,0.3); }
+    .status.published { color: #2d8b6a; border: 1px solid rgba(45,139,106,0.3); }
+    h1 { font-family: 'Noto Serif JP', serif; font-weight: 200; font-size: 36px; color: #e8e8f2; letter-spacing: 0.03em; line-height: 1.2; margin-bottom: 12px; }
+    .meta { font-size: 10px; color: #3a3a50; margin-bottom: 40px; padding-bottom: 28px; border-bottom: 1px solid #1c1c28; display: flex; gap: 16px; align-items: center; }
+    .tags { display: flex; gap: 4px; }
+    .tag { font-size: 9px; color: #c8a86b; border: 1px solid rgba(200,168,107,0.25); padding: 1px 7px; }
+    .body h1,.body h2,.body h3 { font-family: 'Noto Serif JP', serif; font-weight: 200; color: #e8e8f2; margin: 28px 0 12px; }
+    .body h2 { font-size: 22px; padding-bottom: 8px; border-bottom: 1px solid #1c1c28; }
+    .body h3 { font-size: 16px; font-family: 'DM Mono', monospace; }
+    .body p { font-family: 'Noto Serif JP', serif; font-size: 16px; line-height: 1.9; color: #b8b8d0; margin-bottom: 18px; }
+    .body blockquote { border-left: 2px solid #c8a86b; padding: 4px 16px; margin: 16px 0; color: #6868a0; font-style: italic; }
+    .body code { font-family: 'DM Mono', monospace; font-size: 12px; background: #12121a; padding: 1px 6px; border: 1px solid #1c1c28; }
+    .body pre { background: #12121a; border: 1px solid #1c1c28; padding: 16px; overflow-x: auto; margin: 16px 0; }
+    .body pre code { background: none; border: none; padding: 0; }
+    .body strong { font-weight: 600; color: #e8e8f2; }
+    .body a { color: #7a8fd4; }
+    .body ul,.body ol { padding-left: 20px; margin-bottom: 18px; }
+    .body li { font-family: 'Noto Serif JP', serif; font-size: 16px; line-height: 1.9; }
+    .body hr { border: none; border-top: 1px solid #1c1c28; margin: 32px 0; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="/" class="back">← Back</a>
+    <div class={`status ${entry.status}`}>{entry.status}</div>
+    <h1>{entry.data.title}</h1>
+    <div class="meta">
+      <span>{new Date(entry.updated_at).toLocaleDateString()}</span>
+      {entry.data.tags?.length > 0 && (
+        <div class="tags">
+          {entry.data.tags.map((t: string) => <span class="tag">{t}</span>)}
+        </div>
+      )}
+    </div>
+    <div class="body" id="body"></div>
+  </div>
+  <script define:vars={{ body: entry.data.body ?? '' }}>
+    document.getElementById('body').innerHTML = marked.parse(body);
+  </script>
+</body>
+</html>
