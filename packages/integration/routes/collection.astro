@@ -16,6 +16,11 @@ const allCollections = db.getCollections().map(c => ({
   id: c.id, label: c.label, total: db.getEntries(c.id).length,
 }));
 db.close();
+
+const filter  = Astro.url.searchParams.get('filter') ?? 'all';
+const visible = filter === 'published' ? published
+              : filter === 'draft'     ? drafts
+              : entries;
 ---
 <html lang="en">
 <head>
@@ -112,6 +117,11 @@ db.close();
     .field-input:focus,.field-select:focus,.field-textarea:focus { border-color:var(--accent); }
     .coming-soon { margin-top:20px; padding:16px 18px; background:var(--bg2); border:1px solid var(--line); border-left:2px solid var(--accent); font-size:11px; color:var(--muted); line-height:1.8; }
     .coming-soon span { color:var(--accent); }
+    .filter-pill { font-size:10px; padding:4px 12px; border:1px solid var(--line); color:var(--mid); text-decoration:none; transition:all 0.12s; background:var(--bg2); letter-spacing:0.04em; }
+    .filter-pill:hover { border-color:var(--mid); color:var(--text); }
+    .filter-pill.active { border-color:var(--heading); color:var(--heading); background:var(--bg3); }
+    .filter-pill.published.active { border-color:var(--jade); color:var(--jade); background:var(--jade-bg); }
+    .filter-pill.draft.active { border-color:var(--gold); color:var(--gold); background:var(--gold-bg); }
   </style>
 </head>
 <body>
@@ -161,27 +171,28 @@ db.close();
       </div>
 
       <div style="display:flex;gap:6px;margin-bottom:18px;">
-        <span class="pill published" style="padding:4px 12px;border:1px solid currentColor;">All ({entries.length})</span>
-        <span class="pill published" style="padding:4px 12px;border:1px solid currentColor;">Published ({published.length})</span>
-        <span class="pill draft" style="padding:4px 12px;border:1px solid currentColor;">Drafts ({drafts.length})</span>
+        <a href={`/orbiter/${collectionId}`} class={`filter-pill ${filter === 'all' ? 'active' : ''}`}>All ({entries.length})</a>
+        <a href={`/orbiter/${collectionId}?filter=published`} class={`filter-pill published ${filter === 'published' ? 'active' : ''}`}>Published ({published.length})</a>
+        <a href={`/orbiter/${collectionId}?filter=draft`} class={`filter-pill draft ${filter === 'draft' ? 'active' : ''}`}>Drafts ({drafts.length})</a>
       </div>
 
-      {entries.length === 0 ? (
+      {visible.length === 0 ? (
         <div style="padding:48px;text-align:center;background:var(--bg2);border:1px solid var(--line);">
-          <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">No entries yet.</div>
-          <a href={`/orbiter/${collectionId}/new`} class="btn-gold">+ Create first entry</a>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">
+            {entries.length === 0 ? 'No entries yet.' : `No ${filter} entries.`}
+          </div>
+          {entries.length === 0 && <a href={`/orbiter/${collectionId}/new`} class="btn-gold">+ Create first entry</a>}
         </div>
       ) : (
-        <div>
-          {entries.map(entry => (
-            <a href={`/orbiter/${collectionId}/${entry.slug}`} class="entry-card">
+        <div class="panel">
+          {visible.map(entry => (
+            <a href={`/orbiter/${collectionId}/${entry.slug}`} class="entry-row">
               <div>
-                <div style="font-size:12px;color:var(--heading);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{entry.data?.title ?? entry.slug}</div>
-                <div style="font-size:10px;color:var(--muted);margin-top:2px;">/{collectionId}/{entry.slug}</div>
+                <div class="entry-title">{entry.data?.title ?? entry.slug}</div>
+                <div class="entry-coll">/{collectionId}/{entry.slug}</div>
               </div>
-              <div style="font-size:10px;color:var(--muted);">{new Date(entry.updated_at).toLocaleDateString('de-AT')}</div>
+              <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString('de-AT')}</div>
               <div class={`pill ${entry.status}`}>{entry.status}</div>
-              <div style="font-size:11px;color:var(--muted);text-align:center;">✎</div>
             </a>
           ))}
         </div>
