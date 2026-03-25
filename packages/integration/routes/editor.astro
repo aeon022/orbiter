@@ -639,15 +639,12 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
 
     function renderIframe() {
       const slugVal = document.getElementById('slug-preview').textContent || document.getElementById('slug-input').value;
-      const url     = SITE_URL + '/' + COLLECTION + '/' + slugVal;
+      const base    = SITE_URL || window.location.origin;
+      const url     = base + '/' + COLLECTION + '/' + slugVal;
       const iframe  = document.getElementById('preview-iframe');
       const label   = document.getElementById('preview-src-label');
-      if (SITE_URL) {
-        iframe.src = url;
-        label.textContent = url;
-      } else {
-        label.textContent = 'No site URL configured in Settings';
-      }
+      iframe.src          = url;
+      label.textContent   = url;
     }
 
     // Initial render
