@@ -1,17 +1,44 @@
 ---
-// /orbiter/settings — Placeholder for Phase 3
 import { podPath } from 'orbiter:db';
 import { openPod } from '@orbiter/core';
 
-const db       = openPod(podPath);
-const siteName = db.getMeta('site.name') ?? 'Orbiter';
-const siteUrl  = db.getMeta('site.url')  ?? '';
+// ── Handle POST (save) ────────────────────────────────────────────────
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const db   = openPod(podPath);
+
+  const fields = ['site.name', 'site.url', 'site.description', 'site.locale'];
+  for (const key of fields) {
+    const val = form.get(key)?.toString() ?? '';
+    if (val !== '') db.setMeta(key, val);
+  }
+
+  db.close();
+  return Astro.redirect('/orbiter/settings?saved=1');
+}
+
+// ── GET ───────────────────────────────────────────────────────────────
+const db      = openPod(podPath);
+const meta    = {
+  name:        db.getMeta('site.name')        ?? '',
+  url:         db.getMeta('site.url')         ?? '',
+  description: db.getMeta('site.description') ?? '',
+  locale:      db.getMeta('site.locale')      ?? '',
+};
+const formatVersion = db.getMeta('format_version') ?? '1';
+const allCollections = db.getCollections().map(c => ({
+  id: c.id, label: c.label, total: db.getEntries(c.id).length,
+}));
 db.close();
+
+const saved = Astro.url.searchParams.get('saved') === '1';
 ---
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Orbiter — Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -27,7 +54,9 @@ db.close();
     }
     html,body { background:var(--bg0); color:var(--text); font-family:var(--mono); font-size:13px; line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
     .layout { display:grid; grid-template-columns:210px 1fr; grid-template-rows:54px 1fr; min-height:100vh; }
-    .topbar { grid-column:1/-1; background:var(--bg2); border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 22px; }
+
+    /* Topbar */
+    .topbar { grid-column:1/-1; background:var(--bg2); border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 22px; gap:0; }
     .logo { font-family:var(--serif); font-weight:200; font-size:17px; color:var(--heading); display:flex; align-items:center; gap:9px; letter-spacing:0.1em; text-decoration:none; flex-shrink:0; }
     .logo-mark { width:22px; height:22px; border:1px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:9px; color:var(--gold); font-family:var(--mono); }
     .logo-kana { font-size:10px; color:var(--muted); font-family:var(--serif); font-weight:200; margin-left:2px; }
@@ -36,12 +65,12 @@ db.close();
     .breadcrumb a:hover { color:var(--heading); }
     .breadcrumb .sep { color:var(--line); }
     .breadcrumb .current { color:var(--text); }
-    .topbar-site { margin-left:24px; font-size:11px; color:var(--muted); }
     .topbar-right { margin-left:auto; display:flex; align-items:center; gap:14px; }
-    .topbar-pod { margin-left:auto; font-size:10px; color:var(--jade); display:flex; align-items:center; gap:6px; }
     .pod-status { font-size:10px; color:var(--jade); display:flex; align-items:center; gap:5px; }
     .pod-dot { width:5px; height:5px; border-radius:50%; background:var(--jade); animation:pulse 2.5s ease-in-out infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+    /* Sidebar */
     .sidebar { background:var(--bg1); border-right:1px solid var(--line); padding:20px 0; display:flex; flex-direction:column; }
     .nav-section { font-size:9px; letter-spacing:0.3em; text-transform:uppercase; color:var(--muted); padding:0 16px; margin:18px 0 5px; }
     .nav-section:first-child { margin-top:0; }
@@ -54,125 +83,150 @@ db.close();
     .sidebar-pod { margin-top:auto; padding:12px 16px; border-top:1px solid var(--line); font-size:10px; color:var(--muted); }
     .sidebar-pod-name { color:var(--text); font-size:11px; margin-bottom:2px; display:flex; align-items:center; gap:5px; }
     .sidebar-pod-name::before { content:"◆"; font-size:6px; color:var(--gold); }
-    .main { padding:32px 40px; background:var(--bg0); overflow-y:auto; position:relative; }
-    .kanji { position:absolute; right:32px; bottom:24px; font-family:var(--serif); font-size:130px; color:var(--heading); opacity:0.04; pointer-events:none; user-select:none; }
-    .main-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:28px; padding-bottom:18px; border-bottom:1px solid var(--line); }
+
+    /* Main */
+    .main { background:var(--bg0); overflow-y:auto; display:flex; flex-direction:column; }
+    .saved-banner { background:var(--jade-bg); border-bottom:1px solid rgba(30,107,80,0.2); padding:10px 40px; font-size:11px; color:var(--jade); display:flex; align-items:center; gap:6px; flex-shrink:0; }
+    .saved-banner::before { content:"✓"; font-size:12px; }
+    .main-inner { padding:32px 40px; max-width:680px; }
+    .main-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:32px; padding-bottom:18px; border-bottom:1px solid var(--line); }
     .main-title { font-family:var(--serif); font-weight:200; font-size:26px; color:var(--heading); letter-spacing:0.05em; line-height:1; }
-    .main-title-jp { font-size:10px; color:var(--muted); font-family:var(--serif); font-weight:200; letter-spacing:0.08em; margin-top:5px; }
-    .main-date { font-size:10px; color:var(--muted); text-align:right; line-height:1.9; }
-    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
-    .stat { background:var(--bg2); border:1px solid var(--line); padding:16px 18px; position:relative; overflow:hidden; transition:border-color 0.15s,box-shadow 0.15s; }
-    .stat:hover { border-color:var(--gold); box-shadow:var(--shadow); }
-    .stat-label { font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
-    .stat-value { font-size:30px; font-weight:200; font-family:var(--serif); color:var(--heading); line-height:1; margin-bottom:5px; }
-    .stat-sub { font-size:10px; color:var(--jade); }
-    .stat-sub.gold { color:var(--gold); }
-    .stat-deco { position:absolute; bottom:8px; right:12px; font-family:var(--serif); font-size:26px; opacity:0.06; color:var(--heading); pointer-events:none; }
-    .panel { background:var(--bg2); border:1px solid var(--line); }
-    .panel-header { padding:11px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
-    .panel-title { font-size:9px; letter-spacing:0.25em; text-transform:uppercase; color:var(--text); display:flex; align-items:center; gap:8px; }
-    .panel-title::before { content:"—"; color:var(--gold); }
-    .panel-action { font-size:10px; color:var(--accent); text-decoration:none; }
-    .panel-action:hover { color:var(--heading); }
-    .entry-row { display:grid; grid-template-columns:1fr 100px 72px; align-items:center; gap:12px; padding:11px 16px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; }
-    .entry-row:hover { background:var(--line2); }
-    .entry-row:last-child { border-bottom:none; }
-    .entry-title { font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .entry-coll { font-size:10px; color:var(--muted); margin-top:2px; }
-    .entry-date { font-size:10px; color:var(--muted); }
-    .pill { font-size:9px; padding:2px 7px; letter-spacing:0.06em; text-align:center; }
-    .pill.published { color:var(--jade); background:var(--jade-bg); }
-    .pill.draft { color:var(--gold); background:var(--gold-bg); }
-    .btn-gold { display:inline-block; padding:7px 16px; background:transparent; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:10px; letter-spacing:0.13em; text-transform:uppercase; cursor:pointer; text-decoration:none; transition:all 0.15s; }
-    .btn-gold:hover { background:var(--gold); color:var(--bg0); }
-    .btn-block { display:block; width:calc(100% - 32px); margin:12px 16px 14px; padding:9px; text-align:center; }
-    .new-btn { display:block; margin:12px 16px 14px; padding:9px; background:transparent; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:10px; letter-spacing:0.14em; cursor:pointer; text-transform:uppercase; text-align:center; text-decoration:none; transition:all 0.2s; }
-    .new-btn:hover { background:var(--gold); color:var(--bg0); }
-    .coll-item { display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; }
-    .coll-item:hover { background:var(--line2); }
-    .coll-item:last-child { border-bottom:none; }
-    .coll-name { font-size:12px; color:var(--text); }
-    .coll-counts { font-size:10px; color:var(--muted); text-align:right; line-height:1.8; }
-    .coll-counts span { color:var(--jade); }
-    .content-grid { display:grid; grid-template-columns:1fr 280px; gap:16px; }
-    .side-panels { display:flex; flex-direction:column; gap:12px; }
-    .field-input,.field-select,.field-textarea { width:100%; background:var(--bg0); border:1px solid var(--line); padding:6px 9px; color:var(--heading); font-family:var(--mono); font-size:11px; outline:none; appearance:none; transition:border-color 0.15s; }
-    .field-input:focus,.field-select:focus,.field-textarea:focus { border-color:var(--accent); }
-    .coming-soon { margin-top:20px; padding:16px 18px; background:var(--bg2); border:1px solid var(--line); border-left:2px solid var(--accent); font-size:11px; color:var(--muted); line-height:1.8; }
+
+    /* Settings groups */
+    .settings-group { background:var(--bg2); border:1px solid var(--line); margin-bottom:16px; }
+    .group-header { padding:10px 18px; border-bottom:1px solid var(--line); font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:8px; }
+    .group-header::before { content:"—"; color:var(--gold); }
+    .setting-row { display:grid; grid-template-columns:1fr 260px; align-items:center; gap:20px; padding:14px 18px; border-bottom:1px solid var(--line2); }
+    .setting-row:last-child { border-bottom:none; }
+    .setting-label { font-size:12px; color:var(--text); margin-bottom:2px; }
+    .setting-desc { font-size:10px; color:var(--muted); }
+    .field-input,.field-select { width:100%; background:var(--bg0); border:1px solid var(--line); padding:7px 10px; color:var(--heading); font-family:var(--mono); font-size:11px; outline:none; appearance:none; transition:border-color 0.15s; }
+    .field-input:focus,.field-select:focus { border-color:var(--accent); }
+    .field-input[readonly] { color:var(--muted); cursor:default; }
+
+    /* Save button */
+    .save-row { display:flex; justify-content:flex-end; margin-top:8px; }
+    .btn-save { padding:9px 24px; background:var(--gold); border:1px solid var(--gold); color:var(--bg0); font-family:var(--mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase; cursor:pointer; transition:all 0.15s; }
+    .btn-save:hover { background:#7a5520; border-color:#7a5520; }
+
+    /* Coming soon */
+    .coming-soon { margin-top:8px; padding:14px 18px; background:var(--bg2); border:1px solid var(--line); border-left:2px solid var(--accent); font-size:11px; color:var(--muted); line-height:1.8; }
     .coming-soon span { color:var(--accent); }
   </style>
 </head>
 <body>
   <div class="layout">
+
+    <!-- Topbar -->
     <div class="topbar">
-      <a href="/orbiter" class="logo"><div class="logo-mark">OR</div>Orbiter</a>
+      <a href="/orbiter" class="logo">
+        <div class="logo-mark">OR</div>
+        Orbiter<span class="logo-kana">オービター</span>
+      </a>
       <div class="breadcrumb">
         <a href="/orbiter">Dashboard</a>
         <span class="sep">/</span>
-        <span>Settings</span>
+        <span class="current">Settings</span>
+      </div>
+      <div class="topbar-right">
+        <div class="pod-status"><div class="pod-dot"></div>pod synced</div>
       </div>
     </div>
 
+    <!-- Sidebar -->
     <div class="sidebar">
       <div class="nav-section">Content</div>
       <a href="/orbiter" class="nav-item"><span class="nav-icon">◈</span>Dashboard</a>
+      {allCollections.map(c => (
+        <a href={`/orbiter/${c.id}`} class="nav-item">
+          <span class="nav-icon">▤</span>{c.label}
+          <span class="nav-badge">{c.total}</span>
+        </a>
+      ))}
       <div class="nav-section">Assets</div>
       <a href="/orbiter/media" class="nav-item"><span class="nav-icon">⊞</span>Media</a>
       <div class="nav-section">System</div>
       <a href="/orbiter/settings" class="nav-item active"><span class="nav-icon">◎</span>Settings</a>
       <div class="sidebar-pod">
         <div class="sidebar-pod-name">content.pod</div>
-        <div>v1 format</div>
+        <div>v{formatVersion} format</div>
       </div>
     </div>
 
+    <!-- Main -->
     <div class="main">
-      <div class="main-header">
-        <div class="main-title">Settings</div>
-        <div class="main-title-jp"> — Site configuration</div>
-      </div>
+      {saved && <div class="saved-banner">Settings saved successfully</div>}
 
-      <div class="settings-group">
-        <div class="group-header">Site</div>
-        <div class="setting-row">
-          <div>
-            <div class="setting-label">Site Name</div>
-            <div class="setting-desc">Displayed in the admin header</div>
-          </div>
-          <input class="field-input" value={siteName} />
+      <div class="main-inner">
+        <div class="main-header">
+          <div class="main-title">Settings</div>
         </div>
-        <div class="setting-row">
-          <div>
-            <div class="setting-label">Site URL</div>
-            <div class="setting-desc">Used for preview links</div>
-          </div>
-          <input class="field-input" value={siteUrl} />
-        </div>
-      </div>
 
-      <div class="settings-group">
-        <div class="group-header">Pod</div>
-        <div class="setting-row">
-          <div>
-            <div class="setting-label">Pod Path</div>
-            <div class="setting-desc">Location of the .pod file</div>
+        <form method="POST">
+          <!-- Site -->
+          <div class="settings-group">
+            <div class="group-header">Site</div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">Site Name</div>
+                <div class="setting-desc">Displayed in the admin header</div>
+              </div>
+              <input class="field-input" name="site.name" value={meta.name} placeholder="My Website" />
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">Site URL</div>
+                <div class="setting-desc">Used for preview links</div>
+              </div>
+              <input class="field-input" name="site.url" value={meta.url} placeholder="https://example.com" />
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">Description</div>
+                <div class="setting-desc">Short site description</div>
+              </div>
+              <input class="field-input" name="site.description" value={meta.description} placeholder="A short description" />
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">Locale</div>
+                <div class="setting-desc">Default language code</div>
+              </div>
+              <input class="field-input" name="site.locale" value={meta.locale} placeholder="de" />
+            </div>
           </div>
-          <input class="field-input" value="./demo.pod" readonly style="color: #3a3a50;" />
-        </div>
-        <div class="setting-row">
-          <div>
-            <div class="setting-label">Format Version</div>
-            <div class="setting-desc">Schema version</div>
-          </div>
-          <input class="field-input" value="v1" readonly style="color: #3a3a50;" />
-        </div>
-      </div>
 
-      <div class="coming-soon">
-        <span>◆ Phase 3 — Warp</span><br/>
-        Deploy webhooks, build triggers, and i18n config coming next.
+          <div class="save-row">
+            <button type="submit" class="btn-save">Save Settings</button>
+          </div>
+        </form>
+
+        <!-- Pod info (readonly) -->
+        <div class="settings-group" style="margin-top:24px;">
+          <div class="group-header">Pod</div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Pod Path</div>
+              <div class="setting-desc">Location of the .pod file</div>
+            </div>
+            <input class="field-input" value={podPath} readonly />
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Format Version</div>
+              <div class="setting-desc">Schema version</div>
+            </div>
+            <input class="field-input" value={`v${formatVersion}`} readonly />
+          </div>
+        </div>
+
+        <div class="coming-soon">
+          <span>◆ Phase 3 — Warp</span><br/>
+          Deploy webhooks, build triggers, and i18n config coming next.
+        </div>
       </div>
     </div>
+
   </div>
 </body>
 </html>

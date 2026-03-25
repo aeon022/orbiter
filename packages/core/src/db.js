@@ -111,6 +111,10 @@ export class OrbiterDB {
     return row ? row.value : null;
   }
 
+  setMeta(key, value) {
+    this.db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)').run(key, String(value));
+  }
+
   close() {
     this.db.close();
   }
