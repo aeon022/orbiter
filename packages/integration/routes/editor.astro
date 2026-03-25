@@ -9,49 +9,64 @@ const sqliteNow = () => new Date().toISOString().replace('T', ' ').replace(/\.\d
 
 // ── Handle POST (save) ───────────────────────────────────────────────
 if (Astro.request.method === 'POST') {
+  const isAutosave = Astro.request.headers.get('X-Autosave') === '1';
   const form       = await Astro.request.formData();
   const title      = form.get('title')?.toString() ?? '';
   const body       = form.get('body')?.toString() ?? '';
-  const newSlug    = form.get('slug')?.toString().trim().toLowerCase().replace(/\s+/g, '-') ?? slug;
   const status     = form.get('status')?.toString() ?? 'draft';
   const isNew      = slug === 'new';
 
+  // Autosave keeps current slug; manual save allows slug rename
+  const newSlug = isAutosave
+    ? (form.get('current-slug')?.toString() || slug)
+    : (form.get('slug')?.toString().trim().toLowerCase().replace(/\s+/g, '-') || slug);
+
   const db  = openPod(podPath);
   const col = db.getCollection(collectionId);
-  if (!col) return Astro.redirect('/orbiter');
+  if (!col) return new Response(JSON.stringify({ ok: false }), { status: 404 });
 
   const data = JSON.stringify({ title, body });
   const now  = sqliteNow();
+  let   savedSlug = newSlug;
 
   if (isNew) {
+    // Generate slug from title for new entries
+    const autoSlug = isAutosave
+      ? title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 60) || 'untitled'
+      : newSlug;
+    savedSlug = autoSlug;
+
     const id = crypto.randomUUID();
     db.db.prepare(`
-      INSERT INTO _entries (id, collection_id, slug, status, data, created_at, updated_at)
+      INSERT OR IGNORE INTO _entries (id, collection_id, slug, status, data, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(id, collectionId, newSlug, status, data, now, now);
+    `).run(id, collectionId, autoSlug, status, data, now, now);
 
-    // Version snapshot
-    db.db.prepare(`
-      INSERT INTO _versions (id, entry_id, data, created_at)
-      VALUES (?, ?, ?, ?)
-    `).run(crypto.randomUUID(), id, data, now);
+    if (!isAutosave) {
+      db.db.prepare(`INSERT INTO _versions (id, entry_id, data, created_at) VALUES (?, ?, ?, ?)`)
+        .run(crypto.randomUUID(), id, data, now);
+    }
   } else {
     const existing = db.getEntry(collectionId, slug);
     if (existing) {
-      db.db.prepare(`
-        UPDATE _entries SET slug=?, status=?, data=?, updated_at=? WHERE id=?
-      `).run(newSlug, status, data, now, existing.id);
+      db.db.prepare(`UPDATE _entries SET slug=?, status=?, data=?, updated_at=? WHERE id=?`)
+        .run(newSlug, status, data, now, existing.id);
 
-      // Version snapshot
-      db.db.prepare(`
-        INSERT INTO _versions (id, entry_id, data, created_at)
-        VALUES (?, ?, ?, ?)
-      `).run(crypto.randomUUID(), existing.id, data, now);
+      if (!isAutosave) {
+        db.db.prepare(`INSERT INTO _versions (id, entry_id, data, created_at) VALUES (?, ?, ?, ?)`)
+          .run(crypto.randomUUID(), existing.id, data, now);
+      }
     }
   }
 
   db.close();
-  return Astro.redirect(`/orbiter/${collectionId}/${newSlug}?saved=1`);
+
+  if (isAutosave) {
+    return new Response(JSON.stringify({ ok: true, slug: savedSlug }), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  return Astro.redirect(`/orbiter/${collectionId}/${savedSlug}?saved=1`);
 }
 
 // ── GET ──────────────────────────────────────────────────────────────
@@ -242,6 +257,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
     <div class="editor-shell">
       <form method="POST" id="editor-form" style="display:contents;">
         <input type="hidden" name="status" id="status-input" value={entry?.status ?? 'draft'} />
+        <input type="hidden" name="current-slug" id="current-slug" value={isNew ? '' : slug} />
 
         <div class="editor-main">
           {saved && <div class="saved-banner">Entry saved successfully</div>}
@@ -257,7 +273,10 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
             <div class="tool-sep"></div>
             <button type="button" class="tool-btn" onmousedown="event.preventDefault()" onclick="insertMd('> ')">❝</button>
             <button type="button" class="tool-btn" onmousedown="event.preventDefault()" onclick="insertMd('`')"><code style="font-size:9px;">&lt;/&gt;</code></button>
-            <div style="margin-left:auto; font-size:10px; color:var(--muted);" id="wc">— words</div>
+            <div style="margin-left:auto; display:flex; align-items:center; gap:14px;">
+              <div style="font-size:10px; color:var(--muted);" id="autosave-indicator"></div>
+              <div style="font-size:10px; color:var(--muted);" id="wc">— words</div>
+            </div>
           </div>
 
           <!-- Writing area -->
@@ -433,6 +452,64 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
         document.getElementById('editor-form').submit();
       }
     });
+
+    // ── Autosave ─────────────────────────────────────────────────────
+    const indicator     = document.getElementById('autosave-indicator');
+    const currentSlugEl = document.getElementById('current-slug');
+    let autosaveTimer   = null;
+    let currentPath     = window.location.pathname;
+
+    window.scheduleAutosave = function() {
+      clearTimeout(autosaveTimer);
+      setIndicator('pending');
+      autosaveTimer = setTimeout(doAutosave, 2000);
+    }
+
+    function setIndicator(state) {
+      const states = {
+        pending: { text: '●  unsaved',  color: 'var(--gold)' },
+        saving:  { text: '↑  saving…',  color: 'var(--muted)' },
+        saved:   { text: '✓  autosaved', color: 'var(--jade)' },
+        error:   { text: '✕  save failed', color: 'var(--crimson, #8b2635)' },
+      };
+      const s = states[state] ?? {};
+      indicator.textContent = s.text ?? '';
+      indicator.style.color = s.color ?? '';
+    }
+
+    async function doAutosave() {
+      const form = document.getElementById('editor-form');
+      const data = new FormData(form);
+      setIndicator('saving');
+      try {
+        const res = await fetch(currentPath, {
+          method: 'POST',
+          headers: { 'X-Autosave': '1' },
+          body: data,
+        });
+        const json = await res.json();
+        if (json.ok) {
+          setIndicator('saved');
+          // Update URL and current-slug if entry was just created
+          if (json.slug && currentPath.endsWith('/new')) {
+            const newPath = currentPath.replace(/\/new$/, '/' + json.slug);
+            history.replaceState(null, '', newPath);
+            currentPath = newPath;
+            currentSlugEl.value = json.slug;
+            document.getElementById('slug-input').value = json.slug;
+            updateSlugPreview(json.slug);
+          }
+        } else {
+          setIndicator('error');
+        }
+      } catch {
+        setIndicator('error');
+      }
+    }
+
+    // Hook autosave onto title and body inputs
+    document.getElementById('title-input').addEventListener('input', scheduleAutosave);
+    document.getElementById('body-input').addEventListener('input', scheduleAutosave);
   </script>
 </body>
 </html>
