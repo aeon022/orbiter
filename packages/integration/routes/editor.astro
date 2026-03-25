@@ -432,7 +432,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
 
   </div>
 
-  <script>
+  <script define:vars={{ siteUrl, collectionId }}>
     // Auto-resize textareas on load
     document.querySelectorAll('textarea').forEach(t => {
       t.style.height = 'auto';
@@ -591,9 +591,10 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
     document.getElementById('body-input').addEventListener('input', () => { scheduleAutosave(); updatePreview(); });
 
     // ── Live Preview ─────────────────────────────────────────────────
-    const SITE_URL    = {JSON.stringify(siteUrl)};
-    const COLLECTION  = {JSON.stringify(collectionId)};
-    let   viewMode    = 'edit';
+    // siteUrl + collectionId injected via define:vars
+    const SITE_URL   = (siteUrl || '').replace(/\/$/, '');
+    const COLLECTION = collectionId;
+    let   viewMode   = 'edit';
     let   previewSrc  = 'md';
     const shell       = document.querySelector('.editor-shell');
 
