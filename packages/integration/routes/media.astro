@@ -20,9 +20,10 @@ if (Astro.request.method === 'POST') {
   if (file && file.size > 0) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const alt    = form.get('alt')?.toString() ?? '';
+    const now = new Date().toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, '');
     db.db.prepare(
-      'INSERT INTO _media (id, filename, mime_type, size, data, alt, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"))'
-    ).run(crypto.randomUUID(), file.name, file.type || 'application/octet-stream', file.size, buffer, alt);
+      'INSERT INTO _media (id, filename, mime_type, size, data, alt, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).run(crypto.randomUUID(), file.name, file.type || 'application/octet-stream', file.size, buffer, alt, now);
   }
 
   db.close();
