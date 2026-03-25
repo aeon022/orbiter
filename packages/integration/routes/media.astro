@@ -109,13 +109,12 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
     .main-title { font-family:var(--serif); font-weight:200; font-size:26px; color:var(--heading); letter-spacing:0.05em; line-height:1; }
 
     /* Upload area */
-    .upload-area { background:var(--bg2); border:1px dashed var(--line); padding:32px; text-align:center; margin-bottom:28px; transition:border-color 0.15s,background 0.15s; cursor:pointer; position:relative; }
+    .upload-area { background:var(--bg2); border:1px dashed var(--line); padding:32px; text-align:center; margin-bottom:0; transition:border-color 0.15s,background 0.15s; cursor:pointer; display:block; }
     .upload-area:hover,.upload-area.drag-over { border-color:var(--gold); background:var(--gold-bg); }
-    .upload-area input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
     .upload-icon { font-size:22px; color:var(--muted); margin-bottom:8px; }
     .upload-label { font-size:12px; color:var(--mid); margin-bottom:4px; }
     .upload-sub { font-size:10px; color:var(--muted); }
-    .upload-form-row { display:flex; gap:8px; margin-top:16px; align-items:center; justify-content:center; }
+    .upload-form-row { display:flex; gap:8px; margin-top:12px; align-items:center; justify-content:center; }
     .field-input { background:var(--bg0); border:1px solid var(--line); padding:7px 10px; color:var(--heading); font-family:var(--mono); font-size:11px; outline:none; transition:border-color 0.15s; }
     .field-input:focus { border-color:var(--accent); }
     .btn-upload { padding:8px 20px; background:var(--gold); border:1px solid var(--gold); color:var(--bg0); font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
@@ -195,19 +194,20 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
         <!-- Upload form -->
         <form method="POST" enctype="multipart/form-data" id="upload-form">
           <input type="hidden" name="action" value="upload" />
-          <div class="upload-area" id="drop-zone">
-            <input type="file" name="file" id="file-input" accept="image/*,video/*,application/pdf" />
+          <input type="file" name="file" id="file-input" accept="image/*,video/*,application/pdf" style="display:none" />
+          <label for="file-input" class="upload-area" id="drop-zone">
             <div class="upload-icon">↑</div>
             <div class="upload-label" id="upload-label">Drop file here or click to browse</div>
             <div class="upload-sub">Images, PDFs, Videos — stored as BLOB in .pod</div>
-            <div class="upload-form-row">
-              <input class="field-input" name="alt" placeholder="Alt text (optional)" style="width:240px;" />
-              <button type="submit" class="btn-upload">Upload</button>
-            </div>
+          </label>
+          <div class="upload-form-row">
+            <input class="field-input" name="alt" placeholder="Alt text (optional)" style="width:240px;" />
+            <button type="submit" class="btn-upload">Upload</button>
           </div>
         </form>
 
         <!-- Grid -->
+        <div style="margin-top:28px;">
         {media.length === 0 ? (
           <div class="empty">
             <div class="empty-label">No media uploaded yet.</div>
@@ -239,6 +239,7 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
             ))}
           </div>
         )}
+        </div>
       </div>
     </div>
 
