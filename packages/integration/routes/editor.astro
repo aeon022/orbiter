@@ -373,6 +373,10 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
             <button type="button" class="src-btn active" id="src-md"   onclick="setPreviewSrc('md')">Markdown</button>
             <button type="button" class="src-btn"        id="src-site" onclick="setPreviewSrc('site')">Site</button>
             <span id="preview-src-label"></span>
+            <button type="button" id="back-to-editor-btn" onclick="setViewMode('edit')"
+              style="display:none; margin-left:auto; align-items:center; gap:5px; height:20px; padding:0 10px; border:1px solid var(--line); background:transparent; color:var(--mid); font-family:var(--mono); font-size:9px; letter-spacing:0.06em; cursor:pointer;">
+              ← Editor
+            </button>
           </div>
           <div class="preview-scroll" id="preview-md-pane">
             <div class="md-preview-title" id="preview-title"></div>
@@ -605,6 +609,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
       ['edit','split','preview'].forEach(m => {
         document.getElementById('vbtn-' + m).classList.toggle('active', m === mode);
       });
+      document.getElementById('back-to-editor-btn').style.display = mode === 'preview' ? 'flex' : 'none';
       if (mode !== 'edit') updatePreview();
     }
 
@@ -639,12 +644,11 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
 
     function renderIframe() {
       const slugVal = document.getElementById('slug-preview').textContent || document.getElementById('slug-input').value;
-      const base    = SITE_URL || window.location.origin;
-      const url     = base + '/' + COLLECTION + '/' + slugVal;
+      const url     = window.location.origin + '/' + COLLECTION + '/' + slugVal;
       const iframe  = document.getElementById('preview-iframe');
       const label   = document.getElementById('preview-src-label');
-      iframe.src          = url;
-      label.textContent   = url;
+      iframe.src        = url;
+      label.textContent = url;
     }
 
     // Initial render
