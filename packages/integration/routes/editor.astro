@@ -263,6 +263,18 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
 
     /* iframe preview */
     .preview-iframe { flex:1; border:none; width:100%; background:var(--bg2); }
+
+    /* Block picker */
+    .block-picker { position:fixed; z-index:1000; background:var(--bg2); border:1px solid var(--line); box-shadow:0 4px 16px rgba(0,0,0,0.12); width:220px; border-radius:2px; overflow:hidden; display:none; }
+    .block-picker.open { display:block; }
+    .block-picker-search { padding:8px 12px; border-bottom:1px solid var(--line); font-family:var(--mono); font-size:11px; color:var(--muted); }
+    .block-picker-list { max-height:240px; overflow-y:auto; }
+    .block-picker-item { display:flex; align-items:center; gap:10px; padding:8px 12px; cursor:pointer; transition:background 0.08s; }
+    .block-picker-item:hover, .block-picker-item.active { background:var(--accent-bg); }
+    .block-picker-item .bp-icon { width:24px; height:24px; display:flex; align-items:center; justify-content:center; background:var(--bg3); border:1px solid var(--line); font-size:10px; font-family:var(--mono); color:var(--mid); flex-shrink:0; }
+    .block-picker-item .bp-label { font-size:11px; color:var(--text); }
+    .block-picker-item .bp-hint { font-size:9px; color:var(--muted); margin-left:auto; }
+    .block-picker-empty { padding:12px; font-size:11px; color:var(--muted); text-align:center; }
   </style>
 </head>
 <body>
@@ -653,6 +665,181 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
 
     // Initial render
     updatePreview();
+
+    // ── Block Picker ──────────────────────────────────────────────────
+    const BLOCKS = [
+      { label: 'Heading 1',      icon: 'H1', hint: '#',    prefix: '# '    },
+      { label: 'Heading 2',      icon: 'H2', hint: '##',   prefix: '## '   },
+      { label: 'Heading 3',      icon: 'H3', hint: '###',  prefix: '### '  },
+      { label: 'Quote',          icon: '❝',  hint: '>',    prefix: '> '    },
+      { label: 'Code Block',     icon: '{}', hint: '```',  prefix: '```\n', suffix: '\n```' },
+      { label: 'Bullet List',    icon: '•',  hint: '-',    prefix: '- '    },
+      { label: 'Numbered List',  icon: '1.', hint: '1.',   prefix: '1. '   },
+      { label: 'Divider',        icon: '—',  hint: '---',  prefix: '---\n' },
+    ];
+
+    let pickerOpen   = false;
+    let pickerIdx    = 0;
+    let pickerQuery  = '';
+    let pickerStart  = -1; // cursor pos where '/' was typed
+
+    const picker    = document.createElement('div');
+    picker.className = 'block-picker';
+    picker.innerHTML = `
+      <div class="block-picker-search">Blocks</div>
+      <div class="block-picker-list" id="bp-list"></div>
+    `;
+    document.body.appendChild(picker);
+
+    function filteredBlocks() {
+      if (!pickerQuery) return BLOCKS;
+      const q = pickerQuery.toLowerCase();
+      return BLOCKS.filter(b => b.label.toLowerCase().includes(q) || b.hint.includes(q));
+    }
+
+    function renderPicker() {
+      const list = document.getElementById('bp-list');
+      const items = filteredBlocks();
+      if (!items.length) {
+        list.innerHTML = '<div class="block-picker-empty">No blocks</div>';
+        return;
+      }
+      list.innerHTML = items.map((b, i) => `
+        <div class="block-picker-item${i === pickerIdx ? ' active' : ''}" data-idx="${i}">
+          <div class="bp-icon">${b.icon}</div>
+          <div class="bp-label">${b.label}</div>
+          <div class="bp-hint">${b.hint}</div>
+        </div>
+      `).join('');
+      list.querySelectorAll('.block-picker-item').forEach(el => {
+        el.addEventListener('mousedown', e => {
+          e.preventDefault();
+          insertBlock(parseInt(el.dataset.idx));
+        });
+      });
+    }
+
+    function openPicker(pos) {
+      pickerStart = pos;
+      pickerQuery = '';
+      pickerIdx   = 0;
+      pickerOpen  = true;
+      positionPicker();
+      renderPicker();
+      picker.classList.add('open');
+    }
+
+    function closePicker() {
+      pickerOpen = false;
+      picker.classList.remove('open');
+    }
+
+    function positionPicker() {
+      const ta      = document.getElementById('body-input');
+      const rect    = ta.getBoundingClientRect();
+      const lineH   = parseInt(getComputedStyle(ta).lineHeight) || 20;
+      const text    = ta.value.substring(0, pickerStart);
+      const lines   = text.split('\n').length;
+      const scrolled = ta.scrollTop;
+      const top     = rect.top + (lines - 1) * lineH - scrolled + lineH + 4;
+      const left    = rect.left + 16;
+      picker.style.top  = Math.min(top, window.innerHeight - 260) + 'px';
+      picker.style.left = left + 'px';
+    }
+
+    function insertBlock(relIdx) {
+      const items = filteredBlocks();
+      const block = items[relIdx];
+      if (!block) return closePicker();
+
+      const ta    = document.getElementById('body-input');
+      const val   = ta.value;
+      const cur   = ta.selectionStart;
+
+      // Replace from pickerStart (the '/') to current cursor
+      const before = val.substring(0, pickerStart);
+      const after  = val.substring(cur);
+
+      if (block.suffix) {
+        ta.value = before + block.prefix + block.suffix + after;
+        const pos = pickerStart + block.prefix.length;
+        ta.setSelectionRange(pos, pos);
+      } else {
+        ta.value = before + block.prefix + after;
+        const pos = pickerStart + block.prefix.length;
+        ta.setSelectionRange(pos, pos);
+      }
+
+      autoResize(ta);
+      scheduleAutosave();
+      updatePreview();
+      closePicker();
+      ta.focus();
+    }
+
+    document.getElementById('body-input').addEventListener('keydown', e => {
+      if (pickerOpen) {
+        const items = filteredBlocks();
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          pickerIdx = (pickerIdx + 1) % Math.max(items.length, 1);
+          renderPicker();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          pickerIdx = (pickerIdx - 1 + Math.max(items.length, 1)) % Math.max(items.length, 1);
+          renderPicker();
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          insertBlock(pickerIdx);
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          closePicker();
+        } else if (e.key === 'Backspace') {
+          if (pickerQuery.length > 0) {
+            pickerQuery = pickerQuery.slice(0, -1);
+            pickerIdx = 0;
+            renderPicker();
+          } else {
+            closePicker();
+          }
+        }
+        return;
+      }
+    });
+
+    document.getElementById('body-input').addEventListener('input', e => {
+      const ta  = document.getElementById('body-input');
+      const cur = ta.selectionStart;
+      const val = ta.value;
+
+      if (pickerOpen) {
+        // Update query from text typed after the '/'
+        const typed = val.substring(pickerStart + 1, cur);
+        if (typed.includes('\n') || typed.includes(' ')) {
+          closePicker();
+        } else {
+          pickerQuery = typed;
+          pickerIdx   = 0;
+          renderPicker();
+        }
+        return;
+      }
+
+      // Detect '/' typed at start of line
+      const char = val[cur - 1];
+      if (char === '/') {
+        const before = val.substring(0, cur - 1);
+        const isLineStart = before === '' || before.endsWith('\n');
+        if (isLineStart) {
+          openPicker(cur - 1);
+        }
+      }
+    });
+
+    // Close on outside click
+    document.addEventListener('mousedown', e => {
+      if (pickerOpen && !picker.contains(e.target)) closePicker();
+    });
   </script>
 </body>
 </html>
