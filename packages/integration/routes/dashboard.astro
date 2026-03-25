@@ -33,7 +33,8 @@ const recent = collections
 // Media count
 const mediaCount = db.db.prepare('SELECT COUNT(*) as n FROM _media').get().n;
 
-const hasWebhook = !!(db.getMeta('build.webhook_url'));
+const hasWebhook   = !!(db.getMeta('build.webhook_url'));
+const adminLocale  = db.getMeta('site.locale') ?? 'de-AT';
 
 db.close();
 ---
@@ -187,8 +188,8 @@ db.close();
             </div>
           )}
           <div class="main-date">
-            <div>{new Date().toLocaleDateString('de-AT', { weekday: 'long' })}</div>
-            <div>{new Date().toLocaleDateString('de-AT')}</div>
+            <div>{new Date().toLocaleDateString(adminLocale, { weekday: 'long' })}</div>
+            <div>{new Date().toLocaleDateString(adminLocale)}</div>
           </div>
         </div>
       </div>
@@ -235,7 +236,7 @@ db.close();
                 <div class="entry-title">{entry.data?.title ?? entry.slug}</div>
                 <div class="entry-coll">{entry.collectionLabel}</div>
               </div>
-              <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString('de-AT')}</div>
+              <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString(adminLocale)}</div>
               <div class={`pill ${entry.status}`}>{entry.status}</div>
             </a>
           ))}

@@ -15,6 +15,7 @@ const drafts         = entries.filter(e => e.status === 'draft');
 const allCollections = db.getCollections().map(c => ({
   id: c.id, label: c.label, total: db.getEntries(c.id).length,
 }));
+const adminLocale = db.getMeta('site.locale') ?? 'de-AT';
 db.close();
 
 const filter  = Astro.url.searchParams.get('filter') ?? 'all';
@@ -192,7 +193,7 @@ const visible = filter === 'published' ? published
                 <div class="entry-title">{entry.data?.title ?? entry.slug}</div>
                 <div class="entry-coll">/{collectionId}/{entry.slug}</div>
               </div>
-              <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString('de-AT')}</div>
+              <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString(adminLocale)}</div>
               <div class={`pill ${entry.status}`}>{entry.status}</div>
             </a>
           ))}

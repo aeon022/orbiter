@@ -84,6 +84,7 @@ const versions = entry
 const allCollections = db.getCollections().map(c => ({
   id: c.id, label: c.label, total: db.getEntries(c.id).length,
 }));
+const adminLocale = db.getMeta('site.locale') ?? 'de-AT';
 db.close();
 
 const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? slug);
@@ -334,7 +335,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
             {!isNew && entry && (
               <div class="meta-field">
                 <div class="field-label">Updated</div>
-                <input class="field-input" value={new Date(entry.updated_at).toLocaleDateString('de-AT')} readonly style="color:var(--muted);" />
+                <input class="field-input" value={new Date(entry.updated_at).toLocaleDateString(adminLocale)} readonly style="color:var(--muted);" />
               </div>
             )}
           </div>
@@ -346,7 +347,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
                 <div class="version-row">
                   <div class={`v-dot ${i === 0 ? 'cur' : ''}`}></div>
                   <div class="v-hash">{v.id.slice(0, 7)}</div>
-                  <div class="v-time">{new Date(v.created_at).toLocaleDateString('de-AT')}</div>
+                  <div class="v-time">{new Date(v.created_at).toLocaleDateString(adminLocale)}</div>
                 </div>
               ))}
             </div>

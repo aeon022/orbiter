@@ -38,6 +38,7 @@ const media = db.db.prepare(
 const allCollections = db.getCollections().map(c => ({
   id: c.id, label: c.label, total: db.getEntries(c.id).length,
 }));
+const adminLocale = db.getMeta('site.locale') ?? 'de-AT';
 db.close();
 
 const uploaded = Astro.url.searchParams.get('uploaded') === '1';
@@ -227,7 +228,7 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
                   <div class="media-name" title={m.filename}>{m.filename}</div>
                   <div class="media-meta">
                     <span>{fmtSize(m.size)}</span>
-                    <span>{new Date(m.created_at).toLocaleDateString('de-AT')}</span>
+                    <span>{new Date(m.created_at).toLocaleDateString(adminLocale)}</span>
                   </div>
                 </div>
                 <div class="media-delete">

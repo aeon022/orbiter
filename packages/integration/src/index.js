@@ -95,10 +95,21 @@ export default function orbiter(options = {}) {
                     for (const col of collections) {
                       snapshot[col.id] = db.getEntries(col.id, { status: 'published' });
                     }
+
+                    const defaultLocale = db.getMeta('site.locale') ?? 'en';
+                    const rawLocales    = db.getMeta('site.locales') ?? defaultLocale;
+                    const locales       = rawLocales.split(',').map(l => l.trim()).filter(Boolean);
+
                     db.close();
 
                     return `
 export const collections = ${JSON.stringify(snapshot, null, 2)};
+
+/** Default locale (e.g. "de") */
+export const locale = ${JSON.stringify(defaultLocale)};
+
+/** All configured locales (e.g. ["de", "en"]) */
+export const locales = ${JSON.stringify(locales)};
 
 export function getCollection(name) {
   return Promise.resolve(collections[name] ?? []);

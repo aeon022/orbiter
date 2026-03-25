@@ -7,7 +7,7 @@ if (Astro.request.method === 'POST') {
   const form = await Astro.request.formData();
   const db   = openPod(podPath);
 
-  const fields = ['site.name', 'site.url', 'site.description', 'site.locale', 'build.webhook_url'];
+  const fields = ['site.name', 'site.url', 'site.description', 'site.locale', 'site.locales', 'build.webhook_url'];
   for (const key of fields) {
     const val = form.get(key)?.toString() ?? '';
     db.setMeta(key, val);
@@ -24,6 +24,7 @@ const meta    = {
   url:         db.getMeta('site.url')         ?? '',
   description: db.getMeta('site.description') ?? '',
   locale:      db.getMeta('site.locale')      ?? '',
+  locales:     db.getMeta('site.locales')     ?? '',
   webhookUrl:  db.getMeta('build.webhook_url') ?? '',
 };
 const formatVersion = db.getMeta('format_version') ?? '1';
@@ -191,10 +192,17 @@ const saved = Astro.url.searchParams.get('saved') === '1';
             </div>
             <div class="setting-row">
               <div>
-                <div class="setting-label">Locale</div>
-                <div class="setting-desc">Default language code</div>
+                <div class="setting-label">Default Locale</div>
+                <div class="setting-desc">Primary language code (e.g. de, en)</div>
               </div>
               <input class="field-input" name="site.locale" value={meta.locale} placeholder="de" />
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">All Locales</div>
+                <div class="setting-desc">Comma-separated — exported via orbiter:collections</div>
+              </div>
+              <input class="field-input" name="site.locales" value={meta.locales} placeholder="de,en" />
             </div>
           </div>
 
