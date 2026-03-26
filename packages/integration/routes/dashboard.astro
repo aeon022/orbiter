@@ -335,7 +335,7 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
                     <div class="entry-coll">{entry.collectionLabel}</div>
                   </div>
                   <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString(adminLocale)}</div>
-                  <div class={`pill ${entry.status}`}>{entry.status === 'published' ? 'veröffentlicht' : 'entwurf'}</div>
+                  <div class={`pill ${entry.status}`}>{entry.status === 'published' ? '● live' : '○ entwurf'}</div>
                 </a>
               ))}
             </div>

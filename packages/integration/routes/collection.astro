@@ -154,7 +154,7 @@ const visible = filter === 'published' ? published
     .entry-slug { font-size:9px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:0.02em; }
     .entry-subtitle { font-size:9px; color:var(--accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:0.02em; }
     .entry-date { font-size:11px; color:var(--mid); }
-    .status-toggle { font-size:9px; letter-spacing:0.06em; background:none; border:1px solid transparent; padding:3px 8px; cursor:pointer; font-family:var(--mono); transition:all 0.15s; }
+    .status-toggle { font-size:9px; letter-spacing:0.04em; background:none; border:1px solid transparent; padding:2px 7px; cursor:pointer; font-family:var(--mono); transition:all 0.15s; white-space:nowrap; }
     .status-toggle.published { color:var(--jade); border-color:rgba(30,107,80,0.2); background:var(--jade-bg); }
     .status-toggle.draft { color:var(--gold); border-color:rgba(154,110,48,0.2); background:var(--gold-bg); }
     .status-toggle:hover { opacity:0.7; }
@@ -274,7 +274,7 @@ const visible = filter === 'published' ? published
                 <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString(adminLocale)}</div>
               </div>
               <div class="entry-cell" onclick="event.preventDefault();toggleStatus(this,'{entry.slug}')">
-                <button class={`status-toggle ${entry.status}`} data-slug={entry.slug}>{entry.status === 'published' ? 'veröffentlicht' : 'entwurf'}</button>
+                <button class={`status-toggle ${entry.status}`} data-slug={entry.slug}>{entry.status === 'published' ? '● live' : '○ entwurf'}</button>
               </div>
             </a>
           ))}
@@ -308,7 +308,7 @@ const visible = filter === 'published' ? published
         const json = await res.json();
         if (json.ok) {
           const newStatus = json.status;
-          btn.textContent = newStatus;
+          btn.textContent = newStatus === 'published' ? '● live' : '○ entwurf';
           btn.className   = 'status-toggle ' + newStatus;
           const row = cell.closest('.entry-row');
           row.classList.remove('published', 'draft');
