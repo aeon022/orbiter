@@ -81,7 +81,7 @@
 
     palInput = document.createElement('input');
     palInput.type = 'text';
-    palInput.placeholder = 'Search entries, navigate…';
+    palInput.placeholder = 'Suchen, navigieren…';
     palInput.style.cssText = [
       'flex:1','border:none','outline:none','background:transparent',
       'padding:14px 0','font-size:13px',
@@ -213,7 +213,7 @@
     if (navItems.length) {
       var navSec = document.createElement('div');
       navSec.style.cssText = 'font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted,#a09890);padding:8px 16px 4px;';
-      navSec.textContent = 'Navigate';
+      navSec.textContent = 'Navigation';
       palResults.appendChild(navSec);
       navItems.forEach(function (item) { palResults.appendChild(row(item)); });
     }
@@ -221,7 +221,7 @@
     if (entryItems.length) {
       var entrySec = document.createElement('div');
       entrySec.style.cssText = 'font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted,#a09890);padding:8px 16px 4px;border-top:1px solid var(--line,#e0dbd0);';
-      entrySec.textContent = 'Entries';
+      entrySec.textContent = 'Einträge';
       palResults.appendChild(entrySec);
       entryItems.forEach(function (item) { palResults.appendChild(row(item)); });
     }
@@ -229,7 +229,7 @@
     if (!navItems.length && !entryItems.length) {
       var empty = document.createElement('div');
       empty.style.cssText = 'padding:20px 16px;font-size:11px;color:var(--muted,#a09890);text-align:center;';
-      empty.textContent = 'No results';
+      empty.textContent = 'Keine Ergebnisse';
       palResults.appendChild(empty);
     }
   }

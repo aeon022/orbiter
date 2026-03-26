@@ -205,7 +205,7 @@ const visible = filter === 'published' ? published
       <a href="/orbiter/settings" class="nav-item"><span class="nav-icon">◎</span>Settings</a>
       <div class="sidebar-pod">
         <div class="sidebar-pod-name">content.pod</div>
-        <div>{entries.length} entries</div>
+        <div>{entries.length} Einträge</div>
       </div>
     </div>
 
@@ -219,27 +219,27 @@ const visible = filter === 'published' ? published
           <div class="coll-meta">
             <div class="coll-meta-item">
               <div class="coll-meta-dot jade"></div>
-              {published.length} published
+              {published.length} veröffentlicht
             </div>
             <div class="coll-meta-item">
               <div class="coll-meta-dot gold"></div>
-              {drafts.length} draft{drafts.length !== 1 ? 's' : ''}
+              {drafts.length} Entwurf{drafts.length !== 1 ? 'e' : ''}
             </div>
           </div>
         </div>
-        <a href={`/orbiter/${collectionId}/new`} class="btn-new">+ New Entry</a>
+        <a href={`/orbiter/${collectionId}/new`} class="btn-new">+ Neu</a>
       </div>
 
       <!-- Filter tabs -->
       <div class="filter-bar">
         <a href={`/orbiter/${collectionId}`} class={`filter-tab ${filter === 'all' ? 'active' : ''}`}>
-          All <span class="filter-tab-count">{entries.length}</span>
+          Alle <span class="filter-tab-count">{entries.length}</span>
         </a>
         <a href={`/orbiter/${collectionId}?filter=published`} class={`filter-tab published ${filter === 'published' ? 'active published' : ''}`}>
-          Published <span class="filter-tab-count">{published.length}</span>
+          Veröffentlicht <span class="filter-tab-count">{published.length}</span>
         </a>
         <a href={`/orbiter/${collectionId}?filter=draft`} class={`filter-tab draft ${filter === 'draft' ? 'active draft' : ''}`}>
-          Drafts <span class="filter-tab-count">{drafts.length}</span>
+          Entwürfe <span class="filter-tab-count">{drafts.length}</span>
         </a>
       </div>
 
@@ -247,9 +247,9 @@ const visible = filter === 'published' ? published
       {visible.length > 0 ? (
         <div class="entry-table">
           <div class="entry-thead">
-            <div class="entry-thead-cell">Title</div>
+            <div class="entry-thead-cell">Titel</div>
             <div class="entry-thead-cell">Slug</div>
-            <div class="entry-thead-cell">Updated</div>
+            <div class="entry-thead-cell">Geändert</div>
             <div class="entry-thead-cell">Status</div>
           </div>
           {visible.map(entry => (
@@ -274,7 +274,7 @@ const visible = filter === 'published' ? published
                 <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString(adminLocale)}</div>
               </div>
               <div class="entry-cell" onclick="event.preventDefault();toggleStatus(this,'{entry.slug}')">
-                <button class={`status-toggle ${entry.status}`} data-slug={entry.slug}>{entry.status}</button>
+                <button class={`status-toggle ${entry.status}`} data-slug={entry.slug}>{entry.status === 'published' ? 'veröffentlicht' : 'entwurf'}</button>
               </div>
             </a>
           ))}
@@ -283,8 +283,8 @@ const visible = filter === 'published' ? published
         <div class="empty-state">
           <div class="empty-icon">▤</div>
           <div class="empty-text">
-            {entries.length === 0 ? 'No entries yet.' : `No ${filter} entries.`}<br/>
-            {entries.length === 0 && <a href={`/orbiter/${collectionId}/new`} style="color:var(--accent)">Create first entry →</a>}
+            {entries.length === 0 ? 'Noch keine Einträge.' : `Keine ${filter === 'published' ? 'veröffentlichten' : 'Entwurf-'}Einträge.`}<br/>
+            {entries.length === 0 && <a href={`/orbiter/${collectionId}/new`} style="color:var(--accent)">Ersten Eintrag erstellen →</a>}
           </div>
         </div>
       )}

@@ -260,7 +260,7 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
       <a href="/orbiter/settings" class="nav-item"><span class="nav-icon">◎</span>Settings</a>
       <div class="sidebar-pod">
         <div class="sidebar-pod-name">content.pod</div>
-        <div>{totalEntries} entries · {collections.length} collections</div>
+        <div>{totalEntries} Einträge · {collections.length} Collections</div>
       </div>
     </div>
 
@@ -276,7 +276,7 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
         <div class="hero-right">
           <span id="deploy-status" class="deploy-status"></span>
           {meta.siteUrl && (
-            <a href={meta.siteUrl} target="_blank" class="hero-url">↗ Visit site</a>
+            <a href={meta.siteUrl} target="_blank" class="hero-url">↗ Website öffnen</a>
           )}
           {hasWebhook && (
             <button class="btn-deploy" id="deploy-btn" onclick="triggerDeploy()">↑ Deploy</button>
@@ -287,33 +287,33 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
       <!-- Stats row -->
       <div class="stats-row">
         <div class="stat-cell">
-          <div class="stat-label">Total</div>
+          <div class="stat-label">Gesamt</div>
           <div class="stat-num">{totalEntries}</div>
-          <div class="stat-sub">{collections.length} collection{collections.length !== 1 ? 's' : ''}</div>
+          <div class="stat-sub">{collections.length} Collections</div>
           <div class="stat-bar"><div class="stat-bar-fill accent" style={`width:100%`}></div></div>
         </div>
         <div class="stat-cell">
-          <div class="stat-label">Published</div>
+          <div class="stat-label">Veröffentlicht</div>
           <div class="stat-num">{totalPublished}</div>
           <div class="stat-sub">
             <span class="stat-dot jade"></span>
-            {totalEntries > 0 ? Math.round(totalPublished / totalEntries * 100) : 0}% of total
+            {totalEntries > 0 ? Math.round(totalPublished / totalEntries * 100) : 0}% gesamt
           </div>
           <div class="stat-bar"><div class="stat-bar-fill jade" style={`width:${totalEntries > 0 ? Math.round(totalPublished / totalEntries * 100) : 0}%`}></div></div>
         </div>
         <div class="stat-cell">
-          <div class="stat-label">Drafts</div>
+          <div class="stat-label">Entwürfe</div>
           <div class="stat-num">{totalDrafts}</div>
           <div class="stat-sub">
             <span class="stat-dot gold"></span>
-            unpublished
+            unveröffentlicht
           </div>
           <div class="stat-bar"><div class="stat-bar-fill gold" style={`width:${totalEntries > 0 ? Math.round(totalDrafts / totalEntries * 100) : 0}%`}></div></div>
         </div>
         <div class="stat-cell">
           <div class="stat-label">Media</div>
           <div class="stat-num">{mediaCount}</div>
-          <div class="stat-sub">assets in pod</div>
+          <div class="stat-sub">Dateien im Pod</div>
           <div class="stat-bar"><div class="stat-bar-fill accent" style="width:60%"></div></div>
         </div>
       </div>
@@ -324,7 +324,7 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
         <!-- Recent entries -->
         <div class="content-main">
           <div class="section-head">
-            <div class="section-title">Recent Activity</div>
+            <div class="section-title">Zuletzt geändert</div>
           </div>
           {recent.length > 0 ? (
             <div class="entry-list">
@@ -335,14 +335,14 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
                     <div class="entry-coll">{entry.collectionLabel}</div>
                   </div>
                   <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString(adminLocale)}</div>
-                  <div class={`pill ${entry.status}`}>{entry.status}</div>
+                  <div class={`pill ${entry.status}`}>{entry.status === 'published' ? 'veröffentlicht' : 'entwurf'}</div>
                 </a>
               ))}
             </div>
           ) : (
             <div class="empty">
-              No entries yet.<br/>
-              Create your first entry to get started.
+              Noch keine Einträge.<br/>
+              Ersten Eintrag erstellen, um loszulegen.
             </div>
           )}
         </div>
@@ -365,12 +365,12 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
                     <div class="coll-progress-fill" style={`width:${pct}%`}></div>
                   </div>
                   <div class="coll-card-meta">
-                    <span class="pub">{col.published} published</span>
-                    <span>{col.drafts} draft{col.drafts !== 1 ? 's' : ''}</span>
+                    <span class="pub">{col.published} veröffentlicht</span>
+                    <span>{col.drafts} Entwurf{col.drafts !== 1 ? 'e' : ''}</span>
                   </div>
                   <div class="coll-actions">
-                    <a href={`/orbiter/${col.id}/new`} class="btn-sm primary">+ New</a>
-                    <a href={`/orbiter/${col.id}`} class="btn-sm">View all</a>
+                    <a href={`/orbiter/${col.id}/new`} class="btn-sm primary">+ Neu</a>
+                    <a href={`/orbiter/${col.id}`} class="btn-sm">Alle anzeigen</a>
                   </div>
                 </div>
               );

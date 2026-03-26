@@ -359,7 +359,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
         <span class="sep">/</span>
         <a href={`/orbiter/${collectionId}`}>{col.label}</a>
         <span class="sep">/</span>
-        <span class="current">{isNew ? 'New' : slug}</span>
+        <span class="current">{isNew ? 'Neu' : slug}</span>
       </div>
       <div class="topbar-right">
         <div style="font-size:10px;color:var(--muted);" id="autosave-indicator"></div>
@@ -387,7 +387,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
       <a href="/orbiter/settings" class="nav-item"><span class="nav-icon">◎</span>Settings</a>
       <div class="sidebar-pod">
         <div class="sidebar-pod-name">content.pod</div>
-        <div>{isNew ? 'New entry' : `Editing ${slug}`}</div>
+        <div>{isNew ? 'Neuer Eintrag' : `Bearbeiten: ${slug}`}</div>
       </div>
     </div>
 
@@ -398,7 +398,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
         <input type="hidden" name="current-slug" id="current-slug" value={isNew ? '' : slug} />
 
         <div class="editor-main">
-          {saved && <div class="saved-banner">Entry saved successfully</div>}
+          {saved && <div class="saved-banner">Eintrag gespeichert</div>}
 
           <!-- Toolbar -->
           <div class="editor-toolbar">
@@ -433,7 +433,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
               <textarea
                 name="title"
                 class="editor-title-input"
-                placeholder="Untitled"
+                placeholder="Ohne Titel"
                 rows="1"
                 spellcheck="false"
                 id="title-input"
@@ -447,7 +447,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
               <textarea
                 name="body"
                 class="editor-body-input"
-                placeholder="Start writing…"
+                placeholder="Text eingeben…"
                 spellcheck="false"
                 id="body-input"
                 oninput="autoResize(this);updateWc()"
@@ -484,7 +484,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
           <!-- Schema fields (events etc.) -->
           {extraFields.length > 0 && (
             <div class="meta-section">
-              <div class="meta-label">Fields</div>
+              <div class="meta-label">Felder</div>
               {extraFields.map(([key, field]) => {
                 const sw = field.showWhen as string | undefined;
                 let initHidden = false;
@@ -627,11 +627,11 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
             <div class="status-bar">
               <div class={`status-dot ${entry?.status ?? 'draft'}`}></div>
               <div class={`status-label ${entry?.status ?? 'draft'}`} id="status-display">
-                {entry?.status === 'published' ? 'Published' : 'Draft'}
+                {entry?.status === 'published' ? 'Veröffentlicht' : 'Entwurf'}
               </div>
             </div>
-            <button type="submit" class="btn-publish" onclick="setStatus('published')">↑ Publish</button>
-            <button type="submit" class="btn-draft"   onclick="setStatus('draft')">Save as Draft</button>
+            <button type="submit" class="btn-publish" onclick="setStatus('published')">↑ Veröffentlichen</button>
+            <button type="submit" class="btn-draft"   onclick="setStatus('draft')">Als Entwurf speichern</button>
           </div>
 
           <!-- Metadata -->
@@ -639,18 +639,18 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
             <div class="meta-label">Details</div>
             <div class="meta-field">
               <div class="field-label">Slug</div>
-              <input class="field-input" name="slug" id="slug-input" value={isNew ? '' : slug} placeholder="entry-slug" oninput="updateSlugPreview(this.value)" />
+              <input class="field-input" name="slug" id="slug-input" value={isNew ? '' : slug} placeholder="eintrag-slug" oninput="updateSlugPreview(this.value)" />
             </div>
             <div class="meta-field">
               <div class="field-label">Status</div>
               <select class="field-select" id="status-select" onchange="document.getElementById('status-input').value=this.value">
-                <option value="draft" selected={!entry || entry.status === 'draft'}>draft</option>
-                <option value="published" selected={entry?.status === 'published'}>published</option>
+                <option value="draft" selected={!entry || entry.status === 'draft'}>Entwurf</option>
+                <option value="published" selected={entry?.status === 'published'}>Veröffentlicht</option>
               </select>
             </div>
             {!isNew && entry && (
               <div class="meta-field">
-                <div class="field-label">Updated</div>
+                <div class="field-label">Geändert</div>
                 <div class="field-readonly">{new Date(entry.updated_at).toLocaleDateString(adminLocale)}</div>
               </div>
             )}
@@ -659,7 +659,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
           <!-- Version history -->
           {versions.length > 0 && (
             <div class="meta-section">
-              <div class="meta-label">History</div>
+              <div class="meta-label">Verlauf</div>
               {versions.slice(0, 8).map((v, i) => (
                 <div class="version-row">
                   <div class={`v-dot ${i === 0 ? 'cur' : ''}`}></div>
@@ -703,8 +703,8 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
       const body  = bodyInput.value;
       const title = document.getElementById('title-input').value;
       const words = [body, title].join(' ').trim().split(/\s+/).filter(w => w).length;
-      document.getElementById('wc').textContent = words + ' words';
-      document.getElementById('word-count-display').textContent = words + ' words';
+      document.getElementById('wc').textContent = words + ' Wörter';
+      document.getElementById('word-count-display').textContent = words + ' Wörter';
     }
     updateWc();
 
@@ -786,10 +786,10 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
 
     function setIndicator(state) {
       const states = {
-        pending: { text: '●  unsaved',  color: 'var(--gold)' },
-        saving:  { text: '↑  saving…',  color: 'var(--muted)' },
-        saved:   { text: '✓  autosaved', color: 'var(--jade)' },
-        error:   { text: '✕  save failed', color: 'var(--crimson, #8b2635)' },
+        pending: { text: '●  ungespeichert',  color: 'var(--gold)' },
+        saving:  { text: '↑  speichern…',     color: 'var(--muted)' },
+        saved:   { text: '✓  gespeichert',     color: 'var(--jade)' },
+        error:   { text: '✕  Fehler',          color: 'var(--crimson, #8b2635)' },
       };
       const s = states[state] ?? {};
       indicator.textContent = s.text ?? '';
@@ -873,7 +873,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
       const bodyVal  = document.getElementById('body-input').value;
       const slugVal  = document.getElementById('slug-preview').textContent;
 
-      document.getElementById('preview-title').textContent = titleVal || 'Untitled';
+      document.getElementById('preview-title').textContent = titleVal || 'Ohne Titel';
       const slugEl = document.getElementById('preview-slug-line');
       slugEl.innerHTML = '/' + COLLECTION + '/<span>' + (slugVal || '…') + '</span>';
 
@@ -898,14 +898,14 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
 
     // ── Block Picker ──────────────────────────────────────────────────
     var BP_BLOCKS = [
-      { label: 'Heading 1',     icon: 'H1', hint: '#',   prefix: '# '    },
-      { label: 'Heading 2',     icon: 'H2', hint: '##',  prefix: '## '   },
-      { label: 'Heading 3',     icon: 'H3', hint: '###', prefix: '### '  },
-      { label: 'Quote',         icon: '\u275d', hint: '>', prefix: '> '  },
-      { label: 'Code Block',    icon: '{}', hint: '```', prefix: '```\n', suffix: '\n```' },
-      { label: 'Bullet List',   icon: '\u2022', hint: '-', prefix: '- ' },
-      { label: 'Numbered List', icon: '1.', hint: '1.',  prefix: '1. '   },
-      { label: 'Divider',       icon: '\u2014', hint: '---', prefix: '---\n' },
+      { label: 'Überschrift 1',  icon: 'H1', hint: '#',   prefix: '# '    },
+      { label: 'Überschrift 2',  icon: 'H2', hint: '##',  prefix: '## '   },
+      { label: 'Überschrift 3',  icon: 'H3', hint: '###', prefix: '### '  },
+      { label: 'Zitat',          icon: '\u275d', hint: '>', prefix: '> '  },
+      { label: 'Code-Block',     icon: '{}', hint: '```', prefix: '```\n', suffix: '\n```' },
+      { label: 'Aufzählung',     icon: '\u2022', hint: '-', prefix: '- ' },
+      { label: 'Nummerierung',   icon: '1.', hint: '1.',  prefix: '1. '   },
+      { label: 'Trennlinie',     icon: '\u2014', hint: '---', prefix: '---\n' },
     ];
     var bpOpen  = false;
     var bpIdx   = 0;
@@ -922,7 +922,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
     ].join(';');
     var bpHeader = document.createElement('div');
     bpHeader.style.cssText = 'padding:8px 12px;border-bottom:1px solid var(--line,#e0dbd0);font-size:10px;color:var(--muted,#a09890);letter-spacing:0.06em;';
-    bpHeader.textContent = 'Blocks — type to filter';
+    bpHeader.textContent = '/ Blöcke — tippen zum Filtern';
     var bpList = document.createElement('div');
     bpList.style.cssText = 'max-height:240px;overflow-y:auto;';
     bpEl.appendChild(bpHeader);
@@ -943,7 +943,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
       if (!items.length) {
         var empty = document.createElement('div');
         empty.style.cssText = 'padding:12px;font-size:11px;color:var(--muted,#a09890);text-align:center;';
-        empty.textContent = 'No blocks';
+        empty.textContent = 'Keine Blöcke';
         bpList.appendChild(empty);
         return;
       }
