@@ -1,0 +1,30 @@
+---
+import { podPath } from 'orbiter:db';
+import { openPod } from '@orbiter/core';
+
+const q   = (Astro.url.searchParams.get('q') ?? '').toLowerCase().trim();
+const db  = openPod(podPath);
+const cols = db.getCollections();
+
+const results = q.length < 1 ? [] : cols.flatMap(col =>
+  db.getEntries(col.id)
+    .filter(e => {
+      const title = (e.data?.title ?? e.slug).toLowerCase();
+      const slug  = e.slug.toLowerCase();
+      return title.includes(q) || slug.includes(q);
+    })
+    .map(e => ({
+      title:      e.data?.title ?? e.slug,
+      slug:       e.slug,
+      collection: col.id,
+      collLabel:  col.label,
+      status:     e.status,
+      href:       `/orbiter/${col.id}/${e.slug}`,
+    }))
+).slice(0, 12);
+
+db.close();
+return new Response(JSON.stringify({ results }), {
+  headers: { 'Content-Type': 'application/json' },
+});
+---

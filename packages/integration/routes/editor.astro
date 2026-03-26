@@ -1,6 +1,7 @@
 ---
 import { podPath } from 'orbiter:db';
 import { openPod } from '@orbiter/core';
+import adminUtils from 'orbiter:admin-utils';
 
 const { collection: collectionId, slug } = Astro.params;
 
@@ -25,7 +26,23 @@ if (Astro.request.method === 'POST') {
   const col = db.getCollection(collectionId);
   if (!col) return new Response(JSON.stringify({ ok: false }), { status: 404 });
 
-  const data = JSON.stringify({ title, body });
+  // Build data object from schema (saves all fields, not just title+body)
+  const colSchema = col.schema ? JSON.parse(col.schema) : { title: { type: 'string' }, body: { type: 'richtext' } };
+  const dataObj = {};
+  for (const [key, field] of Object.entries(colSchema)) {
+    if (field.type === 'array' || field.type === 'weekdays') {
+      dataObj[key] = form.getAll(key).length
+        ? form.getAll(key).flatMap(v => v.split(',').map(s => s.trim()).filter(Boolean))
+        : [];
+    } else {
+      dataObj[key] = form.get(key)?.toString() ?? '';
+    }
+  }
+  // Always include title/body even if not in schema
+  if (!dataObj.title) dataObj.title = title;
+  if (!dataObj.body  && body) dataObj.body = body;
+
+  const data = JSON.stringify(dataObj);
   const now  = sqliteNow();
   let   savedSlug = newSlug;
 
@@ -78,6 +95,14 @@ const isNew  = slug === 'new';
 const entry  = isNew ? null : db.getEntry(collectionId, slug);
 const saved  = Astro.url.searchParams.get('saved') === '1';
 
+// ── Schema-aware fields ───────────────────────────────────────────────
+const schema      = col.schema ? JSON.parse(col.schema) : {};
+const extraFields = Object.entries(schema).filter(([k]) => k !== 'title' && k !== 'body');
+const hasMedia    = extraFields.some(([, f]) => f.type === 'media');
+const mediaList   = hasMedia
+  ? db.db.prepare('SELECT id, filename, alt FROM _media ORDER BY created_at DESC').all()
+  : [];
+
 const versions = entry
   ? db.db.prepare('SELECT * FROM _versions WHERE entry_id = ? ORDER BY created_at DESC').all(entry.id)
   : [];
@@ -111,6 +136,14 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
       --shadow:0 1px 3px rgba(0,0,0,0.08);
       --serif:"Noto Serif JP",serif; --mono:"DM Mono",monospace;
     }
+    html.dark {
+      --bg0:#0f0f14; --bg1:#14141a; --bg2:#1c1c24; --bg3:#22222d;
+      --line:#2a2a3a; --line2:rgba(255,255,255,0.04);
+      --muted:#52526e; --mid:#8080a0; --text:#b0b0cc; --heading:#e0e0f0;
+      --gold:#c8a86b; --gold-bg:rgba(200,168,107,0.08);
+      --jade:#2d8b6a; --jade-bg:rgba(45,139,106,0.08);
+      --accent:#7a8fd4; --accent-bg:rgba(122,143,212,0.08);
+    }
     html,body { background:var(--bg0); color:var(--text); font-family:var(--mono); font-size:13px; line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
 
     /* Layout */
@@ -127,6 +160,8 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
     .breadcrumb .current { color:var(--text); }
     .topbar-right { margin-left:auto; display:flex; align-items:center; gap:12px; }
     .pod-status { font-size:10px; color:var(--jade); display:flex; align-items:center; gap:5px; }
+    .dark-toggle { background:none; border:1px solid var(--line); color:var(--mid); font-family:var(--mono); font-size:10px; padding:3px 10px; cursor:pointer; letter-spacing:0.04em; transition:color 0.12s,border-color 0.12s,background 0.12s; }
+    .dark-toggle:hover { color:var(--heading); border-color:var(--mid); background:var(--bg3); }
     .pod-dot { width:5px; height:5px; border-radius:50%; background:var(--jade); animation:pulse 2.5s ease-in-out infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
     .status-chip { font-size:9px; padding:2px 8px; border:1px solid currentColor; letter-spacing:0.08em; }
@@ -148,84 +183,54 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
     .sidebar-pod-name::before { content:"◆"; font-size:6px; color:var(--gold); }
 
     /* Editor layout */
-    .editor-shell { display:grid; grid-template-columns:1fr 260px; height:calc(100vh - 54px); overflow:hidden; }
+    .editor-shell { display:grid; grid-template-columns:1fr 280px; height:calc(100vh - 54px); overflow:hidden; }
     .editor-main { display:flex; flex-direction:column; overflow:hidden; background:var(--bg0); }
 
     /* Toolbar */
-    .editor-toolbar { display:flex; align-items:center; gap:2px; padding:10px 32px; border-bottom:1px solid var(--line); background:var(--bg1); flex-shrink:0; }
-    .tool-btn { height:26px; min-width:26px; padding:0 6px; display:flex; align-items:center; justify-content:center; background:transparent; border:1px solid transparent; color:var(--mid); font-family:var(--mono); font-size:10px; cursor:pointer; transition:all 0.12s; border-radius:2px; }
-    .tool-btn:hover { border-color:var(--line); color:var(--heading); background:var(--bg2); }
-    .tool-sep { width:1px; height:16px; background:var(--line); margin:0 5px; }
+    .editor-toolbar { display:flex; align-items:center; gap:1px; padding:0 24px; height:42px; border-bottom:1px solid var(--line); background:var(--bg2); flex-shrink:0; }
+    .tool-group { display:flex; align-items:center; gap:1px; }
+    .tool-btn { height:28px; min-width:28px; padding:0 7px; display:flex; align-items:center; justify-content:center; background:transparent; border:none; color:var(--muted); font-family:var(--mono); font-size:10px; cursor:pointer; transition:color 0.1s,background 0.1s; border-radius:3px; }
+    .tool-btn:hover { color:var(--heading); background:var(--bg3); }
+    .tool-sep { width:1px; height:18px; background:var(--line); margin:0 8px; flex-shrink:0; }
 
     /* Writing area */
-    .editor-scroll { flex:1; overflow-y:auto; padding:40px 64px 80px; }
+    .editor-scroll { flex:1; overflow-y:auto; }
+    .editor-page { max-width:680px; margin:0 auto; padding:52px 40px 120px; }
     .editor-title-input {
       width:100%; background:transparent; border:none; outline:none;
-      font-family:var(--serif); font-weight:200; font-size:32px;
+      font-family:var(--serif); font-weight:200; font-size:34px;
       color:var(--heading); letter-spacing:0.02em; line-height:1.2;
-      margin-bottom:8px; resize:none; overflow:hidden;
+      margin-bottom:10px; resize:none; overflow:hidden;
     }
     .editor-title-input::placeholder { color:var(--line); }
-    .editor-slug-line { font-size:10px; color:var(--muted); margin-bottom:32px; padding-bottom:20px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:5px; }
+    .editor-slug-line { font-size:10px; color:var(--muted); margin-bottom:36px; padding-bottom:18px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:4px; }
     .editor-slug-line span { color:var(--accent); }
     .editor-body-input {
       width:100%; background:transparent; border:none; outline:none;
-      font-family:var(--serif); font-weight:300; font-size:15px;
-      color:var(--text); line-height:1.9; resize:none;
+      font-family:var(--serif); font-weight:300; font-size:16px;
+      color:var(--text); line-height:2; resize:none;
       min-height:400px; letter-spacing:0.01em;
     }
     .editor-body-input::placeholder { color:var(--line); }
 
     /* Saved banner */
-    .saved-banner { background:var(--jade-bg); border-bottom:1px solid rgba(30,107,80,0.2); padding:8px 32px; font-size:11px; color:var(--jade); display:flex; align-items:center; gap:6px; flex-shrink:0; }
-    .saved-banner::before { content:"✓"; font-size:12px; }
-
-    /* Meta panel */
-    .meta-panel { background:var(--bg1); border-left:1px solid var(--line); display:flex; flex-direction:column; overflow-y:auto; }
-    .meta-section { padding:18px 18px 16px; border-bottom:1px solid var(--line); }
-    .meta-section:last-child { border-bottom:none; }
-    .meta-label { font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); margin-bottom:12px; }
-    .meta-field { margin-bottom:10px; }
-    .field-label { font-size:10px; color:var(--mid); margin-bottom:4px; }
-    .field-input,.field-select { width:100%; background:var(--bg0); border:1px solid var(--line); padding:6px 9px; color:var(--heading); font-family:var(--mono); font-size:11px; outline:none; appearance:none; transition:border-color 0.15s; }
-    .field-input:focus,.field-select:focus { border-color:var(--accent); }
-
-    /* Publish buttons */
-    .publish-row { display:flex; gap:6px; }
-    .btn-draft { flex:1; padding:8px; background:transparent; border:1px solid var(--line); color:var(--mid); font-family:var(--mono); font-size:10px; cursor:pointer; transition:all 0.12s; }
-    .btn-draft:hover { border-color:var(--mid); color:var(--text); }
-    .btn-publish { flex:2; padding:8px; background:var(--gold); border:1px solid var(--gold); color:var(--bg0); font-family:var(--mono); font-size:10px; letter-spacing:0.1em; cursor:pointer; transition:all 0.12s; }
-    .btn-publish:hover { background:#7a5520; border-color:#7a5520; }
-
-    /* Version history */
-    .version-row { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--line2); cursor:pointer; }
-    .version-row:last-child { border-bottom:none; }
-    .v-dot { width:5px; height:5px; background:var(--muted); border-radius:50%; flex-shrink:0; }
-    .v-dot.cur { background:var(--gold); }
-    .v-hash { font-size:10px; color:var(--mid); font-family:var(--mono); }
-    .v-time { font-size:10px; color:var(--muted); margin-left:auto; }
-
-    /* Pill */
-    .pill { font-size:9px; padding:2px 7px; letter-spacing:0.06em; }
-    .pill.published { color:var(--jade); background:var(--jade-bg); }
-    .pill.draft { color:var(--gold); background:var(--gold-bg); }
+    .saved-banner { background:var(--jade-bg); border-bottom:1px solid rgba(30,107,80,0.15); padding:7px 24px; font-size:10px; color:var(--jade); display:flex; align-items:center; gap:6px; flex-shrink:0; letter-spacing:0.04em; }
+    .saved-banner::before { content:"✓"; }
 
     /* Word count */
-    .word-count { font-size:10px; color:var(--muted); margin-top:24px; padding-top:16px; border-top:1px solid var(--line2); }
+    .word-count { font-size:10px; color:var(--muted); margin-top:32px; padding-top:14px; border-top:1px solid var(--line2); }
 
     /* ── View modes ────────────────────────────── */
-    .editor-shell.mode-split   { grid-template-columns:1fr 1fr 260px; }
-    .editor-shell.mode-preview { grid-template-columns:0   1fr 260px; overflow:hidden; }
+    .editor-shell.mode-split   { grid-template-columns:1fr 1fr 280px; }
+    .editor-shell.mode-preview { grid-template-columns:0   1fr 280px; overflow:hidden; }
     .editor-shell.mode-preview .editor-main { overflow:hidden; min-width:0; }
 
     /* View toggle */
-    .view-toggle { display:flex; margin-left:8px; }
-    .view-btn { height:22px; padding:0 9px; border:1px solid var(--line); border-right:none; background:transparent; color:var(--muted); font-family:var(--mono); font-size:9px; letter-spacing:0.06em; cursor:pointer; transition:all 0.12s; }
+    .view-toggle { display:flex; gap:1px; }
+    .view-btn { height:24px; padding:0 10px; border:1px solid var(--line); border-right:none; background:transparent; color:var(--muted); font-family:var(--mono); font-size:9px; letter-spacing:0.06em; cursor:pointer; transition:all 0.12s; }
     .view-btn:last-child { border-right:1px solid var(--line); }
-    .view-btn:first-child { border-radius:2px 0 0 2px; }
-    .view-btn:last-child { border-radius:0 2px 2px 0; }
-    .view-btn.active { background:var(--bg3); color:var(--heading); border-color:var(--mid); }
-    .view-btn.active + .view-btn { border-left-color:var(--mid); }
+    .view-btn.active { background:var(--heading); color:var(--bg0); border-color:var(--heading); }
+    .view-btn.active + .view-btn { border-left-color:var(--line); }
 
     /* Preview panel */
     .preview-panel { display:none; border-left:1px solid var(--line); flex-direction:column; overflow:hidden; background:var(--bg2); }
@@ -235,11 +240,74 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
     /* Preview source bar */
     .preview-src-bar { display:flex; align-items:center; gap:4px; padding:8px 14px; border-bottom:1px solid var(--line); background:var(--bg1); flex-shrink:0; }
     .src-btn { height:20px; padding:0 8px; border:1px solid var(--line); background:transparent; color:var(--muted); font-family:var(--mono); font-size:9px; letter-spacing:0.05em; cursor:pointer; transition:all 0.12s; }
-    .src-btn:first-child { border-radius:2px 0 0 2px; border-right:none; }
-    .src-btn:last-child { border-radius:0 2px 2px 0; }
+    .src-btn:first-child { border-right:none; }
     .src-btn.active { background:var(--accent-bg); color:var(--accent); border-color:var(--accent); }
     .src-btn:last-child.active { border-left-color:var(--accent); }
     .preview-src-bar span { margin-left:auto; font-size:9px; color:var(--muted); font-family:var(--mono); }
+
+    /* Meta panel */
+    .meta-panel { background:var(--bg1); border-left:1px solid var(--line); display:flex; flex-direction:column; overflow-y:auto; }
+    .meta-section { padding:16px 18px; border-bottom:1px solid var(--line); }
+    .meta-section:last-child { border-bottom:none; }
+    .meta-label { font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); margin-bottom:12px; }
+
+    /* Status indicator */
+    .status-bar { display:flex; align-items:center; gap:8px; padding:10px 0; margin-bottom:12px; }
+    .status-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .status-dot.published { background:var(--jade); }
+    .status-dot.draft { background:var(--gold); }
+    .status-label { font-size:11px; color:var(--text); }
+    .status-label.published { color:var(--jade); }
+    .status-label.draft { color:var(--gold); }
+
+    /* Publish buttons */
+    .btn-publish { display:block; width:100%; padding:10px; background:var(--gold); border:none; color:var(--bg0); font-family:var(--mono); font-size:10px; letter-spacing:0.12em; cursor:pointer; transition:background 0.15s; margin-bottom:6px; }
+    .btn-publish:hover { background:#7a5520; }
+    .btn-draft { display:block; width:100%; padding:9px; background:transparent; border:1px solid var(--line); color:var(--mid); font-family:var(--mono); font-size:10px; cursor:pointer; transition:all 0.12s; }
+    .btn-draft:hover { border-color:var(--mid); color:var(--text); }
+
+    /* Meta fields */
+    .meta-field { margin-bottom:12px; }
+    .meta-field:last-child { margin-bottom:0; }
+    .field-label { font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
+    .field-input,.field-select { width:100%; background:var(--bg0); border:1px solid var(--line); padding:7px 9px; color:var(--heading); font-family:var(--mono); font-size:11px; outline:none; appearance:none; transition:border-color 0.15s; }
+    .field-input:focus,.field-select:focus { border-color:var(--accent); }
+    .field-readonly { font-size:11px; color:var(--muted); padding:7px 0; }
+
+    /* Schema fields */
+    .media-field-wrap { display:flex; flex-direction:column; gap:5px; }
+    .media-field-row { display:flex; align-items:center; gap:7px; min-height:16px; }
+    .media-upload-status { font-size:9px; color:var(--muted); }
+    .media-drop-zone { position:relative; border:1px dashed var(--line); background:var(--bg0); height:80px; cursor:pointer; transition:border-color 0.12s,background 0.12s; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+    .media-drop-zone:hover { border-color:var(--gold); background:var(--gold-bg); }
+    .media-drop-zone.drag-over { border-color:var(--accent); background:var(--accent-bg); border-style:solid; }
+    .media-drop-zone.has-image { border-style:solid; border-color:var(--line); }
+    .media-drop-zone.has-image:hover { border-color:var(--gold); }
+    .media-drop-zone img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
+    .media-drop-label { position:relative; z-index:1; font-size:9px; color:var(--muted); letter-spacing:0.08em; pointer-events:none; }
+    .media-drop-zone.has-image .media-drop-label { display:none; }
+    .media-drop-zone.drag-over .media-drop-label { color:var(--accent); }
+    .weekday-grid { display:flex; gap:4px; flex-wrap:wrap; margin-top:4px; }
+    .wd-btn { height:26px; min-width:32px; padding:0 4px; background:var(--bg0); border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:9px; letter-spacing:0.04em; cursor:pointer; transition:all 0.1s; text-align:center; }
+    .wd-btn.active { background:var(--accent-bg); border-color:var(--accent); color:var(--accent); }
+    .tag-input { width:100%; background:var(--bg0); border:1px solid var(--line); padding:7px 9px; color:var(--heading); font-family:var(--mono); font-size:11px; outline:none; transition:border-color 0.15s; }
+    .tag-input:focus { border-color:var(--accent); }
+    .tag-preview { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; }
+    .tag-chip { font-size:9px; padding:2px 7px; background:var(--accent-bg); color:var(--accent); border:1px solid rgba(61,79,168,0.2); }
+
+    /* Version history */
+    .version-row { display:flex; align-items:center; gap:9px; padding:6px 0; border-bottom:1px solid var(--line2); }
+    .version-row:last-child { border-bottom:none; }
+    .v-line { display:flex; flex-direction:column; align-items:center; gap:2px; flex-shrink:0; }
+    .v-dot { width:6px; height:6px; background:var(--line); border-radius:50%; flex-shrink:0; }
+    .v-dot.cur { background:var(--gold); box-shadow:0 0 0 2px var(--gold-bg); }
+    .v-hash { font-size:10px; color:var(--mid); font-family:var(--mono); flex:1; }
+    .v-time { font-size:9px; color:var(--muted); }
+
+    /* Pill */
+    .pill { font-size:9px; padding:2px 7px; letter-spacing:0.06em; }
+    .pill.published { color:var(--jade); background:var(--jade-bg); }
+    .pill.draft { color:var(--gold); background:var(--gold-bg); }
 
     /* MD rendered preview */
     .preview-scroll { flex:1; overflow-y:auto; padding:40px 48px 80px; }
@@ -294,8 +362,11 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
         <span class="current">{isNew ? 'New' : slug}</span>
       </div>
       <div class="topbar-right">
-        {!isNew && entry && <span class={`status-chip ${entry.status}`}>{entry.status.toUpperCase()}</span>}
+        <div style="font-size:10px;color:var(--muted);" id="autosave-indicator"></div>
+        <div style="font-size:10px;color:var(--muted);padding:0 2px 0 10px;border-left:1px solid var(--line);" id="wc"></div>
+        <button class="pal-trigger" onclick="__orbOpenPalette()" title="Command palette"> Strg K</button>
         <div class="pod-status"><div class="pod-dot"></div>pod synced</div>
+        <button id="orb-dark-btn" onclick="__orbToggleDark()" class="dark-toggle" title="Toggle dark mode">● dark</button>
       </div>
     </div>
 
@@ -312,6 +383,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
       <div class="nav-section">Assets</div>
       <a href="/orbiter/media" class="nav-item"><span class="nav-icon">⊞</span>Media</a>
       <div class="nav-section">System</div>
+      <a href="/orbiter/build"    class="nav-item"><span class="nav-icon">▲</span>Build</a>
       <a href="/orbiter/settings" class="nav-item"><span class="nav-icon">◎</span>Settings</a>
       <div class="sidebar-pod">
         <div class="sidebar-pod-name">content.pod</div>
@@ -330,52 +402,59 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
 
           <!-- Toolbar -->
           <div class="editor-toolbar">
-            <button type="button" class="tool-btn" onmousedown="event.preventDefault()" onclick="fmt('bold')"><b>B</b></button>
-            <button type="button" class="tool-btn" onmousedown="event.preventDefault()" onclick="fmt('italic')"><i>I</i></button>
-            <button type="button" class="tool-btn" onmousedown="event.preventDefault()" onclick="fmt('underline')"><u>U</u></button>
+            <div class="tool-group" onmousedown="event.preventDefault()">
+              <button type="button" class="tool-btn" onclick="fmt('bold')" title="Bold"><b style="font-size:11px;">B</b></button>
+              <button type="button" class="tool-btn" onclick="fmt('italic')" title="Italic"><i style="font-size:11px;">I</i></button>
+              <button type="button" class="tool-btn" onclick="insertMd('`')" title="Inline code" style="font-size:9px;">&lt;/&gt;</button>
+            </div>
             <div class="tool-sep"></div>
-            <button type="button" class="tool-btn" onmousedown="event.preventDefault()" onclick="insertMd('## ')">H2</button>
-            <button type="button" class="tool-btn" onmousedown="event.preventDefault()" onclick="insertMd('### ')">H3</button>
+            <div class="tool-group" onmousedown="event.preventDefault()">
+              <button type="button" class="tool-btn" onclick="insertMd('# ')"   title="Heading 1" style="font-size:9px;letter-spacing:0;">H1</button>
+              <button type="button" class="tool-btn" onclick="insertMd('## ')"  title="Heading 2" style="font-size:9px;letter-spacing:0;">H2</button>
+              <button type="button" class="tool-btn" onclick="insertMd('### ')" title="Heading 3" style="font-size:9px;letter-spacing:0;">H3</button>
+            </div>
             <div class="tool-sep"></div>
-            <button type="button" class="tool-btn" onmousedown="event.preventDefault()" onclick="insertMd('> ')">❝</button>
-            <button type="button" class="tool-btn" onmousedown="event.preventDefault()" onclick="insertMd('`')"><code style="font-size:9px;">&lt;/&gt;</code></button>
+            <div class="tool-group" onmousedown="event.preventDefault()">
+              <button type="button" class="tool-btn" onclick="insertMd('> ')"  title="Quote">❝</button>
+              <button type="button" class="tool-btn" onclick="insertMd('- ')"  title="List" style="font-size:12px;">·</button>
+              <button type="button" class="tool-btn" onclick="insertMd('---\n')" title="Divider" style="font-size:9px;">—</button>
+            </div>
+            <div class="tool-sep"></div>
             <div class="view-toggle" onmousedown="event.preventDefault()">
               <button type="button" class="view-btn active" id="vbtn-edit"    onclick="setViewMode('edit')">Edit</button>
               <button type="button" class="view-btn"        id="vbtn-split"   onclick="setViewMode('split')">Split</button>
               <button type="button" class="view-btn"        id="vbtn-preview" onclick="setViewMode('preview')">Preview</button>
             </div>
-            <div style="margin-left:auto; display:flex; align-items:center; gap:14px;">
-              <div style="font-size:10px; color:var(--muted);" id="autosave-indicator"></div>
-              <div style="font-size:10px; color:var(--muted);" id="wc">— words</div>
-            </div>
           </div>
 
           <!-- Writing area -->
           <div class="editor-scroll">
-            <textarea
-              name="title"
-              class="editor-title-input"
-              placeholder="Untitled"
-              rows="1"
-              spellcheck="false"
-              id="title-input"
-              oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';updateWc()"
-            >{entry?.data?.title ?? ''}</textarea>
+            <div class="editor-page">
+              <textarea
+                name="title"
+                class="editor-title-input"
+                placeholder="Untitled"
+                rows="1"
+                spellcheck="false"
+                id="title-input"
+                oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';updateWc()"
+              >{entry?.data?.title ?? ''}</textarea>
 
-            <div class="editor-slug-line">
-              /{collectionId}/<span id="slug-preview">{isNew ? '' : slug}</span>
+              <div class="editor-slug-line">
+                /{collectionId}/<span id="slug-preview">{isNew ? '' : slug}</span>
+              </div>
+
+              <textarea
+                name="body"
+                class="editor-body-input"
+                placeholder="Start writing…"
+                spellcheck="false"
+                id="body-input"
+                oninput="autoResize(this);updateWc()"
+              >{entry?.data?.body ?? ''}</textarea>
+
+              <div class="word-count" id="word-count-display"></div>
             </div>
-
-            <textarea
-              name="body"
-              class="editor-body-input"
-              placeholder="Start writing..."
-              spellcheck="false"
-              id="body-input"
-              oninput="autoResize(this);updateWc()"
-            >{entry?.data?.body ?? ''}</textarea>
-
-            <div class="word-count" id="word-count-display"></div>
           </div>
         </div>
 
@@ -401,16 +480,163 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
 
         <!-- Meta panel -->
         <div class="meta-panel">
-          <div class="meta-section">
-            <div class="meta-label">Publish</div>
-            <div class="publish-row">
-              <button type="submit" class="btn-draft" onclick="setStatus('draft')">Save Draft</button>
-              <button type="submit" class="btn-publish" onclick="setStatus('published')">↑ Publish</button>
+
+          <!-- Schema fields (events etc.) -->
+          {extraFields.length > 0 && (
+            <div class="meta-section">
+              <div class="meta-label">Fields</div>
+              {extraFields.map(([key, field]) => {
+                const sw = field.showWhen as string | undefined;
+                let initHidden = false;
+                if (sw) {
+                  const [swKey, rawVal] = sw.split(':');
+                  const negate = rawVal.startsWith('!');
+                  const expected = negate ? rawVal.slice(1) : rawVal;
+                  const current = String(entry?.data?.[swKey] ?? 'none');
+                  initHidden = negate ? current === expected : current !== expected;
+                }
+                return (
+                <div class="meta-field" data-show-when={sw ?? undefined} style={initHidden ? 'display:none;' : ''}>
+                  <div class="field-label">{field.label ?? key}</div>
+
+                  {field.type === 'datetime' && (
+                    <input
+                      type="datetime-local"
+                      class="field-input"
+                      name={key}
+                      value={entry?.data?.[key] ?? ''}
+                    />
+                  )}
+
+                  {field.type === 'select' && (
+                    <select class="field-select" name={key}>
+                      {(field.options ?? []).map((opt: string) => (
+                        <option value={opt} selected={entry?.data?.[key] === opt}>
+                          {(field.optionLabels as any)?.[opt] ?? opt}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+
+                  {field.type === 'weekdays' && (
+                    <div class="weekday-grid" id={`wd-grid-${key}`}>
+                      {([['Mon','Mo'],['Tue','Di'],['Wed','Mi'],['Thu','Do'],['Fri','Fr'],['Sat','Sa'],['Sun','So']] as [string,string][]).map(([day, label]) => {
+                        const active = (entry?.data?.[key] ?? []).includes(day);
+                        return (
+                          <button
+                            type="button"
+                            class={`wd-btn${active ? ' active' : ''}`}
+                            onclick={`toggleWeekday(this,'${key}','${day}')`}
+                          >{label}</button>
+                        );
+                      })}
+                      <input type="hidden" name={key} id={`wd-val-${key}`}
+                        value={(entry?.data?.[key] ?? []).join(',')} />
+                    </div>
+                  )}
+
+                  {field.type === 'media' && (
+                    <div class="media-field-wrap">
+                      <select class="field-select" name={key} id={`media-sel-${key}`}>
+                        <option value="">— none —</option>
+                        {mediaList.map((m: any) => (
+                          <option value={m.id} selected={entry?.data?.[key] === m.id}>
+                            {m.filename}{m.alt ? ` (${m.alt})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                      <input type="file" id={`media-file-${key}`} accept="image/*,video/*,application/pdf" style="display:none" onchange={`uploadMediaField('${key}', this)`} />
+                      <div
+                        class={`media-drop-zone${entry?.data?.[key] ? ' has-image' : ''}`}
+                        id={`media-drop-${key}`}
+                        onclick={`document.getElementById('media-file-${key}').click()`}
+                        ondragover={`event.preventDefault();this.classList.add('drag-over')`}
+                        ondragleave={`this.classList.remove('drag-over')`}
+                        ondrop={`event.preventDefault();this.classList.remove('drag-over');uploadMediaField('${key}',{files:event.dataTransfer.files,value:''})`}
+                      >
+                        {entry?.data?.[key] ? (
+                          <img src={`/orbiter/media/${entry.data[key]}`} alt="" id={`media-img-${key}`} />
+                        ) : (
+                          <img src="" alt="" id={`media-img-${key}`} style="display:none;" />
+                        )}
+                        <div class="media-drop-label" id={`media-drop-label-${key}`}>
+                          {entry?.data?.[key] ? '' : '↑ drop or click'}
+                        </div>
+                      </div>
+                      <div class="media-field-row">
+                        <span class="media-upload-status" id={`media-status-${key}`}></span>
+                      </div>
+                    </div>
+                  )}
+
+                  {field.type === 'array' && (
+                    <div>
+                      <input
+                        class="tag-input"
+                        name={key}
+                        id={`arr-${key}`}
+                        value={(entry?.data?.[key] ?? []).join(', ')}
+                        placeholder="tag1, tag2, …"
+                        oninput={`renderTags('${key}')`}
+                      />
+                      <div class="tag-preview" id={`tags-${key}`}></div>
+                    </div>
+                  )}
+
+                  {(field.type === 'url' || field.type === 'string' || field.type === 'email') && (
+                    <input
+                      type={field.type === 'url' ? 'url' : field.type === 'email' ? 'email' : 'text'}
+                      class="field-input"
+                      name={key}
+                      value={entry?.data?.[key] ?? ''}
+                      placeholder={field.type === 'url' ? 'https://…' : ''}
+                    />
+                  )}
+
+                  {field.type === 'number' && (
+                    field.unitSelect ? (
+                      <div style="display:flex;align-items:center;gap:8px;">
+                        <input type="number" class="field-input" name={key}
+                          value={entry?.data?.[key] ?? ''} min="1" style="width:80px;" />
+                        <span
+                          id={`unit-${key}`}
+                          data-unit-select={field.unitSelect as string}
+                          data-unit-map={JSON.stringify(field.unitMap ?? {})}
+                          style="font-size:11px;color:var(--muted);"
+                        >{(field.unitMap as any)?.[entry?.data?.[(field.unitSelect as string)] ?? ''] ?? ''}</span>
+                      </div>
+                    ) : (
+                      <input type="number" class="field-input" name={key}
+                        value={entry?.data?.[key] ?? ''} min="1" style="width:100%;" />
+                    )
+                  )}
+
+                  {field.type === 'date' && (
+                    <input type="date" class="field-input" name={key}
+                      value={entry?.data?.[key] ?? ''} />
+                  )}
+
+                </div>
+                );
+              })}
             </div>
+          )}
+
+          <!-- Publish -->
+          <div class="meta-section">
+            <div class="status-bar">
+              <div class={`status-dot ${entry?.status ?? 'draft'}`}></div>
+              <div class={`status-label ${entry?.status ?? 'draft'}`} id="status-display">
+                {entry?.status === 'published' ? 'Published' : 'Draft'}
+              </div>
+            </div>
+            <button type="submit" class="btn-publish" onclick="setStatus('published')">↑ Publish</button>
+            <button type="submit" class="btn-draft"   onclick="setStatus('draft')">Save as Draft</button>
           </div>
 
+          <!-- Metadata -->
           <div class="meta-section">
-            <div class="meta-label">Metadata</div>
+            <div class="meta-label">Details</div>
             <div class="meta-field">
               <div class="field-label">Slug</div>
               <input class="field-input" name="slug" id="slug-input" value={isNew ? '' : slug} placeholder="entry-slug" oninput="updateSlugPreview(this.value)" />
@@ -425,14 +651,15 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
             {!isNew && entry && (
               <div class="meta-field">
                 <div class="field-label">Updated</div>
-                <input class="field-input" value={new Date(entry.updated_at).toLocaleDateString(adminLocale)} readonly style="color:var(--muted);" />
+                <div class="field-readonly">{new Date(entry.updated_at).toLocaleDateString(adminLocale)}</div>
               </div>
             )}
           </div>
 
+          <!-- Version history -->
           {versions.length > 0 && (
             <div class="meta-section">
-              <div class="meta-label">Version History</div>
+              <div class="meta-label">History</div>
               {versions.slice(0, 8).map((v, i) => (
                 <div class="version-row">
                   <div class={`v-dot ${i === 0 ? 'cur' : ''}`}></div>
@@ -448,6 +675,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
 
   </div>
 
+  <script set:html={adminUtils} is:inline></script>
   <script define:vars={{ siteUrl, collectionId }}>
     // Auto-resize textareas on load
     document.querySelectorAll('textarea').forEach(t => {
@@ -656,189 +884,313 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
 
     function renderIframe() {
       const slugVal = document.getElementById('slug-preview').textContent || document.getElementById('slug-input').value;
-      const url     = window.location.origin + '/' + COLLECTION + '/' + slugVal;
       const iframe  = document.getElementById('preview-iframe');
       const label   = document.getElementById('preview-src-label');
-      iframe.src        = url;
-      label.textContent = url;
+      // Always use the current origin (dev server) for the iframe —
+      // site.url is a production address and may not be reachable locally.
+      const path = '/' + COLLECTION + '/' + slugVal;
+      iframe.src        = window.location.origin + path;
+      label.textContent = (SITE_URL || window.location.origin) + path;
     }
 
     // Initial render
     updatePreview();
 
     // ── Block Picker ──────────────────────────────────────────────────
-    const BLOCKS = [
-      { label: 'Heading 1',      icon: 'H1', hint: '#',    prefix: '# '    },
-      { label: 'Heading 2',      icon: 'H2', hint: '##',   prefix: '## '   },
-      { label: 'Heading 3',      icon: 'H3', hint: '###',  prefix: '### '  },
-      { label: 'Quote',          icon: '❝',  hint: '>',    prefix: '> '    },
-      { label: 'Code Block',     icon: '{}', hint: '```',  prefix: '```\n', suffix: '\n```' },
-      { label: 'Bullet List',    icon: '•',  hint: '-',    prefix: '- '    },
-      { label: 'Numbered List',  icon: '1.', hint: '1.',   prefix: '1. '   },
-      { label: 'Divider',        icon: '—',  hint: '---',  prefix: '---\n' },
+    var BP_BLOCKS = [
+      { label: 'Heading 1',     icon: 'H1', hint: '#',   prefix: '# '    },
+      { label: 'Heading 2',     icon: 'H2', hint: '##',  prefix: '## '   },
+      { label: 'Heading 3',     icon: 'H3', hint: '###', prefix: '### '  },
+      { label: 'Quote',         icon: '\u275d', hint: '>', prefix: '> '  },
+      { label: 'Code Block',    icon: '{}', hint: '```', prefix: '```\n', suffix: '\n```' },
+      { label: 'Bullet List',   icon: '\u2022', hint: '-', prefix: '- ' },
+      { label: 'Numbered List', icon: '1.', hint: '1.',  prefix: '1. '   },
+      { label: 'Divider',       icon: '\u2014', hint: '---', prefix: '---\n' },
     ];
+    var bpOpen  = false;
+    var bpIdx   = 0;
+    var bpQuery = '';
+    var bpStart = -1;
 
-    let pickerOpen   = false;
-    let pickerIdx    = 0;
-    let pickerQuery  = '';
-    let pickerStart  = -1; // cursor pos where '/' was typed
+    var bpEl = document.createElement('div');
+    // Inline all styles — Astro scopes <style> blocks so dynamic elements don't inherit them
+    bpEl.style.cssText = [
+      'position:fixed', 'z-index:9999', 'width:220px',
+      'background:var(--bg2,#fff)', 'border:1px solid var(--line,#e0dbd0)',
+      'box-shadow:0 4px 16px rgba(0,0,0,0.12)', 'border-radius:2px',
+      'overflow:hidden', 'display:none', 'font-family:var(--mono,"DM Mono",monospace)',
+    ].join(';');
+    var bpHeader = document.createElement('div');
+    bpHeader.style.cssText = 'padding:8px 12px;border-bottom:1px solid var(--line,#e0dbd0);font-size:10px;color:var(--muted,#a09890);letter-spacing:0.06em;';
+    bpHeader.textContent = 'Blocks — type to filter';
+    var bpList = document.createElement('div');
+    bpList.style.cssText = 'max-height:240px;overflow-y:auto;';
+    bpEl.appendChild(bpHeader);
+    bpEl.appendChild(bpList);
+    document.body.appendChild(bpEl);
 
-    const picker    = document.createElement('div');
-    picker.className = 'block-picker';
-    picker.innerHTML = `
-      <div class="block-picker-search">Blocks</div>
-      <div class="block-picker-list" id="bp-list"></div>
-    `;
-    document.body.appendChild(picker);
-
-    function filteredBlocks() {
-      if (!pickerQuery) return BLOCKS;
-      const q = pickerQuery.toLowerCase();
-      return BLOCKS.filter(b => b.label.toLowerCase().includes(q) || b.hint.includes(q));
-    }
-
-    function renderPicker() {
-      const list = document.getElementById('bp-list');
-      const items = filteredBlocks();
-      if (!items.length) {
-        list.innerHTML = '<div class="block-picker-empty">No blocks</div>';
-        return;
-      }
-      list.innerHTML = items.map((b, i) => `
-        <div class="block-picker-item${i === pickerIdx ? ' active' : ''}" data-idx="${i}">
-          <div class="bp-icon">${b.icon}</div>
-          <div class="bp-label">${b.label}</div>
-          <div class="bp-hint">${b.hint}</div>
-        </div>
-      `).join('');
-      list.querySelectorAll('.block-picker-item').forEach(el => {
-        el.addEventListener('mousedown', e => {
-          e.preventDefault();
-          insertBlock(parseInt(el.dataset.idx));
-        });
+    function bpFiltered() {
+      if (!bpQuery) return BP_BLOCKS;
+      var q = bpQuery.toLowerCase();
+      return BP_BLOCKS.filter(function(b) {
+        return b.label.toLowerCase().indexOf(q) !== -1 || b.hint.indexOf(q) !== -1;
       });
     }
 
-    function openPicker(pos) {
-      pickerStart = pos;
-      pickerQuery = '';
-      pickerIdx   = 0;
-      pickerOpen  = true;
-      positionPicker();
-      renderPicker();
-      picker.classList.add('open');
-    }
-
-    function closePicker() {
-      pickerOpen = false;
-      picker.classList.remove('open');
-    }
-
-    function positionPicker() {
-      const ta      = document.getElementById('body-input');
-      const rect    = ta.getBoundingClientRect();
-      const lineH   = parseInt(getComputedStyle(ta).lineHeight) || 20;
-      const text    = ta.value.substring(0, pickerStart);
-      const lines   = text.split('\n').length;
-      const scrolled = ta.scrollTop;
-      const top     = rect.top + (lines - 1) * lineH - scrolled + lineH + 4;
-      const left    = rect.left + 16;
-      picker.style.top  = Math.min(top, window.innerHeight - 260) + 'px';
-      picker.style.left = left + 'px';
-    }
-
-    function insertBlock(relIdx) {
-      const items = filteredBlocks();
-      const block = items[relIdx];
-      if (!block) return closePicker();
-
-      const ta    = document.getElementById('body-input');
-      const val   = ta.value;
-      const cur   = ta.selectionStart;
-
-      // Replace from pickerStart (the '/') to current cursor
-      const before = val.substring(0, pickerStart);
-      const after  = val.substring(cur);
-
-      if (block.suffix) {
-        ta.value = before + block.prefix + block.suffix + after;
-        const pos = pickerStart + block.prefix.length;
-        ta.setSelectionRange(pos, pos);
-      } else {
-        ta.value = before + block.prefix + after;
-        const pos = pickerStart + block.prefix.length;
-        ta.setSelectionRange(pos, pos);
+    function bpRender() {
+      bpList.innerHTML = '';
+      var items = bpFiltered();
+      if (!items.length) {
+        var empty = document.createElement('div');
+        empty.style.cssText = 'padding:12px;font-size:11px;color:var(--muted,#a09890);text-align:center;';
+        empty.textContent = 'No blocks';
+        bpList.appendChild(empty);
+        return;
       }
+      items.forEach(function(b, i) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;' +
+          (i === bpIdx ? 'background:rgba(61,79,168,0.08);' : '');
+        row.setAttribute('data-idx', i);
+        var ico = document.createElement('div');
+        ico.style.cssText = 'width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:var(--bg3,#edeae3);border:1px solid var(--line,#e0dbd0);font-size:10px;flex-shrink:0;';
+        ico.textContent = b.icon;
+        var lbl = document.createElement('div');
+        lbl.style.cssText = 'font-size:11px;color:var(--text,#3a3228);flex:1;';
+        lbl.textContent = b.label;
+        var hnt = document.createElement('div');
+        hnt.style.cssText = 'font-size:9px;color:var(--muted,#a09890);';
+        hnt.textContent = b.hint;
+        row.appendChild(ico);
+        row.appendChild(lbl);
+        row.appendChild(hnt);
+        row.addEventListener('mousedown', function(ev) {
+          ev.preventDefault();
+          bpInsert(i);
+        });
+        row.addEventListener('mouseover', function() {
+          bpIdx = i;
+          bpRender();
+        });
+        bpList.appendChild(row);
+      });
+    }
 
+    function bpOpen_(pos) {
+      bpStart = pos;
+      bpQuery = '';
+      bpIdx   = 0;
+      bpOpen  = true;
+      bpPosition();
+      bpRender();
+      bpEl.style.display = 'block';
+    }
+
+    function bpClose() {
+      bpOpen = false;
+      bpEl.style.display = 'none';
+    }
+
+    function bpPosition() {
+      var ta   = document.getElementById('body-input');
+      var rect = ta.getBoundingClientRect();
+      var lh   = parseFloat(getComputedStyle(ta).lineHeight) || 22;
+      var pt   = parseFloat(getComputedStyle(ta).paddingTop) || 0;
+      var text = ta.value.substring(0, bpStart);
+      var line = text.split('\n').length;
+      var top  = rect.top + pt + line * lh - ta.scrollTop + 6;
+      var left = rect.left + 20;
+      bpEl.style.top  = Math.min(Math.max(top, 10), window.innerHeight - 270) + 'px';
+      bpEl.style.left = Math.min(left, window.innerWidth - 240) + 'px';
+    }
+
+    function bpInsert(relIdx) {
+      var items = bpFiltered();
+      var block = items[relIdx];
+      if (!block) { bpClose(); return; }
+      var ta    = document.getElementById('body-input');
+      var val   = ta.value;
+      var cur   = ta.selectionStart;
+      var before = val.substring(0, bpStart);   // text before the '/'
+      var after  = val.substring(cur);           // text after cursor
+      var inserted = block.prefix + (block.suffix || '');
+      ta.value = before + inserted + after;
+      var pos = bpStart + block.prefix.length;
+      ta.setSelectionRange(pos, pos);
       autoResize(ta);
       scheduleAutosave();
       updatePreview();
-      closePicker();
+      bpClose();
       ta.focus();
     }
 
-    document.getElementById('body-input').addEventListener('keydown', e => {
-      if (pickerOpen) {
-        const items = filteredBlocks();
-        if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          pickerIdx = (pickerIdx + 1) % Math.max(items.length, 1);
-          renderPicker();
-        } else if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          pickerIdx = (pickerIdx - 1 + Math.max(items.length, 1)) % Math.max(items.length, 1);
-          renderPicker();
-        } else if (e.key === 'Enter') {
-          e.preventDefault();
-          insertBlock(pickerIdx);
-        } else if (e.key === 'Escape') {
-          e.preventDefault();
-          closePicker();
-        } else if (e.key === 'Backspace') {
-          if (pickerQuery.length > 0) {
-            pickerQuery = pickerQuery.slice(0, -1);
-            pickerIdx = 0;
-            renderPicker();
-          } else {
-            closePicker();
-          }
-        }
-        return;
+    document.getElementById('body-input').addEventListener('keydown', function(e) {
+      if (!bpOpen) return;
+      var items = bpFiltered();
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        bpIdx = (bpIdx + 1) % (items.length || 1);
+        bpRender();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        bpIdx = (bpIdx - 1 + (items.length || 1)) % (items.length || 1);
+        bpRender();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        bpInsert(bpIdx);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        bpClose();
       }
     });
 
-    document.getElementById('body-input').addEventListener('input', e => {
-      const ta  = document.getElementById('body-input');
-      const cur = ta.selectionStart;
-      const val = ta.value;
-
-      if (pickerOpen) {
-        // Update query from text typed after the '/'
-        const typed = val.substring(pickerStart + 1, cur);
-        if (typed.includes('\n') || typed.includes(' ')) {
-          closePicker();
+    document.getElementById('body-input').addEventListener('keyup', function(e) {
+      if (bpOpen) {
+        // update filter query from what was typed after the slash
+        var ta  = document.getElementById('body-input');
+        var cur = ta.selectionStart;
+        var typed = ta.value.substring(bpStart + 1, cur);
+        if (typed.indexOf('\n') !== -1 || typed.indexOf(' ') !== -1) {
+          bpClose();
         } else {
-          pickerQuery = typed;
-          pickerIdx   = 0;
-          renderPicker();
+          bpQuery = typed;
+          bpIdx   = 0;
+          bpRender();
         }
         return;
       }
-
-      // Detect '/' typed at start of line
-      const char = val[cur - 1];
-      if (char === '/') {
-        const before = val.substring(0, cur - 1);
-        const isLineStart = before === '' || before.endsWith('\n');
-        if (isLineStart) {
-          openPicker(cur - 1);
-        }
+      if (e.key === '/') {
+        var ta = document.getElementById('body-input');
+        bpOpen_(ta.selectionStart - 1);
       }
     });
 
-    // Close on outside click
-    document.addEventListener('mousedown', e => {
-      if (pickerOpen && !picker.contains(e.target)) closePicker();
+    document.addEventListener('mousedown', function(e) {
+      if (bpOpen && !bpEl.contains(e.target)) bpClose();
+    });
+
+    // ── Conditional field visibility (showWhen) ─────────────────────
+    (function() {
+      var conditionalFields = document.querySelectorAll('[data-show-when]');
+      if (!conditionalFields.length) return;
+
+      function evalCond(cond) {
+        var parts  = cond.split(':');
+        var key    = parts[0];
+        var rawVal = parts[1];
+        var negate = rawVal.startsWith('!');
+        var expected = negate ? rawVal.slice(1) : rawVal;
+        var ctrl = document.querySelector('[name="' + key + '"]');
+        var current = ctrl ? ctrl.value : 'none';
+        return negate ? current !== expected : current === expected;
+      }
+
+      function refreshAll() {
+        conditionalFields.forEach(function(el) {
+          el.style.display = evalCond(el.dataset.showWhen) ? '' : 'none';
+        });
+      }
+
+      // Attach listeners to all controlling inputs
+      var controlKeys = new Set(Array.from(conditionalFields).map(function(el) {
+        return el.dataset.showWhen.split(':')[0];
+      }));
+      controlKeys.forEach(function(key) {
+        var ctrl = document.querySelector('[name="' + key + '"]');
+        if (ctrl) ctrl.addEventListener('change', refreshAll);
+      });
+
+      refreshAll();
+    })();
+
+    // ── Dynamic unit labels (e.g. recurring interval) ────────────────
+    (function() {
+      var unitSpans = document.querySelectorAll('[data-unit-select]');
+      if (!unitSpans.length) return;
+      unitSpans.forEach(function(span) {
+        var ctrlName = span.dataset.unitSelect;
+        var unitMap  = JSON.parse(span.dataset.unitMap || '{}');
+        var ctrl = document.querySelector('[name="' + ctrlName + '"]');
+        if (!ctrl) return;
+        function update() { span.textContent = unitMap[ctrl.value] || ''; }
+        ctrl.addEventListener('change', update);
+        update();
+      });
+    })();
+
+    // ── Inline media upload ──────────────────────────────────────────
+    window.uploadMediaField = async function(key, input) {
+      if (!input.files?.length) return;
+      var file     = input.files[0];
+      var statusEl = document.getElementById('media-status-' + key);
+      var sel      = document.getElementById('media-sel-' + key);
+      var zone     = document.getElementById('media-drop-' + key);
+      var img      = document.getElementById('media-img-' + key);
+      var label    = document.getElementById('media-drop-label-' + key);
+
+      statusEl.textContent = '↑ uploading…';
+      statusEl.style.color = 'var(--muted)';
+
+      var fd = new FormData();
+      fd.append('action', 'upload');
+      fd.append('file', file);
+      fd.append('alt', '');
+
+      try {
+        var res  = await fetch('/orbiter/media', { method: 'POST', body: fd, headers: { 'Accept': 'application/json' } });
+        var data = await res.json();
+        if (data.ok && data.id) {
+          // Update select
+          var opt = document.createElement('option');
+          opt.value = data.id;
+          opt.textContent = data.filename;
+          opt.selected = true;
+          sel.appendChild(opt);
+          // Update drop zone
+          if (img) { img.src = '/orbiter/media/' + data.id; img.style.display = 'block'; }
+          if (zone) { zone.classList.add('has-image'); }
+          if (label) { label.textContent = ''; }
+          statusEl.textContent = '✓ ' + data.filename;
+          statusEl.style.color = 'var(--jade)';
+          setTimeout(function() { statusEl.textContent = ''; }, 3000);
+        } else {
+          throw new Error(data.error ?? 'upload failed');
+        }
+      } catch(e) {
+        statusEl.textContent = '✗ ' + e.message;
+        statusEl.style.color = 'var(--crimson,#8b2635)';
+      }
+      if (input.value !== undefined) input.value = '';
+    };
+
+    // ── Weekday toggle ───────────────────────────────────────────────
+    window.toggleWeekday = function(btn, key, day) {
+      btn.classList.toggle('active');
+      var hidden = document.getElementById('wd-val-' + key);
+      var current = hidden.value ? hidden.value.split(',') : [];
+      var idx = current.indexOf(day);
+      if (idx === -1) current.push(day);
+      else current.splice(idx, 1);
+      hidden.value = current.join(',');
+      // Sync: replace hidden with individual form values via name change trick
+      // The hidden input carries the comma-separated value; POST handler splits it
+    };
+
+    // ── Tag preview ──────────────────────────────────────────────────
+    window.renderTags = function(key) {
+      var input   = document.getElementById('arr-' + key);
+      var preview = document.getElementById('tags-' + key);
+      if (!preview) return;
+      var tags = input.value.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+      preview.innerHTML = tags.map(function(t) {
+        return '<span class="tag-chip">' + t + '</span>';
+      }).join('');
+    };
+
+    // Init tag previews on load
+    document.querySelectorAll('[id^="arr-"]').forEach(function(el) {
+      var key = el.id.replace('arr-', '');
+      window.renderTags(key);
     });
   </script>
 </body>

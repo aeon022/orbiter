@@ -72,7 +72,64 @@ db.db.prepare(`
   })
 );
 
-console.log('  ✓ Collections created (posts, pages, authors)');
+db.db.prepare(`
+  INSERT OR IGNORE INTO _collections (id, label, schema) VALUES (?, ?, ?)
+`).run(
+  'events',
+  'Events',
+  JSON.stringify({
+    title:                  { type: 'string',   required: true,  label: 'Event Name' },
+    date_start:             { type: 'datetime', required: true,  label: 'Start' },
+    date_end:               { type: 'datetime', required: false, label: 'Ende' },
+
+    recurring:              { type: 'select',   required: false, label: 'Wiederholen',
+                              options: ['none','daily','weekly','monthly_day','monthly_weekday','yearly'],
+                              optionLabels: {
+                                none: 'Einmalig',
+                                daily: 'Täglich',
+                                weekly: 'Wöchentlich',
+                                monthly_day: 'Monatlich — Tag X',
+                                monthly_weekday: 'Monatlich — Wochentag',
+                                yearly: 'Jährlich',
+                              } },
+    recurring_interval:     { type: 'number',   required: false, label: 'Alle',
+                              showWhen: 'recurring:!none',
+                              unitSelect: 'recurring',
+                              unitMap: {
+                                daily: 'Tage', weekly: 'Wochen',
+                                monthly_day: 'Monate', monthly_weekday: 'Monate', yearly: 'Jahre',
+                              } },
+    recurring_days:         { type: 'weekdays', required: false, label: 'An Wochentagen',
+                              showWhen: 'recurring:weekly' },
+    recurring_day_of_month: { type: 'number',   required: false, label: 'Tag des Monats',
+                              showWhen: 'recurring:monthly_day' },
+    recurring_month_pos:    { type: 'select',   required: false, label: 'Position',
+                              options: ['1st','2nd','3rd','4th','last'],
+                              optionLabels: { '1st':'1.', '2nd':'2.', '3rd':'3.', '4th':'4.', last:'Letzter' },
+                              showWhen: 'recurring:monthly_weekday' },
+    recurring_month_weekday:{ type: 'select',   required: false, label: 'Wochentag',
+                              options: ['Mo','Di','Mi','Do','Fr','Sa','So'],
+                              showWhen: 'recurring:monthly_weekday' },
+    recurring_end_date:     { type: 'date',     required: false, label: 'Wiederholung bis',
+                              showWhen: 'recurring:!none' },
+
+    hero_image:             { type: 'media',    required: false, label: 'Hero Image' },
+    preview_image:          { type: 'media',    required: false, label: 'Vorschaubild' },
+    video_url:              { type: 'url',      required: false, label: 'Video URL' },
+
+    price:                  { type: 'string',   required: false, label: 'Eintritt' },
+    price_notes:            { type: 'string',   required: false, label: 'Preishinweis' },
+    ticket_url:             { type: 'url',      required: false, label: 'Ticket URL' },
+    ticket_provider:        { type: 'select',   required: false, label: 'Ticket-Anbieter',
+                              options: ['custom','pretix','eventbrite','eventim','ticketmaster','tixfox','reservix'] },
+
+    body:                   { type: 'richtext', required: false, label: 'Details' },
+    categories:             { type: 'array',    required: false, label: 'Kategorien' },
+    tags:                   { type: 'array',    required: false, label: 'Tags' },
+  })
+);
+
+console.log('  ✓ Collections created (posts, pages, authors, events)');
 
 // ── Authors ──────────────────────────────────────────────
 
@@ -183,6 +240,65 @@ for (const page of pages) {
 
 console.log(`  ✓ Pages seeded (2 published, 1 draft)`);
 
+// ── Events ───────────────────────────────────────────────
+
+const events = [
+  {
+    slug:   'design-festival-2026',
+    status: 'published',
+    data: {
+      title:          'Design Festival 2026',
+      date_start:     '2026-05-15T10:00',
+      date_end:       '2026-05-17T20:00',
+      recurring:      'none',
+      recurring_days: [],
+      hero_image:     null,
+      preview_image:  null,
+      video_url:      '',
+      body:           'Drei Tage Design, Talks und Workshops im Herzen der Stadt.',
+      categories:     ['design', 'festival', 'kultur'],
+    },
+  },
+  {
+    slug:   'wochentlicher-sketch-club',
+    status: 'published',
+    data: {
+      title:          'Wöchentlicher Sketch Club',
+      date_start:     '2026-04-07T18:00',
+      date_end:       '2026-04-07T20:00',
+      recurring:      'weekly',
+      recurring_days: ['Mon'],
+      hero_image:     null,
+      preview_image:  null,
+      video_url:      '',
+      body:           'Jeden Montag. Bleistift, Papier, Kaffee.',
+      categories:     ['workshop', 'zeichnen'],
+    },
+  },
+  {
+    slug:   'orbiter-launch-talk',
+    status: 'draft',
+    data: {
+      title:          'Orbiter Launch Talk',
+      date_start:     '2026-06-01T19:00',
+      date_end:       '2026-06-01T21:00',
+      recurring:      'none',
+      recurring_days: [],
+      hero_image:     null,
+      preview_image:  null,
+      video_url:      'https://youtube.com/watch?v=example',
+      body:           'Ein Abend über portable CMS-Architekturen und das .pod-Format.',
+      categories:     ['tech', 'vortrag'],
+    },
+  },
+];
+
+for (const ev of events) {
+  insertEntry.run(randomUUID(), 'events', ev.slug, JSON.stringify(ev.data), ev.status);
+}
+
+console.log(`  ✓ Events seeded (2 published, 1 draft)`);
+
 // ── Media (placeholder) ──────────────────────────────────
 
 // Create a minimal 1x1 transparent PNG as placeholder
@@ -246,9 +362,10 @@ console.log(`
 ◆ Orbiter — demo.pod ready
   Path:        ${podPath}
   Size:        ${podSize} KB
-  Collections: posts, pages, authors
+  Collections: posts, pages, authors, events
   Posts:       ${posts.length} (2 published, 1 draft)
   Pages:       ${pages.length} (2 published, 1 draft)
+  Events:      ${events.length} (2 published, 1 draft)
   Media:       2 placeholder assets
 ────────────────────────────────
 

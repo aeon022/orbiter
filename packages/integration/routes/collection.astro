@@ -1,7 +1,7 @@
 ---
 import { podPath } from 'orbiter:db';
 import { openPod } from '@orbiter/core';
-import adminCss from 'orbiter:admin-css';
+import adminUtils from 'orbiter:admin-utils';
 
 const { collection: collectionId } = Astro.params;
 
@@ -9,13 +9,43 @@ const db  = openPod(podPath);
 const col = db.getCollection(collectionId);
 if (!col) return Astro.redirect('/orbiter');
 
+// Inline status toggle
+if (Astro.request.method === 'POST') {
+  const body = await Astro.request.json().catch(() => null);
+  if (body?.action === 'toggle-status' && body?.slug) {
+    const entry = db.getEntry(collectionId, body.slug);
+    if (entry) {
+      const newStatus = entry.status === 'published' ? 'draft' : 'published';
+      const sqliteNow = () => new Date().toISOString().replace('T',' ').replace(/\.\d{3}Z$/,'');
+      db.db.prepare('UPDATE _entries SET status=?, updated_at=? WHERE id=?')
+        .run(newStatus, sqliteNow(), entry.id);
+      db.close();
+      return new Response(JSON.stringify({ ok: true, status: newStatus }), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+  }
+  db.close();
+  return new Response(JSON.stringify({ ok: false }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+}
+
 const entries        = db.getEntries(collectionId);
 const published      = entries.filter(e => e.status === 'published');
 const drafts         = entries.filter(e => e.status === 'draft');
 const allCollections = db.getCollections().map(c => ({
   id: c.id, label: c.label, total: db.getEntries(c.id).length,
 }));
-const adminLocale = db.getMeta('site.locale') ?? 'de-AT';
+const adminLocale = db.getMeta('site.locale') ?? 'en-US';
+const mediaCount  = db.db.prepare('SELECT COUNT(*) as n FROM _media').get().n;
+
+// Schema-aware preview: find subtitle field (first datetime or first non-title string)
+const schema       = col.schema ? JSON.parse(col.schema) : {};
+const schemaFields = Object.entries(schema);
+const dateField    = schemaFields.find(([, f]) => f.type === 'datetime')?.[0] ?? null;
+const subtitleField = dateField
+  ?? schemaFields.find(([k, f]) => k !== 'title' && k !== 'body' && f.type === 'string')?.[0]
+  ?? null;
+
 db.close();
 
 const filter  = Astro.url.searchParams.get('filter') ?? 'all';
@@ -28,10 +58,9 @@ const visible = filter === 'published' ? published
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Orbiter — {col.label}</title>
+  <title>{col.label} — Orbiter</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
-  <style set:html={adminCss} />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -44,23 +73,35 @@ const visible = filter === 'published' ? published
       --shadow:0 1px 3px rgba(0,0,0,0.08);
       --serif:"Noto Serif JP",serif; --mono:"DM Mono",monospace;
     }
+    html.dark {
+      --bg0:#0f0f14; --bg1:#14141a; --bg2:#1c1c24; --bg3:#22222d;
+      --line:#2a2a3a; --line2:rgba(255,255,255,0.04);
+      --muted:#52526e; --mid:#8080a0; --text:#b0b0cc; --heading:#e0e0f0;
+      --gold:#c8a86b; --gold-bg:rgba(200,168,107,0.08);
+      --jade:#2d8b6a; --jade-bg:rgba(45,139,106,0.08);
+      --accent:#7a8fd4; --accent-bg:rgba(122,143,212,0.08);
+    }
     html,body { background:var(--bg0); color:var(--text); font-family:var(--mono); font-size:13px; line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
+
+    /* Layout */
     .layout { display:grid; grid-template-columns:210px 1fr; grid-template-rows:54px 1fr; min-height:100vh; }
+
+    /* Topbar */
     .topbar { grid-column:1/-1; background:var(--bg2); border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 22px; }
     .logo { font-family:var(--serif); font-weight:200; font-size:17px; color:var(--heading); display:flex; align-items:center; gap:9px; letter-spacing:0.1em; text-decoration:none; flex-shrink:0; }
     .logo-mark { width:22px; height:22px; border:1px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:9px; color:var(--gold); font-family:var(--mono); }
-    .logo-kana { font-size:10px; color:var(--muted); font-family:var(--serif); font-weight:200; margin-left:2px; }
     .breadcrumb { margin-left:20px; font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; }
     .breadcrumb a { color:var(--mid); text-decoration:none; }
     .breadcrumb a:hover { color:var(--heading); }
     .breadcrumb .sep { color:var(--line); }
-    .breadcrumb .current { color:var(--text); }
-    .topbar-site { margin-left:24px; font-size:11px; color:var(--muted); }
-    .topbar-right { margin-left:auto; display:flex; align-items:center; gap:14px; }
-    .topbar-pod { margin-left:auto; font-size:10px; color:var(--jade); display:flex; align-items:center; gap:6px; }
+    .topbar-right { margin-left:auto; display:flex; align-items:center; gap:12px; }
     .pod-status { font-size:10px; color:var(--jade); display:flex; align-items:center; gap:5px; }
+    .dark-toggle { background:none; border:1px solid var(--line); color:var(--mid); font-family:var(--mono); font-size:10px; padding:3px 10px; cursor:pointer; letter-spacing:0.04em; transition:color 0.12s,border-color 0.12s,background 0.12s; }
+    .dark-toggle:hover { color:var(--heading); border-color:var(--mid); background:var(--bg3); }
     .pod-dot { width:5px; height:5px; border-radius:50%; background:var(--jade); animation:pulse 2.5s ease-in-out infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+    /* Sidebar */
     .sidebar { background:var(--bg1); border-right:1px solid var(--line); padding:20px 0; display:flex; flex-direction:column; }
     .nav-section { font-size:9px; letter-spacing:0.3em; text-transform:uppercase; color:var(--muted); padding:0 16px; margin:18px 0 5px; }
     .nav-section:first-child { margin-top:0; }
@@ -73,62 +114,63 @@ const visible = filter === 'published' ? published
     .sidebar-pod { margin-top:auto; padding:12px 16px; border-top:1px solid var(--line); font-size:10px; color:var(--muted); }
     .sidebar-pod-name { color:var(--text); font-size:11px; margin-bottom:2px; display:flex; align-items:center; gap:5px; }
     .sidebar-pod-name::before { content:"◆"; font-size:6px; color:var(--gold); }
-    .main { padding:32px 40px; background:var(--bg0); overflow-y:auto; position:relative; }
-    .kanji { position:absolute; right:32px; bottom:24px; font-family:var(--serif); font-size:130px; color:var(--heading); opacity:0.04; pointer-events:none; user-select:none; }
-    .main-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:28px; padding-bottom:18px; border-bottom:1px solid var(--line); }
-    .main-title { font-family:var(--serif); font-weight:200; font-size:26px; color:var(--heading); letter-spacing:0.05em; line-height:1; }
-    .main-title-jp { font-size:10px; color:var(--muted); font-family:var(--serif); font-weight:200; letter-spacing:0.08em; margin-top:5px; }
-    .main-date { font-size:10px; color:var(--muted); text-align:right; line-height:1.9; }
-    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
-    .stat { background:var(--bg2); border:1px solid var(--line); padding:16px 18px; position:relative; overflow:hidden; transition:border-color 0.15s,box-shadow 0.15s; }
-    .stat:hover { border-color:var(--gold); box-shadow:var(--shadow); }
-    .stat-label { font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
-    .stat-value { font-size:30px; font-weight:200; font-family:var(--serif); color:var(--heading); line-height:1; margin-bottom:5px; }
-    .stat-sub { font-size:10px; color:var(--jade); }
-    .stat-sub.gold { color:var(--gold); }
-    .stat-deco { position:absolute; bottom:8px; right:12px; font-family:var(--serif); font-size:26px; opacity:0.06; color:var(--heading); pointer-events:none; }
-    .panel { background:var(--bg2); border:1px solid var(--line); }
-    .panel-header { padding:11px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
-    .panel-title { font-size:9px; letter-spacing:0.25em; text-transform:uppercase; color:var(--text); display:flex; align-items:center; gap:8px; }
-    .panel-title::before { content:"—"; color:var(--gold); }
-    .panel-action { font-size:10px; color:var(--accent); text-decoration:none; }
-    .panel-action:hover { color:var(--heading); }
-    .entry-row { display:grid; grid-template-columns:1fr 100px 72px; align-items:center; gap:12px; padding:11px 16px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; }
-    .entry-row:hover { background:var(--line2); }
-    .entry-row:last-child { border-bottom:none; }
-    .entry-title { font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .entry-coll { font-size:10px; color:var(--muted); margin-top:2px; }
-    .entry-date { font-size:10px; color:var(--muted); }
-    .pill { font-size:9px; padding:2px 7px; letter-spacing:0.06em; text-align:center; }
-    .pill.published { color:var(--jade); background:var(--jade-bg); }
-    .pill.draft { color:var(--gold); background:var(--gold-bg); }
-    .btn-gold { display:inline-block; padding:7px 16px; background:transparent; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:10px; letter-spacing:0.13em; text-transform:uppercase; cursor:pointer; text-decoration:none; transition:all 0.15s; }
-    .btn-gold:hover { background:var(--gold); color:var(--bg0); }
-    .btn-block { display:block; width:calc(100% - 32px); margin:12px 16px 14px; padding:9px; text-align:center; }
-    .new-btn { display:block; margin:12px 16px 14px; padding:9px; background:transparent; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:10px; letter-spacing:0.14em; cursor:pointer; text-transform:uppercase; text-align:center; text-decoration:none; transition:all 0.2s; }
-    .new-btn:hover { background:var(--gold); color:var(--bg0); }
-    .coll-item { display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; }
-    .coll-item:hover { background:var(--line2); }
-    .coll-item:last-child { border-bottom:none; }
-    .coll-name { font-size:12px; color:var(--text); }
-    .coll-counts { font-size:10px; color:var(--muted); text-align:right; line-height:1.8; }
-    .coll-counts span { color:var(--jade); }
-    .content-grid { display:grid; grid-template-columns:1fr 280px; gap:16px; }
-    .side-panels { display:flex; flex-direction:column; gap:12px; }
-    .field-input,.field-select,.field-textarea { width:100%; background:var(--bg0); border:1px solid var(--line); padding:6px 9px; color:var(--heading); font-family:var(--mono); font-size:11px; outline:none; appearance:none; transition:border-color 0.15s; }
-    .field-input:focus,.field-select:focus,.field-textarea:focus { border-color:var(--accent); }
-    .coming-soon { margin-top:20px; padding:16px 18px; background:var(--bg2); border:1px solid var(--line); border-left:2px solid var(--accent); font-size:11px; color:var(--muted); line-height:1.8; }
-    .coming-soon span { color:var(--accent); }
-    .filter-pill { font-size:10px; padding:4px 12px; border:1px solid var(--line); color:var(--mid); text-decoration:none; transition:all 0.12s; background:var(--bg2); letter-spacing:0.04em; }
-    .filter-pill:hover { border-color:var(--mid); color:var(--text); }
-    .filter-pill.active { border-color:var(--heading); color:var(--heading); background:var(--bg3); }
-    .filter-pill.published.active { border-color:var(--jade); color:var(--jade); background:var(--jade-bg); }
-    .filter-pill.draft.active { border-color:var(--gold); color:var(--gold); background:var(--gold-bg); }
+
+    /* Main */
+    .main { background:var(--bg0); overflow-y:auto; display:flex; flex-direction:column; }
+
+    /* Collection header */
+    .coll-header { background:var(--bg2); border-bottom:1px solid var(--line); padding:20px 32px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .coll-title { font-family:var(--serif); font-weight:200; font-size:24px; color:var(--heading); letter-spacing:0.04em; }
+    .coll-meta { font-size:10px; color:var(--muted); margin-top:3px; display:flex; gap:12px; }
+    .coll-meta-item { display:flex; align-items:center; gap:4px; }
+    .coll-meta-dot { width:5px; height:5px; border-radius:50%; }
+    .coll-meta-dot.jade { background:var(--jade); }
+    .coll-meta-dot.gold { background:var(--gold); }
+    .btn-new { display:inline-flex; align-items:center; gap:6px; padding:8px 18px; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:10px; letter-spacing:0.12em; text-decoration:none; transition:all 0.15s; }
+    .btn-new:hover { background:var(--gold); color:var(--bg0); }
+
+    /* Filter tabs */
+    .filter-bar { display:flex; align-items:center; gap:0; border-bottom:1px solid var(--line); padding:0 32px; background:var(--bg1); }
+    .filter-tab { font-size:10px; color:var(--muted); padding:10px 16px; text-decoration:none; border-bottom:2px solid transparent; margin-bottom:-1px; letter-spacing:0.04em; transition:color 0.12s,border-color 0.12s; display:flex; align-items:center; gap:6px; }
+    .filter-tab:hover { color:var(--text); }
+    .filter-tab.active { color:var(--heading); border-bottom-color:var(--gold); }
+    .filter-tab.active.published { color:var(--jade); border-bottom-color:var(--jade); }
+    .filter-tab.active.draft { color:var(--gold); border-bottom-color:var(--gold); }
+    .filter-tab-count { font-size:9px; background:var(--bg3); border:1px solid var(--line); padding:0 5px; color:var(--muted); }
+    .filter-tab.active .filter-tab-count { background:var(--gold-bg); border-color:var(--gold); color:var(--gold); }
+    .filter-tab.active.published .filter-tab-count { background:var(--jade-bg); border-color:var(--jade); color:var(--jade); }
+
+    /* Entry table */
+    .entry-table { flex:1; }
+    .entry-thead { display:grid; grid-template-columns:3fr 1.8fr 100px 90px; gap:0; padding:7px 32px; border-bottom:1px solid var(--line); background:var(--bg1); }
+    .entry-thead-cell { font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); }
+    .entry-row { display:grid; grid-template-columns:3fr 1.8fr 100px 90px; gap:0; align-items:center; padding:0 0 0 32px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; position:relative; }
+    .entry-row:hover { background:var(--bg2); }
+    .entry-row::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; transition:background 0.2s; }
+    .entry-row.published::before { background:var(--jade); }
+    .entry-row.draft::before { background:var(--gold); opacity:0.5; }
+    .entry-cell { padding:12px 16px 12px 0; min-width:0; }
+    .entry-name { font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; }
+    .entry-slug { font-size:9px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:0.02em; }
+    .entry-subtitle { font-size:9px; color:var(--accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:0.02em; }
+    .entry-date { font-size:11px; color:var(--mid); }
+    .status-toggle { font-size:9px; letter-spacing:0.06em; background:none; border:1px solid transparent; padding:3px 8px; cursor:pointer; font-family:var(--mono); transition:all 0.15s; }
+    .status-toggle.published { color:var(--jade); border-color:rgba(30,107,80,0.2); background:var(--jade-bg); }
+    .status-toggle.draft { color:var(--gold); border-color:rgba(154,110,48,0.2); background:var(--gold-bg); }
+    .status-toggle:hover { opacity:0.7; }
+    .entry-arrow { font-size:11px; color:var(--line); padding:12px 20px 12px 0; transition:color 0.12s; text-align:right; }
+    .entry-row:hover .entry-arrow { color:var(--mid); }
+
+    /* Empty */
+    .empty-state { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:60px; color:var(--muted); }
+    .empty-icon { font-size:32px; opacity:0.2; }
+    .empty-text { font-size:12px; text-align:center; line-height:2; }
   </style>
 </head>
 <body>
   <div class="layout">
 
+    <!-- Topbar -->
     <div class="topbar">
       <a href="/orbiter" class="logo">
         <div class="logo-mark">OR</div>
@@ -137,13 +179,16 @@ const visible = filter === 'published' ? published
       <div class="breadcrumb">
         <a href="/orbiter">Dashboard</a>
         <span class="sep">/</span>
-        <span class="current">{col.label}</span>
+        <span style="color:var(--text)">{col.label}</span>
       </div>
       <div class="topbar-right">
+        <button class="pal-trigger" onclick="__orbOpenPalette()" title="Command palette"> Strg K</button>
         <div class="pod-status"><div class="pod-dot"></div>pod synced</div>
+        <button id="orb-dark-btn" onclick="__orbToggleDark()" class="dark-toggle" title="Toggle dark mode">● dark</button>
       </div>
     </div>
 
+    <!-- Sidebar -->
     <div class="sidebar">
       <div class="nav-section">Content</div>
       <a href="/orbiter" class="nav-item"><span class="nav-icon">◈</span>Dashboard</a>
@@ -154,8 +199,9 @@ const visible = filter === 'published' ? published
         </a>
       ))}
       <div class="nav-section">Assets</div>
-      <a href="/orbiter/media" class="nav-item"><span class="nav-icon">⊞</span>Media</a>
+      <a href="/orbiter/media" class="nav-item"><span class="nav-icon">⊞</span>Media<span class="nav-badge">{mediaCount}</span></a>
       <div class="nav-section">System</div>
+      <a href="/orbiter/build"    class="nav-item"><span class="nav-icon">▲</span>Build</a>
       <a href="/orbiter/settings" class="nav-item"><span class="nav-icon">◎</span>Settings</a>
       <div class="sidebar-pod">
         <div class="sidebar-pod-name">content.pod</div>
@@ -163,44 +209,114 @@ const visible = filter === 'published' ? published
       </div>
     </div>
 
+    <!-- Main -->
     <div class="main">
-      <div class="main-header">
+
+      <!-- Collection header -->
+      <div class="coll-header">
         <div>
-          <div class="main-title">{col.label}</div>
-          <div class="main-title-jp">{entries.length} entries — {published.length} published, {drafts.length} drafts</div>
-        </div>
-        <a href={`/orbiter/${collectionId}/new`} class="btn-gold">+ New Entry</a>
-      </div>
-
-      <div style="display:flex;gap:6px;margin-bottom:18px;">
-        <a href={`/orbiter/${collectionId}`} class={`filter-pill ${filter === 'all' ? 'active' : ''}`}>All ({entries.length})</a>
-        <a href={`/orbiter/${collectionId}?filter=published`} class={`filter-pill published ${filter === 'published' ? 'active' : ''}`}>Published ({published.length})</a>
-        <a href={`/orbiter/${collectionId}?filter=draft`} class={`filter-pill draft ${filter === 'draft' ? 'active' : ''}`}>Drafts ({drafts.length})</a>
-      </div>
-
-      {visible.length === 0 ? (
-        <div style="padding:48px;text-align:center;background:var(--bg2);border:1px solid var(--line);">
-          <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">
-            {entries.length === 0 ? 'No entries yet.' : `No ${filter} entries.`}
+          <div class="coll-title">{col.label}</div>
+          <div class="coll-meta">
+            <div class="coll-meta-item">
+              <div class="coll-meta-dot jade"></div>
+              {published.length} published
+            </div>
+            <div class="coll-meta-item">
+              <div class="coll-meta-dot gold"></div>
+              {drafts.length} draft{drafts.length !== 1 ? 's' : ''}
+            </div>
           </div>
-          {entries.length === 0 && <a href={`/orbiter/${collectionId}/new`} class="btn-gold">+ Create first entry</a>}
         </div>
-      ) : (
-        <div class="panel">
+        <a href={`/orbiter/${collectionId}/new`} class="btn-new">+ New Entry</a>
+      </div>
+
+      <!-- Filter tabs -->
+      <div class="filter-bar">
+        <a href={`/orbiter/${collectionId}`} class={`filter-tab ${filter === 'all' ? 'active' : ''}`}>
+          All <span class="filter-tab-count">{entries.length}</span>
+        </a>
+        <a href={`/orbiter/${collectionId}?filter=published`} class={`filter-tab published ${filter === 'published' ? 'active published' : ''}`}>
+          Published <span class="filter-tab-count">{published.length}</span>
+        </a>
+        <a href={`/orbiter/${collectionId}?filter=draft`} class={`filter-tab draft ${filter === 'draft' ? 'active draft' : ''}`}>
+          Drafts <span class="filter-tab-count">{drafts.length}</span>
+        </a>
+      </div>
+
+      <!-- Entry table -->
+      {visible.length > 0 ? (
+        <div class="entry-table">
+          <div class="entry-thead">
+            <div class="entry-thead-cell">Title</div>
+            <div class="entry-thead-cell">Slug</div>
+            <div class="entry-thead-cell">Updated</div>
+            <div class="entry-thead-cell">Status</div>
+          </div>
           {visible.map(entry => (
-            <a href={`/orbiter/${collectionId}/${entry.slug}`} class="entry-row">
-              <div>
-                <div class="entry-title">{entry.data?.title ?? entry.slug}</div>
-                <div class="entry-coll">/{collectionId}/{entry.slug}</div>
+            <a href={`/orbiter/${collectionId}/${entry.slug}`} class={`entry-row ${entry.status}`}>
+              <div class="entry-cell">
+                <div class="entry-name">{entry.data?.title ?? entry.slug}</div>
+                {subtitleField && entry.data?.[subtitleField] ? (
+                  <div class="entry-subtitle">
+                    {dateField
+                      ? new Date(entry.data[dateField]).toLocaleString(adminLocale, { dateStyle:'medium', timeStyle:'short' })
+                      : entry.data[subtitleField]
+                    }
+                  </div>
+                ) : (
+                  <div class="entry-slug">/{collectionId}/{entry.slug}</div>
+                )}
               </div>
-              <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString(adminLocale)}</div>
-              <div class={`pill ${entry.status}`}>{entry.status}</div>
+              <div class="entry-cell">
+                <div class="entry-slug">{entry.slug}</div>
+              </div>
+              <div class="entry-cell">
+                <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString(adminLocale)}</div>
+              </div>
+              <div class="entry-cell" onclick="event.preventDefault();toggleStatus(this,'{entry.slug}')">
+                <button class={`status-toggle ${entry.status}`} data-slug={entry.slug}>{entry.status}</button>
+              </div>
             </a>
           ))}
         </div>
+      ) : (
+        <div class="empty-state">
+          <div class="empty-icon">▤</div>
+          <div class="empty-text">
+            {entries.length === 0 ? 'No entries yet.' : `No ${filter} entries.`}<br/>
+            {entries.length === 0 && <a href={`/orbiter/${collectionId}/new`} style="color:var(--accent)">Create first entry →</a>}
+          </div>
+        </div>
       )}
+
     </div>
 
   </div>
+  <script set:html={adminUtils} is:inline></script>
+  <script define:vars={{ collectionId }}>
+    window.toggleStatus = async function(cell, slug) {
+      const btn = cell.querySelector('.status-toggle');
+      if (!btn || btn.dataset.busy) return;
+      btn.dataset.busy = '1';
+      const oldStatus = btn.textContent.trim();
+      try {
+        const res  = await fetch('/orbiter/' + collectionId, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'toggle-status', slug }),
+        });
+        const json = await res.json();
+        if (json.ok) {
+          const newStatus = json.status;
+          btn.textContent = newStatus;
+          btn.className   = 'status-toggle ' + newStatus;
+          const row = cell.closest('.entry-row');
+          row.classList.remove('published', 'draft');
+          row.classList.add(newStatus);
+        }
+      } catch {}
+      delete btn.dataset.busy;
+    }
+  </script>
 </body>
 </html>

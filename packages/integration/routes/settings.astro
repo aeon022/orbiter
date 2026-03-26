@@ -1,6 +1,7 @@
 ---
 import { podPath } from 'orbiter:db';
 import { openPod } from '@orbiter/core';
+import adminUtils from 'orbiter:admin-utils';
 
 // ── Handle POST (save) ────────────────────────────────────────────────
 if (Astro.request.method === 'POST') {
@@ -55,6 +56,14 @@ const saved = Astro.url.searchParams.get('saved') === '1';
       --shadow:0 1px 3px rgba(0,0,0,0.08);
       --serif:"Noto Serif JP",serif; --mono:"DM Mono",monospace;
     }
+    html.dark {
+      --bg0:#0f0f14; --bg1:#14141a; --bg2:#1c1c24; --bg3:#22222d;
+      --line:#2a2a3a; --line2:rgba(255,255,255,0.04);
+      --muted:#52526e; --mid:#8080a0; --text:#b0b0cc; --heading:#e0e0f0;
+      --gold:#c8a86b; --gold-bg:rgba(200,168,107,0.08);
+      --jade:#2d8b6a; --jade-bg:rgba(45,139,106,0.08);
+      --accent:#7a8fd4; --accent-bg:rgba(122,143,212,0.08);
+    }
     html,body { background:var(--bg0); color:var(--text); font-family:var(--mono); font-size:13px; line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
     .layout { display:grid; grid-template-columns:210px 1fr; grid-template-rows:54px 1fr; min-height:100vh; }
 
@@ -70,6 +79,8 @@ const saved = Astro.url.searchParams.get('saved') === '1';
     .breadcrumb .current { color:var(--text); }
     .topbar-right { margin-left:auto; display:flex; align-items:center; gap:14px; }
     .pod-status { font-size:10px; color:var(--jade); display:flex; align-items:center; gap:5px; }
+    .dark-toggle { background:none; border:1px solid var(--line); color:var(--mid); font-family:var(--mono); font-size:10px; padding:3px 10px; cursor:pointer; letter-spacing:0.04em; transition:color 0.12s,border-color 0.12s,background 0.12s; }
+    .dark-toggle:hover { color:var(--heading); border-color:var(--mid); background:var(--bg3); }
     .pod-dot { width:5px; height:5px; border-radius:50%; background:var(--jade); animation:pulse 2.5s ease-in-out infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
 
@@ -96,7 +107,7 @@ const saved = Astro.url.searchParams.get('saved') === '1';
     .main-title { font-family:var(--serif); font-weight:200; font-size:26px; color:var(--heading); letter-spacing:0.05em; line-height:1; }
 
     /* Settings groups */
-    .settings-group { background:var(--bg2); border:1px solid var(--line); margin-bottom:16px; }
+    .settings-group { background:var(--bg2); border:1px solid var(--line); margin-bottom:14px; }
     .group-header { padding:10px 18px; border-bottom:1px solid var(--line); font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:8px; }
     .group-header::before { content:"—"; color:var(--gold); }
     .setting-row { display:grid; grid-template-columns:1fr 260px; align-items:center; gap:20px; padding:14px 18px; border-bottom:1px solid var(--line2); }
@@ -132,7 +143,9 @@ const saved = Astro.url.searchParams.get('saved') === '1';
         <span class="current">Settings</span>
       </div>
       <div class="topbar-right">
+        <button class="pal-trigger" onclick="__orbOpenPalette()" title="Command palette"> Strg K</button>
         <div class="pod-status"><div class="pod-dot"></div>pod synced</div>
+        <button id="orb-dark-btn" onclick="__orbToggleDark()" class="dark-toggle" title="Toggle dark mode">● dark</button>
       </div>
     </div>
 
@@ -149,6 +162,7 @@ const saved = Astro.url.searchParams.get('saved') === '1';
       <div class="nav-section">Assets</div>
       <a href="/orbiter/media" class="nav-item"><span class="nav-icon">⊞</span>Media</a>
       <div class="nav-section">System</div>
+      <a href="/orbiter/build"    class="nav-item"><span class="nav-icon">▲</span>Build</a>
       <a href="/orbiter/settings" class="nav-item active"><span class="nav-icon">◎</span>Settings</a>
       <div class="sidebar-pod">
         <div class="sidebar-pod-name">content.pod</div>
@@ -207,12 +221,12 @@ const saved = Astro.url.searchParams.get('saved') === '1';
           </div>
 
           <!-- Build -->
-          <div class="settings-group" style="margin-top:16px;">
-            <div class="group-header">Build & Deploy</div>
+          <div class="settings-group">
+            <div class="group-header">Build &amp; Deploy</div>
             <div class="setting-row">
               <div>
                 <div class="setting-label">Webhook URL</div>
-                <div class="setting-desc">POST-Target für Build-Trigger (Netlify, Vercel, etc.)</div>
+                <div class="setting-desc">POST-Target for build triggers (Netlify, Vercel, etc.)</div>
               </div>
               <input class="field-input" name="build.webhook_url" value={meta.webhookUrl} placeholder="https://api.netlify.com/build/hook/…" />
             </div>
@@ -224,7 +238,7 @@ const saved = Astro.url.searchParams.get('saved') === '1';
         </form>
 
         <!-- Pod info (readonly) -->
-        <div class="settings-group" style="margin-top:24px;">
+        <div class="settings-group">
           <div class="group-header">Pod</div>
           <div class="setting-row">
             <div>
@@ -240,15 +254,20 @@ const saved = Astro.url.searchParams.get('saved') === '1';
             </div>
             <input class="field-input" value={`v${formatVersion}`} readonly />
           </div>
-        </div>
-
-        <div class="coming-soon">
-          <span>◆ Phase 3 — Warp</span><br/>
-          Deploy webhooks, build triggers, and i18n config coming next.
+          {allCollections.map(c => (
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">{c.label}</div>
+                <div class="setting-desc">collection · id: {c.id}</div>
+              </div>
+              <input class="field-input" value={`${c.total} entries`} readonly />
+            </div>
+          ))}
         </div>
       </div>
     </div>
 
   </div>
+  <script set:html={adminUtils} is:inline></script>
 </body>
 </html>

@@ -1,0 +1,205 @@
+---
+import { podPath } from 'orbiter:db';
+import { openPod } from '@orbiter/core';
+
+const { slug } = Astro.params;
+const db    = openPod(podPath);
+const entry = db.getEntry('events', slug);
+db.close();
+
+if (!entry) return Astro.redirect('/');
+
+const d = entry.data;
+
+const fmtDate = (str: string) => str
+  ? new Date(str).toLocaleString('de-AT', { dateStyle: 'long', timeStyle: 'short' })
+  : '';
+
+const DAYS: Record<string, string> = {
+  Mon:'Mo', Tue:'Di', Wed:'Mi', Thu:'Do', Fri:'Fr', Sat:'Sa', Sun:'So'
+};
+const POS: Record<string, string> = {
+  '1st':'1.', '2nd':'2.', '3rd':'3.', '4th':'4.', 'last':'letzten'
+};
+const FREQ: Record<string, string> = {
+  daily:'täglich', weekly:'wöchentlich', monthly_day:'monatlich',
+  monthly_weekday:'monatlich', yearly:'jährlich'
+};
+
+function recurringLabel(d: any): string {
+  if (!d.recurring || d.recurring === 'none') return '';
+  const every = d.recurring_interval > 1 ? `alle ${d.recurring_interval} ` : '';
+  if (d.recurring === 'daily') return `↻ ${every}Tage`;
+  if (d.recurring === 'weekly') {
+    const days = (d.recurring_days ?? []).map((x: string) => DAYS[x] ?? x).join(', ');
+    return `↻ ${every}Woche${days ? ' · ' + days : ''}`;
+  }
+  if (d.recurring === 'monthly_day') return `↻ ${every}Monat · jeden ${d.recurring_day_of_month}.`;
+  if (d.recurring === 'monthly_weekday') {
+    const pos = POS[d.recurring_month_pos] ?? d.recurring_month_pos;
+    const wd  = d.recurring_month_weekday ?? '';
+    return `↻ ${every}Monat · ${pos} ${wd}`;
+  }
+  if (d.recurring === 'yearly') return `↻ ${every}Jahr`;
+  return '';
+}
+
+const TICKET_LABELS: Record<string, string> = {
+  pretix: 'Tickets via Pretix',
+  eventbrite: 'Tickets via Eventbrite',
+  eventim: 'Tickets via Eventim',
+  ticketmaster: 'Tickets via Ticketmaster',
+  tixfox: 'Tickets via Tixfox',
+  reservix: 'Tickets via Reservix',
+  custom: 'Tickets',
+};
+
+const recurLabel = recurringLabel(d);
+const isFree     = d.price === '' || d.price === 'Frei' || d.price === 'frei' || d.price === '0' || d.price === '0€';
+const ticketLabel = TICKET_LABELS[d.ticket_provider ?? 'custom'] ?? 'Tickets';
+---
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{d.title ?? slug}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300;400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { font-family: 'DM Mono', monospace; background: #0a0a0f; color: #b8b8d0; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 48px 32px 96px; }
+    .back { font-size: 10px; color: #3a3a50; text-decoration: none; letter-spacing: 0.08em; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 36px; transition: color 0.12s; }
+    .back:hover { color: #c8a86b; }
+    .status { display: inline-block; font-size: 9px; padding: 2px 8px; letter-spacing: 0.08em; margin-bottom: 16px; }
+    .status.draft     { color: #c8a86b; border: 1px solid rgba(200,168,107,0.3); }
+    .status.published { color: #2d8b6a; border: 1px solid rgba(45,139,106,0.3); }
+
+    /* Hero */
+    .hero { width: 100%; height: 280px; object-fit: cover; display: block; margin-bottom: 32px; }
+    .hero-placeholder { width: 100%; height: 280px; background: #12121a; border: 1px solid #1c1c28; margin-bottom: 32px; display: flex; align-items: center; justify-content: center; font-size: 40px; color: #1c1c28; }
+
+    h1 { font-family: 'Noto Serif JP', serif; font-weight: 200; font-size: 34px; color: #e8e8f2; letter-spacing: 0.03em; line-height: 1.2; margin-bottom: 24px; }
+
+    /* Info grid */
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+    @media (max-width: 540px) { .info-grid { grid-template-columns: 1fr; } }
+    .info-card { background: #0d0d14; border: 1px solid #1c1c28; padding: 14px 16px; }
+    .info-card.accent { border-left: 2px solid #c8a86b; }
+    .info-card.ticket { border-left: 2px solid #7a8fd4; background: rgba(122,143,212,0.04); }
+    .info-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #3a3a50; margin-bottom: 6px; }
+    .info-value { font-size: 12px; color: #b8b8d0; line-height: 1.5; }
+    .info-value.price { font-size: 16px; color: #e8e8f2; font-family: 'Noto Serif JP', serif; font-weight: 200; }
+    .info-value.free  { color: #2d8b6a; }
+    .info-sub { font-size: 10px; color: #3a3a50; margin-top: 4px; }
+    .recurring-chips { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
+    .day-chip { font-size: 9px; border: 1px solid #1c1c28; padding: 2px 6px; color: #6868a0; }
+
+    /* Ticket button */
+    .ticket-btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; padding: 8px 16px; background: rgba(122,143,212,0.1); border: 1px solid rgba(122,143,212,0.3); color: #7a8fd4; text-decoration: none; font-size: 10px; letter-spacing: 0.08em; transition: all 0.12s; }
+    .ticket-btn:hover { background: rgba(122,143,212,0.2); border-color: #7a8fd4; color: #aab4e8; }
+
+    /* Video */
+    .video-link { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; color: #7a8fd4; text-decoration: none; margin-bottom: 20px; transition: color 0.12s; }
+    .video-link:hover { color: #aab4e8; }
+
+    /* Categories / tags */
+    .chips-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 20px; }
+    .chip-cat { font-size: 9px; color: #c8a86b; border: 1px solid rgba(200,168,107,0.25); padding: 2px 8px; letter-spacing: 0.04em; }
+    .chip-tag { font-size: 9px; color: #52526e; border: 1px solid #1c1c28; padding: 2px 8px; }
+
+    /* Body */
+    .divider { border: none; border-top: 1px solid #1c1c28; margin: 28px 0; }
+    .body h2 { font-family: 'Noto Serif JP', serif; font-weight: 200; font-size: 22px; color: #e8e8f2; margin: 28px 0 12px; padding-bottom: 8px; border-bottom: 1px solid #1c1c28; }
+    .body h3 { font-family: 'DM Mono', monospace; font-size: 14px; color: #b8b8d0; margin: 20px 0 8px; letter-spacing: 0.04em; }
+    .body p { font-family: 'Noto Serif JP', serif; font-size: 16px; line-height: 1.9; color: #b8b8d0; margin-bottom: 16px; }
+    .body blockquote { border-left: 2px solid #c8a86b; padding: 4px 16px; margin: 16px 0; color: #6868a0; font-style: italic; }
+    .body code { font-family: 'DM Mono', monospace; font-size: 12px; background: #12121a; padding: 1px 6px; border: 1px solid #1c1c28; }
+    .body pre { background: #12121a; border: 1px solid #1c1c28; padding: 16px; overflow-x: auto; margin: 16px 0; }
+    .body pre code { background: none; border: none; padding: 0; }
+    .body strong { font-weight: 600; color: #e8e8f2; }
+    .body a { color: #7a8fd4; }
+    .body ul, .body ol { padding-left: 20px; margin-bottom: 16px; }
+    .body li { font-family: 'Noto Serif JP', serif; font-size: 16px; line-height: 1.9; }
+    .body hr { border: none; border-top: 1px solid #1c1c28; margin: 28px 0; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="/" class="back">← Alle Events</a>
+    <div class={`status ${entry.status}`}>{entry.status}</div>
+
+    {d.hero_image
+      ? <img class="hero" src={`/orbiter/media/${d.hero_image}`} alt={d.title} />
+      : <div class="hero-placeholder">◈</div>
+    }
+
+    <h1>{d.title}</h1>
+
+    <!-- Info grid -->
+    <div class="info-grid">
+
+      <!-- Date -->
+      {d.date_start && (
+        <div class="info-card accent">
+          <div class="info-label">Datum</div>
+          <div class="info-value">{fmtDate(d.date_start)}</div>
+          {d.date_end && <div class="info-sub">bis {fmtDate(d.date_end)}</div>}
+          {recurLabel && (
+            <div class="recurring-chips" style="margin-top:8px;">
+              <span class="day-chip">{recurLabel}</span>
+              {d.recurring_end_date && <span class="day-chip">bis {d.recurring_end_date}</span>}
+            </div>
+          )}
+        </div>
+      )}
+
+      <!-- Price + Ticket -->
+      {(d.price !== undefined || d.ticket_url) && (
+        <div class={`info-card${d.ticket_url ? ' ticket' : ''}`}>
+          <div class="info-label">Eintritt</div>
+          {d.price
+            ? <div class={`info-value price${isFree ? ' free' : ''}`}>{d.price}</div>
+            : <div class="info-value free">Freier Eintritt</div>
+          }
+          {d.price_notes && <div class="info-sub">{d.price_notes}</div>}
+          {d.ticket_url && (
+            <a href={d.ticket_url} class="ticket-btn" target="_blank" rel="noopener">
+              ⊙ {ticketLabel}
+            </a>
+          )}
+        </div>
+      )}
+
+    </div>
+
+    <!-- Video -->
+    {d.video_url && (
+      <a href={d.video_url} class="video-link" target="_blank" rel="noopener">
+        ▶ Video ansehen
+      </a>
+    )}
+
+    <!-- Categories + Tags -->
+    {((d.categories ?? []).length > 0 || (d.tags ?? []).length > 0) && (
+      <div class="chips-row">
+        {(d.categories ?? []).map((c: string) => <span class="chip-cat">{c}</span>)}
+        {(d.tags ?? []).map((t: string) => <span class="chip-tag">{t}</span>)}
+      </div>
+    )}
+
+    <!-- Body -->
+    {d.body && (
+      <>
+        <hr class="divider" />
+        <div class="body" id="body"></div>
+      </>
+    )}
+  </div>
+
+  <script define:vars={{ body: d.body ?? '' }}>
+    if (body && window.marked) document.getElementById('body').innerHTML = marked.parse(body);
+  </script>
+</body>
+</html>

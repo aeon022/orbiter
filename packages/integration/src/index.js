@@ -24,6 +24,9 @@ const RESOLVED_DB_ID = `\0${VIRTUAL_DB_ID}`;
 const VIRTUAL_CSS_ID = 'orbiter:admin-css';
 const RESOLVED_CSS_ID = `\0${VIRTUAL_CSS_ID}`;
 
+const VIRTUAL_UTILS_ID = 'orbiter:admin-utils';
+const RESOLVED_UTILS_ID = `\0${VIRTUAL_UTILS_ID}`;
+
 /**
  * @param {{ pod: string }} options
  * @returns {import('astro').AstroIntegration}
@@ -69,6 +72,10 @@ export default function orbiter(options = {}) {
           pattern:    '/orbiter/build',
           entrypoint: resolve(routesDir, 'build.astro'),
         });
+        injectRoute({
+          pattern:    '/orbiter/search',
+          entrypoint: resolve(routesDir, 'search.astro'),
+        });
 
         // ── Vite virtual modules ─────────────────
         updateConfig({
@@ -80,6 +87,7 @@ export default function orbiter(options = {}) {
                   if (id === VIRTUAL_COLLECTIONS_ID) return RESOLVED_COLLECTIONS_ID;
                   if (id === VIRTUAL_DB_ID)          return RESOLVED_DB_ID;
                   if (id === VIRTUAL_CSS_ID)         return RESOLVED_CSS_ID;
+                  if (id === VIRTUAL_UTILS_ID)       return RESOLVED_UTILS_ID;
                 },
                 load(id) {
                   const resolvedPodPath = resolve(
@@ -132,6 +140,13 @@ export function getEntry(collection, slug) {
                     const cssPath = resolve(__dirname, '../styles/admin.css');
                     const css = readFileSync(cssPath, 'utf-8');
                     return `export default ${JSON.stringify(css)};`;
+                  }
+
+                  // orbiter:admin-utils — dark mode + command palette
+                  if (id === RESOLVED_UTILS_ID) {
+                    const jsPath = resolve(__dirname, 'admin-utils.js');
+                    const js = readFileSync(jsPath, 'utf-8');
+                    return `export default ${JSON.stringify(js)};`;
                   }
                 },
               },

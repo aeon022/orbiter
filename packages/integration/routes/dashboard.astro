@@ -5,6 +5,20 @@
  */
 import { podPath } from 'orbiter:db';
 import { openPod } from '@orbiter/core';
+import adminUtils from 'orbiter:admin-utils';
+
+// ── Handle POST (notes / todos API) ──────────────────────────────────
+if (Astro.request.method === 'POST') {
+  const body = await Astro.request.json().catch(() => null);
+  if (body?.action === 'save-notes' || body?.action === 'save-todos') {
+    const db2 = openPod(podPath);
+    const key = body.action === 'save-notes' ? 'dashboard.notes' : 'dashboard.todos';
+    db2.setMeta(key, body.value ?? '');
+    db2.close();
+    return new Response(JSON.stringify({ ok: true }), { headers: { 'Content-Type': 'application/json' } });
+  }
+  return new Response(JSON.stringify({ ok: false }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+}
 
 const db          = openPod(podPath);
 const collections = db.getCollections();
@@ -13,37 +27,38 @@ const meta        = {
   siteUrl:  db.getMeta('site.url')  ?? '',
 };
 
-// Stats per collection
 const stats = collections.map(col => {
   const all       = db.getEntries(col.id);
   const published = all.filter(e => e.status === 'published').length;
   const drafts    = all.filter(e => e.status === 'draft').length;
-  return { ...col, total: all.length, published, drafts, entries: all.slice(0, 5) };
+  return { ...col, total: all.length, published, drafts };
 });
 
-const totalEntries = stats.reduce((n, s) => n + s.total, 0);
+const totalEntries   = stats.reduce((n, s) => n + s.total, 0);
 const totalPublished = stats.reduce((n, s) => n + s.published, 0);
+const totalDrafts    = totalEntries - totalPublished;
 
-// Recent entries across all collections
 const recent = collections
-  .flatMap(col => db.getEntries(col.id).map(e => ({ ...e, collectionLabel: col.label })))
+  .flatMap(col => db.getEntries(col.id).map(e => ({ ...e, collectionId: col.id, collectionLabel: col.label })))
   .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
-  .slice(0, 8);
+  .slice(0, 10);
 
-// Media count
-const mediaCount = db.db.prepare('SELECT COUNT(*) as n FROM _media').get().n;
-
-const hasWebhook   = !!(db.getMeta('build.webhook_url'));
-const adminLocale  = db.getMeta('site.locale') ?? 'de-AT';
+const mediaCount  = db.db.prepare('SELECT COUNT(*) as n FROM _media').get().n;
+const hasWebhook  = !!(db.getMeta('build.webhook_url'));
+const adminLocale = db.getMeta('site.locale') ?? 'en-US';
+const initNotes   = db.getMeta('dashboard.notes') ?? '';
+const initTodos   = JSON.parse(db.getMeta('dashboard.todos') ?? '[]');
 
 db.close();
+
+const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 ---
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Orbiter — Dashboard</title>
+  <title>{meta.siteName} — Orbiter</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <style>
@@ -58,23 +73,32 @@ db.close();
       --shadow:0 1px 3px rgba(0,0,0,0.08);
       --serif:"Noto Serif JP",serif; --mono:"DM Mono",monospace;
     }
+    html.dark {
+      --bg0:#0f0f14; --bg1:#14141a; --bg2:#1c1c24; --bg3:#22222d;
+      --line:#2a2a3a; --line2:rgba(255,255,255,0.04);
+      --muted:#52526e; --mid:#8080a0; --text:#b0b0cc; --heading:#e0e0f0;
+      --gold:#c8a86b; --gold-bg:rgba(200,168,107,0.08);
+      --jade:#2d8b6a; --jade-bg:rgba(45,139,106,0.08);
+      --accent:#7a8fd4; --accent-bg:rgba(122,143,212,0.08);
+    }
     html,body { background:var(--bg0); color:var(--text); font-family:var(--mono); font-size:13px; line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
+
+    /* Layout */
     .layout { display:grid; grid-template-columns:210px 1fr; grid-template-rows:54px 1fr; min-height:100vh; }
-    .topbar { grid-column:1/-1; background:var(--bg2); border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 22px; }
+
+    /* Topbar */
+    .topbar { grid-column:1/-1; background:var(--bg2); border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 22px; gap:0; }
     .logo { font-family:var(--serif); font-weight:200; font-size:17px; color:var(--heading); display:flex; align-items:center; gap:9px; letter-spacing:0.1em; text-decoration:none; flex-shrink:0; }
     .logo-mark { width:22px; height:22px; border:1px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:9px; color:var(--gold); font-family:var(--mono); }
-    .logo-kana { font-size:10px; color:var(--muted); font-family:var(--serif); font-weight:200; margin-left:2px; }
-    .breadcrumb { margin-left:20px; font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; }
-    .breadcrumb a { color:var(--mid); text-decoration:none; }
-    .breadcrumb a:hover { color:var(--heading); }
-    .breadcrumb .sep { color:var(--line); }
-    .breadcrumb .current { color:var(--text); }
-    .topbar-site { margin-left:24px; font-size:11px; color:var(--muted); }
-    .topbar-right { margin-left:auto; display:flex; align-items:center; gap:14px; }
-    .topbar-pod { margin-left:auto; font-size:10px; color:var(--jade); display:flex; align-items:center; gap:6px; }
+    .topbar-site { margin-left:20px; font-size:11px; color:var(--muted); }
+    .topbar-right { margin-left:auto; display:flex; align-items:center; gap:16px; }
     .pod-status { font-size:10px; color:var(--jade); display:flex; align-items:center; gap:5px; }
+    .dark-toggle { background:none; border:1px solid var(--line); color:var(--mid); font-family:var(--mono); font-size:10px; padding:3px 10px; cursor:pointer; letter-spacing:0.04em; transition:color 0.12s,border-color 0.12s,background 0.12s; }
+    .dark-toggle:hover { color:var(--heading); border-color:var(--mid); background:var(--bg3); }
     .pod-dot { width:5px; height:5px; border-radius:50%; background:var(--jade); animation:pulse 2.5s ease-in-out infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+    /* Sidebar */
     .sidebar { background:var(--bg1); border-right:1px solid var(--line); padding:20px 0; display:flex; flex-direction:column; }
     .nav-section { font-size:9px; letter-spacing:0.3em; text-transform:uppercase; color:var(--muted); padding:0 16px; margin:18px 0 5px; }
     .nav-section:first-child { margin-top:0; }
@@ -87,52 +111,118 @@ db.close();
     .sidebar-pod { margin-top:auto; padding:12px 16px; border-top:1px solid var(--line); font-size:10px; color:var(--muted); }
     .sidebar-pod-name { color:var(--text); font-size:11px; margin-bottom:2px; display:flex; align-items:center; gap:5px; }
     .sidebar-pod-name::before { content:"◆"; font-size:6px; color:var(--gold); }
-    .main { padding:32px 40px; background:var(--bg0); overflow-y:auto; position:relative; }
-    .kanji { position:absolute; right:32px; bottom:24px; font-family:var(--serif); font-size:130px; color:var(--heading); opacity:0.04; pointer-events:none; user-select:none; }
-    .main-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:28px; padding-bottom:18px; border-bottom:1px solid var(--line); }
-    .main-title { font-family:var(--serif); font-weight:200; font-size:26px; color:var(--heading); letter-spacing:0.05em; line-height:1; }
-    .main-title-jp { font-size:10px; color:var(--muted); font-family:var(--serif); font-weight:200; letter-spacing:0.08em; margin-top:5px; }
-    .main-date { font-size:10px; color:var(--muted); text-align:right; line-height:1.9; }
-    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
-    .stat { background:var(--bg2); border:1px solid var(--line); padding:16px 18px; position:relative; overflow:hidden; transition:border-color 0.15s,box-shadow 0.15s; }
-    .stat:hover { border-color:var(--gold); box-shadow:var(--shadow); }
-    .stat-label { font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
-    .stat-value { font-size:30px; font-weight:200; font-family:var(--serif); color:var(--heading); line-height:1; margin-bottom:5px; }
-    .stat-sub { font-size:10px; color:var(--jade); }
-    .stat-sub.gold { color:var(--gold); }
-    .stat-deco { position:absolute; bottom:8px; right:12px; font-family:var(--serif); font-size:26px; opacity:0.06; color:var(--heading); pointer-events:none; }
-    .panel { background:var(--bg2); border:1px solid var(--line); }
-    .panel-header { padding:11px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
-    .panel-title { font-size:9px; letter-spacing:0.25em; text-transform:uppercase; color:var(--text); display:flex; align-items:center; gap:8px; }
-    .panel-title::before { content:"—"; color:var(--gold); }
-    .panel-action { font-size:10px; color:var(--accent); text-decoration:none; }
-    .panel-action:hover { color:var(--heading); }
-    .entry-row { display:grid; grid-template-columns:1fr 100px 72px; align-items:center; gap:12px; padding:11px 16px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; }
+
+    /* Main */
+    .main { background:var(--bg0); overflow-y:auto; display:flex; flex-direction:column; }
+
+    /* Hero */
+    .hero { padding:32px 40px 24px; border-bottom:1px solid var(--line); background:var(--bg2); display:flex; align-items:flex-end; justify-content:space-between; gap:24px; }
+    .hero-left {}
+    .hero-site { font-family:var(--serif); font-weight:200; font-size:28px; color:var(--heading); letter-spacing:0.04em; line-height:1.1; margin-bottom:6px; }
+    .hero-date { font-size:10px; color:var(--muted); letter-spacing:0.04em; }
+    .hero-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+    .hero-url { font-size:10px; color:var(--accent); text-decoration:none; border:1px solid var(--line); padding:5px 12px; transition:border-color 0.15s; }
+    .hero-url:hover { border-color:var(--accent); }
+    .btn-deploy { display:flex; align-items:center; gap:6px; padding:7px 16px; background:transparent; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:10px; letter-spacing:0.13em; text-transform:uppercase; cursor:pointer; transition:all 0.15s; }
+    .btn-deploy:hover { background:var(--gold); color:var(--bg0); }
+    .btn-deploy:disabled { opacity:0.5; cursor:not-allowed; }
+    .deploy-status { font-size:10px; color:var(--muted); }
+
+    /* Stats row */
+    .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:0; border-bottom:1px solid var(--line); }
+    .stat-cell { padding:20px 24px; border-right:1px solid var(--line); position:relative; }
+    .stat-cell:last-child { border-right:none; }
+    .stat-label { font-size:9px; letter-spacing:0.26em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+    .stat-num { font-family:var(--serif); font-weight:200; font-size:36px; color:var(--heading); line-height:1; margin-bottom:6px; }
+    .stat-sub { font-size:10px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+    .stat-bar { height:2px; background:var(--line); margin-top:12px; }
+    .stat-bar-fill { height:100%; transition:width 0.4s; }
+    .stat-bar-fill.jade { background:var(--jade); }
+    .stat-bar-fill.gold { background:var(--gold); }
+    .stat-bar-fill.accent { background:var(--accent); }
+    .stat-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+    .stat-dot.jade { background:var(--jade); }
+    .stat-dot.gold { background:var(--gold); }
+
+    /* Content area */
+    .content { display:grid; grid-template-columns:1fr 300px; flex:1; }
+    .content-main { padding:28px 32px; border-right:1px solid var(--line); }
+    .content-side { padding:24px 0; }
+
+    /* Section headers */
+    .section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    .section-title { font-size:9px; letter-spacing:0.26em; text-transform:uppercase; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .section-title::before { content:"—"; color:var(--gold); font-size:8px; }
+    .section-link { font-size:10px; color:var(--accent); text-decoration:none; }
+    .section-link:hover { color:var(--heading); }
+
+    /* Recent entries */
+    .entry-list { border:1px solid var(--line); }
+    .entry-row { display:grid; grid-template-columns:1fr 90px 70px; align-items:center; gap:16px; padding:11px 14px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; }
     .entry-row:hover { background:var(--line2); }
     .entry-row:last-child { border-bottom:none; }
-    .entry-title { font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .entry-coll { font-size:10px; color:var(--muted); margin-top:2px; }
-    .entry-date { font-size:10px; color:var(--muted); }
+    .entry-name { font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .entry-coll { font-size:9px; color:var(--muted); margin-top:1px; letter-spacing:0.04em; }
+    .entry-date { font-size:10px; color:var(--muted); text-align:right; }
     .pill { font-size:9px; padding:2px 7px; letter-spacing:0.06em; text-align:center; }
     .pill.published { color:var(--jade); background:var(--jade-bg); }
     .pill.draft { color:var(--gold); background:var(--gold-bg); }
-    .btn-gold { display:inline-block; padding:7px 16px; background:transparent; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:10px; letter-spacing:0.13em; text-transform:uppercase; cursor:pointer; text-decoration:none; transition:all 0.15s; }
-    .btn-gold:hover { background:var(--gold); color:var(--bg0); }
-    .btn-block { display:block; width:calc(100% - 32px); margin:12px 16px 14px; padding:9px; text-align:center; }
-    .new-btn { display:block; margin:12px 16px 14px; padding:9px; background:transparent; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:10px; letter-spacing:0.14em; cursor:pointer; text-transform:uppercase; text-align:center; text-decoration:none; transition:all 0.2s; }
-    .new-btn:hover { background:var(--gold); color:var(--bg0); }
-    .coll-item { display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; }
-    .coll-item:hover { background:var(--line2); }
-    .coll-item:last-child { border-bottom:none; }
-    .coll-name { font-size:12px; color:var(--text); }
-    .coll-counts { font-size:10px; color:var(--muted); text-align:right; line-height:1.8; }
-    .coll-counts span { color:var(--jade); }
-    .content-grid { display:grid; grid-template-columns:1fr 280px; gap:16px; }
-    .side-panels { display:flex; flex-direction:column; gap:12px; }
-    .field-input,.field-select,.field-textarea { width:100%; background:var(--bg0); border:1px solid var(--line); padding:6px 9px; color:var(--heading); font-family:var(--mono); font-size:11px; outline:none; appearance:none; transition:border-color 0.15s; }
-    .field-input:focus,.field-select:focus,.field-textarea:focus { border-color:var(--accent); }
-    .coming-soon { margin-top:20px; padding:16px 18px; background:var(--bg2); border:1px solid var(--line); border-left:2px solid var(--accent); font-size:11px; color:var(--muted); line-height:1.8; }
-    .coming-soon span { color:var(--accent); }
+
+    /* Side panels */
+    .side-section { padding:0 20px 24px; }
+    .side-section + .side-section { border-top:1px solid var(--line); padding-top:20px; }
+
+    /* Collection cards */
+    .coll-card { padding:12px 0; border-bottom:1px solid var(--line2); }
+    .coll-card:last-child { border-bottom:none; }
+    .coll-card-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    .coll-card-name { font-size:12px; color:var(--heading); display:flex; align-items:center; gap:7px; }
+    .coll-card-name::before { content:"▤"; font-size:9px; color:var(--muted); }
+    .coll-card-count { font-size:10px; color:var(--muted); }
+    .coll-progress { height:2px; background:var(--line); margin-bottom:6px; }
+    .coll-progress-fill { height:100%; background:var(--jade); transition:width 0.4s; }
+    .coll-card-meta { display:flex; justify-content:space-between; font-size:9px; color:var(--muted); }
+    .coll-card-meta .pub { color:var(--jade); }
+    .coll-actions { display:flex; gap:6px; margin-top:8px; }
+    .btn-sm { font-size:9px; padding:4px 10px; border:1px solid var(--line); color:var(--mid); background:transparent; font-family:var(--mono); cursor:pointer; text-decoration:none; letter-spacing:0.06em; display:inline-flex; align-items:center; gap:4px; transition:all 0.12s; }
+    .btn-sm:hover { border-color:var(--gold); color:var(--gold); }
+    .btn-sm.primary { border-color:var(--gold); color:var(--gold); }
+    .btn-sm.primary:hover { background:var(--gold); color:var(--bg0); }
+
+    /* Empty state */
+    .empty { padding:40px 20px; text-align:center; color:var(--muted); font-size:11px; border:1px solid var(--line); line-height:2; }
+
+    /* Workspace (notes + todos) */
+    .workspace { display:grid; grid-template-columns:1fr 1fr; border-top:1px solid var(--line); }
+    .ws-panel { padding:24px 32px; }
+    .ws-panel + .ws-panel { border-left:1px solid var(--line); }
+    .ws-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    .ws-save-indicator { font-size:9px; color:var(--muted); transition:color 0.2s; }
+    .notes-area { width:100%; min-height:140px; resize:vertical; background:var(--bg1); border:1px solid var(--line); padding:12px 14px; color:var(--text); font-family:var(--mono); font-size:12px; line-height:1.8; outline:none; transition:border-color 0.15s; }
+    .notes-area:focus { border-color:var(--accent); }
+    .todo-input-row { display:flex; align-items:center; gap:0; margin-bottom:12px; border:1px solid var(--line); background:var(--bg1); }
+    .todo-prompt { font-family:var(--mono); font-size:11px; color:var(--muted); padding:7px 6px 7px 10px; flex-shrink:0; user-select:none; }
+    .todo-input { flex:1; background:transparent; border:none; padding:7px 4px; color:var(--text); font-family:var(--mono); font-size:11px; outline:none; }
+    .todo-add-btn { padding:7px 12px; background:transparent; border:none; border-left:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:10px; cursor:pointer; letter-spacing:0.06em; transition:color 0.12s; flex-shrink:0; }
+    .todo-add-btn:hover { color:var(--heading); }
+    .todo-list { font-family:var(--mono); }
+    .todo-item { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid var(--line2); }
+    .todo-item:first-child { border-top:1px solid var(--line2); }
+    .todo-toggle { background:none; border:none; font-family:var(--mono); font-size:11px; color:var(--muted); cursor:pointer; padding:0; flex-shrink:0; width:20px; letter-spacing:0; transition:color 0.1s; }
+    .todo-item.done .todo-toggle { color:var(--jade); }
+    .todo-toggle:hover { color:var(--heading); }
+    .todo-text { flex:1; font-size:11px; color:var(--text); line-height:1.4; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+    .todo-item.done .todo-text { text-decoration:line-through; color:var(--muted); }
+    .todo-del { background:none; border:none; font-family:var(--mono); font-size:11px; color:var(--line); cursor:pointer; padding:0; flex-shrink:0; opacity:0; transition:color 0.1s; }
+    .todo-item:hover .todo-del { opacity:1; }
+    .todo-del:hover { color:var(--mid); }
+    .todo-empty { font-size:11px; color:var(--muted); padding:8px 0; }
+    .todo-footer { display:flex; align-items:center; justify-content:space-between; padding-top:8px; min-height:20px; }
+    .todo-count { font-size:9px; color:var(--muted); }
+    .todo-clear-btn { background:none; border:none; font-family:var(--mono); font-size:9px; color:var(--muted); cursor:pointer; padding:0; letter-spacing:0.04em; transition:color 0.12s; }
+    .todo-clear-btn:hover { color:var(--heading); }
+    .ws-export-btn { background:none; border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:9px; padding:2px 8px; cursor:pointer; letter-spacing:0.06em; transition:all 0.12s; }
+    .ws-export-btn:hover { border-color:var(--accent); color:var(--accent); }
   </style>
 </head>
 <body>
@@ -140,14 +230,15 @@ db.close();
 
     <!-- Topbar -->
     <div class="topbar">
-      <div class="logo">
+      <a href="/orbiter" class="logo">
         <div class="logo-mark">OR</div>
         Orbiter
-      </div>
+      </a>
       <div class="topbar-site">{meta.siteName}</div>
-      <div class="topbar-pod">
-        <div class="pod-dot"></div>
-        pod synced
+      <div class="topbar-right">
+        <button class="pal-trigger" onclick="__orbOpenPalette()" title="Command palette"> Strg K</button>
+        <div class="pod-status"><div class="pod-dot"></div>pod synced</div>
+        <button id="orb-dark-btn" onclick="__orbToggleDark()" class="dark-toggle" title="Toggle dark mode">● dark</button>
       </div>
     </div>
 
@@ -165,6 +256,7 @@ db.close();
       <div class="nav-section">Assets</div>
       <a href="/orbiter/media" class="nav-item"><span class="nav-icon">⊞</span>Media<span class="nav-badge">{mediaCount}</span></a>
       <div class="nav-section">System</div>
+      <a href="/orbiter/build"    class="nav-item"><span class="nav-icon">▲</span>Build</a>
       <a href="/orbiter/settings" class="nav-item"><span class="nav-icon">◎</span>Settings</a>
       <div class="sidebar-pod">
         <div class="sidebar-pod-name">content.pod</div>
@@ -174,90 +266,153 @@ db.close();
 
     <!-- Main -->
     <div class="main">
-      
 
-      <div class="main-header">
-        <div>
-          <div class="main-title">Overview</div>
+      <!-- Hero -->
+      <div class="hero">
+        <div class="hero-left">
+          <div class="hero-site">{meta.siteName}</div>
+          <div class="hero-date">{today}</div>
         </div>
-        <div style="display:flex;align-items:center;gap:16px;">
-          {hasWebhook && (
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span id="deploy-status" style="font-size:10px;color:var(--muted);"></span>
-              <button class="btn-gold" id="deploy-btn" onclick="triggerDeploy()">↑ Deploy</button>
-            </div>
+        <div class="hero-right">
+          <span id="deploy-status" class="deploy-status"></span>
+          {meta.siteUrl && (
+            <a href={meta.siteUrl} target="_blank" class="hero-url">↗ Visit site</a>
           )}
-          <div class="main-date">
-            <div>{new Date().toLocaleDateString(adminLocale, { weekday: 'long' })}</div>
-            <div>{new Date().toLocaleDateString(adminLocale)}</div>
-          </div>
+          {hasWebhook && (
+            <button class="btn-deploy" id="deploy-btn" onclick="triggerDeploy()">↑ Deploy</button>
+          )}
         </div>
       </div>
 
-      <!-- Stats -->
-      <div class="stats">
-        <div class="stat">
-          <div class="stat-label">Total Entries</div>
-          <div class="stat-value">{totalEntries}</div>
-          <div class="stat-sub">{collections.length} collections</div>
-          
+      <!-- Stats row -->
+      <div class="stats-row">
+        <div class="stat-cell">
+          <div class="stat-label">Total</div>
+          <div class="stat-num">{totalEntries}</div>
+          <div class="stat-sub">{collections.length} collection{collections.length !== 1 ? 's' : ''}</div>
+          <div class="stat-bar"><div class="stat-bar-fill accent" style={`width:100%`}></div></div>
         </div>
-        <div class="stat">
+        <div class="stat-cell">
           <div class="stat-label">Published</div>
-          <div class="stat-value">{totalPublished}</div>
-          <div class="stat-sub">{Math.round(totalPublished / (totalEntries || 1) * 100)}% of total</div>
-          
+          <div class="stat-num">{totalPublished}</div>
+          <div class="stat-sub">
+            <span class="stat-dot jade"></span>
+            {totalEntries > 0 ? Math.round(totalPublished / totalEntries * 100) : 0}% of total
+          </div>
+          <div class="stat-bar"><div class="stat-bar-fill jade" style={`width:${totalEntries > 0 ? Math.round(totalPublished / totalEntries * 100) : 0}%`}></div></div>
         </div>
-        <div class="stat">
+        <div class="stat-cell">
           <div class="stat-label">Drafts</div>
-          <div class="stat-value">{totalEntries - totalPublished}</div>
-          <div class="stat-sub gold">unpublished</div>
-          
+          <div class="stat-num">{totalDrafts}</div>
+          <div class="stat-sub">
+            <span class="stat-dot gold"></span>
+            unpublished
+          </div>
+          <div class="stat-bar"><div class="stat-bar-fill gold" style={`width:${totalEntries > 0 ? Math.round(totalDrafts / totalEntries * 100) : 0}%`}></div></div>
         </div>
-        <div class="stat">
-          <div class="stat-label">Media Assets</div>
-          <div class="stat-value">{mediaCount}</div>
-          <div class="stat-sub">in .pod file</div>
-          
+        <div class="stat-cell">
+          <div class="stat-label">Media</div>
+          <div class="stat-num">{mediaCount}</div>
+          <div class="stat-sub">assets in pod</div>
+          <div class="stat-bar"><div class="stat-bar-fill accent" style="width:60%"></div></div>
         </div>
       </div>
 
-      <!-- Content grid -->
-      <div class="content-grid">
+      <!-- Content -->
+      <div class="content">
 
         <!-- Recent entries -->
-        <div class="panel">
-          <div class="panel-header">
-            <div class="panel-title">Recent Entries</div>
+        <div class="content-main">
+          <div class="section-head">
+            <div class="section-title">Recent Activity</div>
           </div>
-          {recent.map(entry => (
-            <a href={`/orbiter/${entry.collection_id}/${entry.slug}`} class="entry-row">
-              <div>
-                <div class="entry-title">{entry.data?.title ?? entry.slug}</div>
-                <div class="entry-coll">{entry.collectionLabel}</div>
-              </div>
-              <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString(adminLocale)}</div>
-              <div class={`pill ${entry.status}`}>{entry.status}</div>
-            </a>
-          ))}
+          {recent.length > 0 ? (
+            <div class="entry-list">
+              {recent.map(entry => (
+                <a href={`/orbiter/${entry.collectionId}/${entry.slug}`} class="entry-row">
+                  <div>
+                    <div class="entry-name">{entry.data?.title ?? entry.slug}</div>
+                    <div class="entry-coll">{entry.collectionLabel}</div>
+                  </div>
+                  <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString(adminLocale)}</div>
+                  <div class={`pill ${entry.status}`}>{entry.status}</div>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div class="empty">
+              No entries yet.<br/>
+              Create your first entry to get started.
+            </div>
+          )}
         </div>
 
-        <!-- Side panels -->
-        <div class="side-panels">
-          <div class="panel">
-            <div class="panel-header">
-              <div class="panel-title">Collections</div>
+        <!-- Side: Collections + Quick Actions -->
+        <div class="content-side">
+          <div class="side-section">
+            <div class="section-head">
+              <div class="section-title">Collections</div>
             </div>
-            {stats.map(col => (
-              <a href={`/orbiter/${col.id}`} class="coll-item">
-                <div class="coll-name">{col.label}</div>
-                <div class="coll-counts">
-                  <span>{col.published}</span> published<br/>
-                  {col.drafts} draft{col.drafts !== 1 ? 's' : ''}
+            {stats.map(col => {
+              const pct = col.total > 0 ? Math.round(col.published / col.total * 100) : 0;
+              return (
+                <div class="coll-card">
+                  <div class="coll-card-head">
+                    <div class="coll-card-name">{col.label}</div>
+                    <div class="coll-card-count">{col.total}</div>
+                  </div>
+                  <div class="coll-progress">
+                    <div class="coll-progress-fill" style={`width:${pct}%`}></div>
+                  </div>
+                  <div class="coll-card-meta">
+                    <span class="pub">{col.published} published</span>
+                    <span>{col.drafts} draft{col.drafts !== 1 ? 's' : ''}</span>
+                  </div>
+                  <div class="coll-actions">
+                    <a href={`/orbiter/${col.id}/new`} class="btn-sm primary">+ New</a>
+                    <a href={`/orbiter/${col.id}`} class="btn-sm">View all</a>
+                  </div>
                 </div>
-              </a>
-            ))}
-            <a href="#" class="new-btn">+ New Entry</a>
+              );
+            })}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Workspace: Notes + Todos -->
+      <div class="workspace">
+
+        <!-- Notes -->
+        <div class="ws-panel">
+          <div class="ws-head">
+            <div class="section-title">Notes</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span class="ws-save-indicator" id="notes-indicator"></span>
+              <button class="ws-export-btn" onclick="exportNotes()" title="Export as Markdown">↓ md</button>
+            </div>
+          </div>
+          <textarea class="notes-area" id="notes-area" placeholder="Jot something down…">{initNotes}</textarea>
+        </div>
+
+        <!-- Todos -->
+        <div class="ws-panel">
+          <div class="ws-head">
+            <div class="section-title">To-Do</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span class="ws-save-indicator" id="todos-indicator"></span>
+              <button class="ws-export-btn" onclick="exportTodos()" title="Export as Markdown">↓ md</button>
+            </div>
+          </div>
+          <div class="todo-input-row">
+            <span class="todo-prompt">›</span>
+            <input class="todo-input" id="todo-input" placeholder="Add a task…" type="text" />
+            <button class="todo-add-btn" onclick="todoAdd()">↵ add</button>
+          </div>
+          <div class="todo-list" id="todo-list"></div>
+          <div class="todo-footer">
+            <span class="todo-count" id="todo-count"></span>
+            <button class="todo-clear-btn" id="todo-clear-btn" onclick="todoClearDone()" style="display:none">Clear done</button>
           </div>
         </div>
 
@@ -266,33 +421,199 @@ db.close();
 
   </div>
 
-  <script>
+  <script set:html={adminUtils} is:inline></script>
+  <script define:vars={{ initNotes, initTodos }}>
+    // ── Deploy ────────────────────────────────────────────────────────
     window.triggerDeploy = async function() {
       const btn    = document.getElementById('deploy-btn');
       const status = document.getElementById('deploy-status');
       btn.disabled = true;
       btn.textContent = '↑ Deploying…';
       status.textContent = '';
-      status.style.color = 'var(--muted)';
       try {
         const res  = await fetch('/orbiter/build', { method: 'POST' });
         const json = await res.json();
         if (json.ok) {
           status.textContent = '✓ Build triggered';
           status.style.color = 'var(--jade)';
-          btn.textContent = '↑ Deploy';
         } else {
-          status.textContent = json.error ?? `Error ${json.status}`;
-          status.style.color = 'var(--crimson, #8b2635)';
-          btn.textContent = '↑ Deploy';
+          status.textContent = json.error ?? 'Error ' + json.status;
+          status.style.color = '#8b2635';
         }
-      } catch (e) {
+      } catch {
         status.textContent = 'Network error';
-        status.style.color = 'var(--crimson, #8b2635)';
-        btn.textContent = '↑ Deploy';
+        status.style.color = '#8b2635';
       }
+      btn.textContent = '↑ Deploy';
       btn.disabled = false;
     }
+
+    // ── Notes ─────────────────────────────────────────────────────────
+    var notesTimer = null;
+    var notesIndicator = document.getElementById('notes-indicator');
+
+    document.getElementById('notes-area').addEventListener('input', function() {
+      notesIndicator.textContent = '●  unsaved';
+      notesIndicator.style.color = 'var(--gold)';
+      clearTimeout(notesTimer);
+      notesTimer = setTimeout(saveNotes, 1500);
+    });
+
+    async function saveNotes() {
+      notesIndicator.textContent = '↑  saving…';
+      notesIndicator.style.color = 'var(--muted)';
+      var val = document.getElementById('notes-area').value;
+      try {
+        await fetch('/orbiter', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'save-notes', value: val }),
+        });
+        notesIndicator.textContent = '✓  saved';
+        notesIndicator.style.color = 'var(--jade)';
+        setTimeout(function() { notesIndicator.textContent = ''; }, 2000);
+      } catch {
+        notesIndicator.textContent = '✕  error';
+        notesIndicator.style.color = '#8b2635';
+      }
+    }
+
+    // ── Todos ─────────────────────────────────────────────────────────
+    var todos = Array.isArray(initTodos) ? initTodos : [];
+    var todosIndicator = document.getElementById('todos-indicator');
+
+    var ROW    = 'display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid #e0dbd0;';
+    var ROW_D  = 'display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid #e0dbd0;opacity:0.45;';
+    var BTN    = 'background:none;border:none;font-family:"DM Mono",monospace;font-size:11px;cursor:pointer;padding:0;flex-shrink:0;white-space:nowrap;';
+
+    function todoRender() {
+      var list     = document.getElementById('todo-list');
+      var count    = document.getElementById('todo-count');
+      var clearBtn = document.getElementById('todo-clear-btn');
+      list.innerHTML = '';
+
+      var doneCount = todos.filter(function(t) { return t.done; }).length;
+      var openCount = todos.length - doneCount;
+
+      clearBtn.style.display = doneCount > 0 ? '' : 'none';
+      count.textContent = todos.length
+        ? openCount + ' open' + (doneCount ? ' · ' + doneCount + ' done' : '')
+        : '';
+
+      if (!todos.length) {
+        var empty = document.createElement('div');
+        empty.style.cssText = 'font-size:11px;color:#a09890;padding:8px 0;font-family:"DM Mono",monospace;';
+        empty.textContent = 'No tasks yet';
+        list.appendChild(empty);
+        return;
+      }
+
+      todos.forEach(function(todo, idx) {
+        var item = document.createElement('div');
+        item.style.cssText = todo.done ? ROW_D : ROW;
+        if (idx === 0) item.style.borderTop = '1px solid #e0dbd0';
+
+        var toggle = document.createElement('button');
+        toggle.style.cssText = BTN + 'color:' + (todo.done ? '#1e6b50' : '#a09890') + ';';
+        toggle.textContent   = todo.done ? '[×]' : '[ ]';
+        toggle.addEventListener('click', function() { todoToggle(idx); });
+
+        var text = document.createElement('div');
+        text.style.cssText = 'flex:1;min-width:0;font-size:11px;font-family:"DM Mono",monospace;color:' +
+          (todo.done ? '#a09890' : '#3a3228') + ';' +
+          (todo.done ? 'text-decoration:line-through;' : '') +
+          'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+        text.textContent = todo.text;
+        text.title       = todo.text;
+
+        var del = document.createElement('button');
+        del.style.cssText = BTN + 'color:#e0dbd0;';
+        del.textContent   = '[del]';
+        del.addEventListener('mouseenter', function() { del.style.color = '#706860'; });
+        del.addEventListener('mouseleave', function() { del.style.color = '#e0dbd0'; });
+        del.addEventListener('click', function() { todoDelete(idx); });
+
+        item.appendChild(toggle);
+        item.appendChild(text);
+        item.appendChild(del);
+        list.appendChild(item);
+      });
+    }
+
+    async function todoSave() {
+      todosIndicator.textContent = '✓  saved';
+      todosIndicator.style.color = 'var(--jade)';
+      setTimeout(function() { todosIndicator.textContent = ''; }, 1500);
+      await fetch('/orbiter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'save-todos', value: JSON.stringify(todos) }),
+      }).catch(function() {});
+    }
+
+    window.todoAdd = function() {
+      var input = document.getElementById('todo-input');
+      var text  = input.value.trim();
+      if (!text) return;
+      todos.push({ id: Date.now(), text: text, done: false });
+      input.value = '';
+      todoRender();
+      todoSave();
+    };
+
+    function todoToggle(idx) {
+      todos[idx].done = !todos[idx].done;
+      todoRender();
+      todoSave();
+    }
+
+    function todoDelete(idx) {
+      todos.splice(idx, 1);
+      todoRender();
+      todoSave();
+    }
+
+    window.todoClearDone = function() {
+      todos = todos.filter(function(t) { return !t.done; });
+      todoRender();
+      todoSave();
+    };
+
+    // Enter key in todo input
+    document.getElementById('todo-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') todoAdd();
+    });
+
+    // Initial render
+    todoRender();
+
+    // ── Exports ───────────────────────────────────────────────────────
+    function mdDownload(filename, content) {
+      var blob = new Blob([content], { type: 'text/markdown' });
+      var a    = document.createElement('a');
+      a.href   = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    window.exportNotes = function() {
+      var text = document.getElementById('notes-area').value.trim();
+      if (!text) return;
+      mdDownload('notes.md', text);
+    };
+
+    window.exportTodos = function() {
+      if (!todos.length) return;
+      var date  = new Date().toISOString().slice(0, 10);
+      var lines = ['# To-Do — ' + date, ''];
+      var open  = todos.filter(function(t) { return !t.done; });
+      var done  = todos.filter(function(t) { return t.done; });
+      open.forEach(function(t) { lines.push('- [ ] ' + t.text); });
+      if (open.length && done.length) lines.push('');
+      done.forEach(function(t) { lines.push('- [x] ' + t.text); });
+      mdDownload('todos-' + date + '.md', lines.join('\n'));
+    };
   </script>
 </body>
 </html>

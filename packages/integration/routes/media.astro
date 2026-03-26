@@ -1,6 +1,7 @@
 ---
 import { podPath } from 'orbiter:db';
 import { openPod } from '@orbiter/core';
+import adminUtils from 'orbiter:admin-utils';
 
 // ── Handle POST ───────────────────────────────────────────────────────
 if (Astro.request.method === 'POST') {
@@ -17,16 +18,30 @@ if (Astro.request.method === 'POST') {
 
   // Upload
   const file = form.get('file');
+  const isJsonRequest = Astro.request.headers.get('Accept') === 'application/json';
   if (file && file.size > 0) {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const alt    = form.get('alt')?.toString() ?? '';
-    const now = new Date().toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, '');
+    const buffer  = Buffer.from(await file.arrayBuffer());
+    const alt     = form.get('alt')?.toString() ?? '';
+    const now     = new Date().toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, '');
+    const newId   = crypto.randomUUID();
     db.db.prepare(
       'INSERT INTO _media (id, filename, mime_type, size, data, alt, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    ).run(crypto.randomUUID(), file.name, file.type || 'application/octet-stream', file.size, buffer, alt, now);
+    ).run(newId, file.name, file.type || 'application/octet-stream', file.size, buffer, alt, now);
+    db.close();
+    if (isJsonRequest) {
+      return new Response(JSON.stringify({ ok: true, id: newId, filename: file.name, alt }), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    return Astro.redirect('/orbiter/media?uploaded=1');
   }
 
   db.close();
+  if (isJsonRequest) {
+    return new Response(JSON.stringify({ ok: false, error: 'no file' }), {
+      status: 400, headers: { 'Content-Type': 'application/json' },
+    });
+  }
   return Astro.redirect('/orbiter/media?uploaded=1');
 }
 
@@ -69,6 +84,15 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
       --shadow:0 1px 3px rgba(0,0,0,0.08);
       --serif:"Noto Serif JP",serif; --mono:"DM Mono",monospace;
     }
+    html.dark {
+      --bg0:#0f0f14; --bg1:#14141a; --bg2:#1c1c24; --bg3:#22222d;
+      --line:#2a2a3a; --line2:rgba(255,255,255,0.04);
+      --muted:#52526e; --mid:#8080a0; --text:#b0b0cc; --heading:#e0e0f0;
+      --gold:#c8a86b; --gold-bg:rgba(200,168,107,0.08);
+      --jade:#2d8b6a; --jade-bg:rgba(45,139,106,0.08);
+      --accent:#7a8fd4; --accent-bg:rgba(122,143,212,0.08);
+      --crimson:#c0525e; --crimson-bg:rgba(192,82,94,0.08);
+    }
     html,body { background:var(--bg0); color:var(--text); font-family:var(--mono); font-size:13px; line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
     .layout { display:grid; grid-template-columns:210px 1fr; grid-template-rows:54px 1fr; min-height:100vh; }
 
@@ -83,6 +107,8 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
     .breadcrumb .current { color:var(--text); }
     .topbar-right { margin-left:auto; display:flex; align-items:center; gap:14px; }
     .pod-status { font-size:10px; color:var(--jade); display:flex; align-items:center; gap:5px; }
+    .dark-toggle { background:none; border:1px solid var(--line); color:var(--mid); font-family:var(--mono); font-size:10px; padding:3px 10px; cursor:pointer; letter-spacing:0.04em; transition:color 0.12s,border-color 0.12s,background 0.12s; }
+    .dark-toggle:hover { color:var(--heading); border-color:var(--mid); background:var(--bg3); }
     .pod-dot { width:5px; height:5px; border-radius:50%; background:var(--jade); animation:pulse 2.5s ease-in-out infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
 
@@ -127,19 +153,24 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
     .media-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:12px; }
     .media-card { background:var(--bg2); border:1px solid var(--line); overflow:hidden; position:relative; transition:border-color 0.15s,box-shadow 0.15s; }
     .media-card:hover { border-color:var(--gold); box-shadow:var(--shadow); }
-    .media-card:hover .media-delete { opacity:1; }
+    .media-card:hover .media-overlay { opacity:1; }
     .media-thumb { width:100%; height:140px; object-fit:cover; display:block; background:var(--bg3); }
-    .media-thumb-placeholder { width:100%; height:140px; display:flex; align-items:center; justify-content:center; background:var(--bg3); font-size:10px; color:var(--muted); letter-spacing:0.1em; }
+    .media-thumb-placeholder { width:100%; height:140px; display:flex; align-items:center; justify-content:center; background:var(--bg3); font-size:28px; color:var(--muted); }
     .media-info { padding:10px 12px; border-top:1px solid var(--line2); }
     .media-name { font-size:10px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; }
     .media-meta { font-size:9px; color:var(--muted); display:flex; justify-content:space-between; }
-    .media-delete { position:absolute; top:6px; right:6px; opacity:0; transition:opacity 0.15s; }
-    .btn-delete { background:rgba(0,0,0,0.55); border:none; color:#fff; font-size:10px; padding:3px 7px; cursor:pointer; font-family:var(--mono); transition:background 0.12s; }
-    .btn-delete:hover { background:var(--crimson); }
+    .media-overlay { position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.45); opacity:0; transition:opacity 0.15s; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; }
+    .btn-copy { background:var(--bg2); border:1px solid var(--line); color:var(--text); font-family:var(--mono); font-size:9px; padding:5px 12px; cursor:pointer; letter-spacing:0.06em; transition:background 0.1s; white-space:nowrap; }
+    .btn-copy:hover { background:var(--bg3); }
+    .btn-copy.copied { color:var(--jade); border-color:var(--jade); }
+    .btn-delete-overlay { background:transparent; border:1px solid rgba(255,255,255,0.3); color:rgba(255,255,255,0.7); font-family:var(--mono); font-size:9px; padding:4px 10px; cursor:pointer; letter-spacing:0.06em; transition:all 0.1s; }
+    .btn-delete-overlay:hover { background:var(--crimson); border-color:var(--crimson); color:#fff; }
 
     /* Empty state */
-    .empty { padding:48px; text-align:center; background:var(--bg2); border:1px solid var(--line); }
-    .empty-label { font-size:12px; color:var(--muted); }
+    .empty { padding:60px 48px; text-align:center; background:var(--bg2); border:1px solid var(--line); }
+    .empty-icon { font-size:28px; color:var(--line); margin-bottom:12px; }
+    .empty-label { font-size:12px; color:var(--muted); margin-bottom:4px; }
+    .empty-sub { font-size:10px; color:var(--line); }
   </style>
 </head>
 <body>
@@ -157,7 +188,9 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
         <span class="current">Media</span>
       </div>
       <div class="topbar-right">
+        <button class="pal-trigger" onclick="__orbOpenPalette()" title="Command palette"> Strg K</button>
         <div class="pod-status"><div class="pod-dot"></div>pod synced</div>
+        <button id="orb-dark-btn" onclick="__orbToggleDark()" class="dark-toggle" title="Toggle dark mode">● dark</button>
       </div>
     </div>
 
@@ -177,6 +210,7 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
         <span class="nav-badge">{media.length}</span>
       </a>
       <div class="nav-section">System</div>
+      <a href="/orbiter/build"    class="nav-item"><span class="nav-icon">▲</span>Build</a>
       <a href="/orbiter/settings" class="nav-item"><span class="nav-icon">◎</span>Settings</a>
       <div class="sidebar-pod">
         <div class="sidebar-pod-name">content.pod</div>
@@ -213,7 +247,9 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
         <div style="margin-top:28px;">
         {media.length === 0 ? (
           <div class="empty">
-            <div class="empty-label">No media uploaded yet.</div>
+            <div class="empty-icon">⊞</div>
+            <div class="empty-label">No media uploaded yet</div>
+            <div class="empty-sub">Drop a file above to get started</div>
           </div>
         ) : (
           <div class="media-grid">
@@ -222,7 +258,9 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
                 {m.mime_type.startsWith('image/') ? (
                   <img class="media-thumb" src={`/orbiter/media/${m.id}`} alt={m.alt ?? ''} loading="lazy" />
                 ) : (
-                  <div class="media-thumb-placeholder">{m.mime_type.split('/')[1].toUpperCase()}</div>
+                  <div class="media-thumb-placeholder">
+                    {m.mime_type.startsWith('video/') ? '▶' : m.mime_type === 'application/pdf' ? '⊠' : '◫'}
+                  </div>
                 )}
                 <div class="media-info">
                   <div class="media-name" title={m.filename}>{m.filename}</div>
@@ -231,11 +269,12 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
                     <span>{new Date(m.created_at).toLocaleDateString(adminLocale)}</span>
                   </div>
                 </div>
-                <div class="media-delete">
-                  <form method="POST" onsubmit="return confirm('Delete this asset?')">
+                <div class="media-overlay">
+                  <button class="btn-copy" onclick={`copyUrl('/orbiter/media/${m.id}', this)`}>copy url</button>
+                  <form method="POST" onsubmit="return confirm('Delete this asset?')" style="margin:0;">
                     <input type="hidden" name="action" value="delete" />
                     <input type="hidden" name="id" value={m.id} />
-                    <button type="submit" class="btn-delete">✕</button>
+                    <button type="submit" class="btn-delete-overlay">delete</button>
                   </form>
                 </div>
               </div>
@@ -248,7 +287,18 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
 
   </div>
 
+  <script set:html={adminUtils} is:inline></script>
   <script>
+    window.copyUrl = function(path, btn) {
+      const url = window.location.origin + path;
+      navigator.clipboard.writeText(url).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = 'copied ✓';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1800);
+      });
+    };
+
     // Show selected filename
     const fileInput  = document.getElementById('file-input');
     const uploadLabel = document.getElementById('upload-label');
