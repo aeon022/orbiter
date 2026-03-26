@@ -56,7 +56,7 @@ const visible = filter === 'published' ? published
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f5f2ec'/><rect x='5' y='5' width='22' height='22' fill='none' stroke='%239a6e30' stroke-width='1.5'/><text x='16' y='21' font-family='monospace' font-size='11' fill='%239a6e30' text-anchor='middle'>OR</text></svg>" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{col.label} — Orbiter</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -273,7 +273,7 @@ const visible = filter === 'published' ? published
               <div class="entry-cell">
                 <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString(adminLocale)}</div>
               </div>
-              <div class="entry-cell" onclick="event.preventDefault();toggleStatus(this,'{entry.slug}')">
+              <div class="entry-cell" onclick="event.preventDefault();toggleStatus(this)">
                 <button class={`status-toggle ${entry.status}`} data-slug={entry.slug}>{entry.status === 'published' ? '● live' : '○ entwurf'}</button>
               </div>
             </a>
@@ -294,11 +294,11 @@ const visible = filter === 'published' ? published
   </div>
   <script set:html={adminUtils} is:inline></script>
   <script define:vars={{ collectionId }}>
-    window.toggleStatus = async function(cell, slug) {
-      const btn = cell.querySelector('.status-toggle');
-      if (!btn || btn.dataset.busy) return;
+    window.toggleStatus = async function(cell) {
+      const btn  = cell.querySelector('.status-toggle');
+      const slug = btn?.dataset.slug;
+      if (!btn || !slug || btn.dataset.busy) return;
       btn.dataset.busy = '1';
-      const oldStatus = btn.textContent.trim();
       try {
         const res  = await fetch('/orbiter/' + collectionId, {
           method: 'POST',
