@@ -7,7 +7,7 @@
  *
  * Run: npm run seed --workspace=apps/demo
  */
-import { createPod } from '@orbiter/core';
+import { createPod, hashPassword } from '@orbiter/core';
 import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -30,6 +30,12 @@ const db = createPod(podPath, {
     locale:      'de',
   }
 });
+
+// ── Admin User ───────────────────────────────────────────
+
+const adminPassword = await hashPassword('admin');
+db.insertUser(randomUUID(), 'admin', adminPassword, 'admin');
+console.log('  ✓ Admin user created (admin / admin)');
 
 // ── Collections ──────────────────────────────────────────
 
@@ -129,6 +135,7 @@ db.db.prepare(`
   })
 );
 
+db.setMeta('setup.complete', '1');  // skip first-run wizard — seed already provides collections
 console.log('  ✓ Collections created (posts, pages, authors, events)');
 
 // ── Authors ──────────────────────────────────────────────
@@ -367,7 +374,9 @@ console.log(`
   Pages:       ${pages.length} (2 published, 1 draft)
   Events:      ${events.length} (2 published, 1 draft)
   Media:       2 placeholder assets
+  Login:       admin / admin
 ────────────────────────────────
 
   Run: npm run dev
+  Open: http://localhost:8080/orbiter
 `);

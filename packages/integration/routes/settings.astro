@@ -1,21 +1,61 @@
 ---
 import { podPath } from 'orbiter:db';
-import { openPod } from '@orbiter/core';
+import { openPod, verifyPassword, hashPassword } from '@orbiter/core';
+import { useTranslations } from '../src/i18n.js';
 import AdminLayout from './AdminLayout.astro';
 
-// ── Handle POST (save) ────────────────────────────────────────────────
+// ── Auth ─────────────────────────────────────────────────────────────
+const _authDb   = openPod(podPath);
+const _sessUser = _authDb.checkSession(Astro.cookies.get('orb_sess')?.value ?? '');
+_authDb.close();
+if (!_sessUser) return Astro.redirect('/orbiter/login');
+
+const locale = Astro.cookies.get('orb_locale')?.value ?? 'en';
+const t = useTranslations(locale);
+
+// ── Handle POST ───────────────────────────────────────────────────────
+let pwError = '', pwSaved = false;
+
 if (Astro.request.method === 'POST') {
-  const form = await Astro.request.formData();
-  const db   = openPod(podPath);
+  const form   = await Astro.request.formData();
+  const action = form.get('_action')?.toString();
+  const db     = openPod(podPath);
 
-  const fields = ['site.name', 'site.url', 'site.description', 'site.locale', 'site.locales', 'build.webhook_url'];
-  for (const key of fields) {
-    const val = form.get(key)?.toString() ?? '';
-    db.setMeta(key, val);
+  if (action === 'change-password') {
+    const currentPw  = form.get('current_password')?.toString() ?? '';
+    const newPw      = form.get('new_password')?.toString() ?? '';
+    const confirmPw  = form.get('confirm_password')?.toString() ?? '';
+
+    const user = db.getUserByUsername(_sessUser.username);
+    const valid = user ? await verifyPassword(currentPw, user.password) : false;
+
+    if (!valid)                  pwError = t.settings_pw_wrong;
+    else if (newPw.length < 8)   pwError = t.settings_pw_short;
+    else if (newPw !== confirmPw) pwError = t.settings_pw_mismatch;
+    else {
+      const hash = await hashPassword(newPw);
+      db.db.prepare('UPDATE _users SET password = ? WHERE id = ?').run(hash, _sessUser.id);
+      db.close();
+      return Astro.redirect('/orbiter/settings?pwsaved=1');
+    }
+    db.close();
+
+  } else if (action === 'set-locale') {
+    const newLocale = form.get('admin_locale')?.toString() ?? 'en';
+    db.setMeta('admin.locale', newLocale);
+    db.close();
+    Astro.cookies.set('orb_locale', newLocale, { path: '/', maxAge: 60 * 60 * 24 * 365 });
+    return Astro.redirect('/orbiter/settings?saved=1');
+
+  } else {
+    // Site settings
+    const fields = ['site.name', 'site.url', 'site.description', 'site.locale', 'site.locales', 'build.webhook_url'];
+    for (const key of fields) {
+      db.setMeta(key, form.get(key)?.toString() ?? '');
+    }
+    db.close();
+    return Astro.redirect('/orbiter/settings?saved=1');
   }
-
-  db.close();
-  return Astro.redirect('/orbiter/settings?saved=1');
 }
 
 // ── GET ───────────────────────────────────────────────────────────────
@@ -28,13 +68,14 @@ const meta    = {
   locales:     db.getMeta('site.locales')     ?? '',
   webhookUrl:  db.getMeta('build.webhook_url') ?? '',
 };
-const formatVersion = db.getMeta('format_version') ?? '1';
+const formatVersion  = db.getMeta('format_version') ?? '1';
 const allCollections = db.getCollections().map(c => ({
   id: c.id, label: c.label, total: db.getEntries(c.id).length,
 }));
 db.close();
 
-const saved = Astro.url.searchParams.get('saved') === '1';
+const saved   = Astro.url.searchParams.get('saved')   === '1';
+pwSaved = pwSaved || Astro.url.searchParams.get('pwsaved') === '1';
 ---
 <style>
   .main-inner { padding:32px 40px; max-width:680px; }
@@ -42,9 +83,9 @@ const saved = Astro.url.searchParams.get('saved') === '1';
   .main-title { font-family:var(--serif); font-weight:200; font-size:26px; color:var(--heading); letter-spacing:0.05em; line-height:1; }
 
   .settings-group { background:var(--bg2); border:1px solid var(--line); margin-bottom:14px; }
-  .group-header { padding:10px 18px; border-bottom:1px solid var(--line); font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:8px; }
+  .group-header { padding:10px 40px; border-bottom:1px solid var(--line); font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:8px; }
   .group-header::before { content:"—"; color:var(--gold); }
-  .setting-row { display:grid; grid-template-columns:1fr 260px; align-items:center; gap:20px; padding:14px 18px; border-bottom:1px solid var(--line2); }
+  .setting-row { display:grid; grid-template-columns:1fr 260px; align-items:center; gap:20px; padding:14px 40px; border-bottom:1px solid var(--line2); }
   .setting-row:last-child { border-bottom:none; }
   .setting-label { font-size:12px; color:var(--text); margin-bottom:2px; }
   .setting-desc { font-size:10px; color:var(--muted); }
@@ -59,93 +100,195 @@ const saved = Astro.url.searchParams.get('saved') === '1';
 
   .saved-banner { background:var(--jade-bg); border-bottom:1px solid rgba(30,107,80,0.15); padding:7px 40px; font-size:10px; color:var(--jade); display:flex; align-items:center; gap:6px; letter-spacing:0.04em; }
   .saved-banner::before { content:"✓"; }
+  .error-banner { background:var(--crimson-bg); border:1px solid rgba(139,38,53,0.15); padding:7px 12px; font-size:10px; color:var(--crimson); display:flex; align-items:center; gap:6px; margin-top:8px; }
+  .error-banner::before { content:"✕"; }
+
+  /* Language switcher */
+  .lang-pills { display:flex; gap:8px; }
+  .lang-pill { padding:6px 16px; border:1px solid var(--line); background:transparent; color:var(--mid); font-family:var(--mono); font-size:10px; letter-spacing:0.08em; cursor:pointer; text-transform:uppercase; transition:all 0.15s; }
+  .lang-pill.active { background:var(--gold); border-color:var(--gold); color:var(--bg0); }
+  .lang-pill:hover:not(.active) { border-color:var(--mid); color:var(--heading); }
+
+  /* Support */
+  .support-widget { border:1px solid var(--line); padding:20px 40px; margin-top:32px; display:flex; align-items:center; justify-content:space-between; gap:24px; }
+  .support-copy-label { font-size:8px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; display:flex; align-items:center; gap:6px; }
+  .support-copy-label::before { content:"◆"; color:var(--gold); font-size:6px; }
+  .support-copy-text { font-size:11px; color:var(--text); }
+  .btn-support { padding:8px 20px; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:9px; letter-spacing:0.12em; text-transform:uppercase; text-decoration:none; white-space:nowrap; transition:all 0.15s; }
+  .btn-support:hover { background:var(--gold); color:var(--bg0); }
+
+  .theme-cards { display:flex; gap:10px; }
+  .theme-card { flex:1; border:1px solid var(--line); padding:14px 16px; cursor:pointer; background:transparent; font-family:var(--mono); text-align:left; transition:border-color 0.15s,background 0.15s; }
+  .theme-card:hover { border-color:var(--mid); }
+  .theme-card-swatch { display:flex; gap:4px; margin-bottom:10px; }
+  .theme-card-swatch span { height:6px; flex:1; }
+  .theme-card-name { font-size:11px; color:var(--text); letter-spacing:0.06em; margin-bottom:2px; }
+  .theme-card-desc { font-size:9px; color:var(--muted); }
 </style>
 <AdminLayout
-  title="Settings"
+  title={t.settings_title}
   activeNav="settings"
-  breadcrumbs={[{label:'Dashboard',href:'/orbiter'},{label:'Settings'}]}
+  breadcrumbs={[{label:t.nav_dashboard,href:'/orbiter'},{label:t.settings_title}]}
   collections={allCollections}
   podInfo={`v${formatVersion} format`}
+  locale={locale}
 >
-  {saved && <div class="saved-banner">Einstellungen gespeichert</div>}
+  {saved && <div class="saved-banner">{t.settings_saved}</div>}
 
   <div class="main-inner">
     <div class="main-header">
-      <div class="main-title">Settings</div>
+      <div class="main-title">{t.settings_title}</div>
     </div>
 
     <form method="POST">
       <!-- Site -->
       <div class="settings-group">
-        <div class="group-header">Site</div>
+        <div class="group-header">{t.settings_site}</div>
         <div class="setting-row">
           <div>
-            <div class="setting-label">Site Name</div>
-            <div class="setting-desc">Wird im Admin-Header angezeigt</div>
+            <div class="setting-label">{t.settings_site_name}</div>
+            <div class="setting-desc">{t.settings_site_name_desc}</div>
           </div>
-          <input class="field-input" name="site.name" value={meta.name} placeholder="Meine Website" />
+          <input class="field-input" name="site.name" value={meta.name} placeholder="My Site" />
         </div>
         <div class="setting-row">
           <div>
-            <div class="setting-label">Site URL</div>
-            <div class="setting-desc">Für Vorschau-Links</div>
+            <div class="setting-label">{t.settings_site_url}</div>
+            <div class="setting-desc">{t.settings_site_url_desc}</div>
           </div>
           <input class="field-input" name="site.url" value={meta.url} placeholder="https://example.com" />
         </div>
         <div class="setting-row">
           <div>
-            <div class="setting-label">Beschreibung</div>
-            <div class="setting-desc">Kurze Website-Beschreibung</div>
+            <div class="setting-label">{t.settings_site_desc}</div>
+            <div class="setting-desc">{t.settings_site_desc_desc}</div>
           </div>
-          <input class="field-input" name="site.description" value={meta.description} placeholder="Eine kurze Beschreibung" />
+          <input class="field-input" name="site.description" value={meta.description} />
         </div>
         <div class="setting-row">
           <div>
-            <div class="setting-label">Standard-Sprache</div>
-            <div class="setting-desc">Primärer Sprachcode (z. B. de, en)</div>
+            <div class="setting-label">{t.settings_site_locale}</div>
+            <div class="setting-desc">{t.settings_site_locale_desc}</div>
           </div>
-          <input class="field-input" name="site.locale" value={meta.locale} placeholder="de" />
+          <input class="field-input" name="site.locale" value={meta.locale} placeholder="en" />
         </div>
         <div class="setting-row">
           <div>
-            <div class="setting-label">Alle Sprachen</div>
-            <div class="setting-desc">Kommagetrennt — wird via orbiter:collections exportiert</div>
+            <div class="setting-label">{t.settings_site_locales}</div>
+            <div class="setting-desc">{t.settings_site_locales_desc}</div>
           </div>
-          <input class="field-input" name="site.locales" value={meta.locales} placeholder="de,en" />
+          <input class="field-input" name="site.locales" value={meta.locales} placeholder="en,de" />
         </div>
       </div>
 
       <!-- Build -->
       <div class="settings-group">
-        <div class="group-header">Build &amp; Deploy</div>
+        <div class="group-header">{t.settings_build}</div>
         <div class="setting-row">
           <div>
-            <div class="setting-label">Webhook URL</div>
-            <div class="setting-desc">POST-Ziel für Build-Trigger (Netlify, Vercel, …)</div>
+            <div class="setting-label">{t.settings_webhook}</div>
+            <div class="setting-desc">{t.settings_webhook_desc}</div>
           </div>
           <input class="field-input" name="build.webhook_url" value={meta.webhookUrl} placeholder="https://api.netlify.com/build/hook/…" />
         </div>
       </div>
 
       <div class="save-row">
-        <button type="submit" class="btn-save">Einstellungen speichern</button>
+        <button type="submit" class="btn-save">{t.settings_save}</button>
       </div>
     </form>
 
-    <!-- Pod info (readonly) -->
+    <!-- Account -->
     <div class="settings-group">
-      <div class="group-header">Pod</div>
+      <div class="group-header">{t.settings_account} — {_sessUser.username}</div>
+      <form method="POST">
+        <input type="hidden" name="_action" value="change-password" />
+        <div class="setting-row">
+          <div><div class="setting-label">{t.settings_pw_current}</div></div>
+          <input class="field-input" type="password" name="current_password" autocomplete="current-password" required />
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">{t.settings_pw_new}</div>
+            <div class="setting-desc">{t.settings_pw_new_desc}</div>
+          </div>
+          <input class="field-input" type="password" name="new_password" autocomplete="new-password" required minlength="8" />
+        </div>
+        <div class="setting-row">
+          <div><div class="setting-label">{t.settings_pw_confirm}</div></div>
+          <input class="field-input" type="password" name="confirm_password" autocomplete="new-password" required />
+        </div>
+        <div style="padding:0 40px 14px;">
+          {pwError && <div class="error-banner">{pwError}</div>}
+          {pwSaved && <div class="saved-banner" style="margin-top:8px;">{t.settings_pw_saved}</div>}
+        </div>
+        <div class="save-row" style="padding-right:40px;padding-bottom:14px;">
+          <button type="submit" class="btn-save">{t.settings_pw_save}</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Admin Language -->
+    <div class="settings-group">
+      <div class="group-header">{t.settings_admin_lang}</div>
       <div class="setting-row">
         <div>
-          <div class="setting-label">Pod-Pfad</div>
-          <div class="setting-desc">Speicherort der .pod-Datei</div>
+          <div class="setting-label">{t.settings_admin_lang}</div>
+          <div class="setting-desc">{t.settings_admin_lang_desc}</div>
+        </div>
+        <form method="POST" style="display:flex;gap:0;">
+          <input type="hidden" name="_action" value="set-locale" />
+          <div class="lang-pills">
+            <button type="submit" name="admin_locale" value="en" class={`lang-pill ${locale === 'en' ? 'active' : ''}`}>EN</button>
+            <button type="submit" name="admin_locale" value="de" class={`lang-pill ${locale === 'de' ? 'active' : ''}`}>DE</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Theme -->
+    <div class="settings-group">
+      <div class="group-header">{t.settings_theme}</div>
+      <div style="padding:16px 40px;">
+        <div class="theme-cards">
+          <button class="theme-card" data-theme-btn="" onclick="__orbSetTheme('')">
+            <div class="theme-card-swatch">
+              <span style="background:#f5f2ec;border:1px solid #e0dbd0;"></span>
+              <span style="background:#9a6e30;"></span>
+              <span style="background:#1e6b50;"></span>
+              <span style="background:#3d4fa8;"></span>
+            </div>
+            <div class="theme-card-name">{t.settings_theme_zen_name}</div>
+            <div class="theme-card-desc">{t.settings_theme_zen_desc}</div>
+          </button>
+          <button class="theme-card" data-theme-btn="space" onclick="__orbSetTheme('space')">
+            <div class="theme-card-swatch">
+              <span style="background:linear-gradient(to bottom,#edf4fc 50%,#000e1a 50%);border:1px solid #a8ccec;"></span>
+              <span style="background:linear-gradient(to bottom,#0088cc 50%,#00c8ff 50%);"></span>
+              <span style="background:linear-gradient(to bottom,#007a5c 50%,#00e89a 50%);"></span>
+              <span style="background:linear-gradient(to bottom,#4a30b8 50%,#8060ff 50%);"></span>
+            </div>
+            <div class="theme-card-name">{t.settings_theme_space_name}</div>
+            <div class="theme-card-desc">{t.settings_theme_space_desc}</div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pod info (readonly) -->
+    <div class="settings-group">
+      <div class="group-header">{t.settings_pod}</div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">{t.settings_pod_path}</div>
+          <div class="setting-desc">{t.settings_pod_path_desc}</div>
         </div>
         <input class="field-input" value={podPath} readonly />
       </div>
       <div class="setting-row">
         <div>
-          <div class="setting-label">Format-Version</div>
-          <div class="setting-desc">Schema-Version</div>
+          <div class="setting-label">{t.settings_pod_format}</div>
+          <div class="setting-desc">{t.settings_pod_format_desc}</div>
         </div>
         <input class="field-input" value={`v${formatVersion}`} readonly />
       </div>
@@ -155,9 +298,18 @@ const saved = Astro.url.searchParams.get('saved') === '1';
             <div class="setting-label">{c.label}</div>
             <div class="setting-desc">collection · id: {c.id}</div>
           </div>
-          <input class="field-input" value={`${c.total} Einträge`} readonly />
+          <input class="field-input" value={`${c.total} ${t.entries}`} readonly />
         </div>
       ))}
     </div>
+
+    <div class="support-widget">
+      <div class="support-copy">
+        <div class="support-copy-label">Support</div>
+        <div class="support-copy-text">{t.settings_support_text}</div>
+      </div>
+      <a href="https://buy.polar.sh/polar_cl_SFvmYDegcsKDv8O8ZylLlIiXzyNRM7Br9nBx942rj4Q" class="btn-support" target="_blank" rel="noopener">{t.settings_support_btn}</a>
+    </div>
+
   </div>
 </AdminLayout>

@@ -61,6 +61,22 @@ export class OrbiterDB {
         alt        TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
+
+      CREATE TABLE IF NOT EXISTS _users (
+        id         TEXT PRIMARY KEY,
+        username   TEXT NOT NULL UNIQUE,
+        password   TEXT NOT NULL,
+        role       TEXT NOT NULL DEFAULT 'editor',
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        last_login TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS _sessions (
+        token      TEXT PRIMARY KEY,
+        user_id    TEXT NOT NULL REFERENCES _users(id) ON DELETE CASCADE,
+        expires_at TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
     `);
 
     // Set format version if not present
@@ -103,6 +119,43 @@ export class OrbiterDB {
       .get(collectionId, slug);
     if (!row) return null;
     return { ...row, data: JSON.parse(row.data) };
+  }
+
+  // ── Users ──────────────────────────────────
+  getUserByUsername(username) {
+    return this.db.prepare('SELECT * FROM _users WHERE username = ?').get(username) ?? null;
+  }
+
+  insertUser(id, username, hashedPassword, role = 'editor') {
+    this.db.prepare(
+      'INSERT INTO _users (id, username, password, role) VALUES (?, ?, ?, ?)'
+    ).run(id, username, hashedPassword, role);
+  }
+
+  // ── Sessions ───────────────────────────────
+  createSession(userId, token, expiresAt) {
+    // Prune expired sessions on every login
+    this.db.prepare("DELETE FROM _sessions WHERE expires_at < datetime('now')").run();
+    this.db.prepare(
+      'INSERT INTO _sessions (token, user_id, expires_at) VALUES (?, ?, ?)'
+    ).run(token, userId, expiresAt);
+    this.db.prepare(
+      "UPDATE _users SET last_login = datetime('now') WHERE id = ?"
+    ).run(userId);
+  }
+
+  checkSession(token) {
+    if (!token) return null;
+    return this.db.prepare(`
+      SELECT u.id, u.username, u.role
+      FROM _sessions s
+      JOIN _users u ON s.user_id = u.id
+      WHERE s.token = ? AND s.expires_at > datetime('now')
+    `).get(token) ?? null;
+  }
+
+  deleteSession(token) {
+    this.db.prepare('DELETE FROM _sessions WHERE token = ?').run(token);
   }
 
   // ── Meta ───────────────────────────────────

@@ -9,10 +9,14 @@
   ],
   "scripts": {
     "dev":       "npm run dev --workspace=apps/demo",
+    "seed":      "npm run seed --workspace=apps/demo",
     "build":     "npm run build --workspace=apps/demo",
     "build:all": "npm run build --workspaces --if-present",
     "lint":      "npm run lint --workspaces --if-present",
-    "clean":     "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' + && find . -name 'dist' -type d -prune -exec rm -rf '{}' +"
+    "clean":           "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' + && find . -name 'dist' -type d -prune -exec rm -rf '{}' +",
+    "publish:core":    "npm publish --workspace=packages/core --access=public",
+    "publish:integration": "npm publish --workspace=packages/integration --access=public",
+    "publish:all":     "npm run publish:core && npm run publish:integration"
   },
   "engines": {
     "node": ">=20.0.0",

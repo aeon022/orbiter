@@ -2,6 +2,13 @@
 import { podPath } from 'orbiter:db';
 import { openPod } from '@orbiter/core';
 import adminUtils from 'orbiter:admin-utils';
+import { useTranslations } from '../src/i18n.js';
+
+// ── Auth ─────────────────────────────────────────────────────────────
+{ const _db = openPod(podPath); const _u = _db.checkSession(Astro.cookies.get('orb_sess')?.value ?? ''); _db.close(); if (!_u) return Astro.redirect('/orbiter/login'); }
+
+const locale = Astro.cookies.get('orb_locale')?.value ?? 'en';
+const t = useTranslations(locale);
 
 const { collection: collectionId } = Astro.params;
 
@@ -142,9 +149,9 @@ const visible = filter === 'published' ? published
 
     /* Entry table */
     .entry-table { flex:1; }
-    .entry-thead { display:grid; grid-template-columns:3fr 1.8fr 100px 90px; gap:0; padding:7px 32px; border-bottom:1px solid var(--line); background:var(--bg1); }
+    .entry-thead { display:grid; grid-template-columns:3fr 1.8fr 100px 90px; gap:0; padding:7px 16px 7px 32px; border-bottom:1px solid var(--line); background:var(--bg1); }
     .entry-thead-cell { font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); }
-    .entry-row { display:grid; grid-template-columns:3fr 1.8fr 100px 90px; gap:0; align-items:center; padding:0 0 0 32px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; position:relative; }
+    .entry-row { display:grid; grid-template-columns:3fr 1.8fr 100px 90px; gap:0; align-items:center; padding:0 16px 0 32px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; position:relative; }
     .entry-row:hover { background:var(--bg2); }
     .entry-row::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; transition:background 0.2s; }
     .entry-row.published::before { background:var(--jade); }
@@ -177,14 +184,14 @@ const visible = filter === 'published' ? published
         Orbiter
       </a>
       <div class="breadcrumb">
-        <a href="/orbiter">Dashboard</a>
+        <a href="/orbiter">{t.nav_dashboard}</a>
         <span class="sep">/</span>
         <span style="color:var(--text)">{col.label}</span>
       </div>
       <div class="topbar-right">
-        <button class="pal-trigger" onclick="__orbOpenPalette()" title="Command palette"> Strg K</button>
-        <div class="pod-status"><div class="pod-dot"></div>pod synced</div>
-        <button id="orb-dark-btn" onclick="__orbToggleDark()" class="dark-toggle" title="Toggle dark mode">● dark</button>
+        <button class="pal-trigger" onclick="__orbOpenPalette()" title="Command palette">Command Palette <kbd>Strg + K</kbd></button>
+        <a href="/orbiter/logout" class="dark-toggle" style="text-decoration:none;">Abmelden</a>
+        <button id="orb-dark-btn" onclick="__orbToggleDark()" class="dark-toggle" title="Toggle dark mode">● {t.nav_dark}</button>
       </div>
     </div>
 
@@ -201,11 +208,13 @@ const visible = filter === 'published' ? published
       <div class="nav-section">Assets</div>
       <a href="/orbiter/media" class="nav-item"><span class="nav-icon">⊞</span>Media<span class="nav-badge">{mediaCount}</span></a>
       <div class="nav-section">System</div>
+      <a href="/orbiter/schema"   class="nav-item"><span class="nav-icon">◈</span>Collections</a>
       <a href="/orbiter/build"    class="nav-item"><span class="nav-icon">▲</span>Build</a>
       <a href="/orbiter/settings" class="nav-item"><span class="nav-icon">◎</span>Settings</a>
       <div class="sidebar-pod">
         <div class="sidebar-pod-name">content.pod</div>
-        <div>{entries.length} Einträge</div>
+        <div>{entries.length} {t.entries}</div>
+        <div class="pod-status" style="margin-top:8px;"><div class="pod-dot"></div>pod synced</div>
       </div>
     </div>
 
@@ -219,27 +228,27 @@ const visible = filter === 'published' ? published
           <div class="coll-meta">
             <div class="coll-meta-item">
               <div class="coll-meta-dot jade"></div>
-              {published.length} veröffentlicht
+              {published.length} {t.col_filter_published}
             </div>
             <div class="coll-meta-item">
               <div class="coll-meta-dot gold"></div>
-              {drafts.length} Entwurf{drafts.length !== 1 ? 'e' : ''}
+              {drafts.length} {t.col_filter_drafts}
             </div>
           </div>
         </div>
-        <a href={`/orbiter/${collectionId}/new`} class="btn-new">+ Neu</a>
+        <a href={`/orbiter/${collectionId}/new`} class="btn-new">+ {t.new_entry}</a>
       </div>
 
       <!-- Filter tabs -->
       <div class="filter-bar">
         <a href={`/orbiter/${collectionId}`} class={`filter-tab ${filter === 'all' ? 'active' : ''}`}>
-          Alle <span class="filter-tab-count">{entries.length}</span>
+          {t.col_filter_all} <span class="filter-tab-count">{entries.length}</span>
         </a>
         <a href={`/orbiter/${collectionId}?filter=published`} class={`filter-tab published ${filter === 'published' ? 'active published' : ''}`}>
-          Veröffentlicht <span class="filter-tab-count">{published.length}</span>
+          {t.col_filter_published} <span class="filter-tab-count">{published.length}</span>
         </a>
         <a href={`/orbiter/${collectionId}?filter=draft`} class={`filter-tab draft ${filter === 'draft' ? 'active draft' : ''}`}>
-          Entwürfe <span class="filter-tab-count">{drafts.length}</span>
+          {t.col_filter_drafts} <span class="filter-tab-count">{drafts.length}</span>
         </a>
       </div>
 
@@ -247,10 +256,10 @@ const visible = filter === 'published' ? published
       {visible.length > 0 ? (
         <div class="entry-table">
           <div class="entry-thead">
-            <div class="entry-thead-cell">Titel</div>
-            <div class="entry-thead-cell">Slug</div>
-            <div class="entry-thead-cell">Geändert</div>
-            <div class="entry-thead-cell">Status</div>
+            <div class="entry-thead-cell">{t.col_title}</div>
+            <div class="entry-thead-cell">{t.col_slug}</div>
+            <div class="entry-thead-cell">{t.col_modified}</div>
+            <div class="entry-thead-cell">{t.col_status}</div>
           </div>
           {visible.map(entry => (
             <a href={`/orbiter/${collectionId}/${entry.slug}`} class={`entry-row ${entry.status}`}>
@@ -274,7 +283,7 @@ const visible = filter === 'published' ? published
                 <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString(adminLocale)}</div>
               </div>
               <div class="entry-cell" onclick="event.preventDefault();toggleStatus(this)">
-                <button class={`status-toggle ${entry.status}`} data-slug={entry.slug}>{entry.status === 'published' ? '● live' : '○ entwurf'}</button>
+                <button class={`status-toggle ${entry.status}`} data-slug={entry.slug}>{entry.status === 'published' ? t.col_live : t.col_draft_dot}</button>
               </div>
             </a>
           ))}
@@ -283,8 +292,8 @@ const visible = filter === 'published' ? published
         <div class="empty-state">
           <div class="empty-icon">▤</div>
           <div class="empty-text">
-            {entries.length === 0 ? 'Noch keine Einträge.' : `Keine ${filter === 'published' ? 'veröffentlichten' : 'Entwurf-'}Einträge.`}<br/>
-            {entries.length === 0 && <a href={`/orbiter/${collectionId}/new`} style="color:var(--accent)">Ersten Eintrag erstellen →</a>}
+            {entries.length === 0 ? t.no_entries : t.col_no_filter.replace('{filter}', filter)}<br/>
+            {entries.length === 0 && <a href={`/orbiter/${collectionId}/new`} style="color:var(--accent)">{t.col_create_first} →</a>}
           </div>
         </div>
       )}
@@ -293,7 +302,7 @@ const visible = filter === 'published' ? published
 
   </div>
   <script set:html={adminUtils} is:inline></script>
-  <script define:vars={{ collectionId }}>
+  <script define:vars={{ collectionId, colLive: t.col_live, colDraft: t.col_draft_dot }}>
     window.toggleStatus = async function(cell) {
       const btn  = cell.querySelector('.status-toggle');
       const slug = btn?.dataset.slug;
@@ -308,7 +317,7 @@ const visible = filter === 'published' ? published
         const json = await res.json();
         if (json.ok) {
           const newStatus = json.status;
-          btn.textContent = newStatus === 'published' ? '● live' : '○ entwurf';
+          btn.textContent = newStatus === 'published' ? colLive : colDraft;
           btn.className   = 'status-toggle ' + newStatus;
           const row = cell.closest('.entry-row');
           row.classList.remove('published', 'draft');

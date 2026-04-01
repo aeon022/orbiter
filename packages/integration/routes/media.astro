@@ -2,6 +2,13 @@
 import { podPath } from 'orbiter:db';
 import { openPod } from '@orbiter/core';
 import adminUtils from 'orbiter:admin-utils';
+import { useTranslations } from '../src/i18n.js';
+
+// ── Auth ─────────────────────────────────────────────────────────────
+{ const _db = openPod(podPath); const _u = _db.checkSession(Astro.cookies.get('orb_sess')?.value ?? ''); _db.close(); if (!_u) return Astro.redirect('/orbiter/login'); }
+
+const locale = Astro.cookies.get('orb_locale')?.value ?? 'en';
+const t = useTranslations(locale);
 
 // ── Handle POST ───────────────────────────────────────────────────────
 if (Astro.request.method === 'POST') {
@@ -183,14 +190,14 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
         Orbiter
       </a>
       <div class="breadcrumb">
-        <a href="/orbiter">Dashboard</a>
+        <a href="/orbiter">{t.nav_dashboard}</a>
         <span class="sep">/</span>
-        <span class="current">Media</span>
+        <span class="current">{t.media_title}</span>
       </div>
       <div class="topbar-right">
         <button class="pal-trigger" onclick="__orbOpenPalette()" title="Command palette"> Strg K</button>
         <div class="pod-status"><div class="pod-dot"></div>pod synced</div>
-        <button id="orb-dark-btn" onclick="__orbToggleDark()" class="dark-toggle" title="Toggle dark mode">● dark</button>
+        <button id="orb-dark-btn" onclick="__orbToggleDark()" class="dark-toggle" title="Toggle dark mode">● {t.nav_dark}</button>
       </div>
     </div>
 
@@ -220,12 +227,12 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
 
     <!-- Main -->
     <div class="main">
-      {uploaded && <div class="banner ok">File uploaded successfully</div>}
-      {deleted  && <div class="banner del">Asset deleted</div>}
+      {uploaded && <div class="banner ok">{t.media_uploaded}</div>}
+      {deleted  && <div class="banner del">{t.media_asset_deleted}</div>}
 
       <div class="main-inner">
         <div class="main-header">
-          <div class="main-title">Media Library</div>
+          <div class="main-title">{t.media_title}</div>
         </div>
 
         <!-- Upload form -->
@@ -234,12 +241,12 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
           <input type="file" name="file" id="file-input" accept="image/*,video/*,application/pdf" style="display:none" />
           <label for="file-input" class="upload-area" id="drop-zone">
             <div class="upload-icon">↑</div>
-            <div class="upload-label" id="upload-label">Drop file here or click to browse</div>
-            <div class="upload-sub">Images, PDFs, Videos — stored as BLOB in .pod</div>
+            <div class="upload-label" id="upload-label">{t.media_drop}</div>
+            <div class="upload-sub">{t.media_drop_sub}</div>
           </label>
           <div class="upload-form-row">
-            <input class="field-input" name="alt" placeholder="Alt text (optional)" style="width:240px;" />
-            <button type="submit" class="btn-upload">Upload</button>
+            <input class="field-input" name="alt" placeholder={t.media_alt} style="width:240px;" />
+            <button type="submit" class="btn-upload">{t.media_upload_btn}</button>
           </div>
         </form>
 
@@ -248,8 +255,8 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
         {media.length === 0 ? (
           <div class="empty">
             <div class="empty-icon">⊞</div>
-            <div class="empty-label">No media uploaded yet</div>
-            <div class="empty-sub">Drop a file above to get started</div>
+            <div class="empty-label">{t.media_none}</div>
+            <div class="empty-sub">{t.media_none_sub}</div>
           </div>
         ) : (
           <div class="media-grid">
@@ -270,8 +277,8 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
                   </div>
                 </div>
                 <div class="media-overlay">
-                  <button class="btn-copy" onclick={`copyUrl('/orbiter/media/${m.id}', this)`}>copy url</button>
-                  <form method="POST" onsubmit="return confirm('Delete this asset?')" style="margin:0;">
+                  <button class="btn-copy" onclick={`copyUrl('/orbiter/media/${m.id}', this)`}>{t.media_copy}</button>
+                  <form method="POST" onsubmit="return confirm(window.__orbMediaDeleteConfirm)" style="margin:0;">
                     <input type="hidden" name="action" value="delete" />
                     <input type="hidden" name="id" value={m.id} />
                     <button type="submit" class="btn-delete-overlay">delete</button>
@@ -288,12 +295,14 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
   </div>
 
   <script set:html={adminUtils} is:inline></script>
-  <script>
+  <script define:vars={{ mediaCopied: t.media_copied, mediaDrop: t.media_drop, mediaDeleteConfirm: t.media_delete_confirm }}>
+    window.__orbMediaDeleteConfirm = mediaDeleteConfirm;
+
     window.copyUrl = function(path, btn) {
       const url = window.location.origin + path;
       navigator.clipboard.writeText(url).then(() => {
         const orig = btn.textContent;
-        btn.textContent = 'copied ✓';
+        btn.textContent = mediaCopied;
         btn.classList.add('copied');
         setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1800);
       });
@@ -303,7 +312,7 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
     const fileInput  = document.getElementById('file-input');
     const uploadLabel = document.getElementById('upload-label');
     fileInput.addEventListener('change', () => {
-      uploadLabel.textContent = fileInput.files[0]?.name ?? 'Drop file here or click to browse';
+      uploadLabel.textContent = fileInput.files[0]?.name ?? mediaDrop;
     });
 
     // Drag & drop styling

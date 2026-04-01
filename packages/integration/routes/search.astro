@@ -2,6 +2,9 @@
 import { podPath } from 'orbiter:db';
 import { openPod } from '@orbiter/core';
 
+// ── Auth ─────────────────────────────────────────────────────────────
+{ const _db = openPod(podPath); const _u = _db.checkSession(Astro.cookies.get('orb_sess')?.value ?? ''); _db.close(); if (!_u) return new Response(JSON.stringify([]), { status: 401, headers: { 'Content-Type': 'application/json' } }); }
+
 const q   = (Astro.url.searchParams.get('q') ?? '').toLowerCase().trim();
 const db  = openPod(podPath);
 const cols = db.getCollections();

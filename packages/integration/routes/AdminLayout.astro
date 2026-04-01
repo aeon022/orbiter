@@ -4,12 +4,14 @@
  * Shared layout for all /orbiter admin routes.
  * Props:
  *   title       — page title (string)
- *   activeNav   — nav item to highlight (string: 'dashboard'|collectionId|'media'|'build'|'settings')
+ *   activeNav   — nav item to highlight
  *   breadcrumbs — array of { label, href? }
  *   collections — array of { id, label, total }
  *   podInfo     — string shown in sidebar footer
+ *   locale      — 'en' | 'de'  (default: 'en')
  */
 import adminUtils from 'orbiter:admin-utils';
+import { useTranslations } from '../src/i18n.js';
 
 const {
   title       = 'Orbiter',
@@ -17,9 +19,12 @@ const {
   breadcrumbs = [],
   collections = [],
   podInfo     = '',
+  locale      = 'en',
 } = Astro.props;
+
+const t = useTranslations(locale);
 ---
-<html lang="de">
+<html lang={locale}>
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f5f2ec'/><rect x='5' y='5' width='22' height='22' fill='none' stroke='%239a6e30' stroke-width='1.5'/><text x='16' y='21' font-family='monospace' font-size='11' fill='%239a6e30' text-anchor='middle'>OR</text></svg>" />
@@ -38,6 +43,7 @@ const {
       --accent:#3d4fa8; --accent-bg:rgba(61,79,168,0.06);
       --crimson:#8b2635; --crimson-bg:rgba(139,38,53,0.07);
       --shadow:0 1px 3px rgba(0,0,0,0.08);
+      --btn-hover:#7a5520;
       --serif:"Noto Serif JP",serif; --mono:"DM Mono",monospace;
     }
     html.dark {
@@ -126,17 +132,17 @@ const {
       )}
       <div class="topbar-right">
         <slot name="topbar-right" />
-        <button class="pal-trigger" onclick="__orbOpenPalette()" title="Command palette"> Strg K</button>
-        <div class="pod-status"><div class="pod-dot"></div>pod synced</div>
-        <button id="orb-dark-btn" onclick="__orbToggleDark()" class="dark-toggle" title="Toggle dark mode">● dark</button>
+        <button class="pal-trigger" onclick="__orbOpenPalette()" title="Command palette">{t.nav_cmd_palette} <kbd>Strg + K</kbd></button>
+        <a href="/orbiter/logout" style="font-size:10px;color:var(--muted);text-decoration:none;padding:3px 10px;border:1px solid var(--line);transition:color 0.12s,border-color 0.12s;" onmouseover="this.style.color='var(--heading)';this.style.borderColor='var(--mid)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--line)'">{t.nav_signout}</a>
+        <button id="orb-dark-btn" onclick="__orbToggleDark()" class="dark-toggle" title="Toggle dark mode">● {t.nav_dark}</button>
       </div>
     </div>
 
     <!-- Sidebar -->
     <div class="sidebar">
-      <div class="nav-section">Content</div>
+      <div class="nav-section">{t.nav_content}</div>
       <a href="/orbiter" class={`nav-item ${activeNav === 'dashboard' ? 'active' : ''}`}>
-        <span class="nav-icon">◈</span>Dashboard
+        <span class="nav-icon">◈</span>{t.nav_dashboard}
       </a>
       {collections.map((col: any) => (
         <a href={`/orbiter/${col.id}`} class={`nav-item ${activeNav === col.id ? 'active' : ''}`}>
@@ -144,20 +150,24 @@ const {
           <span class="nav-badge">{col.total}</span>
         </a>
       ))}
-      <div class="nav-section">Assets</div>
+      <div class="nav-section">{t.nav_assets}</div>
       <a href="/orbiter/media" class={`nav-item ${activeNav === 'media' ? 'active' : ''}`}>
-        <span class="nav-icon">⊞</span>Media
+        <span class="nav-icon">⊞</span>{t.nav_media}
       </a>
-      <div class="nav-section">System</div>
+      <div class="nav-section">{t.nav_system}</div>
+      <a href="/orbiter/schema"   class={`nav-item ${activeNav === 'schema'   ? 'active' : ''}`}>
+        <span class="nav-icon">◈</span>{t.nav_collections}
+      </a>
       <a href="/orbiter/build"    class={`nav-item ${activeNav === 'build'    ? 'active' : ''}`}>
-        <span class="nav-icon">▲</span>Build
+        <span class="nav-icon">▲</span>{t.nav_build}
       </a>
       <a href="/orbiter/settings" class={`nav-item ${activeNav === 'settings' ? 'active' : ''}`}>
-        <span class="nav-icon">◎</span>Settings
+        <span class="nav-icon">◎</span>{t.nav_settings}
       </a>
       <div class="sidebar-pod">
         <div class="sidebar-pod-name">content.pod</div>
         <div>{podInfo}</div>
+        <div class="pod-status" style="margin-top:8px;"><div class="pod-dot"></div>pod synced</div>
       </div>
     </div>
 

@@ -1,0 +1,14 @@
+---
+import { podPath } from 'orbiter:db';
+import { openPod } from '@orbiter/core';
+
+const token = Astro.cookies.get('orb_sess')?.value;
+if (token) {
+  const db = openPod(podPath);
+  db.deleteSession(token);
+  db.close();
+}
+
+Astro.cookies.delete('orb_sess', { path: '/' });
+return Astro.redirect('/orbiter/login');
+---

@@ -1,0 +1,514 @@
+/**
+ * Orbiter Admin i18n
+ * Supported locales: 'en', 'de'
+ */
+
+export const translations = {
+  en: {
+    // ── Navigation ────────────────────────────────────────────────────
+    nav_content:      'Content',
+    nav_assets:       'Assets',
+    nav_system:       'System',
+    nav_dashboard:    'Dashboard',
+    nav_media:        'Media',
+    nav_collections:  'Collections',
+    nav_build:        'Build',
+    nav_settings:     'Settings',
+    nav_signout:      'Sign out',
+    nav_cmd_palette:  'Command Palette',
+    nav_dark:         'dark',
+    nav_light:        'light',
+
+    // ── Common ────────────────────────────────────────────────────────
+    save:             'Save',
+    cancel:           'Cancel',
+    delete:           'Delete',
+    create:           'Create',
+    edit:             'Edit',
+    loading:          'Loading…',
+    search:           'Search',
+    back:             'Back',
+    close:            'Close',
+    confirm:          'Confirm',
+    yes:              'Yes',
+    no:               'No',
+    entries:          'Entries',
+    entry:            'Entry',
+    published:        'Published',
+    draft:            'Draft',
+    new_entry:        'New entry',
+    no_entries:       'No entries yet.',
+    required:         'Required',
+    optional:         'Optional',
+
+    // ── Login ─────────────────────────────────────────────────────────
+    login_title:      'Sign in',
+    login_username:   'Username',
+    login_password:   'Password',
+    login_submit:     'Sign in',
+    login_error:      'Invalid username or password.',
+
+    // ── Dashboard ─────────────────────────────────────────────────────
+    dashboard_title:  'Dashboard',
+    dashboard_welcome:'Welcome back',
+    dashboard_collections: 'Collections',
+    dashboard_build:  'Trigger build',
+    dashboard_support:'Support Orbiter',
+    dashboard_support_text: 'Enjoying Orbiter? Help keep it going.',
+    dashboard_support_btn:  'Support Orbiter CMS →',
+
+    // ── Collection list ───────────────────────────────────────────────
+    col_title:        'Title',
+    col_status:       'Status',
+    col_updated:      'Updated',
+    col_new:          'New entry',
+    col_empty:        'No entries yet. Create the first one.',
+
+    // ── Editor ────────────────────────────────────────────────────────
+    editor_save:      'Save',
+    editor_publish:   'Publish',
+    editor_unpublish: 'Unpublish',
+    editor_delete:    'Delete entry',
+    editor_preview:   'Preview',
+    editor_autosave:  'Autosaved',
+    editor_saved:     'Saved',
+    editor_versions:  'History',
+
+    // ── Schema ────────────────────────────────────────────────────────
+    schema_title:     'Collections',
+    schema_new:       'New collection',
+    schema_empty_panel: 'Select a collection or create a new one.',
+    schema_new_btn:   '+ New collection',
+    schema_col_id:    'Collection ID',
+    schema_col_id_hint: 'Only a–z, 0–9, underscore. Cannot be changed after creation.',
+    schema_col_label: 'Display name',
+    schema_fields:    'Fields',
+    schema_add_field: '+ Add field',
+    schema_save:      'Save',
+    schema_delete_col:'Delete collection',
+    schema_field_key: 'field_key',
+    schema_field_lbl: 'Display name / Label',
+    schema_required:  'Required',
+    schema_field_non_destructive: '◎ Removing fields is non-destructive — existing data stays in the pod but will no longer be shown or saved.',
+    schema_delete_confirm_empty: 'Delete collection "{label}"?\n\nThis action cannot be undone.',
+    schema_delete_confirm_entries: 'Delete collection "{label}"?\n\n⚠ It contains {count} entries — these will also be deleted.\n\nThis action cannot be undone.',
+    schema_col_id_exists: 'A collection with ID "{id}" already exists.',
+    schema_col_id_required: 'ID and display name are required.',
+    schema_saved:     'Saved',
+    schema_deleted:   'Collection deleted',
+    schema_empty_fields: 'No fields yet — click "+ Add field".',
+
+    // ── Settings ─────────────────────────────────────────────────────
+    settings_title:   'Settings',
+    settings_save:    'Save settings',
+    settings_saved:   'Settings saved',
+
+    settings_site:          'Site',
+    settings_site_name:     'Site Name',
+    settings_site_name_desc:'Shown in the admin header',
+    settings_site_url:      'Site URL',
+    settings_site_url_desc: 'Used for preview links',
+    settings_site_desc:     'Description',
+    settings_site_desc_desc:'Short site description',
+    settings_site_locale:   'Default language',
+    settings_site_locale_desc: 'Primary language code (e.g. en, de)',
+    settings_site_locales:  'All languages',
+    settings_site_locales_desc: 'Comma-separated — exported via orbiter:collections',
+
+    settings_build:         'Build & Deploy',
+    settings_webhook:       'Webhook URL',
+    settings_webhook_desc:  'POST target for build triggers (Netlify, Vercel, …)',
+
+    settings_account:       'My Account',
+    settings_pw_current:    'Current password',
+    settings_pw_new:        'New password',
+    settings_pw_new_desc:   'At least 8 characters',
+    settings_pw_confirm:    'Confirm password',
+    settings_pw_save:       'Change password',
+    settings_pw_saved:      'Password changed',
+    settings_pw_wrong:      'Current password is incorrect',
+    settings_pw_short:      'New password must be at least 8 characters',
+    settings_pw_mismatch:   'Passwords do not match',
+
+    settings_theme:         'Interface Theme',
+    settings_theme_zen_name:'Orbiter Zen',
+    settings_theme_zen_desc:'Warm, minimal, calm',
+    settings_theme_space_name: 'Space Enso',
+    settings_theme_space_desc: 'Futuristic, cold — light & dark',
+
+    settings_admin_lang:    'Admin Language',
+    settings_admin_lang_desc: 'Language of the admin interface',
+
+    settings_pod:           'Pod',
+    settings_pod_path:      'Pod path',
+    settings_pod_path_desc: 'Location of the .pod file',
+    settings_pod_format:    'Format version',
+    settings_pod_format_desc: 'Schema version',
+
+    settings_support_text:  'Enjoying Orbiter? Help keep it going.',
+    settings_support_btn:   'Support Orbiter CMS →',
+
+    // ── Build ─────────────────────────────────────────────────────────
+    build_title:      'Build',
+    build_trigger:    'Trigger build',
+    build_running:    'Running…',
+    build_success:    'Build triggered',
+    build_error:      'Error triggering build',
+    build_no_webhook: 'No webhook URL configured. Set one in Settings.',
+    build_last:       'Last triggered',
+
+    // ── Media ─────────────────────────────────────────────────────────
+    media_title:      'Media',
+    media_upload:     'Upload',
+    media_empty:      'No media files yet.',
+    media_delete:     'Delete',
+    media_copy_url:   'Copy URL',
+
+    // ── Dashboard extras ─────────────────────────────────────────────
+    dashboard_open_site:  'Open website',
+    dashboard_total:      'Total',
+    dashboard_drafts:     'Drafts',
+    dashboard_recently:   'Recently changed',
+    dashboard_show_all:   'Show all',
+    dashboard_no_entries: 'No entries yet. Create your first entry to get started.',
+    dashboard_live:       '● live',
+    dashboard_draft_dot:  '○ draft',
+    dashboard_files:      'Files in pod',
+
+    // ── Collection extras ─────────────────────────────────────────────
+    col_filter_all:       'All',
+    col_filter_published: 'Published',
+    col_filter_drafts:    'Drafts',
+    col_slug:             'Slug',
+    col_modified:         'Modified',
+    col_live:             '● live',
+    col_draft_dot:        '○ draft',
+    col_create_first:     'Create first entry',
+    col_no_filter:        'No {filter} entries.',
+
+    // ── Editor extras ─────────────────────────────────────────────────
+    editor_mode_edit:     'Edit',
+    editor_mode_split:    'Split',
+    editor_mode_preview:  'Preview',
+    editor_untitled:      'Untitled',
+    editor_fields:        'Fields',
+    editor_details:       'Details',
+    editor_slug:          'Slug',
+    editor_status:        'Status',
+    editor_modified:      'Modified',
+    editor_history:       'History',
+    editor_autosaving:    '↑ saving…',
+    editor_unsaved:       '● unsaved',
+    editor_err:           '✕ error',
+    editor_publish_btn:   '↑ Publish',
+    editor_draft_btn:     'Save as draft',
+
+    // ── Build extras ──────────────────────────────────────────────────
+    build_subtitle:       'Trigger a website rebuild via webhook',
+    build_no_webhook:     '◎ No webhook configured — add one in Settings.',
+    build_triggering:     'Triggering…',
+    build_last_ok:        'Last build: {ts} — successful',
+    build_last_err:       'Last build: {ts} — error',
+    build_none_yet:       'No build triggered yet',
+    build_history:        'History',
+    build_ok:             'successful',
+    build_fail:           'error',
+    build_manual:         'manually triggered',
+
+    // ── Media extras ──────────────────────────────────────────────────
+    media_drop:           'Drop file here or click to browse',
+    media_drop_sub:       'Images, PDFs, Videos — stored as BLOB in .pod',
+    media_alt:            'Alt text (optional)',
+    media_upload_btn:     'Upload',
+    media_uploaded:       'File uploaded successfully',
+    media_asset_deleted:  'Asset deleted',
+    media_none:           'No media uploaded yet.',
+    media_none_sub:       'Drop a file above to get started.',
+    media_copy:           'copy url',
+    media_copied:         'copied ✓',
+    media_delete_confirm: 'Delete this asset?',
+    media_count:          '{count} assets',
+
+    // ── Search ────────────────────────────────────────────────────────
+    search_title:     'Search',
+    search_placeholder: 'Search entries…',
+    search_no_results:  'No results.',
+
+    // ── Setup wizard ──────────────────────────────────────────────────
+    setup_title:      'Welcome to Orbiter',
+    setup_subtitle:   'Choose the collections to start with. You can always add more later in Settings → Collections.',
+    setup_start:      'Create collections & start',
+    setup_skip:       'Skip — set up manually',
+    setup_lang_label: 'Admin language',
+
+    // Template names / descriptions
+    tpl_posts_label:  'Posts',
+    tpl_posts_desc:   'Blog posts & articles',
+    tpl_pages_label:  'Pages',
+    tpl_pages_desc:   'Landing pages & static content',
+    tpl_events_label: 'Events',
+    tpl_events_desc:  'Events with dates, location & recurrence',
+    tpl_team_label:   'Team',
+    tpl_team_desc:    'Team members & profiles',
+    tpl_faq_label:    'FAQ',
+    tpl_faq_desc:     'Questions & answers',
+  },
+
+  de: {
+    // ── Navigation ────────────────────────────────────────────────────
+    nav_content:      'Inhalt',
+    nav_assets:       'Assets',
+    nav_system:       'System',
+    nav_dashboard:    'Dashboard',
+    nav_media:        'Medien',
+    nav_collections:  'Collections',
+    nav_build:        'Build',
+    nav_settings:     'Einstellungen',
+    nav_signout:      'Abmelden',
+    nav_cmd_palette:  'Command Palette',
+    nav_dark:         'dark',
+    nav_light:        'light',
+
+    // ── Common ────────────────────────────────────────────────────────
+    save:             'Speichern',
+    cancel:           'Abbrechen',
+    delete:           'Löschen',
+    create:           'Erstellen',
+    edit:             'Bearbeiten',
+    loading:          'Laden…',
+    search:           'Suchen',
+    back:             'Zurück',
+    close:            'Schließen',
+    confirm:          'Bestätigen',
+    yes:              'Ja',
+    no:               'Nein',
+    entries:          'Einträge',
+    entry:            'Eintrag',
+    published:        'Veröffentlicht',
+    draft:            'Entwurf',
+    new_entry:        'Neuer Eintrag',
+    no_entries:       'Noch keine Einträge.',
+    required:         'Pflicht',
+    optional:         'Optional',
+
+    // ── Login ─────────────────────────────────────────────────────────
+    login_title:      'Anmelden',
+    login_username:   'Benutzername',
+    login_password:   'Passwort',
+    login_submit:     'Anmelden',
+    login_error:      'Benutzername oder Passwort falsch.',
+
+    // ── Dashboard ─────────────────────────────────────────────────────
+    dashboard_title:  'Dashboard',
+    dashboard_welcome:'Willkommen zurück',
+    dashboard_collections: 'Collections',
+    dashboard_build:  'Build auslösen',
+    dashboard_support:'Orbiter unterstützen',
+    dashboard_support_text: 'Gefällt dir Orbiter? Hilf mit, es weiterzuentwickeln.',
+    dashboard_support_btn:  'Support Orbiter CMS →',
+
+    // ── Collection list ───────────────────────────────────────────────
+    col_title:        'Titel',
+    col_status:       'Status',
+    col_updated:      'Aktualisiert',
+    col_new:          'Neuer Eintrag',
+    col_empty:        'Noch keine Einträge. Lege den ersten an.',
+
+    // ── Editor ────────────────────────────────────────────────────────
+    editor_save:      'Speichern',
+    editor_publish:   'Veröffentlichen',
+    editor_unpublish: 'Zurückziehen',
+    editor_delete:    'Eintrag löschen',
+    editor_preview:   'Vorschau',
+    editor_autosave:  'Automatisch gespeichert',
+    editor_saved:     'Gespeichert',
+    editor_versions:  'Verlauf',
+
+    // ── Schema ────────────────────────────────────────────────────────
+    schema_title:     'Collections',
+    schema_new:       'Neue Collection',
+    schema_empty_panel: 'Wähle eine Collection aus oder lege eine neue an.',
+    schema_new_btn:   '+ Neue Collection',
+    schema_col_id:    'Collection ID',
+    schema_col_id_hint: 'Nur a–z, 0–9, Unterstrich. Kann nach Erstellung nicht geändert werden.',
+    schema_col_label: 'Anzeigename',
+    schema_fields:    'Felder',
+    schema_add_field: '+ Feld hinzufügen',
+    schema_save:      'Speichern',
+    schema_delete_col:'Collection löschen',
+    schema_field_key: 'field_key',
+    schema_field_lbl: 'Anzeigename / Label',
+    schema_required:  'Pflicht',
+    schema_field_non_destructive: '◎ Felder entfernen ist nicht-destruktiv — vorhandene Daten bleiben im Pod erhalten, werden aber nicht mehr angezeigt oder gespeichert.',
+    schema_delete_confirm_empty: 'Collection "{label}" löschen?\n\nDieser Vorgang kann nicht rückgängig gemacht werden.',
+    schema_delete_confirm_entries: 'Collection "{label}" löschen?\n\n⚠ Sie enthält {count} Einträge — diese werden ebenfalls gelöscht.\n\nDieser Vorgang kann nicht rückgängig gemacht werden.',
+    schema_col_id_exists: 'Eine Collection mit ID "{id}" existiert bereits.',
+    schema_col_id_required: 'ID und Anzeigename sind Pflichtfelder.',
+    schema_saved:     'Gespeichert',
+    schema_deleted:   'Collection gelöscht',
+    schema_empty_fields: 'Noch keine Felder — klicke „+ Feld hinzufügen".',
+
+    // ── Settings ─────────────────────────────────────────────────────
+    settings_title:   'Einstellungen',
+    settings_save:    'Einstellungen speichern',
+    settings_saved:   'Einstellungen gespeichert',
+
+    settings_site:          'Site',
+    settings_site_name:     'Site Name',
+    settings_site_name_desc:'Wird im Admin-Header angezeigt',
+    settings_site_url:      'Site URL',
+    settings_site_url_desc: 'Für Vorschau-Links',
+    settings_site_desc:     'Beschreibung',
+    settings_site_desc_desc:'Kurze Website-Beschreibung',
+    settings_site_locale:   'Standard-Sprache',
+    settings_site_locale_desc: 'Primärer Sprachcode (z. B. de, en)',
+    settings_site_locales:  'Alle Sprachen',
+    settings_site_locales_desc: 'Kommagetrennt — wird via orbiter:collections exportiert',
+
+    settings_build:         'Build & Deploy',
+    settings_webhook:       'Webhook URL',
+    settings_webhook_desc:  'POST-Ziel für Build-Trigger (Netlify, Vercel, …)',
+
+    settings_account:       'Mein Konto',
+    settings_pw_current:    'Aktuelles Passwort',
+    settings_pw_new:        'Neues Passwort',
+    settings_pw_new_desc:   'Mindestens 8 Zeichen',
+    settings_pw_confirm:    'Passwort bestätigen',
+    settings_pw_save:       'Passwort ändern',
+    settings_pw_saved:      'Passwort geändert',
+    settings_pw_wrong:      'Aktuelles Passwort ist falsch',
+    settings_pw_short:      'Neues Passwort muss mindestens 8 Zeichen haben',
+    settings_pw_mismatch:   'Passwörter stimmen nicht überein',
+
+    settings_theme:         'Interface Theme',
+    settings_theme_zen_name:'Orbiter Zen',
+    settings_theme_zen_desc:'Warm, minimalistisch, ruhig',
+    settings_theme_space_name: 'Space Enso',
+    settings_theme_space_desc: 'Futuristisch, kalt — light & dark',
+
+    settings_admin_lang:    'Admin-Sprache',
+    settings_admin_lang_desc: 'Sprache der Admin-Oberfläche',
+
+    settings_pod:           'Pod',
+    settings_pod_path:      'Pod-Pfad',
+    settings_pod_path_desc: 'Speicherort der .pod-Datei',
+    settings_pod_format:    'Format-Version',
+    settings_pod_format_desc: 'Schema-Version',
+
+    settings_support_text:  'Gefällt dir Orbiter? Hilf mit, es weiterzuentwickeln.',
+    settings_support_btn:   'Support Orbiter CMS →',
+
+    // ── Build ─────────────────────────────────────────────────────────
+    build_title:      'Build',
+    build_trigger:    'Build auslösen',
+    build_running:    'Läuft…',
+    build_success:    'Build ausgelöst',
+    build_error:      'Fehler beim Build',
+    build_no_webhook: 'Keine Webhook-URL konfiguriert. In Einstellungen hinterlegen.',
+    build_last:       'Zuletzt ausgelöst',
+
+    // ── Media ─────────────────────────────────────────────────────────
+    media_title:      'Medien',
+    media_upload:     'Hochladen',
+    media_empty:      'Noch keine Mediendateien.',
+    media_delete:     'Löschen',
+    media_copy_url:   'URL kopieren',
+
+    // ── Dashboard extras ─────────────────────────────────────────────
+    dashboard_open_site:  'Website öffnen',
+    dashboard_total:      'Gesamt',
+    dashboard_drafts:     'Entwürfe',
+    dashboard_recently:   'Zuletzt geändert',
+    dashboard_show_all:   'Alle anzeigen',
+    dashboard_no_entries: 'Noch keine Einträge. Ersten Eintrag erstellen, um loszulegen.',
+    dashboard_live:       '● live',
+    dashboard_draft_dot:  '○ entwurf',
+    dashboard_files:      'Dateien im Pod',
+
+    // ── Collection extras ─────────────────────────────────────────────
+    col_filter_all:       'Alle',
+    col_filter_published: 'Veröffentlicht',
+    col_filter_drafts:    'Entwürfe',
+    col_slug:             'Slug',
+    col_modified:         'Geändert',
+    col_live:             '● live',
+    col_draft_dot:        '○ entwurf',
+    col_create_first:     'Ersten Eintrag erstellen',
+    col_no_filter:        'Keine {filter}-Einträge.',
+
+    // ── Editor extras ─────────────────────────────────────────────────
+    editor_mode_edit:     'Edit',
+    editor_mode_split:    'Split',
+    editor_mode_preview:  'Preview',
+    editor_untitled:      'Ohne Titel',
+    editor_fields:        'Felder',
+    editor_details:       'Details',
+    editor_slug:          'Slug',
+    editor_status:        'Status',
+    editor_modified:      'Geändert',
+    editor_history:       'Verlauf',
+    editor_autosaving:    '↑ saving…',
+    editor_unsaved:       '● unsaved',
+    editor_err:           '✕ error',
+    editor_publish_btn:   '↑ Veröffentlichen',
+    editor_draft_btn:     'Als Entwurf speichern',
+
+    // ── Build extras ──────────────────────────────────────────────────
+    build_subtitle:       'Rebuild der Website via Webhook auslösen',
+    build_no_webhook:     '◎ Kein Webhook konfiguriert — in den Einstellungen hinzufügen.',
+    build_triggering:     'Build wird ausgelöst…',
+    build_last_ok:        'Letzter Build: {ts} — erfolgreich',
+    build_last_err:       'Letzter Build: {ts} — fehler',
+    build_none_yet:       'Noch kein Build ausgelöst',
+    build_history:        'Verlauf',
+    build_ok:             'erfolgreich',
+    build_fail:           'fehler',
+    build_manual:         'manuell ausgelöst',
+
+    // ── Media extras ──────────────────────────────────────────────────
+    media_drop:           'Datei hier ablegen oder klicken',
+    media_drop_sub:       'Bilder, PDFs, Videos — als BLOB im .pod gespeichert',
+    media_alt:            'Alt-Text (optional)',
+    media_upload_btn:     'Hochladen',
+    media_uploaded:       'Datei erfolgreich hochgeladen',
+    media_asset_deleted:  'Asset gelöscht',
+    media_none:           'Noch keine Medien hochgeladen.',
+    media_none_sub:       'Datei oben ablegen, um zu starten.',
+    media_copy:           'URL kopieren',
+    media_copied:         'kopiert ✓',
+    media_delete_confirm: 'Asset löschen?',
+    media_count:          '{count} Assets',
+
+    // ── Search ────────────────────────────────────────────────────────
+    search_title:     'Suche',
+    search_placeholder: 'Einträge suchen…',
+    search_no_results:  'Keine Ergebnisse.',
+
+    // ── Setup wizard ──────────────────────────────────────────────────
+    setup_title:      'Willkommen bei Orbiter',
+    setup_subtitle:   'Wähle die Collections für den Start. Weitere können später unter Einstellungen → Collections angelegt werden.',
+    setup_start:      'Collections anlegen & starten',
+    setup_skip:       'Überspringen — manuell einrichten',
+    setup_lang_label: 'Admin-Sprache',
+
+    // Template names / descriptions
+    tpl_posts_label:  'Posts',
+    tpl_posts_desc:   'Blog-Beiträge & Artikel',
+    tpl_pages_label:  'Pages',
+    tpl_pages_desc:   'Landingpages & statische Inhalte',
+    tpl_events_label: 'Events',
+    tpl_events_desc:  'Veranstaltungen mit Datum, Ort & Wiederholung',
+    tpl_team_label:   'Team',
+    tpl_team_desc:    'Teammitglieder & Profile',
+    tpl_faq_label:    'FAQ',
+    tpl_faq_desc:     'Fragen & Antworten',
+  },
+};
+
+/**
+ * @param {'en'|'de'} locale
+ * @returns {Record<string, string>}
+ */
+export function useTranslations(locale) {
+  return translations[locale] ?? translations.en;
+}

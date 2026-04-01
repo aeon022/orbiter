@@ -1,16 +1,40 @@
 {
   "name": "@orbiter/integration",
-  "version": "0.0.1",
-  "description": "Astro integration — bridges .pod to getCollection() / getEntry()",
+  "version": "0.1.0",
+  "description": "Astro integration for Orbiter CMS — admin UI, virtual modules, injected routes",
   "type": "module",
   "main": "./src/index.js",
   "exports": {
     ".": "./src/index.js"
   },
+  "files": [
+    "src",
+    "routes"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "astro",
+    "astro-integration",
+    "cms",
+    "sqlite",
+    "headless-cms",
+    "pod",
+    "orbiter"
+  ],
+  "author": "ABTEILUNG83",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aeon022/orbiter.git",
+    "directory": "packages/integration"
+  },
+  "homepage": "https://github.com/aeon022/orbiter#readme",
   "peerDependencies": {
     "astro": ">=4.0.0"
   },
   "dependencies": {
-    "@orbiter/core": "*"
+    "@orbiter/core": "^0.1.0"
   }
 }

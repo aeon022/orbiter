@@ -22,16 +22,126 @@
     if (btn) btn.textContent = darkLabel(document.documentElement.classList.contains('dark'));
   });
 
-  // ── Palette trigger button CSS (injected once) ─────────────────────
+  // ── Theme ──────────────────────────────────────────────────────────
+  var THEMES = ['space'];
+
+  // Backwards compat: 'space-light' / 'space-dark' → 'space'
+  var _savedTheme = localStorage.getItem('orb-theme') || '';
+  if (_savedTheme === 'space-light' || _savedTheme === 'space-dark') {
+    _savedTheme = 'space';
+    localStorage.setItem('orb-theme', 'space');
+  }
+  if (_savedTheme) document.documentElement.classList.add('theme-' + _savedTheme);
+
+  // ── Space Enso: load Space Mono font on demand ─────────────────────
+  if (_savedTheme === 'space') {
+    var _fl = document.createElement('link');
+    _fl.rel  = 'stylesheet';
+    _fl.href = 'https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap';
+    document.head.appendChild(_fl);
+  }
+
+  window.__orbSetTheme = function(theme) {
+    THEMES.forEach(function(t) { document.documentElement.classList.remove('theme-' + t); });
+    localStorage.setItem('orb-theme', theme);
+    if (theme) document.documentElement.classList.add('theme-' + theme);
+    if (theme === 'space' && !document.querySelector('link[href*="Space+Mono"]')) {
+      var _fl2 = document.createElement('link');
+      _fl2.rel  = 'stylesheet';
+      _fl2.href = 'https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap';
+      document.head.appendChild(_fl2);
+    }
+    document.querySelectorAll('[data-theme-btn]').forEach(function(btn) {
+      var active = btn.dataset.themeBtn === theme;
+      btn.style.borderColor = active ? 'var(--gold)' : 'var(--line)';
+      btn.style.color       = active ? 'var(--gold)' : 'var(--muted)';
+      btn.style.background  = active ? 'var(--gold-bg)' : 'transparent';
+    });
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var cur = localStorage.getItem('orb-theme') || '';
+    if (cur === 'space-light' || cur === 'space-dark') cur = 'space';
+    document.querySelectorAll('[data-theme-btn]').forEach(function(btn) {
+      var active = btn.dataset.themeBtn === cur;
+      btn.style.borderColor = active ? 'var(--gold)' : 'var(--line)';
+      btn.style.color       = active ? 'var(--gold)' : 'var(--muted)';
+      btn.style.background  = active ? 'var(--gold-bg)' : 'transparent';
+    });
+  });
+
+  // ── Global styles (themes + pal-trigger) ───────────────────────────
   (function() {
     var s = document.createElement('style');
     s.textContent = [
+      // pal-trigger
       '.pal-trigger{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;',
       'border:1px solid var(--line,#e0dbd0);background:var(--bg2,#fff);',
       'color:var(--muted,#a09890);font-family:"DM Mono",monospace;font-size:10px;',
       'letter-spacing:0.04em;cursor:pointer;transition:border-color 0.12s,color 0.12s;}',
       '.pal-trigger:hover{border-color:var(--accent,#3d4fa8);color:var(--accent,#3d4fa8);}',
       '.pal-trigger kbd{font-size:9px;opacity:0.6;}',
+
+      // Space Light — kühl, hell, technisch
+      'html.theme-space{',
+        '--bg0:#edf4fc;--bg1:#f4f9ff;--bg2:#ffffff;--bg3:#ddeeff;',
+        '--line:#a8ccec;--line2:rgba(0,120,200,0.06);',
+        '--muted:#5a8ab0;--mid:#1c6090;--text:#0d2e50;--heading:#060f20;',
+        '--gold:#0088cc;--gold-bg:rgba(0,136,204,0.09);',
+        '--jade:#007a5c;--jade-bg:rgba(0,122,92,0.08);',
+        '--accent:#4a30b8;--accent-bg:rgba(74,48,184,0.08);',
+        '--crimson:#c0184e;--crimson-bg:rgba(192,24,78,0.07);',
+        '--shadow:0 1px 4px rgba(0,100,180,0.1);',
+      '}',
+
+      // Space Dark — tief schwarz, neon-cyan
+      'html.theme-space.dark{',
+        '--bg0:#000e1a;--bg1:#001524;--bg2:#001c2e;--bg3:#00243c;',
+        '--line:#003a5c;--line2:rgba(0,180,255,0.05);',
+        '--muted:#1a6080;--mid:#3a90b0;--text:#7dc8de;--heading:#c0ecfc;',
+        '--gold:#00c8ff;--gold-bg:rgba(0,200,255,0.09);',
+        '--jade:#00e89a;--jade-bg:rgba(0,232,154,0.08);',
+        '--accent:#8060ff;--accent-bg:rgba(128,96,255,0.09);',
+        '--crimson:#ff3d6e;--crimson-bg:rgba(255,61,110,0.08);',
+        '--shadow:0 1px 8px rgba(0,200,255,0.08);',
+      '}',
+
+      // Space Enso — terminal typography (Space Mono replaces Noto Serif JP)
+      'html.theme-space{--serif:"Space Mono",monospace;}',
+      // Logo: tighter, all-caps terminal feel
+      'html.theme-space .logo{font-family:"Space Mono",monospace;font-weight:400;font-size:13px;letter-spacing:0.22em;text-transform:uppercase;}',
+      // Hero site name
+      'html.theme-space .hero-site{font-family:"Space Mono",monospace;font-weight:400;font-size:20px;letter-spacing:0.1em;}',
+      // Editor / schema display titles
+      'html.theme-space .editor-title{font-family:"Space Mono",monospace;font-weight:400;font-size:18px;letter-spacing:0.06em;}',
+      // Stat numbers
+      'html.theme-space .stat-num{font-family:"Space Mono",monospace;font-weight:700;font-size:28px;}',
+
+      // Space Light — crisp blue accents on active elements
+      'html.theme-space:not(.dark) .logo-mark{border-color:#0088cc;box-shadow:0 0 0 2px rgba(0,136,204,0.12);}',
+      'html.theme-space:not(.dark) .nav-item.active::before{background:#0088cc;}',
+
+      // Space Light — button hover: deep navy (instead of Zen warm-brown #7a5520)
+      'html.theme-space:not(.dark){--btn-hover:#0055a0;}',
+      'html.theme-space:not(.dark) .btn-save:hover,',
+      'html.theme-space:not(.dark) button[type=submit]:hover{background:#0055a0!important;border-color:#0055a0!important;}',
+      'html.theme-space:not(.dark) .btn-deploy:hover{background:#0055a0!important;color:#fff!important;}',
+      'html.theme-space:not(.dark) .btn-support:hover{background:#0055a0!important;color:#fff!important;}',
+      'html.theme-space:not(.dark) .btn-sm.primary:hover{background:#0055a0!important;color:#fff!important;}',
+
+      // Space Dark — neon glow effects
+      'html.theme-space.dark .nav-item.active::before{box-shadow:2px 0 10px var(--gold);}',
+      'html.theme-space.dark .logo-mark{box-shadow:0 0 12px rgba(0,200,255,0.35);}',
+      'html.theme-space.dark .pod-dot{box-shadow:0 0 6px var(--jade);}',
+      'html.theme-space.dark .btn-publish{box-shadow:0 0 14px rgba(0,200,255,0.2);}',
+
+      // Space Dark — button hover: mid cyan (instead of Zen warm-brown #7a5520)
+      'html.theme-space.dark{--btn-hover:#00a0cc;}',
+      'html.theme-space.dark .btn-save:hover,',
+      'html.theme-space.dark button[type=submit]:hover{background:#00a0cc!important;border-color:#00a0cc!important;}',
+      'html.theme-space.dark .btn-deploy:hover{background:#00a0cc!important;color:#000e1a!important;}',
+      'html.theme-space.dark .btn-support:hover{background:#00a0cc!important;color:#000e1a!important;}',
+      'html.theme-space.dark .btn-sm.primary:hover{background:#00a0cc!important;color:#000e1a!important;}',
     ].join('');
     document.head.appendChild(s);
   })();
@@ -50,6 +160,7 @@
     { title: 'Media',      href: '/orbiter/media',    hint: 'nav' },
     { title: 'Build',      href: '/orbiter/build',    hint: 'nav' },
     { title: 'Settings',   href: '/orbiter/settings', hint: 'nav' },
+    { title: 'Abmelden',   href: '/orbiter/logout',   hint: 'action' },
   ];
 
   function buildPalette() {
@@ -177,7 +288,7 @@
 
     var icon = document.createElement('div');
     icon.style.cssText = 'width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted,#a09890);flex-shrink:0;';
-    icon.textContent = item.hint === 'nav' ? '◈' : item.status === 'published' ? '▪' : '▫';
+    icon.textContent = item.hint === 'action' ? '→' : item.hint === 'nav' ? '◈' : item.status === 'published' ? '▪' : '▫';
 
     var main = document.createElement('div');
     main.style.cssText = 'flex:1;min-width:0;';

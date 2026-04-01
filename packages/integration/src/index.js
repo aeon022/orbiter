@@ -76,6 +76,22 @@ export default function orbiter(options = {}) {
           pattern:    '/orbiter/search',
           entrypoint: resolve(routesDir, 'search.astro'),
         });
+        injectRoute({
+          pattern:    '/orbiter/setup',
+          entrypoint: resolve(routesDir, 'setup.astro'),
+        });
+        injectRoute({
+          pattern:    '/orbiter/schema',
+          entrypoint: resolve(routesDir, 'schema.astro'),
+        });
+        injectRoute({
+          pattern:    '/orbiter/login',
+          entrypoint: resolve(routesDir, 'login.astro'),
+        });
+        injectRoute({
+          pattern:    '/orbiter/logout',
+          entrypoint: resolve(routesDir, 'logout.astro'),
+        });
 
         // ── Vite virtual modules ─────────────────
         updateConfig({

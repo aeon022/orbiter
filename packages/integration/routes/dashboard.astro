@@ -6,6 +6,18 @@
 import { podPath } from 'orbiter:db';
 import { openPod } from '@orbiter/core';
 import adminUtils from 'orbiter:admin-utils';
+import { useTranslations } from '../src/i18n.js';
+
+// ── Auth + First-run check ────────────────────────────────────────────
+{
+  const _db = openPod(podPath);
+  const _u  = _db.checkSession(Astro.cookies.get('orb_sess')?.value ?? '');
+  if (!_u) { _db.close(); return Astro.redirect('/orbiter/login'); }
+  const _setupDone     = (_db.getMeta('setup.complete') ?? '') === '1';
+  const _hasCollections = _db.getCollections().length > 0;
+  _db.close();
+  if (!_setupDone && !_hasCollections) return Astro.redirect('/orbiter/setup');
+}
 
 // ── Handle POST (notes / todos API) ──────────────────────────────────
 if (Astro.request.method === 'POST') {
@@ -51,9 +63,12 @@ const initTodos   = JSON.parse(db.getMeta('dashboard.todos') ?? '[]');
 
 db.close();
 
+const locale = Astro.cookies.get('orb_locale')?.value ?? 'en';
+const t = useTranslations(locale);
+
 const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 ---
-<html lang="en">
+<html lang={locale}>
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f5f2ec'/><rect x='5' y='5' width='22' height='22' fill='none' stroke='%239a6e30' stroke-width='1.5'/><text x='16' y='21' font-family='monospace' font-size='11' fill='%239a6e30' text-anchor='middle'>OR</text></svg>" />
@@ -71,6 +86,7 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
       --jade:#1e6b50; --jade-bg:rgba(30,107,80,0.07);
       --accent:#3d4fa8; --accent-bg:rgba(61,79,168,0.06);
       --shadow:0 1px 3px rgba(0,0,0,0.08);
+      --btn-hover:#7a5520;
       --serif:"Noto Serif JP",serif; --mono:"DM Mono",monospace;
     }
     html.dark {
@@ -172,6 +188,14 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
     .side-section { padding:0 20px 24px; }
     .side-section + .side-section { border-top:1px solid var(--line); padding-top:20px; }
 
+    /* Support widget */
+    .support-widget { margin:0 20px 24px; border:1px solid var(--line); padding:14px 16px; }
+    .support-label { font-size:8px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); margin-bottom:7px; display:flex; align-items:center; gap:6px; }
+    .support-label::before { content:"◆"; color:var(--gold); font-size:6px; }
+    .support-text { font-size:10px; color:var(--muted); line-height:1.7; margin-bottom:12px; }
+    .btn-support { display:block; padding:7px 10px; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:9px; letter-spacing:0.1em; text-transform:uppercase; text-decoration:none; text-align:center; transition:all 0.15s; }
+    .btn-support:hover { background:var(--gold); color:var(--bg0); }
+
     /* Collection cards */
     .coll-card { padding:12px 0; border-bottom:1px solid var(--line2); }
     .coll-card:last-child { border-bottom:none; }
@@ -236,16 +260,16 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
       </a>
       <div class="topbar-site">{meta.siteName}</div>
       <div class="topbar-right">
-        <button class="pal-trigger" onclick="__orbOpenPalette()" title="Command palette"> Strg K</button>
-        <div class="pod-status"><div class="pod-dot"></div>pod synced</div>
-        <button id="orb-dark-btn" onclick="__orbToggleDark()" class="dark-toggle" title="Toggle dark mode">● dark</button>
+        <button class="pal-trigger" onclick="__orbOpenPalette()" title="Command palette">{t.nav_cmd_palette} <kbd>⌘ K</kbd></button>
+        <a href="/orbiter/logout" class="dark-toggle" style="text-decoration:none;">{t.nav_signout}</a>
+        <button id="orb-dark-btn" onclick="__orbToggleDark()" class="dark-toggle" title="Toggle dark mode">● {t.nav_dark}</button>
       </div>
     </div>
 
     <!-- Sidebar -->
     <div class="sidebar">
-      <div class="nav-section">Content</div>
-      <a href="/orbiter" class="nav-item active"><span class="nav-icon">◈</span>Dashboard</a>
+      <div class="nav-section">{t.nav_content}</div>
+      <a href="/orbiter" class="nav-item active"><span class="nav-icon">◈</span>{t.nav_dashboard}</a>
       {collections.map(col => (
         <a href={`/orbiter/${col.id}`} class="nav-item">
           <span class="nav-icon">▤</span>
@@ -253,14 +277,16 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
           <span class="nav-badge">{stats.find(s => s.id === col.id)?.total ?? 0}</span>
         </a>
       ))}
-      <div class="nav-section">Assets</div>
-      <a href="/orbiter/media" class="nav-item"><span class="nav-icon">⊞</span>Media<span class="nav-badge">{mediaCount}</span></a>
-      <div class="nav-section">System</div>
-      <a href="/orbiter/build"    class="nav-item"><span class="nav-icon">▲</span>Build</a>
-      <a href="/orbiter/settings" class="nav-item"><span class="nav-icon">◎</span>Settings</a>
+      <div class="nav-section">{t.nav_assets}</div>
+      <a href="/orbiter/media" class="nav-item"><span class="nav-icon">⊞</span>{t.nav_media}<span class="nav-badge">{mediaCount}</span></a>
+      <div class="nav-section">{t.nav_system}</div>
+      <a href="/orbiter/schema"   class="nav-item"><span class="nav-icon">◈</span>{t.nav_collections}</a>
+      <a href="/orbiter/build"    class="nav-item"><span class="nav-icon">▲</span>{t.nav_build}</a>
+      <a href="/orbiter/settings" class="nav-item"><span class="nav-icon">◎</span>{t.nav_settings}</a>
       <div class="sidebar-pod">
         <div class="sidebar-pod-name">content.pod</div>
-        <div>{totalEntries} Einträge · {collections.length} Collections</div>
+        <div>{totalEntries} {t.entries} · {collections.length} {t.dashboard_collections}</div>
+        <div class="pod-status" style="margin-top:8px;"><div class="pod-dot"></div>pod synced</div>
       </div>
     </div>
 
@@ -276,7 +302,7 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
         <div class="hero-right">
           <span id="deploy-status" class="deploy-status"></span>
           {meta.siteUrl && (
-            <a href={meta.siteUrl} target="_blank" class="hero-url">↗ Website öffnen</a>
+            <a href={meta.siteUrl} target="_blank" class="hero-url">↗ {t.dashboard_open_site}</a>
           )}
           {hasWebhook && (
             <button class="btn-deploy" id="deploy-btn" onclick="triggerDeploy()">↑ Deploy</button>
@@ -287,33 +313,33 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
       <!-- Stats row -->
       <div class="stats-row">
         <div class="stat-cell">
-          <div class="stat-label">Gesamt</div>
+          <div class="stat-label">{t.dashboard_total}</div>
           <div class="stat-num">{totalEntries}</div>
-          <div class="stat-sub">{collections.length} Collections</div>
+          <div class="stat-sub">{collections.length} {t.dashboard_collections}</div>
           <div class="stat-bar"><div class="stat-bar-fill accent" style={`width:100%`}></div></div>
         </div>
         <div class="stat-cell">
-          <div class="stat-label">Veröffentlicht</div>
+          <div class="stat-label">{t.published}</div>
           <div class="stat-num">{totalPublished}</div>
           <div class="stat-sub">
             <span class="stat-dot jade"></span>
-            {totalEntries > 0 ? Math.round(totalPublished / totalEntries * 100) : 0}% gesamt
+            {totalEntries > 0 ? Math.round(totalPublished / totalEntries * 100) : 0}% {t.dashboard_total.toLowerCase()}
           </div>
           <div class="stat-bar"><div class="stat-bar-fill jade" style={`width:${totalEntries > 0 ? Math.round(totalPublished / totalEntries * 100) : 0}%`}></div></div>
         </div>
         <div class="stat-cell">
-          <div class="stat-label">Entwürfe</div>
+          <div class="stat-label">{t.dashboard_drafts}</div>
           <div class="stat-num">{totalDrafts}</div>
           <div class="stat-sub">
             <span class="stat-dot gold"></span>
-            unveröffentlicht
+            {t.draft}
           </div>
           <div class="stat-bar"><div class="stat-bar-fill gold" style={`width:${totalEntries > 0 ? Math.round(totalDrafts / totalEntries * 100) : 0}%`}></div></div>
         </div>
         <div class="stat-cell">
           <div class="stat-label">Media</div>
           <div class="stat-num">{mediaCount}</div>
-          <div class="stat-sub">Dateien im Pod</div>
+          <div class="stat-sub">{t.dashboard_files}</div>
           <div class="stat-bar"><div class="stat-bar-fill accent" style="width:60%"></div></div>
         </div>
       </div>
@@ -324,7 +350,7 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
         <!-- Recent entries -->
         <div class="content-main">
           <div class="section-head">
-            <div class="section-title">Zuletzt geändert</div>
+            <div class="section-title">{t.dashboard_recently}</div>
           </div>
           {recent.length > 0 ? (
             <div class="entry-list">
@@ -335,14 +361,13 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
                     <div class="entry-coll">{entry.collectionLabel}</div>
                   </div>
                   <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString(adminLocale)}</div>
-                  <div class={`pill ${entry.status}`}>{entry.status === 'published' ? '● live' : '○ entwurf'}</div>
+                  <div class={`pill ${entry.status}`}>{entry.status === 'published' ? t.dashboard_live : t.dashboard_draft_dot}</div>
                 </a>
               ))}
             </div>
           ) : (
             <div class="empty">
-              Noch keine Einträge.<br/>
-              Ersten Eintrag erstellen, um loszulegen.
+              {t.dashboard_no_entries}
             </div>
           )}
         </div>
@@ -351,7 +376,7 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
         <div class="content-side">
           <div class="side-section">
             <div class="section-head">
-              <div class="section-title">Collections</div>
+              <div class="section-title">{t.dashboard_collections}</div>
             </div>
             {stats.map(col => {
               const pct = col.total > 0 ? Math.round(col.published / col.total * 100) : 0;
@@ -365,17 +390,24 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
                     <div class="coll-progress-fill" style={`width:${pct}%`}></div>
                   </div>
                   <div class="coll-card-meta">
-                    <span class="pub">{col.published} veröffentlicht</span>
-                    <span>{col.drafts} Entwurf{col.drafts !== 1 ? 'e' : ''}</span>
+                    <span class="pub">{col.published} {t.published}</span>
+                    <span>{col.drafts} {t.dashboard_drafts}</span>
                   </div>
                   <div class="coll-actions">
-                    <a href={`/orbiter/${col.id}/new`} class="btn-sm primary">+ Neu</a>
-                    <a href={`/orbiter/${col.id}`} class="btn-sm">Alle anzeigen</a>
+                    <a href={`/orbiter/${col.id}/new`} class="btn-sm primary">+ {t.new_entry}</a>
+                    <a href={`/orbiter/${col.id}`} class="btn-sm">{t.dashboard_show_all}</a>
                   </div>
                 </div>
               );
             })}
           </div>
+
+          <div class="support-widget">
+            <div class="support-label">Support</div>
+            <div class="support-text">{t.dashboard_support_text}</div>
+            <a href="https://buy.polar.sh/polar_cl_SFvmYDegcsKDv8O8ZylLlIiXzyNRM7Br9nBx942rj4Q" class="btn-support" target="_blank" rel="noopener">{t.dashboard_support_btn}</a>
+          </div>
+
         </div>
 
       </div>

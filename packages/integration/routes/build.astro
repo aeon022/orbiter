@@ -6,6 +6,13 @@
  */
 import { podPath } from 'orbiter:db';
 import { openPod } from '@orbiter/core';
+import { useTranslations } from '../src/i18n.js';
+
+// ── Auth ─────────────────────────────────────────────────────────────
+{ const _db = openPod(podPath); const _u = _db.checkSession(Astro.cookies.get('orb_sess')?.value ?? ''); _db.close(); if (!_u) return Astro.redirect('/orbiter/login'); }
+
+const locale = Astro.cookies.get('orb_locale')?.value ?? 'en';
+const t = useTranslations(locale);
 import AdminLayout from './AdminLayout.astro';
 
 // ── Handle POST (API) ─────────────────────────────────────────────────
@@ -89,16 +96,17 @@ const maskedUrl  = hasWebhook
   .history-time { margin-left:auto; font-size:9px; color:var(--muted); }
 </style>
 <AdminLayout
-  title="Build"
+  title={t.build_title}
   activeNav="build"
-  breadcrumbs={[{label:'Dashboard',href:'/orbiter'},{label:'Build'}]}
+  breadcrumbs={[{label:t.nav_dashboard,href:'/orbiter'},{label:t.build_title}]}
   collections={allCollections}
   podInfo="deploy config"
+  locale={locale}
 >
   <div class="main-inner">
     <div class="main-header">
-      <div class="main-title">Build &amp; Deploy</div>
-      <div class="main-sub">Rebuild der Website via Webhook auslösen</div>
+      <div class="main-title">{t.build_title}</div>
+      <div class="main-sub">{t.build_subtitle}</div>
     </div>
 
     <!-- Trigger -->
@@ -111,34 +119,38 @@ const maskedUrl  = hasWebhook
         </div>
       ) : (
         <div class="no-webhook">
-          ◎ Kein Webhook konfiguriert — <a href="/orbiter/settings">in den Einstellungen hinzufügen</a>
+          {t.build_no_webhook}
         </div>
       )}
       <button class="btn-trigger" id="trigger-btn" onclick="triggerBuild()" {!hasWebhook ? 'disabled' : ''}>
         <span class="btn-trigger-icon">▲</span>
-        Build auslösen
+        {t.build_trigger}
       </button>
       <div class="status-row">
         <div class="status-dot-build idle" id="status-dot"></div>
         <span id="status-text">
-          {lastTriggered ? `Letzter Build: ${lastTriggered} — ${lastStatus === 'ok' ? 'erfolgreich' : lastStatus || '—'}` : 'Noch kein Build ausgelöst'}
+          {lastTriggered
+            ? (lastStatus === 'ok'
+                ? t.build_last_ok.replace('{ts}', lastTriggered)
+                : t.build_last_err.replace('{ts}', lastTriggered))
+            : t.build_none_yet}
         </span>
       </div>
     </div>
 
     {lastTriggered && (
       <div class="history-card">
-        <div class="trigger-label">Verlauf</div>
+        <div class="trigger-label">{t.build_history}</div>
         <div class="history-row">
-          <span class={`history-status ${lastStatus === 'ok' ? 'ok' : 'error'}`}>{lastStatus === 'ok' ? 'erfolgreich' : 'fehler'}</span>
-          <span>manuell ausgelöst</span>
+          <span class={`history-status ${lastStatus === 'ok' ? 'ok' : 'error'}`}>{lastStatus === 'ok' ? t.build_ok : t.build_fail}</span>
+          <span>{t.build_manual}</span>
           <span class="history-time">{lastTriggered}</span>
         </div>
       </div>
     )}
   </div>
 </AdminLayout>
-<script>
+<script define:vars={{ buildTriggering: t.build_triggering, buildSuccess: t.build_success, buildError: t.build_error }}>
   window.triggerBuild = async function() {
     const btn  = document.getElementById('trigger-btn');
     const dot  = document.getElementById('status-dot');
@@ -146,7 +158,7 @@ const maskedUrl  = hasWebhook
 
     btn.disabled = true;
     dot.className  = 'status-dot-build running';
-    text.textContent = 'Build wird ausgelöst…';
+    text.textContent = buildTriggering;
 
     try {
       const res  = await fetch('/orbiter/build', { method: 'POST' });
@@ -154,15 +166,15 @@ const maskedUrl  = hasWebhook
 
       if (json.ok) {
         dot.className    = 'status-dot-build ok';
-        text.textContent = 'Build erfolgreich ausgelöst — ' + new Date().toLocaleTimeString('de');
+        text.textContent = buildSuccess + ' — ' + new Date().toLocaleTimeString();
       } else {
         dot.className    = 'status-dot-build error';
-        text.textContent = 'Fehler: ' + (json.error ?? `HTTP ${json.status}`);
+        text.textContent = buildError + ': ' + (json.error ?? `HTTP ${json.status}`);
         btn.disabled = false;
       }
     } catch (e) {
       dot.className    = 'status-dot-build error';
-      text.textContent = 'Netzwerkfehler: ' + e.message;
+      text.textContent = buildError + ': ' + e.message;
       btn.disabled = false;
     }
   };

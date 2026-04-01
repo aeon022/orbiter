@@ -1,18 +1,40 @@
 {
   "name": "@orbiter/core",
-  "version": "0.0.1",
-  "description": "SQLite persistence layer — the .pod file engine",
+  "version": "0.1.0",
+  "description": "SQLite persistence layer for Orbiter CMS — the .pod file engine",
   "type": "module",
   "main": "./src/index.js",
   "exports": {
-    ".": "./src/index.js"
+    ".":      "./src/index.js",
+    "./auth": "./src/auth.js"
   },
+  "files": [
+    "src"
+  ],
   "scripts": {
-    "build": "echo 'No build step yet'"
+    "build": "echo 'No build step'"
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "astro",
+    "cms",
+    "sqlite",
+    "headless-cms",
+    "pod",
+    "orbiter"
+  ],
+  "author": "ABTEILUNG83",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aeon022/orbiter.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/aeon022/orbiter#readme",
   "dependencies": {
-    "better-sqlite3": "^9.4.3",
-    "drizzle-orm": "^0.30.10"
+    "better-sqlite3": "^9.4.3"
   },
   "devDependencies": {
     "drizzle-kit": "^0.21.4"
