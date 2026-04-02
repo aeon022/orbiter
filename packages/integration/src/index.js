@@ -128,6 +128,25 @@ export default function orbiter(options = {}) {
                     const rawLocales    = db.getMeta('site.locales') ?? defaultLocale;
                     const locales       = rawLocales.split(',').map(l => l.trim()).filter(Boolean);
 
+                    // Resolve relation fields inline
+                    const byId = {};
+                    for (const entries of Object.values(snapshot)) {
+                      for (const e of entries) byId[e.id] = e;
+                    }
+                    for (const col of collections) {
+                      const colSchema = col.schema ? JSON.parse(col.schema) : {};
+                      const relFields = Object.entries(colSchema).filter(([, f]) => f.type === 'relation');
+                      if (!relFields.length) continue;
+                      for (const entry of snapshot[col.id] ?? []) {
+                        for (const [key, field] of relFields) {
+                          const raw = entry.data[key];
+                          const ids = Array.isArray(raw) ? raw : (raw ? [raw] : []);
+                          const resolved = ids.map(id => byId[id] ?? id).filter(Boolean);
+                          entry.data[key] = field.multiple !== false ? resolved : (resolved[0] ?? null);
+                        }
+                      }
+                    }
+
                     db.close();
 
                     return `

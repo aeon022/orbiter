@@ -38,6 +38,8 @@ if (Astro.request.method === 'POST') {
       dataObj[key] = form.getAll(key).length
         ? form.getAll(key).flatMap(v => v.split(',').map(s => s.trim()).filter(Boolean))
         : [];
+    } else if (field.type === 'relation') {
+      dataObj[key] = form.getAll(key);
     } else {
       dataObj[key] = form.get(key)?.toString() ?? '';
     }
@@ -106,6 +108,13 @@ const hasMedia    = extraFields.some(([, f]) => f.type === 'media');
 const mediaList   = hasMedia
   ? db.db.prepare('SELECT id, filename, alt FROM _media ORDER BY created_at DESC').all()
   : [];
+
+const relationEntries = {};
+for (const [, field] of extraFields) {
+  if (field.type === 'relation' && field.collection && !relationEntries[field.collection]) {
+    relationEntries[field.collection] = db.getEntries(field.collection);
+  }
+}
 
 const versions = entry
   ? db.db.prepare('SELECT * FROM _versions WHERE entry_id = ? ORDER BY created_at DESC').all(entry.id)
@@ -321,6 +330,22 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
     .tag-input:focus { border-color:var(--accent); }
     .tag-preview { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; }
     .tag-chip { font-size:9px; padding:2px 7px; background:var(--accent-bg); color:var(--accent); border:1px solid rgba(61,79,168,0.2); }
+
+    /* Relation picker */
+    .relation-picker { display:flex; flex-direction:column; gap:5px; }
+    .rel-search { width:100%; background:var(--bg0); border:1px solid var(--line); padding:5px 8px; color:var(--heading); font-family:var(--mono); font-size:11px; outline:none; transition:border-color 0.15s; border-radius:var(--radius); }
+    .rel-search:focus { border-color:var(--accent); }
+    .rel-list { max-height:160px; overflow-y:auto; border:1px solid var(--line); background:var(--bg0); border-radius:var(--radius); }
+    .rel-item { display:flex; align-items:center; gap:7px; padding:6px 10px; cursor:pointer; border-bottom:1px solid var(--line2); }
+    .rel-item:last-child { border-bottom:none; }
+    .rel-item:hover { background:var(--line2); }
+    .rel-item input[type=checkbox] { display:none; }
+    .rel-check { width:13px; height:13px; flex-shrink:0; border:1px solid var(--line); background:var(--bg0); display:flex; align-items:center; justify-content:center; font-size:8px; color:transparent; transition:all 0.12s; flex-shrink:0; }
+    .rel-item:has(input:checked) .rel-check { background:var(--accent); border-color:var(--accent); color:var(--bg0); }
+    .rel-name { font-size:11px; color:var(--text); }
+    .rel-empty { padding:12px; font-size:10px; color:var(--muted); text-align:center; }
+    .rel-selected { display:flex; flex-wrap:wrap; gap:3px; min-height:0; }
+    .rel-tag { font-size:9px; padding:2px 7px; background:var(--accent-bg); color:var(--accent); border:1px solid rgba(61,79,168,0.2); border-radius:2px; }
 
     /* Version history */
     .version-row { display:flex; align-items:center; gap:9px; padding:6px 0; border-bottom:1px solid var(--line2); }
@@ -602,6 +627,36 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
                         oninput={`renderTags('${key}')`}
                       />
                       <div class="tag-preview" id={`tags-${key}`}></div>
+                    </div>
+                  )}
+
+                  {field.type === 'relation' && (
+                    <div class="relation-picker">
+                      {(relationEntries[field.collection] ?? []).length > 5 && (
+                        <input class="rel-search" type="text" placeholder="Search…"
+                          oninput={`filterRel(this,'${key}')`} />
+                      )}
+                      <div class="rel-selected" id={`rel-selected-${key}`}>
+                        {((entry?.data?.[key] ?? []) as string[]).map(id => {
+                          const e = (relationEntries[field.collection] ?? []).find((x: any) => x.id === id);
+                          return e ? <span class="rel-tag">{e.data?.title ?? e.slug}</span> : null;
+                        })}
+                      </div>
+                      <div class="rel-list" id={`rel-list-${key}`}>
+                        {(relationEntries[field.collection] ?? []).length === 0
+                          ? <div class="rel-empty">No entries in {field.collection}</div>
+                          : (relationEntries[field.collection] ?? []).map((e: any) => {
+                              const checked = (entry?.data?.[key] ?? [] as string[]).includes(e.id);
+                              return (
+                                <label class="rel-item" onclick={`updateRelSelected('${key}')`}>
+                                  <input type="checkbox" name={key} value={e.id} checked={checked} />
+                                  <span class="rel-check">{checked ? '✓' : ''}</span>
+                                  <span class="rel-name">{e.data?.title ?? e.slug}</span>
+                                </label>
+                              );
+                            })
+                        }
+                      </div>
                     </div>
                   )}
 
@@ -1378,6 +1433,33 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
       var key = el.id.replace('arr-', '');
       window.renderTags(key);
     });
+
+    window.filterRel = function(input, key) {
+      var q = input.value.toLowerCase();
+      document.querySelectorAll('#rel-list-' + key + ' .rel-item').forEach(function(item) {
+        var name = item.querySelector('.rel-name')?.textContent?.toLowerCase() ?? '';
+        item.style.display = name.includes(q) ? '' : 'none';
+      });
+    };
+
+    window.updateRelSelected = function(key) {
+      var list     = document.getElementById('rel-list-' + key);
+      var selected = document.getElementById('rel-selected-' + key);
+      if (!list || !selected) return;
+      setTimeout(function() {
+        var checked = list.querySelectorAll('input[type=checkbox]:checked');
+        selected.innerHTML = [...checked].map(function(cb) {
+          var name = cb.closest('.rel-item')?.querySelector('.rel-name')?.textContent ?? cb.value;
+          return '<span class="rel-tag">' + name + '</span>';
+        }).join('');
+        // update rel-check visuals
+        list.querySelectorAll('.rel-item').forEach(function(item) {
+          var cb  = item.querySelector('input[type=checkbox]');
+          var box = item.querySelector('.rel-check');
+          if (box) { box.textContent = cb?.checked ? '✓' : ''; box.style.color = cb?.checked ? 'var(--bg0)' : 'transparent'; box.style.background = cb?.checked ? 'var(--accent)' : 'var(--bg0)'; box.style.borderColor = cb?.checked ? 'var(--accent)' : 'var(--line)'; }
+        });
+      }, 0);
+    };
   </script>
 </body>
 </html>

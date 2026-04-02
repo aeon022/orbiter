@@ -84,6 +84,7 @@ const FIELD_TYPES = [
   { value: 'url',      label: 'URL' },
   { value: 'number',   label: 'Number' },
   { value: 'weekdays', label: 'Weekdays' },
+  { value: 'relation', label: 'Relation — link to collection' },
 ];
 
 const fieldTypesJson = JSON.stringify(FIELD_TYPES);
@@ -305,8 +306,13 @@ const fieldTypesJson = JSON.stringify(FIELD_TYPES);
   </div>
 </AdminLayout>
 
-<script define:vars={{ selectedSchema: selected?.schema ?? null, isNew, fieldTypesJson, phKey: t.schema_field_key, phLabel: t.schema_field_lbl, txtRequired: t.schema_required, confirmEmpty: t.schema_delete_confirm_empty, confirmEntries: t.schema_delete_confirm_entries }}>
+<script define:vars={{ selectedSchema: selected?.schema ?? null, isNew, fieldTypesJson, allCollsJson: JSON.stringify(allCollections.map(c => ({id: c.id, label: c.label}))), phKey: t.schema_field_key, phLabel: t.schema_field_lbl, txtRequired: t.schema_required, confirmEmpty: t.schema_delete_confirm_empty, confirmEntries: t.schema_delete_confirm_entries }}>
 const FIELD_TYPES = JSON.parse(fieldTypesJson);
+const ALL_COLLS = JSON.parse(allCollsJson);
+function collOptions(sel) {
+  return '<option value="">— select collection —</option>' +
+    ALL_COLLS.map(c => `<option value="${c.id}"${c.id === sel ? ' selected' : ''}>${c.label} (${c.id})</option>`).join('');
+}
 
 // Shared inline style strings — guaranteed to apply regardless of Astro/Vite CSS processing
 var S = {
@@ -329,7 +335,7 @@ function typeOptions(sel) {
   ).join('');
 }
 
-function addField(key = '', label = '', type = 'string', required = false, options = '') {
+function addField(key = '', label = '', type = 'string', required = false, options = '', collection = '', multiple = true) {
   const rows = document.getElementById('field-rows');
   const div  = document.createElement('div');
   div.className = 'field-row';
@@ -342,8 +348,16 @@ function addField(key = '', label = '', type = 'string', required = false, optio
     </div>
     <div class="fr-right" style="${S.right}">
       <select class="f-type" style="${S.input}" onchange="onTypeChange(this)">${typeOptions(type)}</select>
-      <div class="fr-opts" style="display:${type === 'select' ? 'block' : 'none'}">
+      <div class="fr-opts-select" style="display:${type === 'select' ? 'block' : 'none'}">
         <input class="f-options" style="${S.input}" placeholder="opt1, opt2, opt3" value="${options}" />
+      </div>
+      <div class="fr-opts-relation" style="display:${type === 'relation' ? 'flex' : 'none'};flex-direction:column;gap:4px;">
+        <select class="f-rel-col" style="${S.input}">${collOptions(collection)}</select>
+        <label style="${S.reqW}">
+          <input type="checkbox" class="f-multiple"${multiple ? ' checked' : ''} style="display:none" />
+          <span class="mul-box" style="${S.reqBox}${multiple ? 'background:var(--gold);border-color:var(--gold);color:var(--bg0);' : 'color:transparent;'}">${multiple ? '✓' : ''}</span>
+          <span style="${S.reqTxt}">Multiple</span>
+        </label>
       </div>
       <div class="fr-foot" style="${S.foot}">
         <label style="${S.reqW}">
@@ -366,12 +380,24 @@ function addField(key = '', label = '', type = 'string', required = false, optio
     box.textContent         = this.checked ? '✓' : '';
   });
 
+  const mulCb  = div.querySelector('.f-multiple');
+  const mulBox = div.querySelector('.mul-box');
+  if (mulCb && mulBox) {
+    mulCb.addEventListener('change', function() {
+      mulBox.style.background  = this.checked ? 'var(--gold)' : 'var(--bg0)';
+      mulBox.style.borderColor = this.checked ? 'var(--gold)' : 'var(--line)';
+      mulBox.style.color       = this.checked ? 'var(--bg0)'  : 'transparent';
+      mulBox.textContent       = this.checked ? '✓' : '';
+    });
+  }
+
   rows.appendChild(div);
 }
 
 function onTypeChange(sel) {
-  sel.closest('.field-row').querySelector('.fr-opts').style.display =
-    sel.value === 'select' ? 'block' : 'none';
+  const row = sel.closest('.field-row');
+  row.querySelector('.fr-opts-select').style.display   = sel.value === 'select'   ? 'block' : 'none';
+  row.querySelector('.fr-opts-relation').style.display = sel.value === 'relation' ? 'flex'  : 'none';
 }
 
 function serializeSchema() {
@@ -390,6 +416,10 @@ function serializeSchema() {
       const raw = row.querySelector('.f-options').value;
       entry.options = raw.split(',').map(s => s.trim()).filter(Boolean);
     }
+    if (type === 'relation') {
+      entry.collection = row.querySelector('.f-rel-col').value;
+      entry.multiple   = row.querySelector('.f-multiple').checked;
+    }
     schema[key] = entry;
   });
   document.getElementById('schema-json-input').value = JSON.stringify(schema);
@@ -401,7 +431,7 @@ document.getElementById('schema-form')?.addEventListener('submit', serializeSche
 if (selectedSchema) {
   Object.entries(selectedSchema).forEach(([key, field]) => {
     const opts = field.options ? field.options.join(', ') : '';
-    addField(key, field.label ?? key, field.type ?? 'string', !!field.required, opts);
+    addField(key, field.label ?? key, field.type ?? 'string', !!field.required, opts, field.collection ?? '', field.multiple !== false);
   });
 } else if (isNew) {
   // default: start with a title field
