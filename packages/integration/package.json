@@ -35,6 +35,8 @@
     "astro": ">=4.0.0"
   },
   "dependencies": {
-    "@orbiter/core": "^0.1.0"
+    "@orbiter/core": "^0.1.0",
+    "fast-xml-parser": "^5.5.9",
+    "turndown": "^7.2.2"
   }
 }

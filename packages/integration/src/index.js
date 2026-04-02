@@ -92,6 +92,10 @@ export default function orbiter(options = {}) {
           pattern:    '/orbiter/logout',
           entrypoint: resolve(routesDir, 'logout.astro'),
         });
+        injectRoute({
+          pattern:    '/orbiter/import',
+          entrypoint: resolve(routesDir, 'import.astro'),
+        });
 
         // ── Vite virtual modules ─────────────────
         updateConfig({

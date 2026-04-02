@@ -1,0 +1,422 @@
+---
+/**
+ * /orbiter/import — WordPress WXR Import
+ */
+import { podPath } from 'orbiter:db';
+import { openPod } from '@orbiter/core';
+import AdminLayout from './AdminLayout.astro';
+import { useTranslations } from '../src/i18n.js';
+import { parseWXR, buildImportPlan, executeImport } from '../src/wp-importer.js';
+
+// ── Auth ───────────────────────────────────────────────────────────────────
+const _authDb = openPod(podPath);
+const _u = _authDb.checkSession(Astro.cookies.get('orb_sess')?.value ?? '');
+_authDb.close();
+if (!_u) return Astro.redirect('/orbiter/login');
+
+const locale = Astro.cookies.get('orb_locale')?.value ?? 'en';
+const t = useTranslations(locale);
+
+// ── State vars ─────────────────────────────────────────────────────────────
+let phase         = 'upload';   // 'upload' | 'preview' | 'done'
+let plan          = null;
+let importResults = null;
+let errorMsg      = '';
+let importToken   = '';
+
+// ── POST handler ───────────────────────────────────────────────────────────
+if (Astro.request.method === 'POST') {
+  const form   = await Astro.request.formData();
+  const action = form.get('_action')?.toString() ?? '';
+
+  // ── Analyze: parse uploaded XML → show preview ──────────────────────────
+  if (action === 'analyze') {
+    const file = form.get('wxr_file');
+    if (!file || typeof file === 'string' || file.size === 0) {
+      errorMsg = t.import_no_file;
+      phase = 'upload';
+    } else {
+      try {
+        const xmlText = await file.text();
+        const parsed  = parseWXR(xmlText);
+        plan = buildImportPlan(parsed);
+
+        // Store parsed XML in _meta under a temp token (10 min TTL managed manually)
+        const token = crypto.randomUUID();
+        const db2   = openPod(podPath);
+        db2.setMeta(`import.tmp.${token}`, xmlText);
+        db2.setMeta(`import.tmp.${token}.ts`, Date.now().toString());
+        db2.close();
+
+        importToken = token;
+        phase = 'preview';
+      } catch (err) {
+        errorMsg = `${t.import_parse_error}: ${err.message}`;
+        phase = 'upload';
+      }
+    }
+  }
+
+  // ── Import: execute with chosen options ─────────────────────────────────
+  else if (action === 'import') {
+    const token       = form.get('import_token')?.toString() ?? '';
+    const onDuplicate = (form.get('on_duplicate')?.toString() ?? 'skip') as 'skip' | 'overwrite';
+    const dlMedia     = form.has('download_media') && form.get('download_media') !== '0';
+
+    // Collect selected post types (checkbox value=postType)
+    const selectedTypes = form.getAll('selected_types').map(v => v.toString());
+
+    if (!token) {
+      errorMsg = t.import_expired;
+      phase = 'upload';
+    } else {
+      const db3   = openPod(podPath);
+      const xmlText = db3.getMeta(`import.tmp.${token}`);
+
+      if (!xmlText) {
+        db3.close();
+        errorMsg = t.import_expired;
+        phase = 'upload';
+      } else {
+        try {
+          const parsed = parseWXR(xmlText);
+          importResults = await executeImport(db3, parsed, {
+            selectedTypes,
+            downloadMedia: dlMedia,
+            onDuplicate,
+          });
+
+          // Clean up temp meta keys
+          db3.db.prepare("DELETE FROM _meta WHERE key LIKE ?").run(`import.tmp.${token}%`);
+        } catch (err) {
+          errorMsg = `${t.import_failed}: ${err.message}`;
+        }
+        db3.close();
+        phase = importResults ? 'done' : 'upload';
+      }
+    }
+  }
+}
+
+// Load collections for sidebar
+const _sideDb = openPod(podPath);
+const allCollections = _sideDb.getCollections().map((c: any) => ({
+  id: c.id, label: c.label, total: _sideDb.getEntries(c.id).length,
+}));
+const formatVersion = _sideDb.getMeta('format_version') ?? '1';
+_sideDb.close();
+---
+<style is:global>
+  .import-wrap { padding: 40px 48px; max-width: 720px; }
+
+  .import-head { margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+  .import-title { font-family: var(--serif); font-weight: 200; font-size: 24px; color: var(--heading); letter-spacing: 0.04em; margin-bottom: 6px; }
+  .import-sub { font-size: 10px; color: var(--muted); }
+
+  /* Drop zone */
+  .drop-zone { border: 1px dashed var(--line); padding: 40px; text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s; position: relative; }
+  .drop-zone:hover, .drop-zone.drag { border-color: var(--gold); background: var(--gold-bg); }
+  .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .drop-icon { font-size: 28px; color: var(--muted); opacity: 0.3; margin-bottom: 12px; }
+  .drop-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .drop-sub { font-size: 9px; color: var(--muted); opacity: 0.6; }
+  .drop-chosen { font-size: 11px; color: var(--gold); margin-top: 10px; display: none; }
+
+  /* Sections */
+  .section { margin-bottom: 28px; }
+  .section-head { font-size: 9px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .section-head::before { content: "—"; color: var(--gold); }
+
+  /* Type rows */
+  .type-row { display: grid; grid-template-columns: 24px 1fr auto auto; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line2); background: var(--bg2); }
+  .type-row:first-child { border-top: 1px solid var(--line); }
+  .type-name { font-size: 12px; color: var(--text); }
+  .type-col-id { font-size: 9px; color: var(--muted); font-family: var(--mono); }
+  .type-count { font-size: 10px; color: var(--muted); text-align: right; white-space: nowrap; }
+  .type-badge { font-size: 9px; color: var(--jade); background: var(--jade-bg); padding: 1px 6px; white-space: nowrap; }
+
+  /* Option rows */
+  .opt-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line2); }
+  .opt-row:last-child { border-bottom: none; }
+  .opt-label { font-size: 11px; color: var(--text); flex: 1; }
+  .opt-desc { font-size: 9px; color: var(--muted); display: block; margin-top: 2px; }
+
+  /* Custom checkbox */
+  .ck-wrap { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+  .ck-wrap input { display: none; }
+  .ck-box { width: 14px; height: 14px; border: 1px solid var(--line); background: var(--bg0); display: flex; align-items: center; justify-content: center; font-size: 8px; flex-shrink: 0; transition: all 0.12s; }
+  .ck-wrap input:checked + .ck-box { background: var(--gold); border-color: var(--gold); color: var(--bg0); }
+  .ck-txt { font-size: 11px; color: var(--text); }
+
+  /* Radio pills */
+  .radio-group { display: flex; gap: 0; }
+  .radio-pill { position: relative; }
+  .radio-pill input { display: none; }
+  .radio-pill label { display: block; padding: 5px 14px; font-size: 10px; color: var(--muted); border: 1px solid var(--line); border-right-width: 0; cursor: pointer; transition: all 0.12s; letter-spacing: 0.04em; }
+  .radio-pill:last-child label { border-right-width: 1px; }
+  .radio-pill input:checked + label { color: var(--gold); border-color: var(--gold); background: var(--gold-bg); z-index: 1; position: relative; }
+
+  /* Site info banner */
+  .site-banner { background: var(--bg2); border: 1px solid var(--line); padding: 12px 16px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+  .site-banner-icon { font-size: 18px; opacity: 0.2; }
+  .site-banner-name { font-size: 13px; color: var(--heading); }
+  .site-banner-url { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+  /* Result rows */
+  .result-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line2); font-size: 11px; }
+  .result-row:last-child { border-bottom: none; }
+  .result-ok { color: var(--jade); }
+  .result-warn { color: var(--gold); }
+  .result-err { color: var(--crimson, #8b2635); font-size: 10px; padding: 4px 8px; background: var(--crimson-bg, rgba(139,38,53,0.07)); border: 1px solid rgba(139,38,53,0.15); margin-top: 4px; }
+  .result-num { font-family: var(--serif); font-size: 20px; color: var(--heading); font-weight: 200; min-width: 36px; text-align: right; }
+
+  /* Actions */
+  .import-actions { display: flex; align-items: center; gap: 10px; padding-top: 24px; border-top: 1px solid var(--line); margin-top: 24px; }
+
+  /* Error banner */
+  .err-banner { background: var(--crimson-bg, rgba(139,38,53,0.07)); border: 1px solid rgba(139,38,53,0.15); padding: 10px 14px; font-size: 10px; color: var(--crimson, #8b2635); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  .err-banner::before { content: "✕"; }
+</style>
+
+<AdminLayout
+  title={t.import_title}
+  activeNav="import"
+  breadcrumbs={[{label:t.nav_dashboard,href:'/orbiter'},{label:t.import_title}]}
+  collections={allCollections}
+  podInfo={`v${formatVersion} format`}
+  locale={locale}
+>
+
+  <div class="import-wrap">
+
+    <div class="import-head">
+      <div class="import-title">{t.import_title}</div>
+      <div class="import-sub">{t.import_sub}</div>
+    </div>
+
+    {errorMsg && <div class="err-banner">{errorMsg}</div>}
+
+    {/* ── Phase: Upload ─────────────────────────────────────────────────── */}
+    {phase === 'upload' && (
+      <form method="POST" enctype="multipart/form-data" id="upload-form">
+        <input type="hidden" name="_action" value="analyze" />
+
+        <div class="section">
+          <div class="section-head">{t.import_file_label}</div>
+          <div class="drop-zone" id="drop-zone">
+            <input type="file" name="wxr_file" id="wxr-file" accept=".xml,text/xml,application/xml" required />
+            <div class="drop-icon">⊞</div>
+            <div class="drop-label">{t.import_drop}</div>
+            <div class="drop-sub">{t.import_drop_sub}</div>
+            <div class="drop-chosen" id="drop-chosen"></div>
+          </div>
+        </div>
+
+        <div class="import-actions">
+          <button type="submit"
+            style="padding:9px 28px;background:var(--gold);border:1px solid var(--gold);color:var(--bg0);font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;"
+            onmouseenter="this.style.background='var(--btn-hover,#7a5520)';this.style.borderColor='var(--btn-hover,#7a5520)'"
+            onmouseleave="this.style.background='var(--gold)';this.style.borderColor='var(--gold)'"
+          >{t.import_analyse}</button>
+        </div>
+      </form>
+    )}
+
+    {/* ── Phase: Preview ────────────────────────────────────────────────── */}
+    {phase === 'preview' && plan && (
+      <form method="POST" id="import-form">
+        <input type="hidden" name="_action" value="import" />
+        <input type="hidden" name="import_token" value={importToken} />
+
+        {/* Site info */}
+        <div class="site-banner">
+          <div class="site-banner-icon">◈</div>
+          <div>
+            <div class="site-banner-name">{plan.site.title || 'WordPress Site'}</div>
+            {plan.site.url && <div class="site-banner-url">{plan.site.url}</div>}
+          </div>
+        </div>
+
+        {/* Post types */}
+        <div class="section">
+          <div class="section-head">{t.import_content}</div>
+          {plan.types.map((type: any) => (
+            <div class="type-row">
+              <label class="ck-wrap" style="margin:0">
+                <input type="checkbox" name="selected_types" value={type.postType} checked />
+                <span class="ck-box">✓</span>
+              </label>
+              <div>
+                <div class="type-name">{type.postType === 'post' ? 'Posts' : type.postType === 'page' ? 'Pages' : type.postType}</div>
+                <div class="type-col-id">→ collection: {type.collectionId}</div>
+              </div>
+              <div class="type-count">{type.count} entries<br/><span style="font-size:9px;color:var(--jade)">{type.published} published</span></div>
+              <div class="type-badge">{type.collectionId}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Media */}
+        {plan.mediaCount > 0 && (
+          <div class="section">
+            <div class="section-head">{t.import_media_section}</div>
+            <div class="opt-row">
+              <label class="ck-wrap">
+                <input type="hidden" name="download_media" value="0" />
+                <input type="checkbox" name="download_media" value="1" checked />
+                <span class="ck-box">✓</span>
+                <span class="ck-txt">
+                  {t.import_media_dl.replace('{count}', plan.mediaCount)}
+                  <span class="opt-desc">{t.import_media_dl_desc}</span>
+                </span>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* Duplicate handling */}
+        <div class="section">
+          <div class="section-head">{t.import_duplicates}</div>
+          <div class="opt-row">
+            <span class="opt-label">{t.import_dup_label}</span>
+            <div class="radio-group">
+              <div class="radio-pill">
+                <input type="radio" name="on_duplicate" id="dup-skip" value="skip" checked />
+                <label for="dup-skip">{t.import_skip}</label>
+              </div>
+              <div class="radio-pill">
+                <input type="radio" name="on_duplicate" id="dup-overwrite" value="overwrite" />
+                <label for="dup-overwrite">{t.import_overwrite}</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="import-actions">
+          <a href="/orbiter/import"
+            style="padding:9px 18px;border:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-decoration:none;"
+          >{t.import_back}</a>
+          <button type="submit"
+            style="padding:9px 28px;background:var(--gold);border:1px solid var(--gold);color:var(--bg0);font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;"
+            onmouseenter="this.style.background='var(--btn-hover,#7a5520)';this.style.borderColor='var(--btn-hover,#7a5520)'"
+            onmouseleave="this.style.background='var(--gold)';this.style.borderColor='var(--gold)'"
+          >{t.import_start}</button>
+        </div>
+      </form>
+    )}
+
+    {/* ── Phase: Done ───────────────────────────────────────────────────── */}
+    {phase === 'done' && importResults && (
+      <div>
+        <div class="section">
+          <div class="section-head">{t.import_done}</div>
+
+          {importResults.collections.length > 0 && (
+            <div class="result-row">
+              <span class="result-ok">◈</span>
+              <span>{t.import_created_cols}: <strong>{importResults.collections.join(', ')}</strong></span>
+            </div>
+          )}
+
+          <div class="result-row">
+            <span class="result-num result-ok">{importResults.imported}</span>
+            <span>{t.import_n_imported}</span>
+          </div>
+
+          {importResults.overwritten > 0 && (
+            <div class="result-row">
+              <span class="result-num result-warn">{importResults.overwritten}</span>
+              <span>{t.import_n_overwritten}</span>
+            </div>
+          )}
+
+          {importResults.skipped > 0 && (
+            <div class="result-row">
+              <span class="result-num" style="color:var(--muted)">{importResults.skipped}</span>
+              <span style="color:var(--muted)">{t.import_n_skipped}</span>
+            </div>
+          )}
+
+          {importResults.mediaOk > 0 && (
+            <div class="result-row">
+              <span class="result-num result-ok">{importResults.mediaOk}</span>
+              <span>{t.import_n_media_ok}</span>
+            </div>
+          )}
+
+          {importResults.mediaFailed > 0 && (
+            <div class="result-row">
+              <span class="result-num result-warn">{importResults.mediaFailed}</span>
+              <span style="color:var(--gold)">{t.import_n_media_fail}</span>
+            </div>
+          )}
+
+          {importResults.errors.length > 0 && (
+            <div style="margin-top:16px;">
+              <div class="section-head">{t.import_errors} ({importResults.errors.length})</div>
+              {importResults.errors.slice(0, 20).map((e: string) => (
+                <div class="result-err">{e}</div>
+              ))}
+              {importResults.errors.length > 20 && (
+                <div class="result-err">… and {importResults.errors.length - 20} more</div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div class="import-actions">
+          <a href="/orbiter"
+            style="padding:9px 28px;background:var(--gold);border:1px solid var(--gold);color:var(--bg0);font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;"
+          >{t.import_to_dashboard}</a>
+          <a href="/orbiter/import"
+            style="padding:9px 18px;border:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-decoration:none;"
+          >{t.import_another}</a>
+        </div>
+      </div>
+    )}
+
+  </div>
+
+</AdminLayout>
+
+<script>
+  // File picker: show filename + drag styling
+  const dz   = document.getElementById('drop-zone');
+  const inp  = document.getElementById('wxr-file') as HTMLInputElement;
+  const lbl  = document.getElementById('drop-chosen');
+
+  if (inp && lbl && dz) {
+    inp.addEventListener('change', () => {
+      const f = inp.files?.[0];
+      if (f) { lbl.textContent = f.name; lbl.style.display = 'block'; }
+    });
+    dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('drag'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+    dz.addEventListener('drop', (e) => {
+      e.preventDefault(); dz.classList.remove('drag');
+      const f = e.dataTransfer?.files[0];
+      if (f && inp) {
+        const dt = new DataTransfer(); dt.items.add(f); inp.files = dt.files;
+        lbl.textContent = f.name; lbl.style.display = 'block';
+      }
+    });
+  }
+
+  // Checkboxes: handle hidden+checkbox pair (only last value of same name is used)
+  // The hidden input with value=0 ensures unchecked = 0, checked = 1
+  document.querySelectorAll('.ck-wrap input[type=checkbox]').forEach((cb: any) => {
+    const box = cb.nextElementSibling as HTMLElement;
+    if (!box) return;
+    cb.addEventListener('change', () => {
+      box.style.background   = cb.checked ? 'var(--gold)' : 'var(--bg0)';
+      box.style.borderColor  = cb.checked ? 'var(--gold)' : 'var(--line)';
+      box.style.color        = cb.checked ? 'var(--bg0)'  : 'transparent';
+      box.textContent        = cb.checked ? '✓' : '';
+    });
+    // Set initial state
+    box.style.background  = cb.checked ? 'var(--gold)' : 'var(--bg0)';
+    box.style.borderColor = cb.checked ? 'var(--gold)' : 'var(--line)';
+    box.style.color       = cb.checked ? 'var(--bg0)'  : 'transparent';
+    box.textContent       = cb.checked ? '✓' : '';
+  });
+</script>
