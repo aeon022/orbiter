@@ -285,6 +285,9 @@ export const translations = {
     import_parse_error:   'Could not parse XML',
     import_failed:        'Import failed',
     nav_import:           'Import',
+    settings_data:        'Data',
+    settings_import_desc: 'Import content from a WordPress WXR export file.',
+    settings_import_btn:  'Open import wizard',
   },
 
   de: {
@@ -568,6 +571,9 @@ export const translations = {
     import_parse_error:   'XML konnte nicht gelesen werden',
     import_failed:        'Import fehlgeschlagen',
     nav_import:           'Import',
+    settings_data:        'Daten',
+    settings_import_desc: 'Inhalte aus einem WordPress WXR-Export importieren.',
+    settings_import_btn:  'Import-Assistent öffnen',
   },
 };
 

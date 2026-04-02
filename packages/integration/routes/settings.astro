@@ -275,6 +275,22 @@ pwSaved = pwSaved || Astro.url.searchParams.get('pwsaved') === '1';
       </div>
     </div>
 
+    <!-- Data / Import -->
+    <div class="settings-group">
+      <div class="group-header">{t.settings_data}</div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">WordPress Import</div>
+          <div class="setting-desc">{t.settings_import_desc}</div>
+        </div>
+        <a href="/orbiter/import"
+          style="display:inline-block;padding:8px 18px;border:1px solid var(--line);color:var(--mid);font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-decoration:none;transition:all 0.15s;white-space:nowrap;"
+          onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'"
+          onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--mid)'"
+        >{t.settings_import_btn} ↗</a>
+      </div>
+    </div>
+
     <!-- Pod info (readonly) -->
     <div class="settings-group">
       <div class="group-header">{t.settings_pod}</div>
