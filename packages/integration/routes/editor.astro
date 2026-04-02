@@ -639,7 +639,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
                       <div class="rel-selected" id={`rel-selected-${key}`}>
                         {((entry?.data?.[key] ?? []) as string[]).map(id => {
                           const e = (relationEntries[field.collection] ?? []).find((x: any) => x.id === id);
-                          return e ? <span class="rel-tag">{e.data?.title ?? e.slug}</span> : null;
+                          return e ? <span class="rel-tag">{e.data?.title ?? e.data?.name ?? e.slug}</span> : null;
                         })}
                       </div>
                       <div class="rel-list" id={`rel-list-${key}`}>
@@ -651,7 +651,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
                                 <label class="rel-item" onclick={`updateRelSelected('${key}')`}>
                                   <input type="checkbox" name={key} value={e.id} checked={checked} />
                                   <span class="rel-check">{checked ? '✓' : ''}</span>
-                                  <span class="rel-name">{e.data?.title ?? e.slug}</span>
+                                  <span class="rel-name">{e.data?.title ?? e.data?.name ?? e.slug}</span>
                                 </label>
                               );
                             })

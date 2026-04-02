@@ -78,6 +78,34 @@ db.db.prepare(`
   })
 );
 
+// ── Categories ──────────────────────────────────────────
+db.db.prepare(`INSERT OR IGNORE INTO _collections (id, label, schema) VALUES (?, ?, ?)`).run(
+  'categories', 'Categories',
+  JSON.stringify({
+    name:        { type: 'string', required: true,  label: 'Name' },
+    color:       { type: 'string', required: false, label: 'Color (hex)' },
+    description: { type: 'string', required: false, label: 'Description' },
+  })
+);
+
+const catDefs = [
+  { slug: 'design',   name: 'Design',   color: '#3d4fa8' },
+  { slug: 'festival', name: 'Festival', color: '#1e6b50' },
+  { slug: 'kultur',   name: 'Kultur',   color: '#9a6e30' },
+  { slug: 'tech',     name: 'Tech',     color: '#8b2635' },
+  { slug: 'vortrag',  name: 'Vortrag',  color: '#555577' },
+  { slug: 'workshop', name: 'Workshop', color: '#2d6b8b' },
+  { slug: 'zeichnen', name: 'Zeichnen', color: '#3d4fa8' },
+];
+const catIds = {};
+const insertCat = db.db.prepare(`INSERT OR IGNORE INTO _entries (id, collection_id, slug, data, status) VALUES (?, 'categories', ?, ?, 'published')`);
+for (const cat of catDefs) {
+  const id = randomUUID();
+  insertCat.run(id, cat.slug, JSON.stringify({ name: cat.name, color: cat.color, description: '' }));
+  catIds[cat.slug] = id;
+}
+console.log(`  ✓ Categories seeded (${catDefs.length})`);
+
 db.db.prepare(`
   INSERT OR IGNORE INTO _collections (id, label, schema) VALUES (?, ?, ?)
 `).run(
@@ -130,7 +158,7 @@ db.db.prepare(`
                               options: ['custom','pretix','eventbrite','eventim','ticketmaster','tixfox','reservix'] },
 
     body:                   { type: 'richtext', required: false, label: 'Details' },
-    categories:             { type: 'array',    required: false, label: 'Kategorien' },
+    categories:             { type: 'relation', collection: 'categories', multiple: true, required: false, label: 'Kategorien' },
     tags:                   { type: 'array',    required: false, label: 'Tags' },
   })
 );
@@ -263,7 +291,7 @@ const events = [
       preview_image:  null,
       video_url:      '',
       body:           'Drei Tage Design, Talks und Workshops im Herzen der Stadt.',
-      categories:     ['design', 'festival', 'kultur'],
+      categories:     [catIds['design'], catIds['festival'], catIds['kultur']],
     },
   },
   {
@@ -279,7 +307,7 @@ const events = [
       preview_image:  null,
       video_url:      '',
       body:           'Jeden Montag. Bleistift, Papier, Kaffee.',
-      categories:     ['workshop', 'zeichnen'],
+      categories:     [catIds['workshop'], catIds['zeichnen']],
     },
   },
   {
@@ -295,7 +323,7 @@ const events = [
       preview_image:  null,
       video_url:      'https://youtube.com/watch?v=example',
       body:           'Ein Abend über portable CMS-Architekturen und das .pod-Format.',
-      categories:     ['tech', 'vortrag'],
+      categories:     [catIds['tech'], catIds['vortrag']],
     },
   },
 ];
@@ -369,7 +397,7 @@ console.log(`
 ◆ Orbiter — demo.pod ready
   Path:        ${podPath}
   Size:        ${podSize} KB
-  Collections: posts, pages, authors, events
+  Collections: posts, pages, authors, events, categories
   Posts:       ${posts.length} (2 published, 1 draft)
   Pages:       ${pages.length} (2 published, 1 draft)
   Events:      ${events.length} (2 published, 1 draft)
