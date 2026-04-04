@@ -31,7 +31,7 @@ if (existing) {
   console.log('  · categories collection already exists — skipping creation');
 } else {
   db.db.prepare(`INSERT INTO _collections (id, label, schema) VALUES (?, ?, ?)`)
-    .run('categories', 'Categories', JSON.stringify({
+    .run('event_categories', 'Event Categories', JSON.stringify({
       name:        { type: 'string', required: true,  label: 'Name' },
       color:       { type: 'string', required: false, label: 'Color (hex)' },
       description: { type: 'string', required: false, label: 'Description' },
@@ -74,7 +74,7 @@ for (const name of allStrings) {
     const id    = randomUUID();
     const color = defaultColors[colorIdx++ % defaultColors.length];
     db.db.prepare(`INSERT INTO _entries (id, collection_id, slug, data, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`)
-      .run(id, 'categories', slug, JSON.stringify({ name, color, description: '' }), 'published', now, now);
+      .run(id, 'event_categories', slug, JSON.stringify({ name, color, description: '' }), 'published', now, now);
     nameToId[name] = id;
     console.log(`  ✓ category '${name}' created (${color})`);
   }

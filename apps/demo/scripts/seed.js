@@ -48,8 +48,9 @@ db.db.prepare(`
     title:   { type: 'string',   required: true },
     excerpt: { type: 'string',   required: false },
     body:    { type: 'richtext', required: false },
-    tags:    { type: 'array',    required: false },
-    image:   { type: 'media',    required: false },
+    categories: { type: 'relation', collection: 'post_categories', multiple: true, required: false, label: 'Categories' },
+    tags:       { type: 'array',    required: false },
+    image:      { type: 'media',    required: false },
   })
 );
 
@@ -79,16 +80,18 @@ db.db.prepare(`
 );
 
 // ── Categories ──────────────────────────────────────────
-db.db.prepare(`INSERT OR IGNORE INTO _collections (id, label, schema) VALUES (?, ?, ?)`).run(
-  'categories', 'Categories',
-  JSON.stringify({
-    name:        { type: 'string', required: true,  label: 'Name' },
-    color:       { type: 'string', required: false, label: 'Color (hex)' },
-    description: { type: 'string', required: false, label: 'Description' },
-  })
-);
+const categorySchema = JSON.stringify({
+  name:        { type: 'string', required: true,  label: 'Name' },
+  color:       { type: 'string', required: false, label: 'Color (hex)' },
+  description: { type: 'string', required: false, label: 'Description' },
+});
 
-const catDefs = [
+db.db.prepare(`INSERT OR IGNORE INTO _collections (id, label, schema) VALUES (?, ?, ?)`).run('event_categories', 'Event Categories', categorySchema);
+db.db.prepare(`INSERT OR IGNORE INTO _collections (id, label, schema) VALUES (?, ?, ?)`).run('post_categories',  'Post Categories',  categorySchema);
+
+const insertCat = db.db.prepare(`INSERT OR IGNORE INTO _entries (id, collection_id, slug, data, status) VALUES (?, ?, ?, ?, 'published')`);
+
+const eventCatDefs = [
   { slug: 'design',   name: 'Design',   color: '#3d4fa8' },
   { slug: 'festival', name: 'Festival', color: '#1e6b50' },
   { slug: 'kultur',   name: 'Kultur',   color: '#9a6e30' },
@@ -97,14 +100,27 @@ const catDefs = [
   { slug: 'workshop', name: 'Workshop', color: '#2d6b8b' },
   { slug: 'zeichnen', name: 'Zeichnen', color: '#3d4fa8' },
 ];
-const catIds = {};
-const insertCat = db.db.prepare(`INSERT OR IGNORE INTO _entries (id, collection_id, slug, data, status) VALUES (?, 'categories', ?, ?, 'published')`);
-for (const cat of catDefs) {
+const eventCatIds = {};
+for (const cat of eventCatDefs) {
   const id = randomUUID();
-  insertCat.run(id, cat.slug, JSON.stringify({ name: cat.name, color: cat.color, description: '' }));
-  catIds[cat.slug] = id;
+  insertCat.run(id, 'event_categories', cat.slug, JSON.stringify({ name: cat.name, color: cat.color, description: '' }));
+  eventCatIds[cat.slug] = id;
 }
-console.log(`  ✓ Categories seeded (${catDefs.length})`);
+
+const postCatDefs = [
+  { slug: 'design',       name: 'Design',        color: '#3d4fa8' },
+  { slug: 'development',  name: 'Development',   color: '#1e6b50' },
+  { slug: 'architecture', name: 'Architecture',  color: '#9a6e30' },
+  { slug: 'tools',        name: 'Tools',         color: '#8b2635' },
+];
+const postCatIds = {};
+for (const cat of postCatDefs) {
+  const id = randomUUID();
+  insertCat.run(id, 'post_categories', cat.slug, JSON.stringify({ name: cat.name, color: cat.color, description: '' }));
+  postCatIds[cat.slug] = id;
+}
+
+console.log(`  ✓ Event categories seeded (${eventCatDefs.length}), Post categories seeded (${postCatDefs.length})`);
 
 db.db.prepare(`
   INSERT OR IGNORE INTO _collections (id, label, schema) VALUES (?, ?, ?)
@@ -158,7 +174,7 @@ db.db.prepare(`
                               options: ['custom','pretix','eventbrite','eventim','ticketmaster','tixfox','reservix'] },
 
     body:                   { type: 'richtext', required: false, label: 'Details' },
-    categories:             { type: 'relation', collection: 'categories', multiple: true, required: false, label: 'Kategorien' },
+    categories:             { type: 'relation', collection: 'event_categories', multiple: true, required: false, label: 'Kategorien' },
     tags:                   { type: 'array',    required: false, label: 'Tags' },
   })
 );
@@ -195,6 +211,7 @@ const posts = [
       title:   'The Art of Wabi-Sabi in Modern Interface Design',
       excerpt: 'On the beauty of imperfection and restraint in digital interfaces.',
       body:    'Wabi-sabi is the Japanese worldview centered on the acceptance of transience and imperfection. In interface design, this means embracing whitespace, restraint, and the quiet dignity of purposeful elements.',
+      categories: [postCatIds['design']],
       tags:    ['design', 'japanese', 'ui'],
       author:  authorId,
     },
@@ -206,6 +223,7 @@ const posts = [
       title:   'Single-File Architecture: Why One File Changes Everything',
       excerpt: 'How a single .pod file solves portability, deployments and infrastructure complexity.',
       body:    'The premise is simple: everything your website needs — content, media, schema, config — lives in one SQLite file. Copy it anywhere and your entire site comes with it.',
+      categories: [postCatIds['architecture'], postCatIds['tools']],
       tags:    ['architecture', 'orbiter', 'cms'],
       author:  authorId,
     },
@@ -291,7 +309,7 @@ const events = [
       preview_image:  null,
       video_url:      '',
       body:           'Drei Tage Design, Talks und Workshops im Herzen der Stadt.',
-      categories:     [catIds['design'], catIds['festival'], catIds['kultur']],
+      categories:     [eventCatIds['design'], eventCatIds['festival'], eventCatIds['kultur']],
     },
   },
   {
@@ -307,7 +325,7 @@ const events = [
       preview_image:  null,
       video_url:      '',
       body:           'Jeden Montag. Bleistift, Papier, Kaffee.',
-      categories:     [catIds['workshop'], catIds['zeichnen']],
+      categories:     [eventCatIds['workshop'], eventCatIds['zeichnen']],
     },
   },
   {
@@ -323,7 +341,7 @@ const events = [
       preview_image:  null,
       video_url:      'https://youtube.com/watch?v=example',
       body:           'Ein Abend über portable CMS-Architekturen und das .pod-Format.',
-      categories:     [catIds['tech'], catIds['vortrag']],
+      categories:     [eventCatIds['tech'], eventCatIds['vortrag']],
     },
   },
 ];
@@ -397,7 +415,7 @@ console.log(`
 ◆ Orbiter — demo.pod ready
   Path:        ${podPath}
   Size:        ${podSize} KB
-  Collections: posts, pages, authors, events, categories
+  Collections: posts, pages, authors, events, event_categories, post_categories
   Posts:       ${posts.length} (2 published, 1 draft)
   Pages:       ${pages.length} (2 published, 1 draft)
   Events:      ${events.length} (2 published, 1 draft)
