@@ -26,14 +26,14 @@ for (const c of collections.filter(c => c.parent)) {
   return (
     <>
       <a href={`/orbiter/${col.id}`} class={`nav-item ${activeNav === col.id ? 'active' : ''}`}>
-        <span class="nav-icon">▤</span>{col.label}
+        <span class="nav-icon">▤</span><span class="nav-label">{col.label}</span>
         <span class="nav-badge">{col.total}</span>
       </a>
       {kids.length > 0 && (
         <div class="nav-children">
           {kids.map(kid => (
             <a href={`/orbiter/${kid.id}`} class={`nav-item nav-child ${activeNav === kid.id ? 'active' : ''}`}>
-              <span class="nav-icon">◦</span>{kid.label}
+              <span class="nav-icon">◦</span><span class="nav-label">{kid.label}</span>
               <span class="nav-badge">{kid.total}</span>
             </a>
           ))}
@@ -48,8 +48,9 @@ for (const c of collections.filter(c => c.parent)) {
   .nav-item:hover { color:var(--heading); background:var(--line2); }
   .nav-item.active { color:var(--heading); background:var(--accent-bg); font-weight:500; }
   .nav-item.active::before { content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--gold); border-radius:0 1px 1px 0; }
-  .nav-icon { width:14px; text-align:center; font-size:11px; opacity:0.45; flex-shrink:0; }
-  .nav-badge { margin-left:auto; font-size:10px; color:var(--muted); background:var(--bg3); border:1px solid var(--line); padding:1px 7px; border-radius:3px; }
+  .nav-icon  { width:14px; text-align:center; font-size:11px; opacity:0.45; flex-shrink:0; }
+  .nav-label { flex:1; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+  .nav-badge { margin-left:4px; flex-shrink:0; font-size:10px; color:var(--muted); background:var(--bg3); border:1px solid var(--line); padding:1px 7px; border-radius:3px; }
   .nav-children { border-left:1px solid var(--line); margin-left:18px; margin-bottom:4px; }
   .nav-child    { padding-left:20px; font-size:12px; }
   .nav-child .nav-icon { font-size:7px; opacity:0.3; }
