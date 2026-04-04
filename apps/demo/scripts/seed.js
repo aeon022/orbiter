@@ -179,8 +179,10 @@ db.db.prepare(`
   })
 );
 
-db.setMeta('setup.complete', '1');  // skip first-run wizard — seed already provides collections
-console.log('  ✓ Collections created (posts, pages, authors, events)');
+db.setMeta('setup.complete', '1');
+db.setMeta('collection.event_categories.parent', 'events');
+db.setMeta('collection.post_categories.parent',  'posts');
+console.log('  ✓ Collections created (posts, pages, authors, events, event_categories, post_categories)');
 
 // ── Authors ──────────────────────────────────────────────
 

@@ -146,6 +146,36 @@
     document.head.appendChild(s);
   })();
 
+  // ── Sidebar sub-menus ──────────────────────────────────────────────
+  window.__orbToggleNav = function(colId) {
+    var sub  = document.getElementById('nav-sub-' + colId);
+    var chev = document.getElementById('chev-' + colId);
+    if (!sub) return;
+    var open = sub.style.display !== 'none';
+    sub.style.display = open ? 'none' : '';
+    if (chev) chev.textContent = open ? '▸' : '▾';
+    try {
+      var state = JSON.parse(localStorage.getItem('orb_nav') || '{}');
+      state[colId] = !open;
+      localStorage.setItem('orb_nav', JSON.stringify(state));
+    } catch {}
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    try {
+      var state = JSON.parse(localStorage.getItem('orb_nav') || '{}');
+      Object.keys(state).forEach(function(colId) {
+        var sub  = document.getElementById('nav-sub-' + colId);
+        var chev = document.getElementById('chev-' + colId);
+        if (!sub) return;
+        // Never close a group whose child is currently active
+        if (!state[colId] && sub.querySelector('.active')) return;
+        sub.style.display = state[colId] ? '' : 'none';
+        if (chev) chev.textContent = state[colId] ? '▾' : '▸';
+      });
+    } catch {}
+  });
+
   // ── Command Palette ────────────────────────────────────────────────
   var palette     = null;
   var palInput    = null;

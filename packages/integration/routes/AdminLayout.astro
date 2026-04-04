@@ -12,6 +12,8 @@
  */
 import adminUtils from 'orbiter:admin-utils';
 import { useTranslations } from '../src/i18n.js';
+import { podPath } from 'orbiter:db';
+import { openPod } from '@orbiter/core';
 
 const {
   title       = 'Orbiter',
@@ -23,6 +25,21 @@ const {
 } = Astro.props;
 
 const t = useTranslations(locale);
+
+// Enrich collections with parent relationship from _meta
+const _pdb = openPod(podPath);
+const collectionsWithParent = collections.map((c: any) => ({
+  ...c,
+  parent: _pdb.getMeta(`collection.${c.id}.parent`) ?? null,
+}));
+_pdb.close();
+
+const topLevel  = collectionsWithParent.filter((c: any) => !c.parent);
+const childMap: Record<string, any[]> = {};
+for (const c of collectionsWithParent.filter((c: any) => c.parent)) {
+  if (!childMap[c.parent]) childMap[c.parent] = [];
+  childMap[c.parent].push(c);
+}
 ---
 <html lang={locale}>
 <head>
@@ -87,6 +104,12 @@ const t = useTranslations(locale);
     .nav-item.active::before { content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--gold); border-radius:0 1px 1px 0; }
     .nav-icon { width:14px; text-align:center; font-size:11px; opacity:0.45; flex-shrink:0; }
     .nav-badge { margin-left:auto; font-size:10px; color:var(--muted); background:var(--bg3); border:1px solid var(--line); padding:1px 7px; border-radius:3px; }
+    .nav-item-wrap { display:flex; align-items:stretch; }
+    .nav-item-wrap .nav-item { flex:1; min-width:0; }
+    .nav-toggle { background:none; border:none; color:var(--muted); font-size:9px; cursor:pointer; padding:0 14px; flex-shrink:0; transition:color 0.12s; line-height:1; }
+    .nav-toggle:hover { color:var(--heading); }
+    .nav-child { padding-left:30px; }
+    .nav-child .nav-icon { font-size:8px; opacity:0.35; }
     .sidebar-pod { margin-top:auto; padding:14px 18px; border-top:1px solid var(--line); font-size:11px; color:var(--muted); }
     .sidebar-pod-name { color:var(--text); font-size:12px; font-weight:500; margin-bottom:3px; display:flex; align-items:center; gap:5px; }
     .sidebar-pod-name::before { content:"◆"; font-size:6px; color:var(--gold); }
@@ -146,12 +169,35 @@ const t = useTranslations(locale);
       <a href="/orbiter" class={`nav-item ${activeNav === 'dashboard' ? 'active' : ''}`}>
         <span class="nav-icon">◈</span>{t.nav_dashboard}
       </a>
-      {collections.map((col: any) => (
-        <a href={`/orbiter/${col.id}`} class={`nav-item ${activeNav === col.id ? 'active' : ''}`}>
-          <span class="nav-icon">▤</span>{col.label}
-          <span class="nav-badge">{col.total}</span>
-        </a>
-      ))}
+      {topLevel.map((col: any) => {
+        const kids = childMap[col.id] ?? [];
+        const groupOpen = activeNav === col.id || kids.some((k: any) => k.id === activeNav);
+        return (
+          <>
+            <div class="nav-item-wrap">
+              <a href={`/orbiter/${col.id}`} class={`nav-item ${activeNav === col.id ? 'active' : ''}`}>
+                <span class="nav-icon">▤</span>{col.label}
+                <span class="nav-badge">{col.total}</span>
+              </a>
+              {kids.length > 0 && (
+                <button class="nav-toggle" id={`chev-${col.id}`} onclick={`__orbToggleNav('${col.id}')`}>
+                  {groupOpen ? '▾' : '▸'}
+                </button>
+              )}
+            </div>
+            {kids.length > 0 && (
+              <div id={`nav-sub-${col.id}`} style={groupOpen ? '' : 'display:none'}>
+                {kids.map((kid: any) => (
+                  <a href={`/orbiter/${kid.id}`} class={`nav-item nav-child ${activeNav === kid.id ? 'active' : ''}`}>
+                    <span class="nav-icon">◦</span>{kid.label}
+                    <span class="nav-badge">{kid.total}</span>
+                  </a>
+                ))}
+              </div>
+            )}
+          </>
+        );
+      })}
       <div class="nav-section">{t.nav_assets}</div>
       <a href="/orbiter/media" class={`nav-item ${activeNav === 'media' ? 'active' : ''}`}>
         <span class="nav-icon">⊞</span>{t.nav_media}
