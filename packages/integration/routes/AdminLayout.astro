@@ -10,6 +10,7 @@
  *   podInfo     — string shown in sidebar footer
  *   locale      — 'en' | 'de'  (default: 'en')
  */
+import { ViewTransitions } from 'astro:transitions';
 import adminUtils from 'orbiter:admin-utils';
 import { useTranslations } from '../src/i18n.js';
 import { podPath } from 'orbiter:db';
@@ -77,7 +78,7 @@ for (const c of collectionsWithParent.filter((c: any) => c.parent)) {
     html, body { background:var(--bg0); color:var(--text); font-family:var(--sans); font-size:14px; line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
 
     /* Layout */
-    .layout { display:grid; grid-template-columns:232px 1fr; grid-template-rows:56px 1fr; min-height:100vh; }
+    .layout { display:grid; grid-template-columns:232px 1fr; grid-template-rows:56px 1fr; height:100vh; }
 
     /* Topbar */
     .topbar { grid-column:1/-1; background:var(--bg2); border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 24px; gap:0; z-index:10; }
@@ -127,6 +128,7 @@ for (const c of collectionsWithParent.filter((c: any) => c.parent)) {
     .saved-banner::before { content:"✓"; }
   </style>
   <slot name="head" />
+  <ViewTransitions />
 </head>
 <body>
   <div class="layout">
@@ -159,7 +161,7 @@ for (const c of collectionsWithParent.filter((c: any) => c.parent)) {
     </div>
 
     <!-- Sidebar -->
-    <div class="sidebar">
+    <div id="orb-sidebar" class="sidebar" transition:persist>
       <div class="nav-section">{t.nav_content}</div>
       <a href="/orbiter" class={`nav-item ${activeNav === 'dashboard' ? 'active' : ''}`}>
         <span class="nav-icon">◈</span>{t.nav_dashboard}

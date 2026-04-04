@@ -17,10 +17,28 @@
     if (btn) btn.textContent = darkLabel(dark);
   };
 
-  document.addEventListener('DOMContentLoaded', function () {
+  // Sync dark button label + sidebar active state on every page load (incl. View Transitions)
+  function __orbSyncPage() {
     var btn = document.getElementById('orb-dark-btn');
     if (btn) btn.textContent = darkLabel(document.documentElement.classList.contains('dark'));
-  });
+
+    // Re-apply dark class after View Transitions swaps <html>
+    if (localStorage.getItem('orb-dark') === '1') {
+      document.documentElement.classList.add('dark');
+    }
+
+    // Sync sidebar active nav item to current URL
+    var path = window.location.pathname;
+    document.querySelectorAll('#orb-sidebar .nav-item').forEach(function (a) {
+      var href = a.getAttribute('href');
+      if (!href) return;
+      var active = path === href || (href !== '/orbiter' && path.startsWith(href + '/')) || path.startsWith(href + '?');
+      a.classList.toggle('active', active);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', __orbSyncPage);
+  document.addEventListener('astro:page-load', __orbSyncPage);
 
   // ── Theme ──────────────────────────────────────────────────────────
   var THEMES = ['space'];

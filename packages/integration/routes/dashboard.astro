@@ -3,6 +3,7 @@
  * /orbiter — Admin Dashboard
  * Injected by @orbiter/integration
  */
+import { ViewTransitions } from 'astro:transitions';
 import { podPath } from 'orbiter:db';
 import { openPod } from '@orbiter/core';
 import adminUtils from 'orbiter:admin-utils';
@@ -109,7 +110,7 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
     html,body { background:var(--bg0); color:var(--text); font-family:var(--sans); font-size:14px; line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
 
     /* Layout */
-    .layout { display:grid; grid-template-columns:232px 1fr; grid-template-rows:56px 1fr; min-height:100vh; }
+    .layout { display:grid; grid-template-columns:232px 1fr; grid-template-rows:56px 1fr; height:100vh; }
 
     /* Topbar */
     .topbar { grid-column:1/-1; background:var(--bg2); border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 22px; gap:0; }
@@ -257,6 +258,7 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
     .ws-export-btn { background:none; border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:9px; padding:2px 8px; cursor:pointer; letter-spacing:0.06em; transition:all 0.12s; }
     .ws-export-btn:hover { border-color:var(--accent); color:var(--accent); }
   </style>
+  <ViewTransitions />
 </head>
 <body>
   <div class="layout">
@@ -276,7 +278,7 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
     </div>
 
     <!-- Sidebar -->
-    <div class="sidebar">
+    <div id="orb-sidebar" class="sidebar" transition:persist>
       <div class="nav-section">{t.nav_content}</div>
       <a href="/orbiter" class="nav-item active"><span class="nav-icon">◈</span>{t.nav_dashboard}</a>
       <SidebarCollections collections={allCollections} activeNav="dashboard" />

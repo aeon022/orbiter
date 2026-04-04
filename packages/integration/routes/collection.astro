@@ -1,4 +1,5 @@
 ---
+import { ViewTransitions } from 'astro:transitions';
 import { podPath } from 'orbiter:db';
 import { openPod } from '@orbiter/core';
 import adminUtils from 'orbiter:admin-utils';
@@ -94,7 +95,7 @@ const visible = filter === 'published' ? published
     html,body { background:var(--bg0); color:var(--text); font-family:var(--sans); font-size:14px; line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
 
     /* Layout */
-    .layout { display:grid; grid-template-columns:232px 1fr; grid-template-rows:56px 1fr; min-height:100vh; }
+    .layout { display:grid; grid-template-columns:232px 1fr; grid-template-rows:56px 1fr; height:100vh; }
 
     /* Topbar */
     .topbar { grid-column:1/-1; background:var(--bg2); border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 22px; }
@@ -177,6 +178,7 @@ const visible = filter === 'published' ? published
     .empty-icon { font-size:32px; opacity:0.2; }
     .empty-text { font-size:12px; text-align:center; line-height:2; }
   </style>
+  <ViewTransitions />
 </head>
 <body>
   <div class="layout">
@@ -200,16 +202,16 @@ const visible = filter === 'published' ? published
     </div>
 
     <!-- Sidebar -->
-    <div class="sidebar">
+    <div id="orb-sidebar" class="sidebar" transition:persist>
       <div class="nav-section">{t.nav_content}</div>
-      <a href="/orbiter" class="nav-item"><span class="nav-icon">◈</span>Dashboard</a>
+      <a href="/orbiter" class="nav-item"><span class="nav-icon">◈</span>{t.nav_dashboard}</a>
       <SidebarCollections collections={allCollections} activeNav={collectionId} />
-      <div class="nav-section">Assets</div>
-      <a href="/orbiter/media" class="nav-item"><span class="nav-icon">⊞</span>Media<span class="nav-badge">{mediaCount}</span></a>
-      <div class="nav-section">System</div>
-      <a href="/orbiter/schema"   class="nav-item"><span class="nav-icon">◈</span>Collections</a>
-      <a href="/orbiter/build"    class="nav-item"><span class="nav-icon">▲</span>Build</a>
-      <a href="/orbiter/settings" class="nav-item"><span class="nav-icon">◎</span>Settings</a>
+      <div class="nav-section">{t.nav_assets}</div>
+      <a href="/orbiter/media" class="nav-item"><span class="nav-icon">⊞</span>{t.nav_media}<span class="nav-badge">{mediaCount}</span></a>
+      <div class="nav-section">{t.nav_system}</div>
+      <a href="/orbiter/schema"   class="nav-item"><span class="nav-icon">◈</span>{t.nav_collections}</a>
+      <a href="/orbiter/build"    class="nav-item"><span class="nav-icon">▲</span>{t.nav_build}</a>
+      <a href="/orbiter/settings" class="nav-item"><span class="nav-icon">◎</span>{t.nav_settings}</a>
       <div class="sidebar-pod">
         <div class="sidebar-pod-name">content.pod</div>
         <div>{entries.length} {t.entries}</div>
