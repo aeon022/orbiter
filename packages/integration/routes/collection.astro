@@ -80,7 +80,8 @@ const visible = filter === 'published' ? published
       --jade:#1e6b50; --jade-bg:rgba(30,107,80,0.07);
       --accent:#3d4fa8; --accent-bg:rgba(61,79,168,0.06);
       --shadow:0 1px 3px rgba(0,0,0,0.08);
-      --serif:"Noto Serif JP",serif; --mono:"DM Mono",monospace;
+      --sans:"Inter",system-ui,-apple-system,sans-serif;
+      --serif:"Noto Serif JP",serif; --mono:"DM Mono",monospace; --radius:4px;
     }
     html.dark {
       --bg0:#0f0f14; --bg1:#14141a; --bg2:#1c1c24; --bg3:#22222d;
@@ -90,7 +91,7 @@ const visible = filter === 'published' ? published
       --jade:#2d8b6a; --jade-bg:rgba(45,139,106,0.08);
       --accent:#7a8fd4; --accent-bg:rgba(122,143,212,0.08);
     }
-    html,body { background:var(--bg0); color:var(--text); font-family:var(--mono); font-size:13px; line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
+    html,body { background:var(--bg0); color:var(--text); font-family:var(--sans); font-size:14px; line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
 
     /* Layout */
     .layout { display:grid; grid-template-columns:232px 1fr; grid-template-rows:56px 1fr; min-height:100vh; }
