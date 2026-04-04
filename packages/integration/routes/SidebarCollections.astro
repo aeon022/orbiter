@@ -44,6 +44,12 @@ for (const c of collections.filter(c => c.parent)) {
 })}
 
 <style is:global>
+  .nav-item { display:flex; align-items:center; gap:10px; padding:8px 18px; font-size:13px; color:var(--mid); text-decoration:none; position:relative; transition:color 0.12s,background 0.12s; }
+  .nav-item:hover { color:var(--heading); background:var(--line2); }
+  .nav-item.active { color:var(--heading); background:var(--accent-bg); font-weight:500; }
+  .nav-item.active::before { content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--gold); border-radius:0 1px 1px 0; }
+  .nav-icon { width:14px; text-align:center; font-size:11px; opacity:0.45; flex-shrink:0; }
+  .nav-badge { margin-left:auto; font-size:10px; color:var(--muted); background:var(--bg3); border:1px solid var(--line); padding:1px 7px; border-radius:3px; }
   .nav-children { border-left:1px solid var(--line); margin-left:18px; margin-bottom:4px; }
   .nav-child    { padding-left:20px; font-size:12px; }
   .nav-child .nav-icon { font-size:7px; opacity:0.3; }
