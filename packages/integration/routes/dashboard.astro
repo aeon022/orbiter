@@ -137,12 +137,9 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
     .nav-item.active::before { content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--gold); }
     .nav-icon { width:13px; text-align:center; font-size:10px; opacity:0.5; flex-shrink:0; }
     .nav-badge { margin-left:auto; font-size:10px; color:var(--muted); background:var(--bg3); border:1px solid var(--line); padding:1px 6px; border-radius:3px; }
-    .nav-item-wrap { display:flex; align-items:stretch; }
-    .nav-item-wrap .nav-item { flex:1; min-width:0; }
-    .nav-toggle { background:none; border:none; color:var(--muted); font-size:9px; cursor:pointer; padding:0 14px; flex-shrink:0; transition:color 0.12s; line-height:1; }
-    .nav-toggle:hover { color:var(--heading); }
-    .nav-child { padding-left:30px; }
-    .nav-child .nav-icon { font-size:8px; opacity:0.35; }
+    .nav-children { margin:0 0 4px; border-left:1px solid var(--line); margin-left:18px; }
+    .nav-child { padding-left:20px; font-size:12px; }
+    .nav-child .nav-icon { font-size:7px; opacity:0.3; }
     .sidebar-pod { margin-top:auto; padding:14px 18px; border-top:1px solid var(--line); font-size:11px; color:var(--muted); }
     .sidebar-pod-name { color:var(--text); font-size:12px; margin-bottom:2px; display:flex; align-items:center; gap:5px; }
     .sidebar-pod-name::before { content:"◆"; font-size:6px; color:var(--gold); }
@@ -293,17 +290,12 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
         const kids = collChildMap[col.id] ?? [];
         return (
           <>
-            <div class="nav-item-wrap">
-              <a href={`/orbiter/${col.id}`} class="nav-item">
-                <span class="nav-icon">▤</span>{col.label}
-                <span class="nav-badge">{col.total}</span>
-              </a>
-              {kids.length > 0 && (
-                <button class="nav-toggle" id={`chev-${col.id}`} onclick={`__orbToggleNav('${col.id}')`}>▸</button>
-              )}
-            </div>
+            <a href={`/orbiter/${col.id}`} class="nav-item">
+              <span class="nav-icon">▤</span>{col.label}
+              <span class="nav-badge">{col.total}</span>
+            </a>
             {kids.length > 0 && (
-              <div id={`nav-sub-${col.id}`} style="display:none">
+              <div class="nav-children">
                 {kids.map(kid => (
                   <a href={`/orbiter/${kid.id}`} class="nav-item nav-child">
                     <span class="nav-icon">◦</span>{kid.label}
