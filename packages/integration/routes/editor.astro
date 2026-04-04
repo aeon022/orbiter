@@ -173,11 +173,11 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
     .topbar { grid-column:1/-1; background:var(--bg2); border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 22px; gap:0; z-index:10; }
     .logo { font-family:var(--serif); font-weight:200; font-size:17px; color:var(--heading); display:flex; align-items:center; gap:9px; letter-spacing:0.1em; text-decoration:none; flex-shrink:0; }
     .logo-mark { width:22px; height:22px; border:1px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:9px; color:var(--gold); font-family:var(--mono); }
-    .breadcrumb { margin-left:20px; font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px; }
-    .breadcrumb a { color:var(--mid); text-decoration:none; }
+    .breadcrumb { margin-left:20px; font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px; white-space:nowrap; overflow:hidden; }
+    .breadcrumb a { color:var(--mid); text-decoration:none; flex-shrink:0; }
     .breadcrumb a:hover { color:var(--heading); }
-    .breadcrumb .sep { color:var(--line); }
-    .breadcrumb .current { color:var(--text); }
+    .breadcrumb .sep { color:var(--line); flex-shrink:0; }
+    .breadcrumb .current { color:var(--text); overflow:hidden; text-overflow:ellipsis; }
     .topbar-right { margin-left:auto; display:flex; align-items:center; gap:12px; }
     .pod-status { font-size:10px; color:var(--jade); display:flex; align-items:center; gap:5px; }
     .dark-toggle { background:none; border:1px solid var(--line); color:var(--mid); font-family:var(--mono); font-size:10px; padding:3px 10px; cursor:pointer; letter-spacing:0.04em; transition:color 0.12s,border-color 0.12s,background 0.12s; border-radius:var(--radius); }

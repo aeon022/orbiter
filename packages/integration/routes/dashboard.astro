@@ -46,12 +46,13 @@ const allCollections = db.getCollections().map(c => ({
 }));
 
 
-const stats = collections.map(col => {
+const stats = allCollections.map(col => {
   const all       = db.getEntries(col.id);
   const published = all.filter(e => e.status === 'published').length;
   const drafts    = all.filter(e => e.status === 'draft').length;
   return { ...col, total: all.length, published, drafts };
 });
+const topLevelStats = stats.filter(s => !s.parent);
 
 const totalEntries   = stats.reduce((n, s) => n + s.total, 0);
 const totalPublished = stats.reduce((n, s) => n + s.published, 0);
@@ -380,7 +381,7 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
             <div class="section-head">
               <div class="section-title">{t.dashboard_collections}</div>
             </div>
-            {stats.map(col => {
+            {topLevelStats.map(col => {
               const pct = col.total > 0 ? Math.round(col.published / col.total * 100) : 0;
               return (
                 <div class="coll-card">
