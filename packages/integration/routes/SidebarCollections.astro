@@ -1,0 +1,50 @@
+---
+/**
+ * SidebarCollections.astro
+ * Shared component: renders the collections section of the sidebar.
+ * Handles parent/child grouping with indented sub-items.
+ *
+ * Props:
+ *   collections — array of { id, label, total, parent? }
+ *   activeNav   — currently active nav id (collection id or 'dashboard' etc.)
+ */
+interface Props {
+  collections: Array<{ id: string; label: string; total: number; parent?: string | null }>;
+  activeNav:   string;
+}
+const { collections, activeNav } = Astro.props;
+
+const topLevel = collections.filter(c => !c.parent);
+const childMap: Record<string, typeof collections> = {};
+for (const c of collections.filter(c => c.parent)) {
+  if (!childMap[c.parent!]) childMap[c.parent!] = [];
+  childMap[c.parent!].push(c);
+}
+---
+{topLevel.map(col => {
+  const kids = childMap[col.id] ?? [];
+  return (
+    <>
+      <a href={`/orbiter/${col.id}`} class={`nav-item ${activeNav === col.id ? 'active' : ''}`}>
+        <span class="nav-icon">▤</span>{col.label}
+        <span class="nav-badge">{col.total}</span>
+      </a>
+      {kids.length > 0 && (
+        <div class="nav-children">
+          {kids.map(kid => (
+            <a href={`/orbiter/${kid.id}`} class={`nav-item nav-child ${activeNav === kid.id ? 'active' : ''}`}>
+              <span class="nav-icon">◦</span>{kid.label}
+              <span class="nav-badge">{kid.total}</span>
+            </a>
+          ))}
+        </div>
+      )}
+    </>
+  );
+})}
+
+<style is:global>
+  .nav-children { border-left:1px solid var(--line); margin-left:18px; margin-bottom:4px; }
+  .nav-child    { padding-left:20px; font-size:12px; }
+  .nav-child .nav-icon { font-size:7px; opacity:0.3; }
+</style>

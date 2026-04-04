@@ -3,6 +3,7 @@ import { podPath } from 'orbiter:db';
 import { openPod } from '@orbiter/core';
 import adminUtils from 'orbiter:admin-utils';
 import { useTranslations } from '../src/i18n.js';
+import SidebarCollections from './SidebarCollections.astro';
 
 // ── Auth ─────────────────────────────────────────────────────────────
 { const _db = openPod(podPath); const _u = _db.checkSession(Astro.cookies.get('orb_sess')?.value ?? ''); _db.close(); if (!_u) return Astro.redirect('/orbiter/login'); }
@@ -41,6 +42,7 @@ const published      = entries.filter(e => e.status === 'published');
 const drafts         = entries.filter(e => e.status === 'draft');
 const allCollections = db.getCollections().map(c => ({
   id: c.id, label: c.label, total: db.getEntries(c.id).length,
+  parent: db.getMeta(`collection.${c.id}.parent`) ?? null,
 }));
 const adminLocale = db.getMeta('site.locale') ?? 'en-US';
 const mediaCount  = db.db.prepare('SELECT COUNT(*) as n FROM _media').get().n;
@@ -199,12 +201,7 @@ const visible = filter === 'published' ? published
     <div class="sidebar">
       <div class="nav-section">Content</div>
       <a href="/orbiter" class="nav-item"><span class="nav-icon">◈</span>Dashboard</a>
-      {allCollections.map(c => (
-        <a href={`/orbiter/${c.id}`} class={`nav-item ${c.id === collectionId ? 'active' : ''}`}>
-          <span class="nav-icon">▤</span>{c.label}
-          <span class="nav-badge">{c.total}</span>
-        </a>
-      ))}
+      <SidebarCollections collections={allCollections} activeNav={collectionId} />
       <div class="nav-section">Assets</div>
       <a href="/orbiter/media" class="nav-item"><span class="nav-icon">⊞</span>Media<span class="nav-badge">{mediaCount}</span></a>
       <div class="nav-section">System</div>

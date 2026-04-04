@@ -14,6 +14,7 @@ import adminUtils from 'orbiter:admin-utils';
 import { useTranslations } from '../src/i18n.js';
 import { podPath } from 'orbiter:db';
 import { openPod } from '@orbiter/core';
+import SidebarCollections from './SidebarCollections.astro';
 
 const {
   title       = 'Orbiter',
@@ -104,9 +105,6 @@ for (const c of collectionsWithParent.filter((c: any) => c.parent)) {
     .nav-item.active::before { content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--gold); border-radius:0 1px 1px 0; }
     .nav-icon { width:14px; text-align:center; font-size:11px; opacity:0.45; flex-shrink:0; }
     .nav-badge { margin-left:auto; font-size:10px; color:var(--muted); background:var(--bg3); border:1px solid var(--line); padding:1px 7px; border-radius:3px; }
-    .nav-children { margin:0 0 4px; border-left:1px solid var(--line); margin-left:18px; }
-    .nav-child { padding-left:20px; font-size:12px; }
-    .nav-child .nav-icon { font-size:7px; opacity:0.3; }
     .sidebar-pod { margin-top:auto; padding:14px 18px; border-top:1px solid var(--line); font-size:11px; color:var(--muted); }
     .sidebar-pod-name { color:var(--text); font-size:12px; font-weight:500; margin-bottom:3px; display:flex; align-items:center; gap:5px; }
     .sidebar-pod-name::before { content:"◆"; font-size:6px; color:var(--gold); }
@@ -166,27 +164,7 @@ for (const c of collectionsWithParent.filter((c: any) => c.parent)) {
       <a href="/orbiter" class={`nav-item ${activeNav === 'dashboard' ? 'active' : ''}`}>
         <span class="nav-icon">◈</span>{t.nav_dashboard}
       </a>
-      {topLevel.map((col: any) => {
-        const kids = childMap[col.id] ?? [];
-        return (
-          <>
-            <a href={`/orbiter/${col.id}`} class={`nav-item ${activeNav === col.id ? 'active' : ''}`}>
-              <span class="nav-icon">▤</span>{col.label}
-              <span class="nav-badge">{col.total}</span>
-            </a>
-            {kids.length > 0 && (
-              <div class="nav-children">
-                {kids.map((kid: any) => (
-                  <a href={`/orbiter/${kid.id}`} class={`nav-item nav-child ${activeNav === kid.id ? 'active' : ''}`}>
-                    <span class="nav-icon">◦</span>{kid.label}
-                    <span class="nav-badge">{kid.total}</span>
-                  </a>
-                ))}
-              </div>
-            )}
-          </>
-        );
-      })}
+      <SidebarCollections collections={collectionsWithParent} activeNav={activeNav} />
       <div class="nav-section">{t.nav_assets}</div>
       <a href="/orbiter/media" class={`nav-item ${activeNav === 'media' ? 'active' : ''}`}>
         <span class="nav-icon">⊞</span>{t.nav_media}

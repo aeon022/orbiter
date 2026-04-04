@@ -3,6 +3,7 @@ import { podPath } from 'orbiter:db';
 import { useTranslations } from '../src/i18n.js';
 import { openPod } from '@orbiter/core';
 import adminUtils from 'orbiter:admin-utils';
+import SidebarCollections from './SidebarCollections.astro';
 
 // ── Auth ─────────────────────────────────────────────────────────────
 { const _db = openPod(podPath); const _u = _db.checkSession(Astro.cookies.get('orb_sess')?.value ?? ''); _db.close(); if (!_u) return Astro.redirect('/orbiter/login'); }
@@ -123,12 +124,6 @@ const allCollections = db.getCollections().map(c => ({
   id: c.id, label: c.label, total: db.getEntries(c.id).length,
   parent: db.getMeta(`collection.${c.id}.parent`) ?? null,
 }));
-const topLevelCollections = allCollections.filter(c => !c.parent);
-const collChildMap: Record<string, any[]> = {};
-for (const c of allCollections.filter(c => c.parent)) {
-  if (!collChildMap[c.parent]) collChildMap[c.parent] = [];
-  collChildMap[c.parent].push(c);
-}
 const adminLocale = db.getMeta('site.locale') ?? 'de-AT';
 const siteUrl     = (db.getMeta('site.url') ?? '').replace(/\/$/, '');
 db.close();
@@ -203,9 +198,6 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
     .nav-item.active::before { content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--gold); }
     .nav-icon { width:13px; text-align:center; font-size:10px; opacity:0.5; flex-shrink:0; }
     .nav-badge { margin-left:auto; font-size:10px; color:var(--muted); background:var(--bg3); border:1px solid var(--line); padding:1px 6px; border-radius:3px; }
-    .nav-children { margin:0 0 4px; border-left:1px solid var(--line); margin-left:18px; }
-    .nav-child { padding-left:20px; font-size:12px; }
-    .nav-child .nav-icon { font-size:7px; opacity:0.3; }
     .sidebar-pod { margin-top:auto; padding:12px 16px; border-top:1px solid var(--line); font-size:11px; color:var(--muted); }
     .sidebar-pod-name { color:var(--text); font-size:12px; margin-bottom:2px; display:flex; align-items:center; gap:5px; }
     .sidebar-pod-name::before { content:"◆"; font-size:6px; color:var(--gold); }
@@ -436,27 +428,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
     <div class="sidebar">
       <div class="nav-section">{t.nav_content}</div>
       <a href="/orbiter" class="nav-item"><span class="nav-icon">◈</span>{t.nav_dashboard}</a>
-      {topLevelCollections.map(col => {
-        const kids = collChildMap[col.id] ?? [];
-        return (
-          <>
-            <a href={`/orbiter/${col.id}`} class={`nav-item ${col.id === collectionId ? 'active' : ''}`}>
-              <span class="nav-icon">▤</span>{col.label}
-              <span class="nav-badge">{col.total}</span>
-            </a>
-            {kids.length > 0 && (
-              <div class="nav-children">
-                {kids.map((kid: any) => (
-                  <a href={`/orbiter/${kid.id}`} class={`nav-item nav-child ${kid.id === collectionId ? 'active' : ''}`}>
-                    <span class="nav-icon">◦</span>{kid.label}
-                    <span class="nav-badge">{kid.total}</span>
-                  </a>
-                ))}
-              </div>
-            )}
-          </>
-        );
-      })}
+      <SidebarCollections collections={allCollections} activeNav={collectionId} />
       <div class="nav-section">{t.nav_assets}</div>
       <a href="/orbiter/media" class="nav-item"><span class="nav-icon">⊞</span>{t.nav_media}</a>
       <div class="nav-section">{t.nav_system}</div>
