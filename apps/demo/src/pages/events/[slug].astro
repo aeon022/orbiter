@@ -5,7 +5,11 @@ import { openPod } from '@orbiter/core';
 const { slug } = Astro.params;
 const db    = openPod(podPath);
 const entry = db.getEntry('events', slug);
+const catRows = db.getEntries('event_categories');
 db.close();
+
+const catById: Record<string, any> = {};
+for (const c of catRows) catById[c.id] = c;
 
 if (!entry) return Astro.redirect('/');
 
@@ -184,7 +188,10 @@ const ticketLabel = TICKET_LABELS[d.ticket_provider ?? 'custom'] ?? 'Tickets';
     <!-- Categories + Tags -->
     {((d.categories ?? []).length > 0 || (d.tags ?? []).length > 0) && (
       <div class="chips-row">
-        {(d.categories ?? []).map((c: string) => <span class="chip-cat">{c}</span>)}
+        {(d.categories ?? []).map((id: string) => {
+          const cat = catById[id];
+          return cat ? <span class="chip-cat" style={cat.data.color ? `color:${cat.data.color};border-color:${cat.data.color}40` : ''}>{cat.data.name}</span> : null;
+        })}
         {(d.tags ?? []).map((t: string) => <span class="chip-tag">{t}</span>)}
       </div>
     )}

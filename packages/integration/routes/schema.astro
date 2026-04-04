@@ -306,7 +306,7 @@ const fieldTypesJson = JSON.stringify(FIELD_TYPES);
   </div>
 </AdminLayout>
 
-<script define:vars={{ selectedSchema: selected?.schema ?? null, isNew, fieldTypesJson, allCollsJson: JSON.stringify(allCollections.map(c => ({id: c.id, label: c.label}))), phKey: t.schema_field_key, phLabel: t.schema_field_lbl, txtRequired: t.schema_required, confirmEmpty: t.schema_delete_confirm_empty, confirmEntries: t.schema_delete_confirm_entries }}>
+<script define:vars={{ selectedSchema: selected?.schema ?? null, isNew, fieldTypesJson, allCollsJson: JSON.stringify(allCollections.filter(c => c.id !== selectedId).map(c => ({id: c.id, label: c.label}))), phKey: t.schema_field_key, phLabel: t.schema_field_lbl, txtRequired: t.schema_required, confirmEmpty: t.schema_delete_confirm_empty, confirmEntries: t.schema_delete_confirm_entries }}>
 const FIELD_TYPES = JSON.parse(fieldTypesJson);
 const ALL_COLLS = JSON.parse(allCollsJson);
 function collOptions(sel) {

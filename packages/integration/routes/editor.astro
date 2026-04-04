@@ -346,8 +346,9 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
     .rel-item:has(input:checked) .rel-check { background:var(--accent); border-color:var(--accent); color:var(--bg0); }
     .rel-name { font-size:11px; color:var(--text); }
     .rel-empty { padding:12px; font-size:10px; color:var(--muted); text-align:center; }
-    .rel-selected { display:flex; flex-wrap:wrap; gap:3px; min-height:0; }
+    .rel-selected { display:flex; flex-wrap:wrap; gap:3px; min-height:22px; align-items:center; padding:4px 0; border-bottom:1px solid var(--line2); margin-bottom:2px; }
     .rel-tag { font-size:9px; padding:2px 7px; background:var(--accent-bg); color:var(--accent); border:1px solid rgba(61,79,168,0.2); border-radius:2px; }
+    .rel-none { font-size:10px; color:var(--muted); font-family:var(--mono); }
 
     /* Version history */
     .version-row { display:flex; align-items:center; gap:9px; padding:6px 0; border-bottom:1px solid var(--line2); }
@@ -629,16 +630,17 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
 
                   {field.type === 'relation' && (
                     <div class="relation-picker">
-                      {(relationEntries[field.collection] ?? []).length > 5 && (
-                        <input class="rel-search" type="text" placeholder="Search…"
-                          oninput={`filterRel(this,'${key}')`} />
-                      )}
                       <div class="rel-selected" id={`rel-selected-${key}`}>
                         {((entry?.data?.[key] ?? []) as string[]).map(id => {
                           const e = (relationEntries[field.collection] ?? []).find((x: any) => x.id === id);
                           return e ? <span class="rel-tag">{e.data?.title ?? e.data?.name ?? e.slug}</span> : null;
                         })}
+                        {((entry?.data?.[key] ?? []) as string[]).filter(id => (relationEntries[field.collection] ?? []).find((x: any) => x.id === id)).length === 0 && (
+                          <span class="rel-none">—</span>
+                        )}
                       </div>
+                      <input class="rel-search" type="text" placeholder={`Filter ${field.label ?? key}…`}
+                        oninput={`filterRel(this,'${key}')`} />
                       <div class="rel-list" id={`rel-list-${key}`}>
                         {(relationEntries[field.collection] ?? []).length === 0
                           ? <div class="rel-empty">No entries in {field.collection}</div>
@@ -1445,10 +1447,14 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
       if (!list || !selected) return;
       setTimeout(function() {
         var checked = list.querySelectorAll('input[type=checkbox]:checked');
-        selected.innerHTML = [...checked].map(function(cb) {
-          var name = cb.closest('.rel-item')?.querySelector('.rel-name')?.textContent ?? cb.value;
-          return '<span class="rel-tag">' + name + '</span>';
-        }).join('');
+        if (checked.length === 0) {
+          selected.innerHTML = '<span class="rel-none">—</span>';
+        } else {
+          selected.innerHTML = [...checked].map(function(cb) {
+            var name = cb.closest('.rel-item')?.querySelector('.rel-name')?.textContent ?? cb.value;
+            return '<span class="rel-tag">' + name + '</span>';
+          }).join('');
+        }
         // update rel-check visuals
         list.querySelectorAll('.rel-item').forEach(function(item) {
           var cb  = item.querySelector('input[type=checkbox]');

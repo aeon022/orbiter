@@ -4,6 +4,7 @@ import { getCollection } from 'orbiter:collections';
 const posts   = await getCollection('posts');
 const pages   = await getCollection('pages');
 const authors = await getCollection('authors');
+const events  = await getCollection('events');
 ---
 <html lang="en">
 <head>
@@ -69,7 +70,7 @@ const authors = await getCollection('authors');
 
     .grid {
       display: grid;
-      grid-template-columns: 1fr 1fr 300px;
+      grid-template-columns: 1fr 1fr 1fr 300px;
       gap: 24px;
     }
 
@@ -204,6 +205,24 @@ const authors = await getCollection('authors');
     </header>
 
     <div class="grid">
+
+      <!-- Events -->
+      <div>
+        <div class="section-label">Events ({events.length})</div>
+        {events.map(ev => (
+          <div class="card">
+            <div class="card-title">{ev.data.title}</div>
+            <div class="card-footer">
+              <div class="tags">
+                {((ev.data.categories ?? []) as any[]).map((cat: any) => (
+                  <span class="tag" style={cat?.data?.color ? `color:${cat.data.color};border-color:${cat.data.color}40` : ''}>{cat?.data?.name ?? cat}</span>
+                ))}
+              </div>
+              <span class={`pill ${ev.status}`}>{ev.status}</span>
+            </div>
+          </div>
+        ))}
+      </div>
 
       <!-- Posts -->
       <div>
