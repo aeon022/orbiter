@@ -9,9 +9,9 @@
     "seed": "node scripts/seed.js"
   },
   "dependencies": {
-    "@astrojs/node": "^10.0.4",
     "@a83/orbiter-core": "*",
     "@a83/orbiter-integration": "*",
-    "astro": "^4.7.0"
+    "@astrojs/node": "^9.5.5",
+    "astro": "^5.18.1"
   }
 }

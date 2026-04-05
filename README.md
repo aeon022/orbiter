@@ -14,7 +14,7 @@ your-site/
             └── [slug].astro
 ```
 
-> **Status:** Active development — Phase 3 complete. Not yet published to npm.
+> **Status:** Active development — Phase 4 in progress. Not yet published to npm.
 > Use the demo to try it locally (see [Quick Start](#quick-start) below).
 
 ---
@@ -146,10 +146,10 @@ The integration injects a complete admin UI under `/orbiter` using Astro's `inje
 If you want to add Orbiter to your own Astro project (rather than the demo):
 
 ```bash
-npm install @a83/orbiter-core @a83/orbiter-integration @astrojs/node
+npm install @a83/orbiter-core @a83/orbiter-integration @astrojs/node@^9
 ```
 
-`@astrojs/node` is the adapter for self-hosted Node.js deployments. See [Adapters & Deployment](#adapters--deployment) for alternatives (Netlify, Vercel, Docker).
+`@astrojs/node@^9` is the adapter for self-hosted Node.js deployments — it targets **Astro 5**. (`@astrojs/node@^10` requires Astro 6 and is not compatible.) See [Adapters & Deployment](#adapters--deployment) for alternatives (Netlify, Vercel, Docker).
 
 > **Note:** Not yet published to npm. Until the first release, install from this repository using workspaces or `npm link`.
 
@@ -662,8 +662,10 @@ Orbiter uses `better-sqlite3` — a native Node.js addon. It opens a file on dis
 Install the adapter:
 
 ```bash
-npm install @astrojs/node
+npm install @astrojs/node@^9
 ```
+
+Orbiter requires **Astro 5**. Use `@astrojs/node@^9` — version 10+ targets Astro 6.
 
 Configure:
 
@@ -1004,7 +1006,7 @@ git push origin v0.1.0
 | 01 | Ignition | ✅ Done | Core DB, virtual modules, basic admin routes |
 | 02 | Bridge | ✅ Done | Full admin UI, media library, build trigger, auth |
 | 03 | Warp | ✅ Done | Block editor, version history, themes, i18n, light mode, relation fields |
-| 04 | Orbit | 🔄 Active | CLI, npm publish, PWA, public launch |
+| 04 | Orbit | 🔄 Active | npm publish, Astro 5, media categories, public launch |
 
 **Phase 3 delivered:**
 - Richtext block editor with live split-pane Markdown preview
