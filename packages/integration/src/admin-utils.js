@@ -17,22 +17,29 @@
     if (btn) btn.textContent = darkLabel(dark);
   };
 
-  // Sync dark button label + sidebar active state on every page load (incl. View Transitions)
+  // Sync theme + dark + sidebar active state on every page load (incl. View Transitions)
   function __orbSyncPage() {
-    var btn = document.getElementById('orb-dark-btn');
-    if (btn) btn.textContent = darkLabel(document.documentElement.classList.contains('dark'));
-
-    // Re-apply dark class after View Transitions swaps <html>
+    // Re-apply dark mode
     if (localStorage.getItem('orb-dark') === '1') {
       document.documentElement.classList.add('dark');
     }
+
+    // Re-apply theme class (View Transitions resets <html> classes)
+    var savedTheme = localStorage.getItem('orb-theme') || '';
+    if (savedTheme === 'space-light' || savedTheme === 'space-dark') savedTheme = 'space';
+    THEMES.forEach(function(t) { document.documentElement.classList.remove('theme-' + t); });
+    if (savedTheme) document.documentElement.classList.add('theme-' + savedTheme);
+
+    // Sync dark button label
+    var btn = document.getElementById('orb-dark-btn');
+    if (btn) btn.textContent = darkLabel(document.documentElement.classList.contains('dark'));
 
     // Sync sidebar active nav item to current URL
     var path = window.location.pathname;
     document.querySelectorAll('#orb-sidebar .nav-item').forEach(function (a) {
       var href = a.getAttribute('href');
       if (!href) return;
-      var active = path === href || (href !== '/orbiter' && path.startsWith(href + '/')) || path.startsWith(href + '?');
+      var active = path === href || (href !== '/orbiter' && path.startsWith(href + '/'));
       a.classList.toggle('active', active);
     });
   }

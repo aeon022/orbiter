@@ -1,8 +1,10 @@
 ---
+import { ViewTransitions } from 'astro:transitions';
 import { podPath } from 'orbiter:db';
 import { openPod } from '@orbiter/core';
 import adminUtils from 'orbiter:admin-utils';
 import { useTranslations } from '../src/i18n.js';
+import SidebarCollections from './SidebarCollections.astro';
 
 // ── Auth ─────────────────────────────────────────────────────────────
 { const _db = openPod(podPath); const _u = _db.checkSession(Astro.cookies.get('orb_sess')?.value ?? ''); _db.close(); if (!_u) return Astro.redirect('/orbiter/login'); }
@@ -59,6 +61,7 @@ const media = db.db.prepare(
 ).all();
 const allCollections = db.getCollections().map(c => ({
   id: c.id, label: c.label, total: db.getEntries(c.id).length,
+  parent: db.getMeta(`collection.${c.id}.parent`) ?? null,
 }));
 const adminLocale = db.getMeta('site.locale') ?? 'de-AT';
 db.close();
@@ -77,7 +80,7 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Orbiter — Media</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -89,7 +92,8 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
       --accent:#3d4fa8; --accent-bg:rgba(61,79,168,0.06);
       --crimson:#8b2635; --crimson-bg:rgba(139,38,53,0.07);
       --shadow:0 1px 3px rgba(0,0,0,0.08);
-      --serif:"Noto Serif JP",serif; --mono:"DM Mono",monospace;
+      --sans:"Inter",system-ui,-apple-system,sans-serif;
+      --serif:"Noto Serif JP",serif; --mono:"DM Mono",monospace; --radius:4px;
     }
     html.dark {
       --bg0:#0f0f14; --bg1:#14141a; --bg2:#1c1c24; --bg3:#22222d;
@@ -100,18 +104,18 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
       --accent:#7a8fd4; --accent-bg:rgba(122,143,212,0.08);
       --crimson:#c0525e; --crimson-bg:rgba(192,82,94,0.08);
     }
-    html,body { background:var(--bg0); color:var(--text); font-family:var(--mono); font-size:13px; line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
-    .layout { display:grid; grid-template-columns:210px 1fr; grid-template-rows:54px 1fr; min-height:100vh; }
+    html,body { background:var(--bg0); color:var(--text); font-family:var(--sans); font-size:14px; line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
+    .layout { display:grid; grid-template-columns:232px 1fr; grid-template-rows:56px 1fr; height:100vh; }
 
     /* Topbar */
     .topbar { grid-column:1/-1; background:var(--bg2); border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 22px; gap:0; }
     .logo { font-family:var(--serif); font-weight:200; font-size:17px; color:var(--heading); display:flex; align-items:center; gap:9px; letter-spacing:0.1em; text-decoration:none; flex-shrink:0; }
     .logo-mark { width:22px; height:22px; border:1px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:9px; color:var(--gold); font-family:var(--mono); }
-    .breadcrumb { margin-left:20px; font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; }
-    .breadcrumb a { color:var(--mid); text-decoration:none; }
+    .breadcrumb { margin-left:20px; font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px; white-space:nowrap; overflow:hidden; }
+    .breadcrumb a { color:var(--mid); text-decoration:none; flex-shrink:0; }
     .breadcrumb a:hover { color:var(--heading); }
-    .breadcrumb .sep { color:var(--line); }
-    .breadcrumb .current { color:var(--text); }
+    .breadcrumb .sep { color:var(--line); flex-shrink:0; }
+    .breadcrumb .current { color:var(--text); overflow:hidden; text-overflow:ellipsis; }
     .topbar-right { margin-left:auto; display:flex; align-items:center; gap:14px; }
     .pod-status { font-size:10px; color:var(--jade); display:flex; align-items:center; gap:5px; }
     .dark-toggle { background:none; border:1px solid var(--line); color:var(--mid); font-family:var(--mono); font-size:10px; padding:3px 10px; cursor:pointer; letter-spacing:0.04em; transition:color 0.12s,border-color 0.12s,background 0.12s; }
@@ -120,17 +124,17 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
 
     /* Sidebar */
-    .sidebar { background:var(--bg1); border-right:1px solid var(--line); padding:20px 0; display:flex; flex-direction:column; }
-    .nav-section { font-size:9px; letter-spacing:0.3em; text-transform:uppercase; color:var(--muted); padding:0 16px; margin:18px 0 5px; }
+    .sidebar { background:var(--bg1); border-right:1px solid var(--line); padding:16px 0; display:flex; flex-direction:column; overflow-y:auto; }
+    .nav-section { font-size:10px; letter-spacing:0.22em; text-transform:uppercase; color:var(--muted); padding:0 18px; margin:20px 0 4px; font-weight:500; }
     .nav-section:first-child { margin-top:0; }
-    .nav-item { display:flex; align-items:center; gap:9px; padding:7px 16px; font-size:12px; color:var(--mid); text-decoration:none; position:relative; transition:color 0.12s,background 0.12s; }
+    .nav-item { display:flex; align-items:center; gap:10px; padding:8px 18px; font-size:13px; color:var(--mid); text-decoration:none; position:relative; transition:color 0.12s,background 0.12s; }
     .nav-item:hover { color:var(--heading); background:var(--line2); }
-    .nav-item.active { color:var(--heading); background:var(--accent-bg); }
-    .nav-item.active::before { content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--gold); }
-    .nav-icon { width:13px; text-align:center; font-size:10px; opacity:0.5; flex-shrink:0; }
-    .nav-badge { margin-left:auto; font-size:9px; color:var(--muted); background:var(--bg3); border:1px solid var(--line); padding:1px 6px; }
-    .sidebar-pod { margin-top:auto; padding:12px 16px; border-top:1px solid var(--line); font-size:10px; color:var(--muted); }
-    .sidebar-pod-name { color:var(--text); font-size:11px; margin-bottom:2px; display:flex; align-items:center; gap:5px; }
+    .nav-item.active { color:var(--heading); background:var(--accent-bg); font-weight:500; }
+    .nav-item.active::before { content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--gold); border-radius:0 1px 1px 0; }
+    .nav-icon { width:14px; text-align:center; font-size:11px; opacity:0.45; flex-shrink:0; }
+    .nav-badge { margin-left:auto; font-size:10px; color:var(--muted); background:var(--bg3); border:1px solid var(--line); padding:1px 7px; border-radius:3px; }
+    .sidebar-pod { margin-top:auto; padding:14px 18px; border-top:1px solid var(--line); font-size:11px; color:var(--muted); }
+    .sidebar-pod-name { color:var(--text); font-size:12px; font-weight:500; margin-bottom:3px; display:flex; align-items:center; gap:5px; }
     .sidebar-pod-name::before { content:"◆"; font-size:6px; color:var(--gold); }
 
     /* Main */
@@ -179,6 +183,7 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
     .empty-label { font-size:12px; color:var(--muted); margin-bottom:4px; }
     .empty-sub { font-size:10px; color:var(--line); }
   </style>
+  <ViewTransitions />
 </head>
 <body>
   <div class="layout">
@@ -202,26 +207,23 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
     </div>
 
     <!-- Sidebar -->
-    <div class="sidebar">
-      <div class="nav-section">Content</div>
-      <a href="/orbiter" class="nav-item"><span class="nav-icon">◈</span>Dashboard</a>
-      {allCollections.map(c => (
-        <a href={`/orbiter/${c.id}`} class="nav-item">
-          <span class="nav-icon">▤</span>{c.label}
-          <span class="nav-badge">{c.total}</span>
-        </a>
-      ))}
-      <div class="nav-section">Assets</div>
+    <div id="orb-sidebar" class="sidebar" transition:persist>
+      <div class="nav-section">{t.nav_content}</div>
+      <a href="/orbiter" class="nav-item"><span class="nav-icon">◈</span>{t.nav_dashboard}</a>
+      <SidebarCollections collections={allCollections} activeNav="media" />
+      <div class="nav-section">{t.nav_assets}</div>
       <a href="/orbiter/media" class="nav-item active">
-        <span class="nav-icon">⊞</span>Media
+        <span class="nav-icon">⊞</span>{t.nav_media}
         <span class="nav-badge">{media.length}</span>
       </a>
-      <div class="nav-section">System</div>
-      <a href="/orbiter/build"    class="nav-item"><span class="nav-icon">▲</span>Build</a>
-      <a href="/orbiter/settings" class="nav-item"><span class="nav-icon">◎</span>Settings</a>
+      <div class="nav-section">{t.nav_system}</div>
+      <a href="/orbiter/schema"   class="nav-item"><span class="nav-icon">◈</span>{t.nav_collections}</a>
+      <a href="/orbiter/build"    class="nav-item"><span class="nav-icon">▲</span>{t.nav_build}</a>
+      <a href="/orbiter/settings" class="nav-item"><span class="nav-icon">◎</span>{t.nav_settings}</a>
       <div class="sidebar-pod">
         <div class="sidebar-pod-name">content.pod</div>
         <div>{media.length} assets</div>
+        <div class="pod-status" style="margin-top:8px;"><div class="pod-dot"></div>pod synced</div>
       </div>
     </div>
 
