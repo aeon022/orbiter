@@ -44,6 +44,12 @@
     });
   }
 
+  // Before View Transitions swaps <html>, copy current classes into incoming document
+  // so theme-* and dark classes survive the swap without flicker
+  document.addEventListener('astro:before-swap', function(e) {
+    e.newDocument.documentElement.className = document.documentElement.className;
+  });
+
   document.addEventListener('DOMContentLoaded', __orbSyncPage);
   document.addEventListener('astro:page-load', __orbSyncPage);
 
