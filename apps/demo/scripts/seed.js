@@ -21,8 +21,9 @@ let savedMedia = [];
 if (existsSync(podPath)) {
   try {
     const oldDb = openPod(podPath);
+    // Only restore real uploads — skip seed-generated demo placeholders
     savedMedia = oldDb.db.prepare(
-      'SELECT id, filename, mime_type, size, data, alt, folder, created_at FROM _media'
+      "SELECT id, filename, mime_type, size, data, alt, folder, created_at FROM _media WHERE folder != 'demo'"
     ).all();
     oldDb.close();
   } catch {}
