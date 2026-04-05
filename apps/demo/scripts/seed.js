@@ -7,7 +7,7 @@
  *
  * Run: npm run seed --workspace=apps/demo
  */
-import { createPod, openPod, hashPassword } from '@orbiter/core';
+import { createPod, openPod, hashPassword } from '@a83/orbiter-core';
 import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';

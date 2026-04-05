@@ -7,7 +7,7 @@
  *
  * Run: node apps/demo/scripts/migrate-events-schema.js
  */
-import { openPod } from '@orbiter/core';
+import { openPod } from '@a83/orbiter-core';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';

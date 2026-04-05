@@ -1,7 +1,7 @@
 ---
 export const prerender = false;
 import { podPath } from 'orbiter:db';
-import { openPod } from '@orbiter/core';
+import { openPod } from '@a83/orbiter-core';
 
 const token = Astro.cookies.get('orb_sess')?.value;
 if (token) {

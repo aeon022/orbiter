@@ -4,7 +4,7 @@ export const prerender = false;
  * /orbiter/media/[id] — serves a media BLOB from the .pod file
  */
 import { podPath } from 'orbiter:db';
-import { openPod } from '@orbiter/core';
+import { openPod } from '@a83/orbiter-core';
 
 // ── Auth ─────────────────────────────────────────────────────────────
 { const _db = openPod(podPath); const _u = _db.checkSession(Astro.cookies.get('orb_sess')?.value ?? ''); _db.close(); if (!_u) return new Response(null, { status: 401 }); }

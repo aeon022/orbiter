@@ -26,13 +26,13 @@ Inspiration: Keystatic (Astro-nativ, Schema-Definition) + PocketBase (Single-Fil
 ```
 ~/Sites/orbiter/
 ├── packages/
-│   ├── core/               # SQLite-Management (@orbiter/core)
+│   ├── core/               # SQLite-Management (@a83/orbiter-core)
 │   │   └── src/
 │   │       ├── index.js    # exportiert OrbiterDB, createPod, openPod, hashPassword, verifyPassword, generateToken
 │   │       ├── db.js       # class OrbiterDB (better-sqlite3 wrapper)
 │   │       ├── pod.js      # createPod(), openPod() lifecycle helpers
 │   │       └── auth.js     # hashPassword, verifyPassword, generateToken (Node crypto / scrypt)
-│   ├── integration/        # Astro-Integration (@orbiter/integration)
+│   ├── integration/        # Astro-Integration (@a83/orbiter-integration)
 │   │   ├── src/
 │   │   │   ├── index.js    # Vite virtual modules + injectRoute()
 │   │   │   └── admin-utils.js  # Dark mode + Command palette JS (als String in orbiter:admin-utils)
@@ -50,7 +50,7 @@ Inspiration: Keystatic (Astro-nativ, Schema-Definition) + PocketBase (Single-Fil
 │   │   │   └── search.astro        # /orbiter/search (JSON API)
 │   │   └── styles/
 │   │       └── admin.css   # Shared CSS (wird via orbiter:admin-css als String geladen)
-│   └── admin/              # @orbiter/admin — Placeholder, noch leer
+│   └── admin/              # @a83/orbiter-admin — Placeholder, noch leer
 │       └── src/index.js    # nur VERSION export
 └── apps/
     └── demo/               # Demo-Site
@@ -103,11 +103,11 @@ db.checkSession(token)                   // → {id, username, role} | null
 db.deleteSession(token)
 ```
 
-### Auth-Utilities (@orbiter/core)
+### Auth-Utilities (@a83/orbiter-core)
 ```js
-import { hashPassword, verifyPassword, generateToken } from '@orbiter/core';
+import { hashPassword, verifyPassword, generateToken } from '@a83/orbiter-core';
 // oder:
-import { hashPassword, verifyPassword, generateToken } from '@orbiter/core/auth';
+import { hashPassword, verifyPassword, generateToken } from '@a83/orbiter-core/auth';
 
 await hashPassword('plaintext')        // → 'salt:hash'
 await verifyPassword('plain', stored)  // → boolean (timing-safe)

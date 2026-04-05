@@ -1,5 +1,5 @@
 {
-  "name": "@orbiter/integration",
+  "name": "@a83/orbiter-integration",
   "version": "0.1.0",
   "description": "Astro integration for Orbiter CMS — admin UI, virtual modules, injected routes",
   "type": "module",
@@ -35,7 +35,7 @@
     "astro": ">=4.0.0"
   },
   "dependencies": {
-    "@orbiter/core": "^0.1.0",
+    "@a83/orbiter-core": "^0.1.0",
     "fast-xml-parser": "^5.5.9",
     "turndown": "^7.2.2"
   }

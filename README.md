@@ -146,7 +146,7 @@ The integration injects a complete admin UI under `/orbiter` using Astro's `inje
 If you want to add Orbiter to your own Astro project (rather than the demo):
 
 ```bash
-npm install @orbiter/core @orbiter/integration @astrojs/node
+npm install @a83/orbiter-core @a83/orbiter-integration @astrojs/node
 ```
 
 `@astrojs/node` is the adapter for self-hosted Node.js deployments. See [Adapters & Deployment](#adapters--deployment) for alternatives (Netlify, Vercel, Docker).
@@ -163,7 +163,7 @@ Run this once to initialize your `.pod` and create an admin user:
 
 ```js
 // scripts/setup.js
-import { createPod, hashPassword } from '@orbiter/core';
+import { createPod, hashPassword } from '@a83/orbiter-core';
 import { randomUUID } from 'node:crypto';
 
 const db = createPod('./content.pod', {
@@ -189,7 +189,7 @@ node scripts/setup.js
 ```js
 // astro.config.mjs
 import { defineConfig } from 'astro/config';
-import orbiter from '@orbiter/integration';
+import orbiter from '@a83/orbiter-integration';
 import node from '@astrojs/node';
 
 export default defineConfig({
@@ -222,7 +222,7 @@ In hybrid mode, your own Astro pages default to `prerender: true` (static). All 
 Collections can be created in the **Schema** editor in the admin UI, or programmatically:
 
 ```js
-import { openPod } from '@orbiter/core';
+import { openPod } from '@a83/orbiter-core';
 
 const db = openPod('./content.pod');
 
@@ -613,7 +613,7 @@ All `/orbiter/*` routes check for a valid `orb_sess` cookie. Unauthenticated req
 ### Password utilities
 
 ```js
-import { hashPassword, verifyPassword, generateToken } from '@orbiter/core';
+import { hashPassword, verifyPassword, generateToken } from '@a83/orbiter-core';
 
 // Hash a password (returns a string with algorithm+params+hash+salt)
 const hash = await hashPassword('my-password');
@@ -669,7 +669,7 @@ Configure:
 
 ```js
 import { defineConfig } from 'astro/config';
-import orbiter from '@orbiter/integration';
+import orbiter from '@a83/orbiter-integration';
 import node from '@astrojs/node';
 
 export default defineConfig({
@@ -722,7 +722,7 @@ npm install @astrojs/netlify
 
 ```js
 import { defineConfig } from 'astro/config';
-import orbiter from '@orbiter/integration';
+import orbiter from '@a83/orbiter-integration';
 import netlify from '@astrojs/netlify';
 
 export default defineConfig({
@@ -744,7 +744,7 @@ npm install @astrojs/vercel
 
 ```js
 import { defineConfig } from 'astro/config';
-import orbiter from '@orbiter/integration';
+import orbiter from '@a83/orbiter-integration';
 import vercel from '@astrojs/vercel';
 
 export default defineConfig({
@@ -865,14 +865,14 @@ orbiter/
 │           └── pages/           ← demo frontend pages
 │
 ├── packages/
-│   ├── core/                    ← @orbiter/core
+│   ├── core/                    ← @a83/orbiter-core
 │   │   └── src/
 │   │       ├── index.js         ← public API entry point
 │   │       ├── db.js            ← OrbiterDB class (SQLite wrapper)
 │   │       ├── pod.js           ← createPod / openPod
 │   │       └── auth.js          ← hashPassword / verifyPassword / generateToken
 │   │
-│   └── integration/             ← @orbiter/integration
+│   └── integration/             ← @a83/orbiter-integration
 │       ├── src/
 │       │   ├── index.js         ← Astro integration, virtual modules, injectRoute
 │       │   ├── admin-utils.js   ← client-side JS (theme, dark mode, command palette)
@@ -903,8 +903,8 @@ orbiter/
 | `npm run seed` | Delete and recreate `demo.pod` with fresh demo data |
 | `npm run build` | Build the demo app for production |
 | `npm run build:all` | Build all packages |
-| `npm run publish:core` | Publish `@orbiter/core` to npm |
-| `npm run publish:integration` | Publish `@orbiter/integration` to npm |
+| `npm run publish:core` | Publish `@a83/orbiter-core` to npm |
+| `npm run publish:integration` | Publish `@a83/orbiter-integration` to npm |
 | `npm run publish:all` | Publish both packages sequentially |
 
 ---
@@ -945,7 +945,7 @@ npm version patch --workspace=packages/core
 npm version patch --workspace=packages/integration
 ```
 
-Both packages follow [Semantic Versioning](https://semver.org). If you bump `@orbiter/core`'s major version, update the peer dependency in `packages/integration/package.json`.
+Both packages follow [Semantic Versioning](https://semver.org). If you bump `@a83/orbiter-core`'s major version, update the peer dependency in `packages/integration/package.json`.
 
 ### Dry run
 
@@ -971,14 +971,14 @@ npm publish --workspace=packages/integration --access=public
 npm run publish:all
 ```
 
-`--access=public` is required on first publish for scoped packages (`@orbiter/...`).
+`--access=public` is required on first publish for scoped packages (`@a83/...`).
 
 ### After publishing
 
 ```bash
 # Verify packages are live
-npm info @orbiter/core
-npm info @orbiter/integration
+npm info @a83/orbiter-core
+npm info @a83/orbiter-integration
 
 # Tag the release
 git tag v0.1.0
@@ -989,7 +989,7 @@ git push origin v0.1.0
 
 ```
 [ ] Both package versions bumped
-[ ] @orbiter/core version in integration's package.json updated (major bumps only)
+[ ] @a83/orbiter-core version in integration's package.json updated (major bumps only)
 [ ] npm pack --dry-run is clean (no secrets, no demo files, no .pod files)
 [ ] npm whoami confirms correct account
 [ ] git status is clean
@@ -1024,8 +1024,8 @@ git push origin v0.1.0
 
 | Package | Version | Description |
 |---------|---------|-------------|
-| `@orbiter/core` | 0.1.0 | SQLite engine — `OrbiterDB`, `createPod`, `openPod`, `hashPassword` |
-| `@orbiter/integration` | 0.1.0 | Astro integration — virtual modules, injected admin routes, admin UI |
+| `@a83/orbiter-core` | 0.1.0 | SQLite engine — `OrbiterDB`, `createPod`, `openPod`, `hashPassword` |
+| `@a83/orbiter-integration` | 0.1.0 | Astro integration — virtual modules, injected admin routes, admin UI |
 
 ---
 

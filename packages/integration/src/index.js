@@ -1,5 +1,5 @@
 /**
- * @orbiter/integration
+ * @a83/orbiter-integration
  *
  * Astro integration that:
  * 1. Opens the .pod file at build/dev time
@@ -8,7 +8,7 @@
  * 4. Injects virtual module `orbiter:admin-css`
  * 5. Injects admin routes under /orbiter
  */
-import { openPod } from '@orbiter/core';
+import { openPod } from '@a83/orbiter-core';
 import { fileURLToPath } from 'node:url';
 import { resolve, dirname } from 'node:path';
 import { readFileSync } from 'node:fs';
@@ -35,7 +35,7 @@ export default function orbiter(options = {}) {
   const podPath = options.pod ?? './content.pod';
 
   return {
-    name: '@orbiter/integration',
+    name: '@a83/orbiter-integration',
 
     hooks: {
       'astro:config:setup': ({ updateConfig, config, injectRoute, logger }) => {

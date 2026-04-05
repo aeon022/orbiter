@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@astrojs/node": "^10.0.4",
-    "@orbiter/core": "*",
-    "@orbiter/integration": "*",
+    "@a83/orbiter-core": "*",
+    "@a83/orbiter-integration": "*",
     "astro": "^4.7.0"
   }
 }

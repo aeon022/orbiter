@@ -1,5 +1,5 @@
 import { defineConfig } from 'astro/config';
-import orbiter from '@orbiter/integration';
+import orbiter from '@a83/orbiter-integration';
 import node from '@astrojs/node';
 
 export default defineConfig({

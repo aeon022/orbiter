@@ -1,5 +1,5 @@
 {
-  "name": "@orbiter/core",
+  "name": "@a83/orbiter-core",
   "version": "0.1.0",
   "description": "SQLite persistence layer for Orbiter CMS — the .pod file engine",
   "type": "module",
