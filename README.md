@@ -1,49 +1,163 @@
 # Orbiter
 
-> Portable single-file CMS for Astro.
+> Portable single-file CMS for Astro — everything in one `.pod` file.
 
-Everything in one `.pod` file — content, media, schema, config, users. Copy the file and your entire site moves with it. No cloud. No API keys. No external services.
-
-```
-npm install @orbiter/core @orbiter/integration
-```
-
-> **Status:** Active development — Phase 3 (Warp). Not yet published to npm.
-> See [Running the demo](#running-the-demo) to try it locally.
-
----
-
-## How it works
-
-Orbiter stores everything in a single SQLite database with a `.pod` extension.
+Content, media, schema, config, users — all in one SQLite database. Copy the file and your entire site moves with it. No cloud. No API keys. No external services.
 
 ```
 your-site/
 ├── astro.config.mjs
-├── content.pod        ← everything lives here
+├── content.pod        ← your entire CMS lives here
 └── src/
     └── pages/
         └── blog/
             └── [slug].astro
 ```
 
-The Astro integration connects your `.pod` to Astro's content layer and injects a full admin UI at `/orbiter`.
+> **Status:** Active development — Phase 3 complete. Not yet published to npm.
+> Use the demo to try it locally (see [Quick Start](#quick-start) below).
 
 ---
 
-## Installation
+## Quick Start
+
+The fastest way to try Orbiter is to clone this repository and run the demo app. You need **Node.js 20+** and **npm 10+** installed.
+
+**Step 1 — Clone the repository**
+
+```bash
+git clone https://github.com/aeon022/orbiter.git
+cd orbiter
+```
+
+**Step 2 — Install dependencies**
+
+```bash
+npm install
+```
+
+This installs everything for all packages and the demo app in one step (npm workspaces).
+
+**Step 3 — Create the demo database**
+
+```bash
+npm run seed
+```
+
+This creates `apps/demo/demo.pod` — a pre-filled SQLite database with:
+- Sample collections: Posts, Pages, Authors, Events, Event Categories, Post Categories
+- Demo content entries (published + drafts)
+- Two placeholder images in the media library
+- One admin user: **admin / admin**
+
+**Step 4 — Start the dev server**
+
+```bash
+npm run dev
+```
+
+The server starts at **http://localhost:8080**.
+
+**Step 5 — Open the admin**
+
+Go to **http://localhost:8080/orbiter** and log in:
+
+```
+Username: admin
+Password: admin
+```
+
+You're in. Explore the dashboard, open a collection, edit an entry, upload a file, or try switching themes in Settings.
+
+**Step 6 — View the frontend**
+
+The demo site renders the content at **http://localhost:8080**. Browse posts and events to see the CMS content on a live Astro site.
+
+---
+
+## What is Orbiter?
+
+Orbiter is a CMS that fits entirely into a single file. Most CMS tools depend on a hosted database, a separate API server, or a third-party cloud service. Orbiter uses SQLite — a single file on disk that contains everything.
+
+**What that means in practice:**
+
+- **Zero infrastructure.** No database server to run. No connection strings to configure. No cloud account required.
+- **Fully portable.** Move your site to a new server by copying one file. Backup with `cp content.pod content.pod.bak`.
+- **Self-contained.** Schema, content, media, users, sessions — everything in one place.
+- **Inspectable.** Open the file with any SQLite tool and query your content directly.
+- **Admin included.** A full admin UI at `/orbiter` — editor, media library, build trigger, settings, schema editor.
+
+Orbiter is built for Astro. It integrates directly with Astro's content layer and provides a virtual module (`orbiter:collections`) that works like Astro's own `getCollection` and `getEntry` APIs.
+
+---
+
+## How It Works
+
+### The .pod file
+
+A `.pod` file is a standard SQLite database with a custom extension. The extension is purely cosmetic — any SQLite tool can open it.
+
+When you add Orbiter to your Astro project, the integration reads from the `.pod` file at **build time** (to generate static pages) and at **runtime** (for the admin UI and media serving).
+
+```
+content.pod
+├── _meta          → site config, locale, build webhook URL
+├── _collections   → schema definitions (JSON per collection)
+├── _entries       → all content from all collections
+├── _versions      → full version history per entry
+├── _media         → uploaded files stored as BLOBs
+├── _users         → admin users (hashed passwords)
+└── _sessions      → active login sessions (auto-pruned)
+```
+
+### Virtual modules
+
+The integration provides two virtual modules:
+
+| Module | Usage |
+|--------|-------|
+| `orbiter:collections` | Read published content in Astro pages (build-time) |
+| `orbiter:db` | Access the pod path in admin routes (runtime) |
+
+`orbiter:collections` is a **static snapshot** — it reads all published entries from the pod when Astro builds and inlines them as a JavaScript module. Your Astro pages import from it the same way you would from `astro:content`.
+
+### Admin routes
+
+The integration injects a complete admin UI under `/orbiter` using Astro's `injectRoute` API. No files are added to your `src/pages` directory.
+
+| Route | Page |
+|-------|------|
+| `/orbiter` | Dashboard |
+| `/orbiter/[collection]` | Collection list |
+| `/orbiter/[collection]/[slug]` | Entry editor |
+| `/orbiter/media` | Media library |
+| `/orbiter/media/[id]` | Serve a media file (BLOB → HTTP) |
+| `/orbiter/schema` | Schema editor |
+| `/orbiter/settings` | Site settings |
+| `/orbiter/build` | Build trigger |
+| `/orbiter/login` | Login page |
+| `/orbiter/setup` | First-run setup wizard |
+| `/orbiter/search` | Command palette search API |
+
+---
+
+## Installing in a New Astro Project
+
+If you want to add Orbiter to your own Astro project (rather than the demo):
 
 ```bash
 npm install @orbiter/core @orbiter/integration
 ```
 
+> **Note:** Not yet published to npm. Until the first release, install from this repository using workspaces or `npm link`.
+
 ---
 
-## Setup
+## Setting Up a New Project
 
-### 1. Create a pod
+### 1. Create the pod file
 
-Run this once to initialize your `.pod` file:
+Run this once to initialize your `.pod` and create an admin user:
 
 ```js
 // scripts/setup.js
@@ -52,16 +166,15 @@ import { randomUUID } from 'node:crypto';
 
 const db = createPod('./content.pod', {
   site: {
-    name:   'My Site',
-    url:    'https://example.com',
-    locale: 'en',
+    name:        'My Site',
+    url:         'https://example.com',
+    description: 'My Astro site powered by Orbiter',
+    locale:      'en',
   }
 });
 
-// Create an admin user
 const hash = await hashPassword('change-me');
 db.insertUser(randomUUID(), 'admin', hash, 'admin');
-
 db.close();
 ```
 
@@ -69,9 +182,10 @@ db.close();
 node scripts/setup.js
 ```
 
-### 2. Add to `astro.config.mjs`
+### 2. Configure Astro
 
 ```js
+// astro.config.mjs
 import { defineConfig } from 'astro/config';
 import orbiter from '@orbiter/integration';
 
@@ -83,11 +197,11 @@ export default defineConfig({
 });
 ```
 
-> **`output: 'server'` is required.** Orbiter's admin routes are server-rendered.
+> **`output: 'server'` is required.** The admin routes are server-rendered (they read and write the pod at runtime). Your public-facing pages can still be fully static — Astro renders them from the `orbiter:collections` snapshot at build time.
 
 ### 3. Define collections
 
-Collections are defined directly in the `.pod` via the admin UI, or programmatically:
+Collections can be created in the **Schema** editor in the admin UI, or programmatically:
 
 ```js
 import { openPod } from '@orbiter/core';
@@ -98,11 +212,17 @@ db.db.prepare(`
   INSERT OR IGNORE INTO _collections (id, label, schema)
   VALUES (?, ?, ?)
 `).run('posts', 'Posts', JSON.stringify({
-  title:   { type: 'string',   required: true  },
-  excerpt: { type: 'string',   required: false },
-  body:    { type: 'richtext', required: false },
-  tags:    { type: 'array',    required: false },
-  image:   { type: 'media',    required: false },
+  title:    { type: 'string',   required: true,  label: 'Title' },
+  excerpt:  { type: 'string',   required: false, label: 'Excerpt' },
+  body:     { type: 'richtext', required: false, label: 'Body' },
+  tags:     { type: 'array',    required: false, label: 'Tags' },
+  image:    { type: 'media',    required: false, label: 'Cover Image' },
+  category: {
+    type: 'select',
+    required: true,
+    options: ['news', 'tutorial', 'opinion'],
+    optionLabels: { news: 'News', tutorial: 'Tutorial', opinion: 'Opinion' },
+  },
 }));
 
 db.close();
@@ -110,25 +230,15 @@ db.close();
 
 ### 4. Open the admin
 
-Start your dev server and go to `/orbiter`:
+Start your dev server:
 
+```bash
+npx astro dev
 ```
-http://localhost:4321/orbiter
-```
 
-Log in with the credentials you created in step 1. The admin gives you:
+Go to **http://localhost:4321/orbiter** and log in with the credentials from step 1. Use the Schema editor to adjust field definitions, the Collection list to create entries, and the Editor to write content.
 
-- Content editor with block editor, autosave, live preview
-- Media library (files stored as BLOBs in the pod)
-- Build trigger via webhook
-- Site settings
-- Version history per entry
-
----
-
-## Using content in pages
-
-Import from the `orbiter:collections` virtual module:
+### 5. Use content in your pages
 
 ```astro
 ---
@@ -136,13 +246,14 @@ Import from the `orbiter:collections` virtual module:
 import { getCollection } from 'orbiter:collections';
 
 const posts = await getCollection('posts');
-// → array of published entries, sorted by updated_at desc
+// → array of all published entries, newest first
 ---
 
 <ul>
   {posts.map(post => (
     <li>
       <a href={`/blog/${post.slug}`}>{post.data.title}</a>
+      <p>{post.data.excerpt}</p>
     </li>
   ))}
 </ul>
@@ -168,216 +279,397 @@ const post = await getEntry('posts', slug);
 </article>
 ```
 
-### Locales
+---
 
-```js
-import { locale, locales } from 'orbiter:collections';
+## The `orbiter:collections` Virtual Module
 
-// locale  → 'de'
-// locales → ['de', 'en']
+This module is the bridge between your CMS and your Astro pages. It is generated at build time and contains a frozen snapshot of all published entries.
+
+### API
+
+```ts
+// Get all published entries in a collection
+getCollection(name: string): Promise<Entry[]>
+
+// Get a single entry by slug
+getEntry(collection: string, slug: string): Promise<Entry | null>
+
+// Default locale (from Settings → Default Language)
+locale: string   // e.g. "de"
+
+// All configured locales (from Settings → All Languages)
+locales: string[]  // e.g. ["de", "en"]
 ```
 
-Configured in Settings → Default Language / All Languages.
+### Entry shape
+
+```ts
+{
+  id:         string,   // UUID
+  slug:       string,   // URL-safe identifier
+  status:     'published',
+  created_at: string,   // ISO datetime
+  updated_at: string,   // ISO datetime
+  data: {
+    // all fields defined in this collection's schema
+    title:   string,
+    body:    string,    // richtext fields: Markdown-rendered HTML
+    image:   string,    // media fields: UUID → use /orbiter/media/{id}
+    tags:    string[],  // array fields: string array
+    // relation fields: resolved to full Entry objects (not just IDs)
+    author:  Entry,
+    // ...
+  }
+}
+```
+
+### Media URLs
+
+Media files are served from `/orbiter/media/[id]`. Build a full URL like this:
+
+```astro
+<img src={`/orbiter/media/${post.data.image}`} alt={post.data.image_alt} />
+```
+
+### Relation fields
+
+Relation fields are **resolved at build time**. The raw value (an array of UUIDs) is replaced with the actual referenced Entry objects before the module is generated. You can access them directly:
+
+```astro
+---
+const posts = await getCollection('posts');
+---
+
+{posts.map(post => (
+  <div>
+    <h2>{post.data.title}</h2>
+    <!-- post.data.author is the full Author entry, not a UUID -->
+    <p>by {post.data.author?.data?.name}</p>
+
+    <!-- post.data.categories is an array of Category entries -->
+    {post.data.categories?.map(cat => (
+      <span style={`background:${cat.data.color}`}>{cat.data.name}</span>
+    ))}
+  </div>
+))}
+```
 
 ---
 
-## Schema field types
+## Schema Field Types
 
-| Type | Description |
-|------|-------------|
-| `string` | Single-line text input |
-| `richtext` | Block editor → stored as Markdown |
-| `array` | Comma-separated tags (stored as array) |
-| `media` | Media library picker (stored as media ID) |
-| `datetime` | Date + time picker |
-| `date` | Date picker |
-| `select` | Dropdown with defined options |
-| `weekdays` | Weekday multi-select |
-| `url` | URL input |
-| `number` | Numeric input |
+Fields are defined as a JSON object on each collection. Each key is a field name; the value is a field definition object.
 
-### Field options
+| Type | Input | Stored as |
+|------|-------|-----------|
+| `string` | Single-line text | `TEXT` |
+| `richtext` | Block editor | Markdown `TEXT` |
+| `number` | Numeric input | `TEXT` (as string) |
+| `url` | URL input with validation | `TEXT` |
+| `email` | Email input with validation | `TEXT` |
+| `date` | Date picker | `TEXT` (ISO date) |
+| `datetime` | Date + time picker | `TEXT` (ISO datetime) |
+| `select` | Dropdown | `TEXT` (option key) |
+| `array` | Tag input (comma-separated) | `TEXT` (JSON array) |
+| `weekdays` | Weekday multi-select | `TEXT` (JSON array) |
+| `media` | Media library picker | `TEXT` (media UUID) |
+| `relation` | Entry picker from another collection | `TEXT` (JSON array of UUIDs) |
+
+### Field definition options
 
 ```js
 {
-  title:      { type: 'string',  required: true,  label: 'Post Title' },
-  category:   { type: 'select',  required: true,
-                options: ['news', 'event', 'review'],
-                optionLabels: { news: 'News', event: 'Event', review: 'Review' } },
-  body:       { type: 'richtext' },
-  image:      { type: 'media',   label: 'Cover Image' },
+  // All fields support:
+  type:     'string',          // required — field type (see table above)
+  label:    'Post Title',      // optional — display name in the editor (defaults to the key name)
+  required: true,              // optional — marks field as required in the editor
 
-  // Conditional visibility
-  event_date: { type: 'datetime', showWhen: 'category:event' },
+  // select fields also support:
+  options:      ['news', 'event', 'review'],
+  optionLabels: { news: 'News', event: 'Event', review: 'Review' },
+
+  // relation fields also support:
+  collection: 'authors',       // which collection to pick entries from
+  multiple:   true,            // allow multiple selections (default: true)
+
+  // Conditional visibility — show this field only when another field has a specific value:
+  showWhen: 'category:event',  // syntax: 'fieldName:value'
+}
+```
+
+### Full example schema
+
+```js
+{
+  title:      { type: 'string',   required: true,  label: 'Post Title' },
+  slug:       { type: 'string',   required: true,  label: 'URL Slug' },
+  excerpt:    { type: 'string',   required: false, label: 'Short Summary' },
+  body:       { type: 'richtext', required: false, label: 'Body' },
+  author:     { type: 'relation', collection: 'authors', multiple: false, label: 'Author' },
+  categories: { type: 'relation', collection: 'post_categories', label: 'Categories' },
+  cover:      { type: 'media',    label: 'Cover Image' },
+  tags:       { type: 'array',    label: 'Tags' },
+  status_note:{ type: 'string',   showWhen: 'status:draft', label: 'Internal Note' },
+  published_at: { type: 'datetime', label: 'Publish Date' },
+  category:   {
+    type: 'select',
+    required: true,
+    options: ['news', 'tutorial', 'opinion'],
+    optionLabels: { news: 'News', tutorial: 'Tutorial', opinion: 'Opinion' },
+  },
 }
 ```
 
 ---
 
-## The `.pod` file
+## Admin UI
 
-A `.pod` is a standard SQLite database. You can open it with any SQLite tool:
+### Dashboard
+
+The dashboard shows:
+- **Stats** — entry counts per top-level collection (published / draft)
+- **Recent** — last edited entries across all collections
+- **Notes** — a persistent scratchpad stored in `localStorage`
+- **Todos** — a simple task list stored in `localStorage`
+- **Deploy status** — last build trigger result + timestamp
+
+### Collection list
+
+Each collection has a list view showing all entries with their slug, status badge, last-updated date, and a quick-publish toggle. Click any row to open the editor. Use the **New entry** button to create a new entry (auto-generates a slug from the title field if one exists).
+
+### Entry editor
+
+The editor provides:
+- **All defined fields** rendered as the appropriate input type
+- **Richtext block editor** — Markdown-based with live split-pane preview. The preview renders Markdown to HTML using `marked` and updates as you type.
+- **Autosave** — changes are saved automatically after a short debounce. A save indicator shows the last-saved timestamp.
+- **Version history** — every save creates a version snapshot. Access past versions from the "Versions" panel in the editor sidebar.
+- **Status toggle** — switch between `draft` and `published` directly in the editor toolbar.
+- **Media picker** — for `media` fields: open the media library, search, and insert by UUID.
+- **Relation picker** — for `relation` fields: search entries from the linked collection and select one or more.
+- **Conditional fields** — fields with `showWhen` are hidden until the condition is met.
+
+### Media library
+
+Upload, browse, and manage files:
+- **Supported formats** — images (PNG, JPG, GIF, WebP, SVG), PDF, video (MP4, WebM), and any other file type
+- **Folder categories** — assign a folder name on upload; filter the grid by folder
+- **Type filter** — filter by All / Images / Video / PDF / Other
+- **Inline preview** — images and SVGs shown as thumbnails; videos show an inline `<video>` player
+- **Copy URL** — copies the full absolute URL of the file to the clipboard
+- **Alt text** — set on upload; stored with the asset in the pod
+- **Storage** — files stored as BLOBs directly in the `.pod` file (no separate `/public` assets needed)
+
+Files are served at `/orbiter/media/[id]` with a `Content-Type` header from the stored MIME type.
+
+### Schema editor
+
+Add, edit, and delete fields on any collection. Changes take effect immediately — no migration needed. Fields are stored as JSON in the `_collections` table.
+
+- **Add field** — choose type, set label and options
+- **Reorder fields** — drag-to-reorder (visual order only; does not affect data)
+- **Delete field** — removes the field from the schema (does not delete existing data in entries)
+- **Relation setup** — link a relation field to any other collection in the pod
+
+### Settings
+
+- **Site info** — name, URL, description
+- **Language** — default locale (`locale`) and all supported locales (`locales`, comma-separated). These are exported from `orbiter:collections` for use in your Astro pages.
+- **Admin language** — switch the admin UI between English and German. Stored in a cookie (`orb_locale`) and in the pod.
+- **Interface theme** — Orbiter Zen (default, warm serif) or Space Enso (terminal, cool blue/cyan). See [Themes](#themes).
+- **Build webhook** — paste a Netlify / Vercel / Cloudflare Pages webhook URL to enable the Build button.
+
+### Command palette
+
+`⌘ K` / `Ctrl K` opens a floating search palette. Type to fuzzy-search across all content entries and all navigation items. Works on every admin page.
+
+### Setup wizard
+
+On first launch (no collections exist), Orbiter redirects to `/orbiter/setup`. The wizard lets you:
+- Choose an admin language before doing anything else
+- Pick collection templates to pre-populate your schema (Posts, Pages, Events, Team, FAQ)
+- Skip to the schema editor if you prefer to define everything manually
+
+---
+
+## Themes
+
+Orbiter ships two visual themes, selectable in **Settings → Interface Theme**:
+
+### Orbiter Zen (default)
+
+Warm, minimal, calm. Inspired by Japanese editorial design.
+- **Light:** warm off-white backgrounds, amber/gold accents, deep brown text
+- **Dark:** deep charcoal backgrounds, muted amber accents
+- **Typography:** Noto Serif JP for display headings, DM Mono for UI text
+
+### Space Enso
+
+Futuristic, precise, terminal-feel.
+- **Light:** cool blue-tinted backgrounds, electric blue accents, deep navy text
+- **Dark:** near-black with deep blue tones, neon cyan accents, subtle glow effects
+- **Typography:** Space Mono throughout — a full monospace typeset
+
+Both themes support **light and dark mode**, toggled with the `● dark` button in the topbar. Preferences are saved to `localStorage`. The theme class is applied to `<html>` before first paint to prevent flash.
+
+Space Mono is lazy-loaded only when Space Enso is active — Orbiter Zen users load no extra fonts.
+
+---
+
+## The `.pod` File
+
+A `.pod` is a standard SQLite 3 database with a renamed extension.
 
 ```bash
+# Inspect with the sqlite3 CLI
 sqlite3 content.pod ".tables"
-sqlite3 content.pod "SELECT slug, status FROM _entries"
+sqlite3 content.pod "SELECT slug, status, updated_at FROM _entries ORDER BY updated_at DESC LIMIT 10"
+sqlite3 content.pod "SELECT key, value FROM _meta"
 ```
+
+Open with any SQLite GUI: TablePlus, DB Browser for SQLite, DBeaver, etc.
+
+### Table reference
 
 | Table | Contents |
 |-------|----------|
-| `_meta` | Site config, format version |
-| `_collections` | Schema definitions |
-| `_entries` | All content (all collections) |
-| `_versions` | Full version history per entry |
-| `_media` | Binary assets as BLOBs |
-| `_users` | Users, password hashes, roles |
-| `_sessions` | Auth sessions (auto-pruned) |
+| `_meta` | Key-value store for site config, build status, format version |
+| `_collections` | One row per collection — `id`, `label`, `schema` (JSON) |
+| `_entries` | All content from all collections — `id`, `collection_id`, `slug`, `data` (JSON), `status`, timestamps |
+| `_versions` | Full JSON snapshots of each saved state per entry |
+| `_media` | Uploaded files — `id`, `filename`, `mime_type`, `size`, `data` (BLOB), `alt`, `folder`, `created_at` |
+| `_users` | Admin users — `id`, `username`, `password` (scrypt hash), `role`, timestamps |
+| `_sessions` | Active sessions — `token`, `user_id`, `expires_at` |
 
-**Deployment:** copy the `.pod` file. That's it.
+### Backup and portability
 
 ```bash
-# Move your entire site's content to a new server:
+# Full backup
+cp content.pod content.pod.bak
+
+# Move to a new server
 scp content.pod user@server:/var/www/mysite/
+
+# Restore
+cp content.pod.bak content.pod
+```
+
+The `.pod` file is the complete source of truth. Nothing else needs to be moved.
+
+### Querying content directly
+
+Since everything is SQL, you can run ad-hoc queries without the admin:
+
+```bash
+# Count published entries per collection
+sqlite3 content.pod "
+  SELECT collection_id, COUNT(*) as total
+  FROM _entries
+  WHERE status = 'published'
+  GROUP BY collection_id
+"
+
+# Export all post titles and slugs as CSV
+sqlite3 -csv content.pod "
+  SELECT slug, json_extract(data, '$.title'), status
+  FROM _entries
+  WHERE collection_id = 'posts'
+"
+
+# List all uploaded media
+sqlite3 content.pod "
+  SELECT filename, mime_type, ROUND(size / 1024.0, 1) || ' KB' as filesize, folder, created_at
+  FROM _media
+  ORDER BY created_at DESC
+"
 ```
 
 ---
 
 ## Auth
 
-Orbiter uses cookie-based sessions. Passwords are hashed with `scrypt` (Node built-in, no bcrypt dependency).
+Orbiter uses **cookie-based sessions**. Passwords are hashed with `scrypt` — Node.js built-in, no bcrypt dependency.
+
+All `/orbiter/*` routes check for a valid `orb_sess` cookie. Unauthenticated requests redirect to `/orbiter/login`.
+
+### Password utilities
 
 ```js
 import { hashPassword, verifyPassword, generateToken } from '@orbiter/core';
 
-// Hash a password (async)
+// Hash a password (returns a string with algorithm+params+hash+salt)
 const hash = await hashPassword('my-password');
 
-// Verify
-const valid = await verifyPassword('my-password', hash); // true
+// Verify a password against a stored hash
+const valid = await verifyPassword('my-password', hash); // → true / false
+
+// Generate a random session token
+const token = generateToken(); // → hex string
 ```
 
-All `/orbiter/*` routes are protected. Unauthenticated requests redirect to `/orbiter/login`.
+### Session lifecycle
 
----
+1. User submits login form (`POST /orbiter/login`)
+2. Orbiter verifies the password hash, generates a token, stores it in `_sessions` with an expiry
+3. Token is set as an HTTP-only cookie (`orb_sess`)
+4. On each request, the cookie is checked against `_sessions`. Expired sessions are pruned.
+5. Logout deletes the session row and clears the cookie
 
-## Running the demo
+### User roles
 
-```bash
-# Clone
-git clone https://github.com/aeon022/orbiter.git
-cd orbiter
-
-# Install
-npm install
-
-# Create demo pod with seed data (admin / admin)
-npm run seed
-
-# Start dev server → http://localhost:8080
-npm run dev
-```
-
-Open `http://localhost:8080/orbiter` and log in with `admin` / `admin`.
-
----
-
-## Admin UI
-
-### Themes
-
-Orbiter ships two visual themes, selectable in **Settings → Interface Theme**:
-
-| Theme | Description |
-|-------|-------------|
-| **Orbiter Zen** | Default — warm, minimal, calm. Noto Serif JP headings, DM Mono body. |
-| **Space Enso** | Futuristic, cold. Space Mono throughout — full terminal typeset. Blue/cyan accents in both light and dark. |
-
-Both themes support **light and dark mode**, toggled via the `● dark` button in the topbar. Preference is saved to `localStorage`. The theme class (`theme-space`) and dark class (`dark`) are applied to `<html>` at load time before first paint to prevent flicker.
-
-Space Enso's Space Mono font is lazy-loaded only when that theme is active — no impact on Orbiter Zen users.
-
-### Admin Language
-
-The entire admin UI is available in **English and German** (EN / DE). Switch in **Settings → Admin Language**. The preference is stored in:
-
-- Cookie `orb_locale` (read on every request — no database hit for the UI language)
-- Pod meta key `admin.locale` (persisted across sessions)
-
-The Setup Wizard also has a language switcher so you can pick your language before the first configuration.
-
-To add a new locale, extend `packages/integration/src/i18n.js`:
-
-```js
-export const translations = {
-  en: { nav_dashboard: 'Dashboard', /* ... */ },
-  de: { nav_dashboard: 'Dashboard', /* ... */ },
-  fr: { nav_dashboard: 'Tableau de bord', /* ... */ },
-};
-```
-
-Then add the language pill to the settings and setup pages.
-
-### Command Palette
-
-`⌘ K` / `Ctrl K` opens the command palette — fuzzy search across all collections and navigation items. Works on any admin page.
-
-### Setup Wizard
-
-On first launch (no collections defined), Orbiter shows a guided setup wizard at `/orbiter/setup`. Choose from preset collection templates (Posts, Pages, Events, Team, FAQ) or skip to configure manually via Schema.
+Currently two roles are supported: `admin` and `editor`. Role is stored in `_users`. Role-based permissions are not yet enforced in the UI — all authenticated users have full access. This will be expanded in a future phase.
 
 ---
 
 ## Build & Deploy
 
+### Workflow
+
+Orbiter is designed for **statically built Astro sites**. The typical workflow is:
+
+1. Edit content in the admin (`/orbiter`)
+2. Mark entries as `published`
+3. Click **Trigger build** in the admin
+4. Your hosting platform (Netlify, Vercel, Cloudflare Pages) rebuilds the site from the pod
+
+At build time, Astro reads all published entries from the pod via `orbiter:collections` and renders static HTML.
+
+| Action | Build needed? |
+|--------|--------------|
+| Publish a new entry | **Yes** — not visible until rebuild |
+| Edit a published entry | **Yes** — changes won't go live until rebuild |
+| Unpublish an entry | **Yes** — still live until rebuild |
+| Upload media | Depends — if referenced by URL in content, **yes** |
+| Change site name or locale | **Yes**, if used in the build |
+| Change admin password | No |
+
 ### How the build trigger works
 
-The Build button sends an HTTP `POST` to a webhook URL you configure in Settings. Full flow:
+**1.** Click **Trigger build** in the admin dashboard.
 
-**1. Click "Trigger build"**
+**2.** The browser sends `POST /orbiter/build` to the Astro server.
 
-The button disables, the status indicator switches to "running". The browser sends `POST /orbiter/build` to the Astro server.
+**3.** The server reads `build.webhook_url` from `_meta` in the pod. If not set, an error is returned.
 
-**2. Orbiter reads the webhook URL from the pod**
-
-The server opens the `.pod` file and reads `build.webhook_url` from the `_meta` table. If no URL is configured, the request returns an error.
-
-**3. Orbiter forwards an empty POST to the webhook**
+**4.** The server sends an empty `POST` to the webhook URL:
 
 ```
 POST https://api.netlify.com/build/hook/your-hook-id
 ```
 
-A plain empty-body HTTP request — exactly what Netlify, Vercel, and Cloudflare expect. Orbiter acts as a proxy: Browser → Orbiter server → webhook.
+Orbiter acts as a proxy — the webhook URL never appears in browser network tools.
 
-> **Why not call the webhook directly from the browser?** The webhook URL is a secret — it would be visible in browser network tools. Routing through the server keeps it server-side only.
+**5.** On success, `build.last_triggered` and `build.last_status` are written to `_meta`. The UI shows the timestamp.
 
-**4. The platform acknowledges**
+Orbiter does not poll for build completion. Check your platform's dashboard for build logs.
 
-The webhook service (e.g. Netlify) responds with `2xx`. Orbiter stores the timestamp and status in the pod:
-
-```
-_meta: build.last_triggered = "2026-04-01 14:23:11"
-_meta: build.last_status    = "ok"
-```
-
-**5. Status feedback in the browser**
-
-- Success: indicator turns green, timestamp shown
-- Error: indicator turns red, error message shown, button re-enables
-
-**What Orbiter does not do:**
-
-Orbiter only triggers the build — it does not monitor it. There is no polling, no webhook callback, no build log view. Whether the build on Netlify/Vercel completed successfully is visible in that platform's own dashboard.
-
----
-
-### Configuring the webhook URL
+### Configuring the webhook
 
 **Netlify**
 
-1. Netlify Dashboard → your project → *Site configuration* → *Build & deploy* → *Build hooks*
-2. *Add build hook* → give it a name (e.g. "Orbiter") → copy the hook URL
-3. In Orbiter: *Settings → Build & Deploy → Webhook URL* → paste
+1. Netlify → your site → *Site configuration* → *Build & deploy* → *Build hooks* → *Add build hook*
+2. Copy the hook URL
+3. Orbiter admin → *Settings* → *Build & Deploy* → paste the URL
 
 ```
 https://api.netlify.com/build/hook/abc123xyz
@@ -385,9 +677,9 @@ https://api.netlify.com/build/hook/abc123xyz
 
 **Vercel**
 
-1. Vercel Dashboard → your project → *Settings* → *Git* → *Deploy Hooks*
-2. Create hook → copy URL
-3. In Orbiter: *Settings → Build & Deploy → Webhook URL* → paste
+1. Vercel → your project → *Settings* → *Git* → *Deploy Hooks* → create hook
+2. Copy the URL
+3. Paste in Orbiter Settings
 
 ```
 https://api.vercel.com/v1/integrations/deploy/prj_xxx/yyy
@@ -395,238 +687,158 @@ https://api.vercel.com/v1/integrations/deploy/prj_xxx/yyy
 
 **Cloudflare Pages**
 
-1. Cloudflare Dashboard → Pages → your project → *Settings* → *Builds & deployments* → *Deploy hooks*
-2. Create hook → copy URL
+1. Cloudflare → Pages → your project → *Settings* → *Builds & deployments* → *Deploy hooks*
+2. Copy the URL
+3. Paste in Orbiter Settings
 
-```
-https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/xxx
-```
+**GitHub Actions**
 
-**GitHub Actions (self-hosted)**
-
-You can trigger a GitHub Actions workflow via `repository_dispatch`:
-
-```yaml
-# .github/workflows/build.yml
-on:
-  repository_dispatch:
-    types: [orbiter-build]
-```
-
-You'll need a small proxy endpoint (e.g. a Netlify Function or Vercel Edge Function) that adds the `Authorization` header GitHub requires — Orbiter sends no auth headers.
+GitHub's `repository_dispatch` API requires an `Authorization` header that Orbiter does not add. Use a small serverless proxy (Netlify Function, Vercel Edge Function) to add the header before forwarding to GitHub.
 
 ---
 
-### When to trigger a build
+## Repository Structure
 
-Orbiter is a headless CMS for statically built sites (`astro build`). The build reads all `published` entries from the pod at build time and generates static HTML.
+```
+orbiter/
+├── apps/
+│   └── demo/                    ← demo Astro site
+│       ├── astro.config.mjs
+│       ├── demo.pod             ← generated by npm run seed
+│       ├── scripts/
+│       │   └── seed.js          ← creates and populates demo.pod
+│       └── src/
+│           └── pages/           ← demo frontend pages
+│
+├── packages/
+│   ├── core/                    ← @orbiter/core
+│   │   └── src/
+│   │       ├── index.js         ← public API entry point
+│   │       ├── db.js            ← OrbiterDB class (SQLite wrapper)
+│   │       ├── pod.js           ← createPod / openPod
+│   │       └── auth.js          ← hashPassword / verifyPassword / generateToken
+│   │
+│   └── integration/             ← @orbiter/integration
+│       ├── src/
+│       │   ├── index.js         ← Astro integration, virtual modules, injectRoute
+│       │   ├── admin-utils.js   ← client-side JS (theme, dark mode, command palette)
+│       │   └── i18n.js          ← EN/DE translations
+│       └── routes/
+│           ├── AdminLayout.astro
+│           ├── dashboard.astro
+│           ├── collection.astro
+│           ├── editor.astro
+│           ├── media.astro
+│           ├── media-serve.astro
+│           ├── schema.astro
+│           ├── settings.astro
+│           ├── build.astro
+│           ├── login.astro
+│           ├── setup.astro
+│           ├── search.astro
+│           └── SidebarCollections.astro
+│
+└── package.json                 ← npm workspace root
+```
 
-| Action | Build needed? |
-|--------|--------------|
-| Mark entry as `published` | **Yes** — not visible on the site otherwise |
-| Edit a published entry | **Yes** — changes won't go live otherwise |
-| Set entry back to `draft` | **Yes** — still live until rebuild |
-| Upload media | No if referenced by URL; **Yes** if needed as a static asset |
-| Change settings (site name, locale) | **Yes**, if used in the build |
+### npm scripts (root)
+
+| Script | What it does |
+|--------|-------------|
+| `npm run dev` | Start Astro dev server for the demo app (port 8080) |
+| `npm run seed` | Delete and recreate `demo.pod` with fresh demo data |
+| `npm run build` | Build the demo app for production |
+| `npm run build:all` | Build all packages |
+| `npm run publish:core` | Publish `@orbiter/core` to npm |
+| `npm run publish:integration` | Publish `@orbiter/integration` to npm |
+| `npm run publish:all` | Publish both packages sequentially |
+
+---
+
+## Adding a New Admin Language
+
+The admin UI ships with **English** and **German**. To add a new locale:
+
+**1.** Add translations to `packages/integration/src/i18n.js`:
+
+```js
+export const translations = {
+  en: { nav_dashboard: 'Dashboard', nav_content: 'Content', /* ... */ },
+  de: { nav_dashboard: 'Dashboard', nav_content: 'Inhalt',  /* ... */ },
+  fr: { nav_dashboard: 'Tableau de bord', nav_content: 'Contenu', /* ... */ },
+};
+```
+
+**2.** Add the language pill to the settings page (`routes/settings.astro`) and the setup wizard (`routes/setup.astro`).
+
+**3.** The `useTranslations(locale)` function will automatically pick it up.
 
 ---
 
 ## Publishing to npm
 
-This section is for maintainers of the `@orbiter/*` packages. It documents exactly how to cut a release and publish both packages to the npm registry.
-
 ### Prerequisites
-
-**1. npm account with access to the `@orbiter` scope**
-
-If the scope doesn't exist yet, create it at [npmjs.com](https://www.npmjs.com) by registering an organization named `orbiter` (or use an existing account and set the packages to public).
-
-**2. Log in locally**
 
 ```bash
 npm login
+npm whoami   # confirm you're authenticated
 ```
 
-This opens a browser window for authentication. Confirm with:
+### Version bump
 
 ```bash
-npm whoami
-# → your-username
-```
-
-**3. Verify scope access**
-
-```bash
-npm access list packages @orbiter
-```
-
-If the `@orbiter` scope doesn't exist yet on the registry, the first `npm publish --access=public` will create it automatically.
-
----
-
-### Versioning
-
-Both packages follow [Semantic Versioning](https://semver.org):
-
-| Change type | Example | Version bump |
-|-------------|---------|--------------|
-| Bug fix, no API change | Fix autosave crash | `patch` — `0.1.0` → `0.1.1` |
-| New feature, backwards-compatible | New field type | `minor` — `0.1.0` → `0.2.0` |
-| Breaking change | Renamed export, changed pod schema | `major` — `0.1.0` → `1.0.0` |
-
-**Before publishing, update the version in both package files:**
-
-```bash
-# Bump patch version in both packages
 npm version patch --workspace=packages/core
 npm version patch --workspace=packages/integration
 ```
 
-Or edit the `"version"` field in `packages/core/package.json` and `packages/integration/package.json` manually.
+Both packages follow [Semantic Versioning](https://semver.org). If you bump `@orbiter/core`'s major version, update the peer dependency in `packages/integration/package.json`.
 
-> `@orbiter/core` and `@orbiter/integration` are versioned independently but should generally be bumped together. The integration's `package.json` pins core as `"@orbiter/core": "^0.1.0"` — update this if you bump core's major version.
+### Dry run
 
----
-
-### What gets published
-
-Use `npm pack --dry-run` to see exactly which files would be included before publishing:
+Always check what will be published before pushing:
 
 ```bash
 npm pack --workspace=packages/core --dry-run
 npm pack --workspace=packages/integration --dry-run
 ```
 
-**`@orbiter/core` ships:**
-```
-src/index.js    ← entry point, re-exports everything
-src/db.js       ← OrbiterDB class (SQLite wrapper)
-src/pod.js      ← createPod / openPod
-src/auth.js     ← hashPassword / verifyPassword / generateToken
-package.json
-```
+Verify: no secrets, no demo files, no `.pod` files.
 
-**`@orbiter/integration` ships:**
-```
-src/index.js              ← Astro integration + virtual modules
-src/admin-utils.js        ← client-side JS (theme, dark mode, command palette)
-src/i18n.js               ← EN/DE translations, useTranslations()
-routes/AdminLayout.astro  ← shared admin shell (locale-aware nav)
-routes/dashboard.astro
-routes/collection.astro
-routes/editor.astro
-routes/settings.astro
-routes/login.astro
-routes/logout.astro
-routes/media.astro
-routes/media-serve.astro
-routes/build.astro
-routes/schema.astro
-routes/setup.astro
-routes/search.astro
-package.json
-```
-
-The `apps/demo` directory, test files, seed scripts, and `.pod` files are never included — the root `package.json` is `"private": true` and each package uses an explicit `"files"` allowlist.
-
----
-
-### Publishing
-
-**Dry run first — always:**
+### Publish
 
 ```bash
-npm pack --workspace=packages/core --dry-run
-npm pack --workspace=packages/integration --dry-run
-```
-
-Check the output. If anything unexpected appears, fix the `"files"` array in the relevant `package.json` before continuing.
-
-**Publish core first** (integration depends on it):
-
-```bash
+# Core first (integration depends on it)
 npm publish --workspace=packages/core --access=public
-```
 
-The `--access=public` flag is required the **first time** you publish a scoped package (`@orbiter/...`). Scoped packages default to private on npm; this overrides that. On subsequent publishes it's optional but harmless to include.
-
-**Then publish integration:**
-
-```bash
+# Then integration
 npm publish --workspace=packages/integration --access=public
-```
 
-**Or publish both at once using the root script:**
-
-```bash
+# Or both at once:
 npm run publish:all
 ```
 
-This runs `publish:core` then `publish:integration` sequentially.
-
----
+`--access=public` is required on first publish for scoped packages (`@orbiter/...`).
 
 ### After publishing
 
-**Verify the packages are live:**
-
 ```bash
+# Verify packages are live
 npm info @orbiter/core
 npm info @orbiter/integration
-```
 
-**Tag the release in git:**
-
-```bash
+# Tag the release
 git tag v0.1.0
 git push origin v0.1.0
 ```
 
-Use the version number that matches what you just published. If core and integration have different versions, tag both:
-
-```bash
-git tag core-v0.1.0
-git tag integration-v0.1.0
-git push origin core-v0.1.0 integration-v0.1.0
-```
-
----
-
-### Fixing a bad publish
-
-npm does not allow overwriting a published version. If you published something broken:
-
-**Option A — patch release:**
-
-Fix the code, bump to the next patch version (`0.1.1`), publish again.
-
-**Option B — deprecate the bad version:**
-
-```bash
-npm deprecate @orbiter/core@0.1.0 "Critical bug — use 0.1.1"
-```
-
-This marks the version as deprecated in the registry. Users will see a warning when installing it. The version remains downloadable but npm will recommend the newer one.
-
-**Option C — unpublish (time-limited):**
-
-```bash
-npm unpublish @orbiter/core@0.1.0
-```
-
-npm only allows unpublishing within **72 hours** of publish and only if the package has fewer than 300 downloads. After that window, you must use deprecation instead.
-
----
-
-### Checklist before every release
+### Release checklist
 
 ```
 [ ] Both package versions bumped
-[ ] @orbiter/core version in integration's dependencies updated (if major bump)
-[ ] npm pack --dry-run looks clean (no secrets, no demo files)
-[ ] npm whoami confirms you're logged in with the right account
-[ ] git status is clean — all changes committed
-[ ] CHANGELOG or release notes updated (optional but recommended)
+[ ] @orbiter/core version in integration's package.json updated (major bumps only)
+[ ] npm pack --dry-run is clean (no secrets, no demo files, no .pod files)
+[ ] npm whoami confirms correct account
+[ ] git status is clean
 ```
 
 ---
@@ -635,30 +847,31 @@ npm only allows unpublishing within **72 hours** of publish and only if the pack
 
 | Phase | Name | Status | Focus |
 |-------|------|--------|-------|
-| 01 | Ignition | ✅ Done | Core DB, virtual modules, basic routes |
-| 02 | Bridge | ✅ Done | Full admin UI, media, build trigger, auth |
-| 03 | Warp | ✅ Done | Block editor, live preview, themes, i18n, admin light mode |
+| 01 | Ignition | ✅ Done | Core DB, virtual modules, basic admin routes |
+| 02 | Bridge | ✅ Done | Full admin UI, media library, build trigger, auth |
+| 03 | Warp | ✅ Done | Block editor, version history, themes, i18n, light mode, relation fields |
 | 04 | Orbit | 🔄 Active | CLI, npm publish, PWA, public launch |
 
-**Phase 3 (Warp) delivered:**
-- Block editor with live split-pane preview (Markdown → HTML via `marked`)
-- Version history per entry
-- Admin light mode (full light/dark support across all routes)
-- Theme system: Orbiter Zen + Space Enso (terminal typeset, blue/cyan accents)
-- Full EN/DE i18n — cookie-based language switching, setup wizard language picker
-- Schema editor redesigned (settings-style field rows, inline-style approach for Astro CSS scoping robustness)
-- Command palette (`⌘ K`) across all admin pages
-- Setup wizard with collection templates
-- Media library with BLOB storage, alt text, copy-URL
+**Phase 3 delivered:**
+- Richtext block editor with live split-pane Markdown preview
+- Version history — full JSON snapshot per save, per entry
+- Admin light mode — complete light/dark support across all routes
+- Two themes: Orbiter Zen + Space Enso (terminal typeset, blue/cyan)
+- EN/DE i18n — cookie-based language switching, setup wizard language picker
+- Relation field type — link entries across collections, resolved at build time
+- Schema editor redesign — inline field management
+- Command palette (`⌘ K`) — search content and navigation from any page
+- Setup wizard with preset collection templates
+- Media library — BLOB storage, folder categories, type filter, inline video preview
 
 ---
 
 ## Packages
 
-| Package | Description |
-|---------|-------------|
-| `@orbiter/core` | SQLite engine — OrbiterDB class, pod lifecycle, auth utilities |
-| `@orbiter/integration` | Astro integration — virtual modules, injected admin routes |
+| Package | Version | Description |
+|---------|---------|-------------|
+| `@orbiter/core` | 0.1.0 | SQLite engine — `OrbiterDB`, `createPod`, `openPod`, `hashPassword` |
+| `@orbiter/integration` | 0.1.0 | Astro integration — virtual modules, injected admin routes, admin UI |
 
 ---
 
