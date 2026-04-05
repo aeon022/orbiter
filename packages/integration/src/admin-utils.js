@@ -102,8 +102,20 @@
   });
 
   // ── Global styles (themes + pal-trigger) ───────────────────────────
-  (function() {
+  // Re-injected on every View Transitions swap because <head> is replaced
+  function __orbInjectStyles() {
+    // Space Mono font (only needed for space theme; browser caches it)
+    var savedTheme = localStorage.getItem('orb-theme') || '';
+    if ((savedTheme === 'space' || savedTheme === 'space-light' || savedTheme === 'space-dark')
+        && !document.querySelector('link[href*="Space+Mono"]')) {
+      var fl = document.createElement('link');
+      fl.rel = 'stylesheet';
+      fl.href = 'https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap';
+      document.head.appendChild(fl);
+    }
+    if (document.getElementById('orb-theme-styles')) return; // CSS already present
     var s = document.createElement('style');
+    s.id = 'orb-theme-styles';
     s.textContent = [
       // pal-trigger
       '.pal-trigger{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;',
@@ -175,7 +187,9 @@
       'html.theme-space.dark .btn-sm.primary:hover{background:#00a0cc!important;color:#000e1a!important;}',
     ].join('');
     document.head.appendChild(s);
-  })();
+  }
+  __orbInjectStyles();
+  document.addEventListener('astro:after-swap', __orbInjectStyles);
 
   // ── Sidebar sub-menus ──────────────────────────────────────────────
   window.__orbToggleNav = function(colId) {
