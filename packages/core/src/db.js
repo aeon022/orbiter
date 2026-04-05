@@ -59,6 +59,7 @@ export class OrbiterDB {
         size       INTEGER NOT NULL,
         data       BLOB NOT NULL,
         alt        TEXT,
+        folder     TEXT NOT NULL DEFAULT '',
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
 
@@ -78,6 +79,9 @@ export class OrbiterDB {
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
     `);
+
+    // Migrations: add columns that didn't exist in older pods
+    try { this.db.exec(`ALTER TABLE _media ADD COLUMN folder TEXT NOT NULL DEFAULT ''`); } catch {}
 
     // Set format version if not present
     const existing = this.db

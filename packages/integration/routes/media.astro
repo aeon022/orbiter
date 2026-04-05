@@ -31,14 +31,15 @@ if (Astro.request.method === 'POST') {
   if (file && file.size > 0) {
     const buffer  = Buffer.from(await file.arrayBuffer());
     const alt     = form.get('alt')?.toString() ?? '';
+    const folder  = form.get('folder')?.toString().trim() ?? '';
     const now     = new Date().toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, '');
     const newId   = crypto.randomUUID();
     db.db.prepare(
-      'INSERT INTO _media (id, filename, mime_type, size, data, alt, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    ).run(newId, file.name, file.type || 'application/octet-stream', file.size, buffer, alt, now);
+      'INSERT INTO _media (id, filename, mime_type, size, data, alt, folder, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(newId, file.name, file.type || 'application/octet-stream', file.size, buffer, alt, folder, now);
     db.close();
     if (isJsonRequest) {
-      return new Response(JSON.stringify({ ok: true, id: newId, filename: file.name, alt }), {
+      return new Response(JSON.stringify({ ok: true, id: newId, filename: file.name, alt, folder }), {
         headers: { 'Content-Type': 'application/json' },
       });
     }
@@ -57,8 +58,9 @@ if (Astro.request.method === 'POST') {
 // ── GET ───────────────────────────────────────────────────────────────
 const db    = openPod(podPath);
 const media = db.db.prepare(
-  'SELECT id, filename, mime_type, size, alt, created_at FROM _media ORDER BY created_at DESC'
+  'SELECT id, filename, mime_type, size, alt, folder, created_at FROM _media ORDER BY created_at DESC'
 ).all();
+const folders = [...new Set(media.map(m => m.folder).filter(Boolean))].sort();
 const allCollections = db.getCollections().map(c => ({
   id: c.id, label: c.label, total: db.getEntries(c.id).length,
   parent: db.getMeta(`collection.${c.id}.parent`) ?? null,
@@ -160,16 +162,27 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
     .btn-upload { padding:8px 20px; background:var(--gold); border:1px solid var(--gold); color:var(--bg0); font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
     .btn-upload:hover { background:#7a5520; border-color:#7a5520; }
 
+    /* Filter bar */
+    .filter-bar { display:flex; align-items:center; gap:6px; margin-bottom:20px; flex-wrap:wrap; }
+    .filter-btn { background:transparent; border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:10px; padding:4px 12px; cursor:pointer; letter-spacing:0.06em; transition:all 0.12s; }
+    .filter-btn:hover { border-color:var(--mid); color:var(--text); }
+    .filter-btn.active { border-color:var(--gold); color:var(--gold); background:var(--gold-bg); }
+    .filter-sep { width:1px; height:18px; background:var(--line); margin:0 4px; flex-shrink:0; }
+
     /* Media grid */
     .media-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:12px; }
     .media-card { background:var(--bg2); border:1px solid var(--line); overflow:hidden; position:relative; transition:border-color 0.15s,box-shadow 0.15s; }
     .media-card:hover { border-color:var(--gold); box-shadow:var(--shadow); }
     .media-card:hover .media-overlay { opacity:1; }
     .media-thumb { width:100%; height:140px; object-fit:cover; display:block; background:var(--bg3); }
-    .media-thumb-placeholder { width:100%; height:140px; display:flex; align-items:center; justify-content:center; background:var(--bg3); font-size:28px; color:var(--muted); }
+    .media-thumb-placeholder { width:100%; height:140px; display:flex; flex-direction:column; align-items:center; justify-content:center; background:var(--bg3); gap:8px; }
+    .media-thumb-icon { font-size:32px; color:var(--muted); line-height:1; }
+    .media-thumb-type { font-family:var(--mono); font-size:9px; color:var(--muted); letter-spacing:0.12em; text-transform:uppercase; }
+    .media-thumb-video { width:100%; height:140px; object-fit:cover; display:block; background:#000; }
     .media-info { padding:10px 12px; border-top:1px solid var(--line2); }
     .media-name { font-size:10px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; }
-    .media-meta { font-size:9px; color:var(--muted); display:flex; justify-content:space-between; }
+    .media-meta { font-size:9px; color:var(--muted); display:flex; justify-content:space-between; gap:4px; }
+    .media-folder-badge { font-size:9px; color:var(--accent); background:var(--accent-bg); padding:1px 5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:80px; }
     .media-overlay { position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.45); opacity:0; transition:opacity 0.15s; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; }
     .btn-copy { background:var(--bg2); border:1px solid var(--line); color:var(--text); font-family:var(--mono); font-size:9px; padding:5px 12px; cursor:pointer; letter-spacing:0.06em; transition:background 0.1s; white-space:nowrap; }
     .btn-copy:hover { background:var(--bg3); }
@@ -247,13 +260,40 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
             <div class="upload-sub">{t.media_drop_sub}</div>
           </label>
           <div class="upload-form-row">
-            <input class="field-input" name="alt" placeholder={t.media_alt} style="width:240px;" />
+            <input class="field-input" name="alt" placeholder={t.media_alt} style="width:180px;" />
+            <input class="field-input" name="folder" list="folder-list" placeholder="Ordner (optional)" style="width:150px;" />
+            <datalist id="folder-list">
+              {folders.map(f => <option value={f} />)}
+            </datalist>
             <button type="submit" class="btn-upload">{t.media_upload_btn}</button>
           </div>
         </form>
 
-        <!-- Grid -->
+        <!-- Filter bar -->
         <div style="margin-top:28px;">
+        {media.length > 0 && (
+          <div class="filter-bar" id="filter-bar">
+            <button class="filter-btn active" data-filter="all" onclick="orbFilterMedia('all',this)">Alle <span id="cnt-all">{media.length}</span></button>
+            {media.some(m => m.mime_type.startsWith('image/')) && (
+              <button class="filter-btn" data-filter="image" onclick="orbFilterMedia('image',this)">Bilder <span id="cnt-image"></span></button>
+            )}
+            {media.some(m => m.mime_type.startsWith('video/')) && (
+              <button class="filter-btn" data-filter="video" onclick="orbFilterMedia('video',this)">Video <span id="cnt-video"></span></button>
+            )}
+            {media.some(m => m.mime_type === 'application/pdf') && (
+              <button class="filter-btn" data-filter="pdf" onclick="orbFilterMedia('pdf',this)">PDF <span id="cnt-pdf"></span></button>
+            )}
+            {media.some(m => !m.mime_type.startsWith('image/') && !m.mime_type.startsWith('video/') && m.mime_type !== 'application/pdf') && (
+              <button class="filter-btn" data-filter="other" onclick="orbFilterMedia('other',this)">Sonstige</button>
+            )}
+            {folders.length > 0 && <div class="filter-sep"></div>}
+            {folders.map(f => (
+              <button class="filter-btn" data-filter={`folder:${f}`} onclick={`orbFilterMedia('folder:${f}',this)`}>{f}</button>
+            ))}
+          </div>
+        )}
+
+        <!-- Grid -->
         {media.length === 0 ? (
           <div class="empty">
             <div class="empty-icon">⊞</div>
@@ -261,33 +301,43 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
             <div class="empty-sub">{t.media_none_sub}</div>
           </div>
         ) : (
-          <div class="media-grid">
-            {media.map(m => (
-              <div class="media-card">
-                {m.mime_type.startsWith('image/') ? (
-                  <img class="media-thumb" src={`/orbiter/media/${m.id}`} alt={m.alt ?? ''} loading="lazy" />
-                ) : (
-                  <div class="media-thumb-placeholder">
-                    {m.mime_type.startsWith('video/') ? '▶' : m.mime_type === 'application/pdf' ? '⊠' : '◫'}
+          <div class="media-grid" id="media-grid">
+            {media.map(m => {
+              const isImage = m.mime_type.startsWith('image/');
+              const isVideo = m.mime_type.startsWith('video/');
+              const isPdf   = m.mime_type === 'application/pdf';
+              const isSvg   = m.mime_type === 'image/svg+xml';
+              const typeClass = isImage ? 'image' : isVideo ? 'video' : isPdf ? 'pdf' : 'other';
+              return (
+                <div class="media-card" data-type={typeClass} data-folder={m.folder ?? ''}>
+                  {isImage ? (
+                    <img class="media-thumb" src={`/orbiter/media/${m.id}`} alt={m.alt ?? ''} loading="lazy" />
+                  ) : isVideo ? (
+                    <video class="media-thumb-video" src={`/orbiter/media/${m.id}`} muted preload="metadata" />
+                  ) : (
+                    <div class="media-thumb-placeholder">
+                      <div class="media-thumb-icon">{isPdf ? '⊠' : '◫'}</div>
+                      <div class="media-thumb-type">{m.mime_type.split('/')[1]?.toUpperCase()}</div>
+                    </div>
+                  )}
+                  <div class="media-info">
+                    <div class="media-name" title={m.filename}>{m.filename}</div>
+                    <div class="media-meta">
+                      <span>{fmtSize(m.size)}</span>
+                      {m.folder ? <span class="media-folder-badge">{m.folder}</span> : <span>{new Date(m.created_at).toLocaleDateString(adminLocale)}</span>}
+                    </div>
                   </div>
-                )}
-                <div class="media-info">
-                  <div class="media-name" title={m.filename}>{m.filename}</div>
-                  <div class="media-meta">
-                    <span>{fmtSize(m.size)}</span>
-                    <span>{new Date(m.created_at).toLocaleDateString(adminLocale)}</span>
+                  <div class="media-overlay">
+                    <button class="btn-copy" onclick={`copyUrl('/orbiter/media/${m.id}', this)`}>{t.media_copy}</button>
+                    <form method="POST" onsubmit="return confirm(window.__orbMediaDeleteConfirm)" style="margin:0;">
+                      <input type="hidden" name="action" value="delete" />
+                      <input type="hidden" name="id" value={m.id} />
+                      <button type="submit" class="btn-delete-overlay">delete</button>
+                    </form>
                   </div>
                 </div>
-                <div class="media-overlay">
-                  <button class="btn-copy" onclick={`copyUrl('/orbiter/media/${m.id}', this)`}>{t.media_copy}</button>
-                  <form method="POST" onsubmit="return confirm(window.__orbMediaDeleteConfirm)" style="margin:0;">
-                    <input type="hidden" name="action" value="delete" />
-                    <input type="hidden" name="id" value={m.id} />
-                    <button type="submit" class="btn-delete-overlay">delete</button>
-                  </form>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
         </div>
@@ -299,6 +349,32 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
   <script set:html={adminUtils} is:inline></script>
   <script define:vars={{ mediaCopied: t.media_copied, mediaDrop: t.media_drop, mediaDeleteConfirm: t.media_delete_confirm }}>
     window.__orbMediaDeleteConfirm = mediaDeleteConfirm;
+
+    window.orbFilterMedia = function(filter, btn) {
+      document.querySelectorAll('#filter-bar .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('#media-grid .media-card').forEach(card => {
+        let show = false;
+        if (filter === 'all') show = true;
+        else if (filter.startsWith('folder:')) show = card.dataset.folder === filter.slice(7);
+        else if (filter === 'pdf') show = card.dataset.type === 'pdf';
+        else show = card.dataset.type === filter;
+        card.style.display = show ? '' : 'none';
+      });
+    };
+
+    // Init counts
+    (function() {
+      const cards = document.querySelectorAll('#media-grid .media-card');
+      const cnt = { image: 0, video: 0, pdf: 0 };
+      cards.forEach(c => { if (cnt[c.dataset.type] !== undefined) cnt[c.dataset.type]++; });
+      const imgEl = document.getElementById('cnt-image');
+      const vidEl = document.getElementById('cnt-video');
+      const pdfEl = document.getElementById('cnt-pdf');
+      if (imgEl) imgEl.textContent = cnt.image;
+      if (vidEl) vidEl.textContent = cnt.video;
+      if (pdfEl) pdfEl.textContent = cnt.pdf;
+    })();
 
     window.copyUrl = function(path, btn) {
       const url = window.location.origin + path;

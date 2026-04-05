@@ -22,7 +22,7 @@ if (existsSync(podPath)) {
   try {
     const oldDb = openPod(podPath);
     savedMedia = oldDb.db.prepare(
-      'SELECT id, filename, mime_type, size, data, alt, created_at FROM _media'
+      'SELECT id, filename, mime_type, size, data, alt, folder, created_at FROM _media'
     ).all();
     oldDb.close();
   } catch {}
@@ -364,46 +364,32 @@ console.log(`  ✓ Events seeded (2 published, 1 draft)`);
 
 // ── Media (placeholder) ──────────────────────────────────
 
-// Create a minimal 1x1 transparent PNG as placeholder
-// (real uploads will come via the admin UI in Phase 2)
-const placeholder1x1 = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-  'base64'
+const makePlaceholderSvg = (label, bg = '#edeae3', fg = '#a09890') => Buffer.from(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect width="800" height="600" fill="${bg}"/>`+
+  `<text x="400" y="310" font-family="monospace" font-size="18" fill="${fg}" text-anchor="middle">${label}</text></svg>`
 );
 
 const insertMedia = db.db.prepare(`
-  INSERT OR IGNORE INTO _media (id, filename, mime_type, size, data, alt)
-  VALUES (?, ?, ?, ?, ?, ?)
+  INSERT OR IGNORE INTO _media (id, filename, mime_type, size, data, alt, folder)
+  VALUES (?, ?, ?, ?, ?, ?, ?)
 `);
 
-insertMedia.run(
-  randomUUID(),
-  'hero-main.png',
-  'image/png',
-  placeholder1x1.length,
-  placeholder1x1,
-  'Hero image placeholder'
-);
+const heroSvg = makePlaceholderSvg('hero image');
+insertMedia.run(randomUUID(), 'hero-main.svg', 'image/svg+xml', heroSvg.length, heroSvg, 'Hero image placeholder', 'demo');
 
-insertMedia.run(
-  randomUUID(),
-  'logo-mark.png',
-  'image/png',
-  placeholder1x1.length,
-  placeholder1x1,
-  'Orbiter logo mark'
-);
+const logoSvg = makePlaceholderSvg('logo mark', '#1a1510', '#9a6e30');
+insertMedia.run(randomUUID(), 'logo-mark.svg', 'image/svg+xml', logoSvg.length, logoSvg, 'Orbiter logo mark', 'demo');
 
-console.log(`  ✓ Media seeded (2 placeholder assets)`);
+console.log(`  ✓ Media seeded (2 SVG placeholder assets)`);
 
 // Restore user uploads saved before the wipe
 if (savedMedia.length > 0) {
   const restoreMedia = db.db.prepare(`
-    INSERT OR IGNORE INTO _media (id, filename, mime_type, size, data, alt, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT OR IGNORE INTO _media (id, filename, mime_type, size, data, alt, folder, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
   for (const row of savedMedia) {
-    restoreMedia.run(row.id, row.filename, row.mime_type, row.size, row.data, row.alt ?? '', row.created_at);
+    restoreMedia.run(row.id, row.filename, row.mime_type, row.size, row.data, row.alt ?? '', row.folder ?? '', row.created_at);
   }
   console.log(`  ✓ Restored ${savedMedia.length} existing media upload(s)`);
 }
