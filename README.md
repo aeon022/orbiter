@@ -146,8 +146,10 @@ The integration injects a complete admin UI under `/orbiter` using Astro's `inje
 If you want to add Orbiter to your own Astro project (rather than the demo):
 
 ```bash
-npm install @orbiter/core @orbiter/integration
+npm install @orbiter/core @orbiter/integration @astrojs/node
 ```
+
+`@astrojs/node` is the adapter for self-hosted Node.js deployments. See [Adapters & Deployment](#adapters--deployment) for alternatives (Netlify, Vercel, Docker).
 
 > **Note:** Not yet published to npm. Until the first release, install from this repository using workspaces or `npm link`.
 
@@ -188,16 +190,32 @@ node scripts/setup.js
 // astro.config.mjs
 import { defineConfig } from 'astro/config';
 import orbiter from '@orbiter/integration';
+import node from '@astrojs/node';
 
 export default defineConfig({
   output: 'server',   // required — admin UI needs SSR
+  adapter: node({ mode: 'standalone' }),
   integrations: [
     orbiter({ pod: './content.pod' }),
   ],
 });
 ```
 
-> **`output: 'server'` is required.** The admin routes are server-rendered (they read and write the pod at runtime). Your public-facing pages can still be fully static — Astro renders them from the `orbiter:collections` snapshot at build time.
+> **`output: 'server'` is required.** The admin routes are server-rendered. See [Adapters & Deployment](#adapters--deployment) for all supported hosting options.
+
+Alternatively, use `output: 'hybrid'` to pre-render your public pages while keeping the admin dynamic:
+
+```js
+export default defineConfig({
+  output: 'hybrid',   // public pages static, admin routes SSR
+  adapter: node({ mode: 'standalone' }),
+  integrations: [
+    orbiter({ pod: './content.pod' }),
+  ],
+});
+```
+
+In hybrid mode, your own Astro pages default to `prerender: true` (static). All Orbiter admin routes export `prerender = false` automatically — no extra configuration needed.
 
 ### 3. Define collections
 
@@ -618,6 +636,142 @@ const token = generateToken(); // → hex string
 ### User roles
 
 Currently two roles are supported: `admin` and `editor`. Role is stored in `_users`. Role-based permissions are not yet enforced in the UI — all authenticated users have full access. This will be expanded in a future phase.
+
+---
+
+## Adapters & Deployment
+
+### Why an adapter is required
+
+Orbiter uses `better-sqlite3` — a native Node.js addon. It opens a file on disk, reads and writes synchronously, and has no network protocol. This means:
+
+- **Works:** any environment that runs real Node.js with filesystem access
+- **Does not work:** edge runtimes (Cloudflare Workers, Netlify Edge, Vercel Edge) — these are V8 isolates without native module support
+
+### Supported adapters
+
+| Adapter | Package | Mode | Notes |
+|---------|---------|------|-------|
+| **Node.js** | `@astrojs/node` | `standalone` or `middleware` | Recommended for self-hosting |
+| **Netlify** | `@astrojs/netlify` | serverless functions | Use serverless, not edge |
+| **Vercel** | `@astrojs/vercel` | serverless | Admin writes won't persist on ephemeral FS — see note |
+| **Cloudflare Pages** | — | — | ❌ Not supported — no native Node.js |
+
+### Node.js (recommended)
+
+Install the adapter:
+
+```bash
+npm install @astrojs/node
+```
+
+Configure:
+
+```js
+import { defineConfig } from 'astro/config';
+import orbiter from '@orbiter/integration';
+import node from '@astrojs/node';
+
+export default defineConfig({
+  output: 'server',
+  adapter: node({ mode: 'standalone' }),
+  integrations: [orbiter({ pod: './content.pod' })],
+});
+```
+
+Build and run:
+
+```bash
+npx astro build
+node dist/server/entry.mjs
+```
+
+Host on any platform that runs Node.js:
+
+| Platform | Notes |
+|----------|-------|
+| **VPS** (Hetzner, DigitalOcean, Linode) | Full control, persistent disk — ideal |
+| **Railway** | Git push deploy, persistent volume for the `.pod` |
+| **Render** | Web service with persistent disk |
+| **Fly.io** | Docker-based, persistent volumes |
+| **Docker** | Mount the `.pod` as a volume |
+
+**Docker example:**
+
+```dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY . .
+RUN npm install && npx astro build
+EXPOSE 3000
+CMD ["node", "dist/server/entry.mjs"]
+```
+
+```bash
+# Mount .pod from host so it persists across container restarts
+docker run -p 3000:3000 -v $(pwd)/content.pod:/app/content.pod my-orbiter-site
+```
+
+### Netlify
+
+Orbiter works on Netlify Serverless Functions. The Netlify Edge runtime is **not supported**.
+
+```bash
+npm install @astrojs/netlify
+```
+
+```js
+import { defineConfig } from 'astro/config';
+import orbiter from '@orbiter/integration';
+import netlify from '@astrojs/netlify';
+
+export default defineConfig({
+  output: 'server',
+  adapter: netlify(),
+  integrations: [orbiter({ pod: './content.pod' })],
+});
+```
+
+> **Important:** Netlify's filesystem is read-only in deployed functions. The `.pod` file is deployed with the site at build time. This means the admin UI is **read-only on Netlify** — content you edit won't be saved back to disk.
+>
+> **Recommended pattern for Netlify:** run the Orbiter admin on a persistent server (VPS, Railway) and use Netlify only for the static frontend. The admin triggers a Netlify build hook when content is ready.
+
+### Vercel
+
+```bash
+npm install @astrojs/vercel
+```
+
+```js
+import { defineConfig } from 'astro/config';
+import orbiter from '@orbiter/integration';
+import vercel from '@astrojs/vercel';
+
+export default defineConfig({
+  output: 'server',
+  adapter: vercel(),
+  integrations: [orbiter({ pod: './content.pod' })],
+});
+```
+
+> Same limitation as Netlify: Vercel serverless functions have an ephemeral filesystem. Admin writes don't persist. Use Vercel for static frontend only.
+
+### Recommended architecture for static hosting (Netlify / Vercel)
+
+```
+┌─────────────────────────────┐     build hook     ┌──────────────────────┐
+│  Orbiter Admin              │ ──────────────────▶ │  Netlify / Vercel    │
+│  (VPS or Railway)           │                     │  (static frontend)   │
+│                             │                     │                      │
+│  /orbiter  ← edit content   │                     │  /        ← visitors │
+│  content.pod  ← persists    │                     │  /blog/[slug]        │
+└─────────────────────────────┘                     └──────────────────────┘
+```
+
+1. Run Orbiter on a Node.js server with a persistent `.pod` file
+2. Edit content in the admin, click **Trigger build**
+3. Netlify/Vercel fetches the repo + pod, runs `astro build`, deploys static HTML
+4. Visitors hit the static CDN — fast, no server needed for public pages
 
 ---
 

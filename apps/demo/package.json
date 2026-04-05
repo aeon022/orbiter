@@ -4,13 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev":   "astro dev",
+    "dev": "astro dev",
     "build": "astro build",
-    "seed":  "node scripts/seed.js"
+    "seed": "node scripts/seed.js"
   },
   "dependencies": {
-    "@orbiter/core":        "*",
+    "@astrojs/node": "^10.0.4",
+    "@orbiter/core": "*",
     "@orbiter/integration": "*",
-    "astro":                "^4.7.0"
+    "astro": "^4.7.0"
   }
 }
