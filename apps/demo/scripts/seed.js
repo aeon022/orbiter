@@ -7,7 +7,7 @@
  *
  * Run: npm run seed --workspace=apps/demo
  */
-import { createPod, hashPassword } from '@orbiter/core';
+import { createPod, openPod, hashPassword } from '@orbiter/core';
 import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,8 +16,16 @@ import { readFileSync, existsSync, unlinkSync } from 'node:fs';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const podPath = resolve(__dirname, '../demo.pod');
 
-// Remove existing pod for a clean seed
+// Preserve user-uploaded media before wiping the pod
+let savedMedia = [];
 if (existsSync(podPath)) {
+  try {
+    const oldDb = openPod(podPath);
+    savedMedia = oldDb.db.prepare(
+      'SELECT id, filename, mime_type, size, data, alt, created_at FROM _media'
+    ).all();
+    oldDb.close();
+  } catch {}
   unlinkSync(podPath);
   console.log('  ✓ Removed existing demo.pod');
 }
@@ -387,6 +395,18 @@ insertMedia.run(
 );
 
 console.log(`  ✓ Media seeded (2 placeholder assets)`);
+
+// Restore user uploads saved before the wipe
+if (savedMedia.length > 0) {
+  const restoreMedia = db.db.prepare(`
+    INSERT OR IGNORE INTO _media (id, filename, mime_type, size, data, alt, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+  for (const row of savedMedia) {
+    restoreMedia.run(row.id, row.filename, row.mime_type, row.size, row.data, row.alt ?? '', row.created_at);
+  }
+  console.log(`  ✓ Restored ${savedMedia.length} existing media upload(s)`);
+}
 
 // ── Version snapshots ────────────────────────────────────
 
