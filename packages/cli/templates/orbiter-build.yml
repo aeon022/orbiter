@@ -1,0 +1,69 @@
+# .github/workflows/orbiter-build.yml
+#
+# Builds and deploys your Astro site whenever Orbiter pushes updated content.
+# Triggered by: push to main (from Orbiter's "Commit & Push" action)
+#               or manually via workflow_dispatch.
+#
+# Requirements:
+#   - GITHUB_TOKEN has write access to Pages (set in repo Settings → Actions)
+#   - Astro output mode: 'static' or 'hybrid' for GitHub Pages
+#     (for a Node server deploy, adapt the deploy step accordingly)
+
+name: Orbiter Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'content.pod'
+      - 'media/**'
+      - 'media-index.json'
+      - 'src/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Pack media into pod
+        run: npx @a83/orbiter-cli pack --pod ./content.pod --media-dir ./media
+
+      - name: Build Astro site
+        run: npx astro build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

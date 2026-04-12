@@ -120,6 +120,14 @@ export default function orbiter(options = {}) {
           pattern:    '/orbiter/offline',
           entrypoint: resolve(routesDir, 'offline.astro'),
         });
+        injectRoute({
+          pattern:    '/orbiter/github-push',
+          entrypoint: resolve(routesDir, 'github-push.astro'),
+        });
+        injectRoute({
+          pattern:    '/orbiter/github-workflow',
+          entrypoint: resolve(routesDir, 'github-workflow.js'),
+        });
 
         // ── Vite virtual modules ─────────────────
         updateConfig({

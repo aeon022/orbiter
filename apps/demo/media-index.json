@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "media": [
+    {
+      "id": "d213e821-4744-460c-8f17-c7749a6e85d7",
+      "filename": "hero-main.svg",
+      "mime_type": "image/svg+xml",
+      "size": 232,
+      "alt": "Hero image placeholder",
+      "folder": "demo",
+      "created_at": "2026-04-08 13:17:40",
+      "file": "media/d213e821-4744-460c-8f17-c7749a6e85d7.svg"
+    },
+    {
+      "id": "a0402939-4019-47dc-a61e-9f38cf228363",
+      "filename": "logo-mark.svg",
+      "mime_type": "image/svg+xml",
+      "size": 231,
+      "alt": "Orbiter logo mark",
+      "folder": "demo",
+      "created_at": "2026-04-08 13:17:40",
+      "file": "media/a0402939-4019-47dc-a61e-9f38cf228363.svg"
+    },
+    {
+      "id": "8ab2f0a3-fb15-4fc0-9ea3-3503add65795",
+      "filename": "logo_guit_footer.png",
+      "mime_type": "image/png",
+      "size": 79101,
+      "alt": "",
+      "folder": "",
+      "created_at": "2026-04-05 06:53:40",
+      "file": "media/8ab2f0a3-fb15-4fc0-9ea3-3503add65795.png"
+    }
+  ]
+}

@@ -1,0 +1,190 @@
+---
+export const prerender = false;
+/**
+ * POST /orbiter/github-push
+ * Commits the lean pod + media files to a GitHub repository.
+ *
+ * Flow:
+ *  1. Unpack BLOBs from pod into memory (without touching disk)
+ *  2. Upload lean pod + media files + media-index.json to GitHub via Contents API
+ *  3. Returns JSON { ok, message }
+ *
+ * Auth: requires active admin session.
+ */
+import { podPath } from 'orbiter:db';
+import { openPod } from '@a83/orbiter-core';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+// ── Auth ────────────────────────────────────────────────────────────────
+const _authDb   = openPod(podPath);
+const _sessUser = _authDb.checkSession(Astro.cookies.get('orb_sess')?.value ?? '');
+_authDb.close();
+if (!_sessUser) return new Response(JSON.stringify({ ok: false, message: 'Unauthorized' }), { status: 401 });
+
+if (Astro.request.method !== 'POST') {
+  return new Response(JSON.stringify({ ok: false, message: 'Method not allowed' }), { status: 405 });
+}
+
+// ── Read config ─────────────────────────────────────────────────────────
+const db     = openPod(podPath);
+const token  = db.getMeta('github.token')  ?? '';
+const repo   = db.getMeta('github.repo')   ?? '';
+const branch = db.getMeta('github.branch') ?? 'main';
+db.close();
+
+if (!token || !repo) {
+  return new Response(JSON.stringify({ ok: false, message: 'GitHub token and repo not configured in Settings.' }), { status: 400 });
+}
+
+const MIME_EXT: Record<string, string> = {
+  'image/jpeg':      '.jpg',
+  'image/png':       '.png',
+  'image/gif':       '.gif',
+  'image/webp':      '.webp',
+  'image/svg+xml':   '.svg',
+  'image/avif':      '.avif',
+  'application/pdf': '.pdf',
+  'video/mp4':       '.mp4',
+  'video/webm':      '.webm',
+};
+function extFor(mime: string, filename: string): string {
+  if (MIME_EXT[mime]) return MIME_EXT[mime];
+  const m = filename.match(/\.[^.]+$/);
+  return m ? m[0] : '.bin';
+}
+
+// ── GitHub API helpers ───────────────────────────────────────────────────
+const API = 'https://api.github.com';
+const headers = {
+  Authorization: `Bearer ${token}`,
+  Accept:        'application/vnd.github+json',
+  'X-GitHub-Api-Version': '2022-11-28',
+  'Content-Type': 'application/json',
+  'User-Agent':   'orbiter-cms',
+};
+
+async function ghGet(path: string) {
+  const res = await fetch(`${API}${path}`, { headers });
+  if (!res.ok) throw new Error(`GitHub GET ${path}: ${res.status} ${await res.text()}`);
+  return res.json();
+}
+
+async function ghPost(path: string, body: any) {
+  const res = await fetch(`${API}${path}`, { method: 'POST', headers, body: JSON.stringify(body) });
+  if (!res.ok) throw new Error(`GitHub POST ${path}: ${res.status} ${await res.text()}`);
+  return res.json();
+}
+
+async function ghPatch(path: string, body: any) {
+  const res = await fetch(`${API}${path}`, { method: 'PATCH', headers, body: JSON.stringify(body) });
+  if (!res.ok) throw new Error(`GitHub PATCH ${path}: ${res.status} ${await res.text()}`);
+  return res.json();
+}
+
+// ── Build file list ──────────────────────────────────────────────────────
+try {
+  // 1. Read media rows from pod (metadata + BLOB)
+  const db2   = openPod(podPath);
+  const media = db2.db.prepare('SELECT id, filename, mime_type, data FROM _media').all() as any[];
+
+  // 2. Read the pod file itself as base64
+  const podBuf    = readFileSync(podPath);
+  const podBase64 = podBuf.toString('base64');
+
+  // 3. Build media index (no BLOBs)
+  const db3         = openPod(podPath);
+  const mediaRows   = db3.db.prepare('SELECT id, filename, mime_type, size, alt, folder, created_at FROM _media').all() as any[];
+  db3.close();
+
+  const indexEntries = mediaRows.map((r: any) => {
+    const ext = extFor(r.mime_type, r.filename);
+    return {
+      id:         r.id,
+      filename:   r.filename,
+      mime_type:  r.mime_type,
+      size:       r.size,
+      alt:        r.alt ?? '',
+      folder:     r.folder ?? '',
+      created_at: r.created_at,
+      file:       `media/${r.id}${ext}`,
+    };
+  });
+  const indexJson = JSON.stringify({ version: 1, media: indexEntries }, null, 2);
+
+  // 4. Build lean pod (SQLite with empty media BLOBs) via SQLite VACUUM INTO
+  //    For simplicity we send the full pod — unpack happens in the GH Action.
+  //    Mark storage.mode so the action knows to unpack.
+  db2.setMeta('storage.mode', 'git');
+  db2.close();
+
+  // Re-read pod after marking (storage.mode written)
+  const leanPodBase64 = readFileSync(podPath).toString('base64');
+
+  // 5. Files to commit
+  type FileEntry = { path: string; content: string; encoding: string };
+  const files: FileEntry[] = [
+    { path: 'content.pod', content: leanPodBase64, encoding: 'base64' },
+    { path: 'media-index.json', content: Buffer.from(indexJson).toString('base64'), encoding: 'base64' },
+  ];
+
+  for (const row of media as any[]) {
+    if (!row.data || (row.data as Buffer).length === 0) continue;
+    const ext = extFor(row.mime_type, row.filename);
+    files.push({
+      path:     `media/${row.id}${ext}`,
+      content:  (row.data as Buffer).toString('base64'),
+      encoding: 'base64',
+    });
+  }
+
+  // ── Commit via Git Trees API ───────────────────────────────────────────
+  // Get current branch ref
+  const refData    = await ghGet(`/repos/${repo}/git/refs/heads/${branch}`);
+  const latestSha  = refData.object.sha as string;
+  const commitData = await ghGet(`/repos/${repo}/git/commits/${latestSha}`);
+  const treeSha    = commitData.tree.sha as string;
+
+  // Create blobs
+  const treeItems = await Promise.all(
+    files.map(async (f) => {
+      const blob = await ghPost(`/repos/${repo}/git/blobs`, {
+        content:  f.content,
+        encoding: f.encoding,
+      });
+      return { path: f.path, mode: '100644', type: 'blob', sha: blob.sha };
+    })
+  );
+
+  // Create tree
+  const newTree = await ghPost(`/repos/${repo}/git/trees`, {
+    base_tree: treeSha,
+    tree:      treeItems,
+  });
+
+  // Create commit
+  const newCommit = await ghPost(`/repos/${repo}/git/commits`, {
+    message: `orbiter: publish content [${new Date().toISOString().slice(0, 10)}]`,
+    tree:    newTree.sha,
+    parents: [latestSha],
+  });
+
+  // Update branch ref
+  await ghPatch(`/repos/${repo}/git/refs/heads/${branch}`, {
+    sha:   newCommit.sha,
+    force: false,
+  });
+
+  return new Response(JSON.stringify({
+    ok:      true,
+    message: `Pushed ${files.length} files to ${repo}@${branch}`,
+    commit:  newCommit.sha,
+  }), { headers: { 'Content-Type': 'application/json' } });
+
+} catch (err: any) {
+  return new Response(JSON.stringify({
+    ok:      false,
+    message: err.message ?? 'Unknown error',
+  }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+}
+---

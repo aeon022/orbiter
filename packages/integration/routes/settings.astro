@@ -75,7 +75,7 @@ if (Astro.request.method === 'POST') {
 
   } else {
     // Site settings
-    const fields = ['site.name', 'site.url', 'site.description', 'site.locale', 'site.locales', 'build.webhook_url'];
+    const fields = ['site.name', 'site.url', 'site.description', 'site.locale', 'site.locales', 'build.webhook_url', 'github.token', 'github.repo', 'github.branch'];
     for (const key of fields) {
       db.setMeta(key, form.get(key)?.toString() ?? '');
     }
@@ -87,12 +87,15 @@ if (Astro.request.method === 'POST') {
 // ── GET ───────────────────────────────────────────────────────────────
 const db      = openPod(podPath);
 const meta    = {
-  name:        db.getMeta('site.name')        ?? '',
-  url:         db.getMeta('site.url')         ?? '',
-  description: db.getMeta('site.description') ?? '',
-  locale:      db.getMeta('site.locale')      ?? '',
-  locales:     db.getMeta('site.locales')     ?? '',
-  webhookUrl:  db.getMeta('build.webhook_url') ?? '',
+  name:          db.getMeta('site.name')         ?? '',
+  url:           db.getMeta('site.url')          ?? '',
+  description:   db.getMeta('site.description')  ?? '',
+  locale:        db.getMeta('site.locale')       ?? '',
+  locales:       db.getMeta('site.locales')      ?? '',
+  webhookUrl:    db.getMeta('build.webhook_url') ?? '',
+  githubToken:   db.getMeta('github.token')      ?? '',
+  githubRepo:    db.getMeta('github.repo')       ?? '',
+  githubBranch:  db.getMeta('github.branch')     ?? 'main',
 };
 const formatVersion  = db.getMeta('format_version') ?? '1';
 const allCollections = db.getCollections().map(c => ({
@@ -220,10 +223,53 @@ unSaved = unSaved || Astro.url.searchParams.get('unsaved') === '1';
         </div>
       </div>
 
+      <!-- GitHub Mode -->
+      <div class="settings-group">
+        <div class="group-header">{t.settings_github}</div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">{t.settings_github_token}</div>
+            <div class="setting-desc">{t.settings_github_token_desc}</div>
+          </div>
+          <input class="field-input" type="password" name="github.token" value={meta.githubToken} autocomplete="off" placeholder="ghp_…" />
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">{t.settings_github_repo}</div>
+            <div class="setting-desc">{t.settings_github_repo_desc}</div>
+          </div>
+          <input class="field-input" name="github.repo" value={meta.githubRepo} placeholder="owner/my-site" />
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">{t.settings_github_branch}</div>
+            <div class="setting-desc">{t.settings_github_branch_desc}</div>
+          </div>
+          <input class="field-input" name="github.branch" value={meta.githubBranch} placeholder="main" />
+        </div>
+      </div>
+
       <div class="save-row">
         <button type="submit" class="btn-save">{t.settings_save}</button>
       </div>
     </form>
+
+    <!-- GitHub Push -->
+    {meta.githubRepo && (
+      <div class="settings-group" style="margin-top:0;">
+        <div class="group-header">{t.settings_github}</div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">{meta.githubRepo} @ {meta.githubBranch}</div>
+            <div class="setting-desc" id="gh-push-status"></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <a href="/orbiter/github-workflow" download="orbiter-build.yml" style="font-size:9px;color:var(--muted);text-decoration:none;border:1px solid var(--line);padding:5px 10px;font-family:var(--mono);letter-spacing:0.06em;transition:color 0.12s,border-color 0.12s;" onmouseover="this.style.color='var(--heading)';this.style.borderColor='var(--mid)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--line)'">{t.settings_github_workflow}</a>
+            <button id="gh-push-btn" class="btn-save" onclick="__orbGithubPush(this)">{t.settings_github_push}</button>
+          </div>
+        </div>
+      </div>
+    )}
 
     <!-- Account -->
     <div class="settings-group">
@@ -380,3 +426,25 @@ unSaved = unSaved || Astro.url.searchParams.get('unsaved') === '1';
 
   </div>
 </AdminLayout>
+
+<script is:inline>
+window.__orbGithubPush = async function(btn) {
+  const statusEl = document.getElementById('gh-push-status');
+  btn.disabled = true;
+  btn.textContent = btn.dataset.pushing ?? 'Pushing…';
+  if (statusEl) statusEl.textContent = '';
+  try {
+    const res  = await fetch('/orbiter/github-push', { method: 'POST' });
+    const json = await res.json();
+    if (json.ok) {
+      if (statusEl) { statusEl.textContent = '✓ ' + json.message; statusEl.style.color = 'var(--jade)'; }
+    } else {
+      if (statusEl) { statusEl.textContent = '✕ ' + json.message; statusEl.style.color = 'var(--crimson)'; }
+    }
+  } catch (e) {
+    if (statusEl) { statusEl.textContent = '✕ ' + e.message; statusEl.style.color = 'var(--crimson)'; }
+  }
+  btn.disabled = false;
+  btn.textContent = btn.dataset.push ?? 'Commit & Push';
+};
+</script>

@@ -7,6 +7,8 @@ const commands = {
   init:       () => import('../src/init.js').then(m => m.run(args)),
   'add-user': () => import('../src/add-user.js').then(m => m.run(args)),
   export:     () => import('../src/export.js').then(m => m.run(args)),
+  unpack:     () => import('../src/unpack.js').then(m => m.run(args)),
+  pack:       () => import('../src/pack.js').then(m => m.run(args)),
   help:       () => printHelp(),
 };
 
@@ -34,6 +36,8 @@ function printHelp() {
     init          Scaffold a new Orbiter + Astro project
     add-user      Add a user to an existing .pod file
     export        Export content from a .pod file to JSON
+    unpack        Extract media BLOBs to files (pod → git mode)
+    pack          Re-insert media files as BLOBs (git → server mode)
 
   Options:
     -h, --help    Show this help message
