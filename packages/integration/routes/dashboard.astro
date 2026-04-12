@@ -4,12 +4,10 @@ export const prerender = false;
  * /orbiter — Admin Dashboard
  * Injected by @a83/orbiter-integration
  */
-import { ViewTransitions } from 'astro:transitions';
 import { podPath } from 'orbiter:db';
 import { openPod } from '@a83/orbiter-core';
-import adminUtils from 'orbiter:admin-utils';
 import { useTranslations } from '../src/i18n.js';
-import SidebarCollections from './SidebarCollections.astro';
+import AdminLayout from './AdminLayout.astro';
 
 // ── Auth + First-run check ────────────────────────────────────────────
 {
@@ -47,7 +45,6 @@ const allCollections = db.getCollections().map(c => ({
   parent: db.getMeta(`collection.${c.id}.parent`) ?? null,
 }));
 
-
 const stats = allCollections.map(col => {
   const all       = db.getEntries(col.id);
   const published = all.filter(e => e.status === 'published').length;
@@ -78,388 +75,277 @@ const t = useTranslations(locale);
 
 const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 ---
-<html lang={locale}>
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f5f2ec'/><rect x='5' y='5' width='22' height='22' fill='none' stroke='%239a6e30' stroke-width='1.5'/><text x='16' y='21' font-family='monospace' font-size='11' fill='%239a6e30' text-anchor='middle'>OR</text></svg>" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{meta.siteName} — Orbiter</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg0:#f5f2ec; --bg1:#faf8f3; --bg2:#ffffff; --bg3:#edeae3;
-      --line:#e0dbd0; --line2:rgba(0,0,0,0.04);
-      --muted:#a09890; --mid:#706860; --text:#3a3228; --heading:#1a1510;
-      --gold:#9a6e30; --gold-bg:rgba(154,110,48,0.08);
-      --jade:#1e6b50; --jade-bg:rgba(30,107,80,0.07);
-      --accent:#3d4fa8; --accent-bg:rgba(61,79,168,0.06);
-      --shadow:0 1px 3px rgba(0,0,0,0.08);
-      --btn-hover:#7a5520;
-      --sans:"Inter",system-ui,-apple-system,sans-serif; --radius:4px;
-      --serif:"Noto Serif JP",serif; --mono:"DM Mono",monospace;
-    }
-    html.dark {
-      --bg0:#0f0f14; --bg1:#14141a; --bg2:#1c1c24; --bg3:#22222d;
-      --line:#2a2a3a; --line2:rgba(255,255,255,0.04);
-      --muted:#52526e; --mid:#8080a0; --text:#b0b0cc; --heading:#e0e0f0;
-      --gold:#c8a86b; --gold-bg:rgba(200,168,107,0.08);
-      --jade:#2d8b6a; --jade-bg:rgba(45,139,106,0.08);
-      --accent:#7a8fd4; --accent-bg:rgba(122,143,212,0.08);
-    }
-    html,body { background:var(--bg0); color:var(--text); font-family:var(--sans); font-size:14px; line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
+<style>
+  /* Hero */
+  .hero { padding:32px 40px 24px; border-bottom:1px solid var(--line); background:var(--bg2); display:flex; align-items:flex-end; justify-content:space-between; gap:24px; }
+  .hero-site { font-family:var(--serif); font-weight:200; font-size:28px; color:var(--heading); letter-spacing:0.04em; line-height:1.1; margin-bottom:6px; }
+  .hero-date { font-size:10px; color:var(--muted); letter-spacing:0.04em; }
+  .hero-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .hero-url { font-size:10px; color:var(--accent); text-decoration:none; border:1px solid var(--line); padding:5px 12px; transition:border-color 0.15s; }
+  .hero-url:hover { border-color:var(--accent); }
+  .btn-deploy { display:flex; align-items:center; gap:6px; padding:7px 16px; background:transparent; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:10px; letter-spacing:0.13em; text-transform:uppercase; cursor:pointer; border-radius:var(--radius); transition:all 0.15s; }
+  .btn-deploy:hover { background:var(--gold); color:var(--bg0); }
+  .btn-deploy:disabled { opacity:0.5; cursor:not-allowed; }
+  .deploy-status { font-size:10px; color:var(--muted); }
 
-    /* Layout */
-    .layout { display:grid; grid-template-columns:232px 1fr; grid-template-rows:56px 1fr; height:100vh; }
+  /* Stats row */
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:0; border-bottom:1px solid var(--line); }
+  .stat-cell { padding:20px 24px; border-right:1px solid var(--line); position:relative; }
+  .stat-cell:last-child { border-right:none; }
+  .stat-label { font-size:9px; letter-spacing:0.26em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+  .stat-num { font-family:var(--serif); font-weight:200; font-size:36px; color:var(--heading); line-height:1; margin-bottom:6px; }
+  .stat-sub { font-size:10px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+  .stat-bar { height:2px; background:var(--line); margin-top:12px; }
+  .stat-bar-fill { height:100%; transition:width 0.4s; }
+  .stat-bar-fill.jade { background:var(--jade); }
+  .stat-bar-fill.gold { background:var(--gold); }
+  .stat-bar-fill.accent { background:var(--accent); }
+  .stat-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+  .stat-dot.jade { background:var(--jade); }
+  .stat-dot.gold { background:var(--gold); }
 
-    /* Topbar */
-    .topbar { grid-column:1/-1; background:var(--bg2); border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 22px; gap:0; }
-    .logo { font-family:var(--serif); font-weight:200; font-size:17px; color:var(--heading); display:flex; align-items:center; gap:9px; letter-spacing:0.1em; text-decoration:none; flex-shrink:0; }
-    .logo-mark { width:22px; height:22px; border:1px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:9px; color:var(--gold); font-family:var(--mono); }
-    .topbar-site { margin-left:20px; font-size:11px; color:var(--muted); }
-    .topbar-right { margin-left:auto; display:flex; align-items:center; gap:16px; }
-    .pod-status { font-size:10px; color:var(--jade); display:flex; align-items:center; gap:5px; }
-    .dark-toggle { background:none; border:1px solid var(--line); color:var(--mid); font-family:var(--mono); font-size:11px; padding:3px 10px; cursor:pointer; letter-spacing:0.04em; border-radius:var(--radius); transition:color 0.12s,border-color 0.12s,background 0.12s; }
-    .dark-toggle:hover { color:var(--heading); border-color:var(--mid); background:var(--bg3); }
-    .pod-dot { width:5px; height:5px; border-radius:50%; background:var(--jade); animation:pulse 2.5s ease-in-out infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+  /* Content area */
+  .content { display:grid; grid-template-columns:1fr 300px; }
+  .content-main { padding:28px 32px; border-right:1px solid var(--line); }
+  .content-side { padding:24px 0; }
 
-    /* Sidebar */
-    .sidebar { background:var(--bg1); border-right:1px solid var(--line); padding:16px 0; display:flex; flex-direction:column; overflow-y:auto; }
-    .nav-section { font-size:10px; letter-spacing:0.22em; text-transform:uppercase; color:var(--muted); padding:0 18px; margin:20px 0 4px; font-weight:500; }
-    .nav-section:first-child { margin-top:0; }
-    .nav-item { display:flex; align-items:center; gap:10px; padding:8px 18px; font-size:13px; color:var(--mid); text-decoration:none; position:relative; transition:color 0.12s,background 0.12s; }
-    .nav-item:hover { color:var(--heading); background:var(--line2); }
-    .nav-item.active { color:var(--heading); background:var(--accent-bg); font-weight:500; }
-    .nav-item.active::before { content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--gold); border-radius:0 1px 1px 0; }
-    .nav-icon { width:14px; text-align:center; font-size:11px; opacity:0.45; flex-shrink:0; }
-    .nav-badge { margin-left:auto; font-size:10px; color:var(--muted); background:var(--bg3); border:1px solid var(--line); padding:1px 7px; border-radius:3px; }
-    .sidebar-pod { margin-top:auto; padding:14px 18px; border-top:1px solid var(--line); font-size:11px; color:var(--muted); }
-    .sidebar-pod-name { color:var(--text); font-size:12px; font-weight:500; margin-bottom:3px; display:flex; align-items:center; gap:5px; }
-    .sidebar-pod-name::before { content:"◆"; font-size:6px; color:var(--gold); }
+  /* Section headers */
+  .section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .section-title { font-size:9px; letter-spacing:0.26em; text-transform:uppercase; color:var(--text); display:flex; align-items:center; gap:8px; }
+  .section-title::before { content:"—"; color:var(--gold); font-size:8px; }
+  .section-link { font-size:10px; color:var(--accent); text-decoration:none; }
+  .section-link:hover { color:var(--heading); }
 
-    /* Main */
-    .main { background:var(--bg0); overflow-y:auto; display:flex; flex-direction:column; }
+  /* Recent entries */
+  .entry-list { border:1px solid var(--line); }
+  .entry-row { display:grid; grid-template-columns:1fr 90px 70px; align-items:center; gap:16px; padding:11px 14px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; }
+  .entry-row:hover { background:var(--line2); }
+  .entry-row:last-child { border-bottom:none; }
+  .entry-name { font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .entry-coll { font-size:9px; color:var(--muted); margin-top:1px; letter-spacing:0.04em; }
+  .entry-date { font-size:10px; color:var(--muted); text-align:right; }
+  .pill { font-size:9px; padding:2px 7px; letter-spacing:0.06em; text-align:center; }
+  .pill.published { color:var(--jade); background:var(--jade-bg); }
+  .pill.draft { color:var(--gold); background:var(--gold-bg); }
 
-    /* Hero */
-    .hero { padding:32px 40px 24px; border-bottom:1px solid var(--line); background:var(--bg2); display:flex; align-items:flex-end; justify-content:space-between; gap:24px; }
-    .hero-left {}
-    .hero-site { font-family:var(--serif); font-weight:200; font-size:28px; color:var(--heading); letter-spacing:0.04em; line-height:1.1; margin-bottom:6px; }
-    .hero-date { font-size:10px; color:var(--muted); letter-spacing:0.04em; }
-    .hero-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
-    .hero-url { font-size:10px; color:var(--accent); text-decoration:none; border:1px solid var(--line); padding:5px 12px; transition:border-color 0.15s; }
-    .hero-url:hover { border-color:var(--accent); }
-    .btn-deploy { display:flex; align-items:center; gap:6px; padding:7px 16px; background:transparent; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:10px; letter-spacing:0.13em; text-transform:uppercase; cursor:pointer; border-radius:var(--radius); transition:all 0.15s; }
-    .btn-deploy:hover { background:var(--gold); color:var(--bg0); }
-    .btn-deploy:disabled { opacity:0.5; cursor:not-allowed; }
-    .deploy-status { font-size:10px; color:var(--muted); }
+  /* Side panels */
+  .side-section { padding:0 20px 24px; }
+  .side-section + .side-section { border-top:1px solid var(--line); padding-top:20px; }
 
-    /* Stats row */
-    .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:0; border-bottom:1px solid var(--line); }
-    .stat-cell { padding:20px 24px; border-right:1px solid var(--line); position:relative; }
-    .stat-cell:last-child { border-right:none; }
-    .stat-label { font-size:9px; letter-spacing:0.26em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
-    .stat-num { font-family:var(--serif); font-weight:200; font-size:36px; color:var(--heading); line-height:1; margin-bottom:6px; }
-    .stat-sub { font-size:10px; color:var(--muted); display:flex; align-items:center; gap:6px; }
-    .stat-bar { height:2px; background:var(--line); margin-top:12px; }
-    .stat-bar-fill { height:100%; transition:width 0.4s; }
-    .stat-bar-fill.jade { background:var(--jade); }
-    .stat-bar-fill.gold { background:var(--gold); }
-    .stat-bar-fill.accent { background:var(--accent); }
-    .stat-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
-    .stat-dot.jade { background:var(--jade); }
-    .stat-dot.gold { background:var(--gold); }
+  /* Support widget */
+  .support-widget { margin:0 20px 24px; border:1px solid var(--line); padding:14px 16px; }
+  .support-label { font-size:8px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); margin-bottom:7px; display:flex; align-items:center; gap:6px; }
+  .support-label::before { content:"◆"; color:var(--gold); font-size:6px; }
+  .support-text { font-size:10px; color:var(--muted); line-height:1.7; margin-bottom:12px; }
+  .btn-support { display:block; padding:7px 10px; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:9px; letter-spacing:0.1em; text-transform:uppercase; text-decoration:none; text-align:center; border-radius:var(--radius); transition:all 0.15s; }
+  .btn-support:hover { background:var(--gold); color:var(--bg0); }
 
-    /* Content area */
-    .content { display:grid; grid-template-columns:1fr 300px; flex:1; }
-    .content-main { padding:28px 32px; border-right:1px solid var(--line); }
-    .content-side { padding:24px 0; }
+  /* Collection cards */
+  .coll-card { padding:12px 0; border-bottom:1px solid var(--line2); }
+  .coll-card:last-child { border-bottom:none; }
+  .coll-card-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .coll-card-name { font-size:12px; color:var(--heading); display:flex; align-items:center; gap:7px; }
+  .coll-card-name::before { content:"▤"; font-size:9px; color:var(--muted); }
+  .coll-card-count { font-size:10px; color:var(--muted); }
+  .coll-progress { height:2px; background:var(--line); margin-bottom:6px; }
+  .coll-progress-fill { height:100%; background:var(--jade); transition:width 0.4s; }
+  .coll-card-meta { display:flex; justify-content:space-between; font-size:9px; color:var(--muted); }
+  .coll-card-meta .pub { color:var(--jade); }
+  .coll-actions { display:flex; gap:6px; margin-top:8px; }
+  .btn-sm { font-size:9px; padding:4px 10px; border:1px solid var(--line); color:var(--mid); background:transparent; font-family:var(--mono); cursor:pointer; text-decoration:none; letter-spacing:0.06em; display:inline-flex; align-items:center; gap:4px; border-radius:var(--radius); transition:all 0.12s; }
+  .btn-sm:hover { border-color:var(--gold); color:var(--gold); }
+  .btn-sm.primary { border-color:var(--gold); color:var(--gold); }
+  .btn-sm.primary:hover { background:var(--gold); color:var(--bg0); }
 
-    /* Section headers */
-    .section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
-    .section-title { font-size:9px; letter-spacing:0.26em; text-transform:uppercase; color:var(--text); display:flex; align-items:center; gap:8px; }
-    .section-title::before { content:"—"; color:var(--gold); font-size:8px; }
-    .section-link { font-size:10px; color:var(--accent); text-decoration:none; }
-    .section-link:hover { color:var(--heading); }
+  /* Empty state */
+  .empty { padding:40px 20px; text-align:center; color:var(--muted); font-size:11px; border:1px solid var(--line); line-height:2; }
 
-    /* Recent entries */
-    .entry-list { border:1px solid var(--line); }
-    .entry-row { display:grid; grid-template-columns:1fr 90px 70px; align-items:center; gap:16px; padding:11px 14px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; }
-    .entry-row:hover { background:var(--line2); }
-    .entry-row:last-child { border-bottom:none; }
-    .entry-name { font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .entry-coll { font-size:9px; color:var(--muted); margin-top:1px; letter-spacing:0.04em; }
-    .entry-date { font-size:10px; color:var(--muted); text-align:right; }
-    .pill { font-size:9px; padding:2px 7px; letter-spacing:0.06em; text-align:center; }
-    .pill.published { color:var(--jade); background:var(--jade-bg); }
-    .pill.draft { color:var(--gold); background:var(--gold-bg); }
+  /* Workspace (notes + todos) */
+  .workspace { display:grid; grid-template-columns:1fr 1fr; border-top:1px solid var(--line); }
+  .ws-panel { padding:24px 32px; }
+  .ws-panel + .ws-panel { border-left:1px solid var(--line); }
+  .ws-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .ws-save-indicator { font-size:9px; color:var(--muted); transition:color 0.2s; }
+  .notes-area { width:100%; min-height:140px; resize:vertical; background:var(--bg1); border:1px solid var(--line); padding:12px 14px; color:var(--text); font-family:var(--mono); font-size:13px; line-height:1.8; outline:none; border-radius:var(--radius); transition:border-color 0.15s; }
+  .notes-area:focus { border-color:var(--accent); }
+  .todo-input-row { display:flex; align-items:center; gap:0; margin-bottom:12px; border:1px solid var(--line); background:var(--bg1); border-radius:var(--radius); }
+  .todo-prompt { font-family:var(--mono); font-size:11px; color:var(--muted); padding:7px 6px 7px 10px; flex-shrink:0; user-select:none; }
+  .todo-input { flex:1; background:transparent; border:none; padding:7px 4px; color:var(--text); font-family:var(--mono); font-size:11px; outline:none; }
+  .todo-add-btn { padding:7px 12px; background:transparent; border:none; border-left:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:10px; cursor:pointer; letter-spacing:0.06em; transition:color 0.12s; flex-shrink:0; }
+  .todo-add-btn:hover { color:var(--heading); }
+  .todo-footer { display:flex; align-items:center; justify-content:space-between; padding-top:8px; min-height:20px; }
+  .todo-count { font-size:9px; color:var(--muted); }
+  .todo-clear-btn { background:none; border:none; font-family:var(--mono); font-size:9px; color:var(--muted); cursor:pointer; padding:0; letter-spacing:0.04em; transition:color 0.12s; }
+  .todo-clear-btn:hover { color:var(--heading); }
+  .ws-export-btn { background:none; border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:9px; padding:2px 8px; cursor:pointer; letter-spacing:0.06em; transition:all 0.12s; }
+  .ws-export-btn:hover { border-color:var(--accent); color:var(--accent); }
+</style>
+<AdminLayout
+  title={meta.siteName}
+  activeNav="dashboard"
+  breadcrumbs={[]}
+  collections={allCollections}
+  podInfo={`${totalEntries} ${t.entries} · ${collections.length} ${t.dashboard_collections}`}
+  locale={locale}
+>
 
-    /* Side panels */
-    .side-section { padding:0 20px 24px; }
-    .side-section + .side-section { border-top:1px solid var(--line); padding-top:20px; }
+  <!-- Hero -->
+  <div class="hero">
+    <div>
+      <div class="hero-site">{meta.siteName}</div>
+      <div class="hero-date">{today}</div>
+    </div>
+    <div class="hero-right">
+      <span id="deploy-status" class="deploy-status"></span>
+      {meta.siteUrl && (
+        <a href={meta.siteUrl} target="_blank" class="hero-url">↗ {t.dashboard_open_site}</a>
+      )}
+      {hasWebhook && (
+        <button class="btn-deploy" id="deploy-btn" onclick="triggerDeploy()">↑ Deploy</button>
+      )}
+    </div>
+  </div>
 
-    /* Support widget */
-    .support-widget { margin:0 20px 24px; border:1px solid var(--line); padding:14px 16px; }
-    .support-label { font-size:8px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); margin-bottom:7px; display:flex; align-items:center; gap:6px; }
-    .support-label::before { content:"◆"; color:var(--gold); font-size:6px; }
-    .support-text { font-size:10px; color:var(--muted); line-height:1.7; margin-bottom:12px; }
-    .btn-support { display:block; padding:7px 10px; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:9px; letter-spacing:0.1em; text-transform:uppercase; text-decoration:none; text-align:center; border-radius:var(--radius); transition:all 0.15s; }
-    .btn-support:hover { background:var(--gold); color:var(--bg0); }
-
-    /* Collection cards */
-    .coll-card { padding:12px 0; border-bottom:1px solid var(--line2); }
-    .coll-card:last-child { border-bottom:none; }
-    .coll-card-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
-    .coll-card-name { font-size:12px; color:var(--heading); display:flex; align-items:center; gap:7px; }
-    .coll-card-name::before { content:"▤"; font-size:9px; color:var(--muted); }
-    .coll-card-count { font-size:10px; color:var(--muted); }
-    .coll-progress { height:2px; background:var(--line); margin-bottom:6px; }
-    .coll-progress-fill { height:100%; background:var(--jade); transition:width 0.4s; }
-    .coll-card-meta { display:flex; justify-content:space-between; font-size:9px; color:var(--muted); }
-    .coll-card-meta .pub { color:var(--jade); }
-    .coll-actions { display:flex; gap:6px; margin-top:8px; }
-    .btn-sm { font-size:9px; padding:4px 10px; border:1px solid var(--line); color:var(--mid); background:transparent; font-family:var(--mono); cursor:pointer; text-decoration:none; letter-spacing:0.06em; display:inline-flex; align-items:center; gap:4px; border-radius:var(--radius); transition:all 0.12s; }
-    .btn-sm:hover { border-color:var(--gold); color:var(--gold); }
-    .btn-sm.primary { border-color:var(--gold); color:var(--gold); }
-    .btn-sm.primary:hover { background:var(--gold); color:var(--bg0); }
-
-    /* Empty state */
-    .empty { padding:40px 20px; text-align:center; color:var(--muted); font-size:11px; border:1px solid var(--line); line-height:2; }
-
-    /* Workspace (notes + todos) */
-    .workspace { display:grid; grid-template-columns:1fr 1fr; border-top:1px solid var(--line); }
-    .ws-panel { padding:24px 32px; }
-    .ws-panel + .ws-panel { border-left:1px solid var(--line); }
-    .ws-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
-    .ws-save-indicator { font-size:9px; color:var(--muted); transition:color 0.2s; }
-    .notes-area { width:100%; min-height:140px; resize:vertical; background:var(--bg1); border:1px solid var(--line); padding:12px 14px; color:var(--text); font-family:var(--mono); font-size:13px; line-height:1.8; outline:none; border-radius:var(--radius); transition:border-color 0.15s; }
-    .notes-area:focus { border-color:var(--accent); }
-    .todo-input-row { display:flex; align-items:center; gap:0; margin-bottom:12px; border:1px solid var(--line); background:var(--bg1); border-radius:var(--radius); }
-    .todo-prompt { font-family:var(--mono); font-size:11px; color:var(--muted); padding:7px 6px 7px 10px; flex-shrink:0; user-select:none; }
-    .todo-input { flex:1; background:transparent; border:none; padding:7px 4px; color:var(--text); font-family:var(--mono); font-size:11px; outline:none; }
-    .todo-add-btn { padding:7px 12px; background:transparent; border:none; border-left:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:10px; cursor:pointer; letter-spacing:0.06em; transition:color 0.12s; flex-shrink:0; }
-    .todo-add-btn:hover { color:var(--heading); }
-    .todo-list { font-family:var(--mono); }
-    .todo-item { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid var(--line2); }
-    .todo-item:first-child { border-top:1px solid var(--line2); }
-    .todo-toggle { background:none; border:none; font-family:var(--mono); font-size:11px; color:var(--muted); cursor:pointer; padding:0; flex-shrink:0; width:20px; letter-spacing:0; transition:color 0.1s; }
-    .todo-item.done .todo-toggle { color:var(--jade); }
-    .todo-toggle:hover { color:var(--heading); }
-    .todo-text { flex:1; font-size:11px; color:var(--text); line-height:1.4; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
-    .todo-item.done .todo-text { text-decoration:line-through; color:var(--muted); }
-    .todo-del { background:none; border:none; font-family:var(--mono); font-size:11px; color:var(--line); cursor:pointer; padding:0; flex-shrink:0; opacity:0; transition:color 0.1s; }
-    .todo-item:hover .todo-del { opacity:1; }
-    .todo-del:hover { color:var(--mid); }
-    .todo-empty { font-size:11px; color:var(--muted); padding:8px 0; }
-    .todo-footer { display:flex; align-items:center; justify-content:space-between; padding-top:8px; min-height:20px; }
-    .todo-count { font-size:9px; color:var(--muted); }
-    .todo-clear-btn { background:none; border:none; font-family:var(--mono); font-size:9px; color:var(--muted); cursor:pointer; padding:0; letter-spacing:0.04em; transition:color 0.12s; }
-    .todo-clear-btn:hover { color:var(--heading); }
-    .ws-export-btn { background:none; border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:9px; padding:2px 8px; cursor:pointer; letter-spacing:0.06em; transition:all 0.12s; }
-    .ws-export-btn:hover { border-color:var(--accent); color:var(--accent); }
-  </style>
-  <ViewTransitions />
-</head>
-<body>
-  <div class="layout">
-
-    <!-- Topbar -->
-    <div class="topbar">
-      <a href="/orbiter" class="logo">
-        <div class="logo-mark">OR</div>
-        Orbiter
-      </a>
-      <div class="topbar-site">{meta.siteName}</div>
-      <div class="topbar-right">
-        <button class="pal-trigger" onclick="__orbOpenPalette()" title="Command palette">{t.nav_cmd_palette} <kbd>⌘ K</kbd></button>
-        <a href="/orbiter/logout" class="dark-toggle" style="text-decoration:none;">{t.nav_signout}</a>
-        <button id="orb-dark-btn" onclick="__orbToggleDark()" class="dark-toggle" title="Toggle dark mode">● {t.nav_dark}</button>
+  <!-- Stats row -->
+  <div class="stats-row">
+    <div class="stat-cell">
+      <div class="stat-label">{t.dashboard_total}</div>
+      <div class="stat-num">{totalEntries}</div>
+      <div class="stat-sub">{collections.length} {t.dashboard_collections}</div>
+      <div class="stat-bar"><div class="stat-bar-fill accent" style={`width:100%`}></div></div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-label">{t.published}</div>
+      <div class="stat-num">{totalPublished}</div>
+      <div class="stat-sub">
+        <span class="stat-dot jade"></span>
+        {totalEntries > 0 ? Math.round(totalPublished / totalEntries * 100) : 0}% {t.dashboard_total.toLowerCase()}
       </div>
+      <div class="stat-bar"><div class="stat-bar-fill jade" style={`width:${totalEntries > 0 ? Math.round(totalPublished / totalEntries * 100) : 0}%`}></div></div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-label">{t.dashboard_drafts}</div>
+      <div class="stat-num">{totalDrafts}</div>
+      <div class="stat-sub">
+        <span class="stat-dot gold"></span>
+        {t.draft}
+      </div>
+      <div class="stat-bar"><div class="stat-bar-fill gold" style={`width:${totalEntries > 0 ? Math.round(totalDrafts / totalEntries * 100) : 0}%`}></div></div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-label">Media</div>
+      <div class="stat-num">{mediaCount}</div>
+      <div class="stat-sub">{t.dashboard_files}</div>
+      <div class="stat-bar"><div class="stat-bar-fill accent" style="width:60%"></div></div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- Recent entries -->
+    <div class="content-main">
+      <div class="section-head">
+        <div class="section-title">{t.dashboard_recently}</div>
+      </div>
+      {recent.length > 0 ? (
+        <div class="entry-list">
+          {recent.map(entry => (
+            <a href={`/orbiter/${entry.collectionId}/${entry.slug}`} class="entry-row">
+              <div>
+                <div class="entry-name">{entry.data?.title ?? entry.slug}</div>
+                <div class="entry-coll">{entry.collectionLabel}</div>
+              </div>
+              <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString(adminLocale)}</div>
+              <div class={`pill ${entry.status}`}>{entry.status === 'published' ? t.dashboard_live : t.dashboard_draft_dot}</div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <div class="empty">
+          {t.dashboard_no_entries}
+        </div>
+      )}
     </div>
 
-    <!-- Sidebar -->
-    <div id="orb-sidebar" class="sidebar" transition:persist>
-      <div class="nav-section">{t.nav_content}</div>
-      <a href="/orbiter" class="nav-item active"><span class="nav-icon">◈</span>{t.nav_dashboard}</a>
-      <SidebarCollections collections={allCollections} activeNav="dashboard" />
-      <div class="nav-section">{t.nav_assets}</div>
-      <a href="/orbiter/media" class="nav-item"><span class="nav-icon">⊞</span>{t.nav_media}<span class="nav-badge">{mediaCount}</span></a>
-      <div class="nav-section">{t.nav_system}</div>
-      <a href="/orbiter/schema"   class="nav-item"><span class="nav-icon">◈</span>{t.nav_collections}</a>
-      <a href="/orbiter/build"    class="nav-item"><span class="nav-icon">▲</span>{t.nav_build}</a>
-      <a href="/orbiter/settings" class="nav-item"><span class="nav-icon">◎</span>{t.nav_settings}</a>
-      <div class="sidebar-pod">
-        <div class="sidebar-pod-name">content.pod</div>
-        <div>{totalEntries} {t.entries} · {collections.length} {t.dashboard_collections}</div>
-        <div class="pod-status" style="margin-top:8px;"><div class="pod-dot"></div>pod synced</div>
+    <!-- Side: Collections + Quick Actions -->
+    <div class="content-side">
+      <div class="side-section">
+        <div class="section-head">
+          <div class="section-title">{t.dashboard_collections}</div>
+        </div>
+        {topLevelStats.map(col => {
+          const pct = col.total > 0 ? Math.round(col.published / col.total * 100) : 0;
+          return (
+            <div class="coll-card">
+              <div class="coll-card-head">
+                <div class="coll-card-name">{col.label}</div>
+                <div class="coll-card-count">{col.total}</div>
+              </div>
+              <div class="coll-progress">
+                <div class="coll-progress-fill" style={`width:${pct}%`}></div>
+              </div>
+              <div class="coll-card-meta">
+                <span class="pub">{col.published} {t.published}</span>
+                <span>{col.drafts} {t.dashboard_drafts}</span>
+              </div>
+              <div class="coll-actions">
+                <a href={`/orbiter/${col.id}/new`} class="btn-sm primary">+ {t.new_entry}</a>
+                <a href={`/orbiter/${col.id}`} class="btn-sm">{t.dashboard_show_all}</a>
+              </div>
+            </div>
+          );
+        })}
       </div>
+
+      <div class="support-widget">
+        <div class="support-label">Support</div>
+        <div class="support-text">{t.dashboard_support_text}</div>
+        <a href="https://buy.polar.sh/polar_cl_SFvmYDegcsKDv8O8ZylLlIiXzyNRM7Br9nBx942rj4Q" class="btn-support" target="_blank" rel="noopener">{t.dashboard_support_btn}</a>
+      </div>
+
     </div>
 
-    <!-- Main -->
-    <div class="main">
+  </div>
 
-      <!-- Hero -->
-      <div class="hero">
-        <div class="hero-left">
-          <div class="hero-site">{meta.siteName}</div>
-          <div class="hero-date">{today}</div>
-        </div>
-        <div class="hero-right">
-          <span id="deploy-status" class="deploy-status"></span>
-          {meta.siteUrl && (
-            <a href={meta.siteUrl} target="_blank" class="hero-url">↗ {t.dashboard_open_site}</a>
-          )}
-          {hasWebhook && (
-            <button class="btn-deploy" id="deploy-btn" onclick="triggerDeploy()">↑ Deploy</button>
-          )}
+  <!-- Workspace: Notes + Todos -->
+  <div class="workspace">
+
+    <!-- Notes -->
+    <div class="ws-panel">
+      <div class="ws-head">
+        <div class="section-title">Notes</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="ws-save-indicator" id="notes-indicator"></span>
+          <button class="ws-export-btn" onclick="exportNotes()" title="Export as Markdown">↓ md</button>
         </div>
       </div>
+      <textarea class="notes-area" id="notes-area" placeholder="Jot something down…">{initNotes}</textarea>
+    </div>
 
-      <!-- Stats row -->
-      <div class="stats-row">
-        <div class="stat-cell">
-          <div class="stat-label">{t.dashboard_total}</div>
-          <div class="stat-num">{totalEntries}</div>
-          <div class="stat-sub">{collections.length} {t.dashboard_collections}</div>
-          <div class="stat-bar"><div class="stat-bar-fill accent" style={`width:100%`}></div></div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-label">{t.published}</div>
-          <div class="stat-num">{totalPublished}</div>
-          <div class="stat-sub">
-            <span class="stat-dot jade"></span>
-            {totalEntries > 0 ? Math.round(totalPublished / totalEntries * 100) : 0}% {t.dashboard_total.toLowerCase()}
-          </div>
-          <div class="stat-bar"><div class="stat-bar-fill jade" style={`width:${totalEntries > 0 ? Math.round(totalPublished / totalEntries * 100) : 0}%`}></div></div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-label">{t.dashboard_drafts}</div>
-          <div class="stat-num">{totalDrafts}</div>
-          <div class="stat-sub">
-            <span class="stat-dot gold"></span>
-            {t.draft}
-          </div>
-          <div class="stat-bar"><div class="stat-bar-fill gold" style={`width:${totalEntries > 0 ? Math.round(totalDrafts / totalEntries * 100) : 0}%`}></div></div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-label">Media</div>
-          <div class="stat-num">{mediaCount}</div>
-          <div class="stat-sub">{t.dashboard_files}</div>
-          <div class="stat-bar"><div class="stat-bar-fill accent" style="width:60%"></div></div>
+    <!-- Todos -->
+    <div class="ws-panel">
+      <div class="ws-head">
+        <div class="section-title">To-Do</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="ws-save-indicator" id="todos-indicator"></span>
+          <button class="ws-export-btn" onclick="exportTodos()" title="Export as Markdown">↓ md</button>
         </div>
       </div>
-
-      <!-- Content -->
-      <div class="content">
-
-        <!-- Recent entries -->
-        <div class="content-main">
-          <div class="section-head">
-            <div class="section-title">{t.dashboard_recently}</div>
-          </div>
-          {recent.length > 0 ? (
-            <div class="entry-list">
-              {recent.map(entry => (
-                <a href={`/orbiter/${entry.collectionId}/${entry.slug}`} class="entry-row">
-                  <div>
-                    <div class="entry-name">{entry.data?.title ?? entry.slug}</div>
-                    <div class="entry-coll">{entry.collectionLabel}</div>
-                  </div>
-                  <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString(adminLocale)}</div>
-                  <div class={`pill ${entry.status}`}>{entry.status === 'published' ? t.dashboard_live : t.dashboard_draft_dot}</div>
-                </a>
-              ))}
-            </div>
-          ) : (
-            <div class="empty">
-              {t.dashboard_no_entries}
-            </div>
-          )}
-        </div>
-
-        <!-- Side: Collections + Quick Actions -->
-        <div class="content-side">
-          <div class="side-section">
-            <div class="section-head">
-              <div class="section-title">{t.dashboard_collections}</div>
-            </div>
-            {topLevelStats.map(col => {
-              const pct = col.total > 0 ? Math.round(col.published / col.total * 100) : 0;
-              return (
-                <div class="coll-card">
-                  <div class="coll-card-head">
-                    <div class="coll-card-name">{col.label}</div>
-                    <div class="coll-card-count">{col.total}</div>
-                  </div>
-                  <div class="coll-progress">
-                    <div class="coll-progress-fill" style={`width:${pct}%`}></div>
-                  </div>
-                  <div class="coll-card-meta">
-                    <span class="pub">{col.published} {t.published}</span>
-                    <span>{col.drafts} {t.dashboard_drafts}</span>
-                  </div>
-                  <div class="coll-actions">
-                    <a href={`/orbiter/${col.id}/new`} class="btn-sm primary">+ {t.new_entry}</a>
-                    <a href={`/orbiter/${col.id}`} class="btn-sm">{t.dashboard_show_all}</a>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div class="support-widget">
-            <div class="support-label">Support</div>
-            <div class="support-text">{t.dashboard_support_text}</div>
-            <a href="https://buy.polar.sh/polar_cl_SFvmYDegcsKDv8O8ZylLlIiXzyNRM7Br9nBx942rj4Q" class="btn-support" target="_blank" rel="noopener">{t.dashboard_support_btn}</a>
-          </div>
-
-        </div>
-
+      <div class="todo-input-row">
+        <span class="todo-prompt">›</span>
+        <input class="todo-input" id="todo-input" placeholder="Add a task…" type="text" />
+        <button class="todo-add-btn" onclick="todoAdd()">↵ add</button>
       </div>
-
-      <!-- Workspace: Notes + Todos -->
-      <div class="workspace">
-
-        <!-- Notes -->
-        <div class="ws-panel">
-          <div class="ws-head">
-            <div class="section-title">Notes</div>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <span class="ws-save-indicator" id="notes-indicator"></span>
-              <button class="ws-export-btn" onclick="exportNotes()" title="Export as Markdown">↓ md</button>
-            </div>
-          </div>
-          <textarea class="notes-area" id="notes-area" placeholder="Jot something down…">{initNotes}</textarea>
-        </div>
-
-        <!-- Todos -->
-        <div class="ws-panel">
-          <div class="ws-head">
-            <div class="section-title">To-Do</div>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <span class="ws-save-indicator" id="todos-indicator"></span>
-              <button class="ws-export-btn" onclick="exportTodos()" title="Export as Markdown">↓ md</button>
-            </div>
-          </div>
-          <div class="todo-input-row">
-            <span class="todo-prompt">›</span>
-            <input class="todo-input" id="todo-input" placeholder="Add a task…" type="text" />
-            <button class="todo-add-btn" onclick="todoAdd()">↵ add</button>
-          </div>
-          <div class="todo-list" id="todo-list"></div>
-          <div class="todo-footer">
-            <span class="todo-count" id="todo-count"></span>
-            <button class="todo-clear-btn" id="todo-clear-btn" onclick="todoClearDone()" style="display:none">Clear done</button>
-          </div>
-        </div>
-
+      <div id="todo-list"></div>
+      <div class="todo-footer">
+        <span class="todo-count" id="todo-count"></span>
+        <button class="todo-clear-btn" id="todo-clear-btn" onclick="todoClearDone()" style="display:none">Clear done</button>
       </div>
     </div>
 
   </div>
 
-  <script set:html={adminUtils} is:inline></script>
   <script define:vars={{ initNotes, initTodos }}>
     // ── Deploy ────────────────────────────────────────────────────────
     window.triggerDeploy = async function() {
@@ -617,12 +503,10 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
       todoSave();
     };
 
-    // Enter key in todo input
     document.getElementById('todo-input').addEventListener('keydown', function(e) {
       if (e.key === 'Enter') todoAdd();
     });
 
-    // Initial render
     todoRender();
 
     // ── Exports ───────────────────────────────────────────────────────
@@ -653,5 +537,5 @@ const today = new Date().toLocaleDateString(adminLocale, { weekday: 'long', year
       mdDownload('todos-' + date + '.md', lines.join('\n'));
     };
   </script>
-</body>
-</html>
+
+</AdminLayout>

@@ -1,11 +1,9 @@
 ---
 export const prerender = false;
-import { ViewTransitions } from 'astro:transitions';
 import { podPath } from 'orbiter:db';
 import { useTranslations } from '../src/i18n.js';
 import { openPod } from '@a83/orbiter-core';
-import adminUtils from 'orbiter:admin-utils';
-import SidebarCollections from './SidebarCollections.astro';
+import AdminLayout from './AdminLayout.astro';
 
 // ── Auth ─────────────────────────────────────────────────────────────
 { const _db = openPod(podPath); const _u = _db.checkSession(Astro.cookies.get('orb_sess')?.value ?? ''); _db.close(); if (!_u) return Astro.redirect('/orbiter/login'); }
@@ -82,6 +80,18 @@ if (Astro.request.method === 'POST') {
         db.db.prepare(`INSERT INTO _versions (id, entry_id, data, created_at) VALUES (?, ?, ?, ?)`)
           .run(crypto.randomUUID(), existing.id, data, now);
       }
+    } else {
+      // Create locale variant at this specific slug
+      const newId = crypto.randomUUID();
+      savedSlug = newSlug;
+      db.db.prepare(`
+        INSERT OR IGNORE INTO _entries (id, collection_id, slug, status, data, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(newId, collectionId, newSlug, status, data, now, now);
+      if (!isAutosave) {
+        db.db.prepare(`INSERT INTO _versions (id, entry_id, data, created_at) VALUES (?, ?, ?, ?)`)
+          .run(crypto.randomUUID(), newId, data, now);
+      }
     }
   }
 
@@ -128,84 +138,57 @@ const allCollections = db.getCollections().map(c => ({
 }));
 const adminLocale = db.getMeta('site.locale') ?? 'de-AT';
 const siteUrl     = (db.getMeta('site.url') ?? '').replace(/\/$/, '');
+
+// ── Locale i18n ───────────────────────────────────────────────────────
+const LOCALE_SEP  = '--';
+const siteLocales = (db.getMeta('site.locales') ?? '').split(',').map((l: string) => l.trim()).filter(Boolean);
+const localeMatch = !isNew && slug.includes(LOCALE_SEP);
+const baseSlug    = localeMatch ? slug.slice(0, slug.lastIndexOf(LOCALE_SEP)) : (isNew ? '' : slug);
+const entryLocale = localeMatch ? slug.slice(slug.lastIndexOf(LOCALE_SEP) + 2) : '';
+const isLocaleNew = !isNew && !entry; // locale variant that doesn't exist yet
+
+// Which variants already exist (for switcher dots)
+const existingLocales: Record<string, boolean> = {};
+if (siteLocales.length > 0 && !isNew) {
+  const effBase = baseSlug || slug;
+  existingLocales[''] = !!db.getEntry(collectionId, effBase);
+  for (const loc of siteLocales) {
+    existingLocales[loc] = !!db.getEntry(collectionId, `${effBase}${LOCALE_SEP}${loc}`);
+  }
+}
+
+// Pre-populate new locale variant from primary entry
+let prefillData: any = null;
+if (isLocaleNew && baseSlug) {
+  const primary = db.getEntry(collectionId, baseSlug);
+  if (primary) prefillData = primary.data;
+}
+
 db.close();
 
 const locale = Astro.cookies.get('orb_locale')?.value ?? 'en';
 const t = useTranslations(locale);
 
-const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? slug);
+const title = isNew       ? `New ${col.label.slice(0,-1)}`
+  : isLocaleNew           ? (prefillData?.title ?? slug)
+  : (entry?.data?.title ?? slug);
 ---
-<html lang={locale}>
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f5f2ec'/><rect x='5' y='5' width='22' height='22' fill='none' stroke='%239a6e30' stroke-width='1.5'/><text x='16' y='21' font-family='monospace' font-size='11' fill='%239a6e30' text-anchor='middle'>OR</text></svg>" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Orbiter — {title}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg0:#f5f2ec; --bg1:#faf8f3; --bg2:#ffffff; --bg3:#edeae3;
-      --line:#e0dbd0; --line2:rgba(0,0,0,0.04);
-      --muted:#a09890; --mid:#706860; --text:#3a3228; --heading:#1a1510;
-      --gold:#9a6e30; --gold-bg:rgba(154,110,48,0.08);
-      --jade:#1e6b50; --jade-bg:rgba(30,107,80,0.07);
-      --accent:#3d4fa8; --accent-bg:rgba(61,79,168,0.06);
-      --shadow:0 1px 3px rgba(0,0,0,0.08);
-      --btn-hover:#7a5520;
-      --sans:"Inter",system-ui,-apple-system,sans-serif; --radius:4px;
-      --serif:"Noto Serif JP",serif; --mono:"DM Mono",monospace;
-    }
-    html.dark {
-      --bg0:#0f0f14; --bg1:#14141a; --bg2:#1c1c24; --bg3:#22222d;
-      --line:#2a2a3a; --line2:rgba(255,255,255,0.04);
-      --muted:#52526e; --mid:#8080a0; --text:#b0b0cc; --heading:#e0e0f0;
-      --gold:#c8a86b; --gold-bg:rgba(200,168,107,0.08);
-      --jade:#2d8b6a; --jade-bg:rgba(45,139,106,0.08);
-      --accent:#7a8fd4; --accent-bg:rgba(122,143,212,0.08);
-    }
-    html,body { background:var(--bg0); color:var(--text); font-family:var(--sans); font-size:14px; line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
+<style>
+  /* Status chip */
+  .status-chip { font-size:9px; padding:2px 8px; border:1px solid currentColor; letter-spacing:0.08em; }
+  .status-chip.published { color:var(--jade); }
+  .status-chip.draft { color:var(--gold); }
 
-    /* Layout */
-    .layout { display:grid; grid-template-columns:232px 1fr; grid-template-rows:56px 1fr; height:100vh; }
+  /* Locale switcher */
+  .locale-switcher { display:flex; flex-wrap:wrap; gap:4px; }
+  .locale-pill { font-size:9px; padding:3px 10px; border:1px solid var(--line); color:var(--mid); text-decoration:none; font-family:var(--mono); letter-spacing:0.06em; border-radius:2px; transition:all 0.12s; }
+  .locale-pill:hover { border-color:var(--accent); color:var(--accent); }
+  .locale-pill.active { background:var(--accent-bg); border-color:var(--accent); color:var(--accent); font-weight:500; }
+  .locale-pill.missing { border-style:dashed; color:var(--muted); }
+  .locale-pill.missing:hover { border-style:solid; border-color:var(--gold); color:var(--gold); }
 
-    /* Topbar */
-    .topbar { grid-column:1/-1; background:var(--bg2); border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 22px; gap:0; z-index:10; }
-    .logo { font-family:var(--serif); font-weight:200; font-size:17px; color:var(--heading); display:flex; align-items:center; gap:9px; letter-spacing:0.1em; text-decoration:none; flex-shrink:0; }
-    .logo-mark { width:22px; height:22px; border:1px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:9px; color:var(--gold); font-family:var(--mono); }
-    .breadcrumb { margin-left:20px; font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px; white-space:nowrap; overflow:hidden; }
-    .breadcrumb a { color:var(--mid); text-decoration:none; flex-shrink:0; }
-    .breadcrumb a:hover { color:var(--heading); }
-    .breadcrumb .sep { color:var(--line); flex-shrink:0; }
-    .breadcrumb .current { color:var(--text); overflow:hidden; text-overflow:ellipsis; }
-    .topbar-right { margin-left:auto; display:flex; align-items:center; gap:12px; }
-    .pod-status { font-size:10px; color:var(--jade); display:flex; align-items:center; gap:5px; }
-    .dark-toggle { background:none; border:1px solid var(--line); color:var(--mid); font-family:var(--mono); font-size:10px; padding:3px 10px; cursor:pointer; letter-spacing:0.04em; transition:color 0.12s,border-color 0.12s,background 0.12s; border-radius:var(--radius); }
-    .dark-toggle:hover { color:var(--heading); border-color:var(--mid); background:var(--bg3); }
-    .pod-dot { width:5px; height:5px; border-radius:50%; background:var(--jade); animation:pulse 2.5s ease-in-out infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
-    .status-chip { font-size:9px; padding:2px 8px; border:1px solid currentColor; letter-spacing:0.08em; }
-    .status-chip.published { color:var(--jade); }
-    .status-chip.draft { color:var(--gold); }
-
-    /* Sidebar */
-    .sidebar { background:var(--bg1); border-right:1px solid var(--line); padding:16px 0; display:flex; flex-direction:column; overflow-y:auto; }
-    .nav-section { font-size:10px; letter-spacing:0.22em; text-transform:uppercase; color:var(--muted); padding:0 18px; margin:20px 0 4px; font-weight:500; }
-    .nav-section:first-child { margin-top:0; }
-    .nav-item { display:flex; align-items:center; gap:10px; padding:8px 18px; font-size:13px; color:var(--mid); text-decoration:none; position:relative; transition:color 0.12s,background 0.12s; }
-    .nav-item:hover { color:var(--heading); background:var(--line2); }
-    .nav-item.active { color:var(--heading); background:var(--accent-bg); font-weight:500; }
-    .nav-item.active::before { content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--gold); border-radius:0 1px 1px 0; }
-    .nav-icon { width:14px; text-align:center; font-size:11px; opacity:0.45; flex-shrink:0; }
-    .nav-badge { margin-left:auto; font-size:10px; color:var(--muted); background:var(--bg3); border:1px solid var(--line); padding:1px 7px; border-radius:3px; }
-    .sidebar-pod { margin-top:auto; padding:12px 16px; border-top:1px solid var(--line); font-size:11px; color:var(--muted); }
-    .sidebar-pod-name { color:var(--text); font-size:12px; margin-bottom:2px; display:flex; align-items:center; gap:5px; }
-    .sidebar-pod-name::before { content:"◆"; font-size:6px; color:var(--gold); }
-
-    /* Editor layout */
-    .editor-shell { display:grid; grid-template-columns:1fr 280px; height:calc(100vh - 56px); overflow:hidden; }
+  /* Editor layout */
+  .editor-shell { display:grid; grid-template-columns:1fr 280px; height:100%; overflow:hidden; }
     .editor-main { display:flex; flex-direction:column; overflow:hidden; background:var(--bg0); }
 
     /* Toolbar */
@@ -399,54 +382,27 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
     .block-picker-item .bp-icon { width:24px; height:24px; display:flex; align-items:center; justify-content:center; background:var(--bg3); border:1px solid var(--line); font-size:10px; font-family:var(--mono); color:var(--mid); flex-shrink:0; }
     .block-picker-item .bp-label { font-size:11px; color:var(--text); }
     .block-picker-item .bp-hint { font-size:9px; color:var(--muted); margin-left:auto; }
-    .block-picker-empty { padding:12px; font-size:11px; color:var(--muted); text-align:center; }
-  </style>
-  <ViewTransitions />
-</head>
-<body>
-  <div class="layout">
+  .block-picker-empty { padding:12px; font-size:11px; color:var(--muted); text-align:center; }
+</style>
+<script is:inline src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js" slot="head"></script>
+<AdminLayout
+  title={title}
+  activeNav={collectionId}
+  breadcrumbs={[
+    {label: t.nav_dashboard, href: '/orbiter'},
+    {label: col.label, href: `/orbiter/${collectionId}`},
+    {label: isNew ? t.new_entry : slug},
+  ]}
+  collections={allCollections}
+  podInfo={isNew ? t.new_entry : `${t.entries}: ${slug}`}
+  locale={locale}
+>
+  <Fragment slot="topbar-right">
+    <div style="font-size:10px;color:var(--muted);" id="autosave-indicator"></div>
+    <div style="font-size:10px;color:var(--muted);padding:0 2px 0 10px;border-left:1px solid var(--line);" id="wc"></div>
+  </Fragment>
 
-    <!-- Topbar -->
-    <div class="topbar">
-      <a href="/orbiter" class="logo">
-        <div class="logo-mark">OR</div>
-        Orbiter
-      </a>
-      <div class="breadcrumb">
-        <a href="/orbiter">Dashboard</a>
-        <span class="sep">/</span>
-        <a href={`/orbiter/${collectionId}`}>{col.label}</a>
-        <span class="sep">/</span>
-        <span class="current">{isNew ? t.new_entry : slug}</span>
-      </div>
-      <div class="topbar-right">
-        <div style="font-size:10px;color:var(--muted);" id="autosave-indicator"></div>
-        <div style="font-size:10px;color:var(--muted);padding:0 2px 0 10px;border-left:1px solid var(--line);" id="wc"></div>
-        <button class="pal-trigger" onclick="__orbOpenPalette()" title="Command palette">{t.nav_cmd_palette} <kbd>Strg + K</kbd></button>
-        <a href="/orbiter/logout" class="dark-toggle" style="text-decoration:none;">{t.nav_signout}</a>
-        <button id="orb-dark-btn" onclick="__orbToggleDark()" class="dark-toggle" title="Toggle dark mode">● {t.nav_dark}</button>
-      </div>
-    </div>
-
-    <!-- Sidebar -->
-    <div id="orb-sidebar" class="sidebar" transition:persist>
-      <div class="nav-section">{t.nav_content}</div>
-      <a href="/orbiter" class="nav-item"><span class="nav-icon">◈</span>{t.nav_dashboard}</a>
-      <SidebarCollections collections={allCollections} activeNav={collectionId} />
-      <div class="nav-section">{t.nav_assets}</div>
-      <a href="/orbiter/media" class="nav-item"><span class="nav-icon">⊞</span>{t.nav_media}</a>
-      <div class="nav-section">{t.nav_system}</div>
-      <a href="/orbiter/schema"   class="nav-item"><span class="nav-icon">◈</span>{t.nav_collections}</a>
-      <a href="/orbiter/build"    class="nav-item"><span class="nav-icon">▲</span>{t.nav_build}</a>
-      <a href="/orbiter/settings" class="nav-item"><span class="nav-icon">◎</span>{t.nav_settings}</a>
-      <div class="sidebar-pod">
-        <div class="sidebar-pod-name">content.pod</div>
-        <div>{isNew ? t.new_entry : `${t.entries}: ${slug}`}</div>
-        <div class="pod-status" style="margin-top:8px;"><div class="pod-dot"></div>pod synced</div>
-      </div>
-    </div>
-
-    <!-- Editor -->
+  <!-- Editor -->
     <div class="editor-shell">
       <form method="POST" id="editor-form" style="display:contents;">
         <input type="hidden" name="status" id="status-input" value={entry?.status ?? 'draft'} />
@@ -493,14 +449,14 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
                 spellcheck="false"
                 id="title-input"
                 oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';updateWc()"
-              >{entry?.data?.title ?? ''}</textarea>
+              >{entry?.data?.title ?? prefillData?.title ?? ''}</textarea>
 
               <div class="editor-slug-line">
                 /{collectionId}/<span id="slug-preview">{isNew ? '' : slug}</span>
               </div>
 
               <div id="be-editor" class="be-editor" spellcheck="false"></div>
-              <textarea name="body" id="body-input" style="display:none">{entry?.data?.body ?? ''}</textarea>
+              <textarea name="body" id="body-input" style="display:none">{entry?.data?.body ?? prefillData?.body ?? ''}</textarea>
 
               <div class="word-count" id="word-count-display"></div>
             </div>
@@ -553,14 +509,14 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
                       type="datetime-local"
                       class="field-input"
                       name={key}
-                      value={entry?.data?.[key] ?? ''}
+                      value={entry?.data?.[key] ?? prefillData?.[key] ?? ''}
                     />
                   )}
 
                   {field.type === 'select' && (
                     <select class="field-select" name={key}>
                       {(field.options ?? []).map((opt: string) => (
-                        <option value={opt} selected={entry?.data?.[key] === opt}>
+                        <option value={opt} selected={(entry?.data?.[key] ?? prefillData?.[key]) === opt}>
                           {(field.optionLabels as any)?.[opt] ?? opt}
                         </option>
                       ))}
@@ -570,7 +526,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
                   {field.type === 'weekdays' && (
                     <div class="weekday-grid" id={`wd-grid-${key}`}>
                       {([['Mon','Mo'],['Tue','Di'],['Wed','Mi'],['Thu','Do'],['Fri','Fr'],['Sat','Sa'],['Sun','So']] as [string,string][]).map(([day, label]) => {
-                        const active = (entry?.data?.[key] ?? []).includes(day);
+                        const active = (entry?.data?.[key] ?? prefillData?.[key] ?? []).includes(day);
                         return (
                           <button
                             type="button"
@@ -580,7 +536,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
                         );
                       })}
                       <input type="hidden" name={key} id={`wd-val-${key}`}
-                        value={(entry?.data?.[key] ?? []).join(',')} />
+                        value={(entry?.data?.[key] ?? prefillData?.[key] ?? []).join(',')} />
                     </div>
                   )}
 
@@ -624,7 +580,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
                         class="tag-input"
                         name={key}
                         id={`arr-${key}`}
-                        value={(entry?.data?.[key] ?? []).join(', ')}
+                        value={(entry?.data?.[key] ?? prefillData?.[key] ?? []).join(', ')}
                         placeholder="tag1, tag2, …"
                         oninput={`renderTags('${key}')`}
                       />
@@ -668,7 +624,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
                       type={field.type === 'url' ? 'url' : field.type === 'email' ? 'email' : 'text'}
                       class="field-input"
                       name={key}
-                      value={entry?.data?.[key] ?? ''}
+                      value={entry?.data?.[key] ?? prefillData?.[key] ?? ''}
                       placeholder={field.type === 'url' ? 'https://…' : ''}
                     />
                   )}
@@ -677,7 +633,7 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
                     field.unitSelect ? (
                       <div style="display:flex;align-items:center;gap:8px;">
                         <input type="number" class="field-input" name={key}
-                          value={entry?.data?.[key] ?? ''} min="1" style="width:80px;" />
+                          value={entry?.data?.[key] ?? prefillData?.[key] ?? ''} min="1" style="width:80px;" />
                         <span
                           id={`unit-${key}`}
                           data-unit-select={field.unitSelect as string}
@@ -687,18 +643,37 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
                       </div>
                     ) : (
                       <input type="number" class="field-input" name={key}
-                        value={entry?.data?.[key] ?? ''} min="1" style="width:100%;" />
+                        value={entry?.data?.[key] ?? prefillData?.[key] ?? ''} min="1" style="width:100%;" />
                     )
                   )}
 
                   {field.type === 'date' && (
                     <input type="date" class="field-input" name={key}
-                      value={entry?.data?.[key] ?? ''} />
+                      value={entry?.data?.[key] ?? prefillData?.[key] ?? ''} />
                   )}
 
                 </div>
                 );
               })}
+            </div>
+          )}
+
+          <!-- Locale switcher -->
+          {siteLocales.length > 0 && !isNew && (
+            <div class="meta-section">
+              <div class="meta-label">Locales</div>
+              <div class="locale-switcher">
+                <a
+                  href={`/orbiter/${collectionId}/${baseSlug || slug}`}
+                  class={`locale-pill ${!entryLocale ? 'active' : ''} ${existingLocales[''] === false ? 'missing' : ''}`}
+                >primary</a>
+                {siteLocales.map((loc: string) => (
+                  <a
+                    href={`/orbiter/${collectionId}/${baseSlug || slug}${LOCALE_SEP}${loc}`}
+                    class={`locale-pill ${entryLocale === loc ? 'active' : ''} ${existingLocales[loc] === false ? 'missing' : ''}`}
+                  >{loc}</a>
+                ))}
+              </div>
             </div>
           )}
 
@@ -753,9 +728,6 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
       </form>
     </div>
 
-  </div>
-
-  <script set:html={adminUtils} is:inline></script>
   <script define:vars={{ siteUrl, collectionId, i18n: { untitled: t.editor_untitled, unsaved: t.editor_unsaved, saving: t.editor_autosaving, saved: t.editor_saved, err: t.editor_err } }}>
     // Auto-resize title textarea on load
     const titleTA = document.getElementById('title-input');
@@ -1468,5 +1440,5 @@ const title = isNew ? `New ${col.label.slice(0,-1)}` : (entry?.data?.title ?? sl
       }, 0);
     };
   </script>
-</body>
-</html>
+
+</AdminLayout>

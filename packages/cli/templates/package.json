@@ -1,0 +1,16 @@
+{
+  "name": "{{name}}",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev":   "astro dev",
+    "build": "astro build",
+    "start": "node ./dist/server/entry.mjs"
+  },
+  "dependencies": {
+    "@a83/orbiter-integration": "latest",
+    "@astrojs/node": "^9.0.0",
+    "astro": "^5.0.0"
+  }
+}

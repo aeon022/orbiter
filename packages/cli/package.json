@@ -1,0 +1,38 @@
+{
+  "name": "@a83/orbiter-cli",
+  "version": "0.1.0",
+  "description": "CLI for Orbiter CMS — init, add-user, export",
+  "type": "module",
+  "bin": {
+    "orbiter": "./bin/orbiter.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "templates"
+  ],
+  "scripts": {
+    "build": "echo 'No build step'"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "astro",
+    "cms",
+    "orbiter",
+    "cli",
+    "headless-cms"
+  ],
+  "author": "ABTEILUNG83",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aeon022/orbiter.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/aeon022/orbiter#readme",
+  "dependencies": {
+    "@a83/orbiter-core": "^0.1.0"
+  }
+}

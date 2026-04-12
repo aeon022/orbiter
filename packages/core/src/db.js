@@ -130,6 +130,16 @@ export class OrbiterDB {
     return this.db.prepare('SELECT * FROM _users WHERE username = ?').get(username) ?? null;
   }
 
+  getUsers() {
+    return this.db.prepare(
+      'SELECT id, username, role, created_at, last_login FROM _users ORDER BY created_at ASC'
+    ).all();
+  }
+
+  deleteUser(id) {
+    this.db.prepare('DELETE FROM _users WHERE id = ?').run(id);
+  }
+
   insertUser(id, username, hashedPassword, role = 'editor') {
     this.db.prepare(
       'INSERT INTO _users (id, username, password, role) VALUES (?, ?, ?, ?)'

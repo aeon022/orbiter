@@ -1,0 +1,22 @@
+---
+import { getCollection } from 'orbiter:collections';
+
+const posts = await getCollection('posts');
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Orbiter Site</title>
+</head>
+<body>
+  <h1>My Orbiter Site</h1>
+  <ul>
+    {posts.map(p => (
+      <li><a href={`/posts/${p.slug}`}>{p.data.title ?? p.slug}</a></li>
+    ))}
+  </ul>
+  <p><a href="/orbiter">→ Admin</a></p>
+</body>
+</html>

@@ -1,0 +1,50 @@
+---
+export const prerender = false;
+
+// Serve the PWA manifest for the Orbiter admin
+const manifest = {
+  name: 'Orbiter Admin',
+  short_name: 'Orbiter',
+  description: 'Orbiter CMS — content editor',
+  start_url: '/orbiter',
+  scope: '/orbiter',
+  display: 'standalone',
+  orientation: 'portrait-primary',
+  background_color: '#f5f2ec',
+  theme_color: '#9a6e30',
+  categories: ['productivity'],
+  icons: [
+    {
+      src: '/orbiter/icon-192',
+      sizes: '192x192',
+      type: 'image/svg+xml',
+      purpose: 'any',
+    },
+    {
+      src: '/orbiter/icon-512',
+      sizes: '512x512',
+      type: 'image/svg+xml',
+      purpose: 'any maskable',
+    },
+  ],
+  shortcuts: [
+    {
+      name: 'Dashboard',
+      url: '/orbiter',
+      description: 'Go to dashboard',
+    },
+    {
+      name: 'Media',
+      url: '/orbiter/media',
+      description: 'Open media library',
+    },
+  ],
+};
+
+return new Response(JSON.stringify(manifest), {
+  headers: {
+    'Content-Type': 'application/manifest+json',
+    'Cache-Control': 'public, max-age=86400',
+  },
+});
+---

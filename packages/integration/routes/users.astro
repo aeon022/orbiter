@@ -1,0 +1,204 @@
+---
+export const prerender = false;
+import { podPath } from 'orbiter:db';
+import { openPod, hashPassword } from '@a83/orbiter-core';
+import { useTranslations } from '../src/i18n.js';
+import AdminLayout from './AdminLayout.astro';
+
+// ── Auth + role guard ─────────────────────────────────────────────────
+const _authDb   = openPod(podPath);
+const _sessUser = _authDb.checkSession(Astro.cookies.get('orb_sess')?.value ?? '');
+_authDb.close();
+if (!_sessUser)              return Astro.redirect('/orbiter/login');
+if (_sessUser.role !== 'admin') return Astro.redirect('/orbiter');
+
+const locale = Astro.cookies.get('orb_locale')?.value ?? 'en';
+const t = useTranslations(locale);
+
+// ── Handle POST ───────────────────────────────────────────────────────
+let formError = '';
+
+if (Astro.request.method === 'POST') {
+  const form   = await Astro.request.formData();
+  const action = form.get('_action')?.toString();
+  const db     = openPod(podPath);
+
+  if (action === 'create-user') {
+    const username = form.get('username')?.toString().trim() ?? '';
+    const password = form.get('password')?.toString() ?? '';
+    const role     = form.get('role')?.toString() === 'admin' ? 'admin' : 'editor';
+
+    if (password.length < 8) {
+      formError = t.users_pw_short;
+      db.close();
+    } else {
+      const taken = db.db.prepare('SELECT id FROM _users WHERE username = ?').get(username);
+      if (taken) {
+        formError = t.users_taken;
+        db.close();
+      } else {
+        const hash = await hashPassword(password);
+        db.insertUser(crypto.randomUUID(), username, hash, role);
+        db.close();
+        return Astro.redirect('/orbiter/users?saved=1');
+      }
+    }
+
+  } else if (action === 'delete-user') {
+    const userId = form.get('user_id')?.toString() ?? '';
+    if (userId === _sessUser.id) {
+      formError = t.users_no_self;
+      db.close();
+    } else {
+      db.deleteUser(userId);
+      db.close();
+      return Astro.redirect('/orbiter/users?deleted=1');
+    }
+  } else {
+    db.close();
+  }
+}
+
+// ── GET ───────────────────────────────────────────────────────────────
+const db             = openPod(podPath);
+const users          = db.getUsers();
+const allCollections = db.getCollections().map(c => ({
+  id: c.id, label: c.label, total: db.getEntries(c.id).length,
+}));
+const formatVersion  = db.getMeta('format_version') ?? '1';
+const adminLocale    = db.getMeta('site.locale') ?? 'en-US';
+db.close();
+
+const saved   = Astro.url.searchParams.get('saved')   === '1';
+const deleted = Astro.url.searchParams.get('deleted')  === '1';
+---
+<style>
+  .main-inner { padding:32px 40px; max-width:800px; }
+  .main-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:32px; padding-bottom:18px; border-bottom:1px solid var(--line); }
+  .main-title { font-family:var(--serif); font-weight:200; font-size:26px; color:var(--heading); letter-spacing:0.05em; line-height:1; }
+
+  /* User table */
+  .user-table { border:1px solid var(--line); margin-bottom:32px; }
+  .user-thead { display:grid; grid-template-columns:1fr 90px 140px 80px; padding:7px 16px; background:var(--bg1); border-bottom:1px solid var(--line); }
+  .user-thead-cell { font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); }
+  .user-row { display:grid; grid-template-columns:1fr 90px 140px 80px; align-items:center; padding:12px 16px; border-bottom:1px solid var(--line2); }
+  .user-row:last-child { border-bottom:none; }
+  .user-row.is-self { background:var(--accent-bg); }
+  .user-name { font-size:12px; color:var(--text); display:flex; align-items:center; gap:8px; }
+  .user-self-tag { font-size:9px; color:var(--accent); background:var(--accent-bg); border:1px solid rgba(61,79,168,0.2); padding:1px 6px; }
+  .role-badge { font-size:9px; padding:2px 8px; letter-spacing:0.06em; }
+  .role-badge.admin  { color:var(--gold);   background:var(--gold-bg);   border:1px solid rgba(154,110,48,0.2); }
+  .role-badge.editor { color:var(--muted);  background:var(--bg3);       border:1px solid var(--line); }
+  .user-date { font-size:11px; color:var(--mid); }
+  .btn-delete { padding:3px 10px; background:transparent; border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:9px; letter-spacing:0.06em; cursor:pointer; transition:all 0.15s; }
+  .btn-delete:hover { border-color:var(--crimson); color:var(--crimson); background:var(--crimson-bg); }
+  .btn-delete:disabled { opacity:0.3; cursor:default; }
+
+  /* Add user form */
+  .add-group { background:var(--bg2); border:1px solid var(--line); }
+  .group-header { padding:10px 20px; border-bottom:1px solid var(--line); font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:8px; }
+  .group-header::before { content:"—"; color:var(--gold); }
+  .add-row { display:grid; grid-template-columns:1fr 1fr 120px; gap:12px; padding:16px 20px; align-items:end; }
+  .add-field { display:flex; flex-direction:column; gap:5px; }
+  .add-label { font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); }
+  .field-input,.field-select { width:100%; background:var(--bg0); border:1px solid var(--line); padding:7px 9px; color:var(--heading); font-family:var(--mono); font-size:11px; outline:none; appearance:none; transition:border-color 0.15s; }
+  .field-input:focus,.field-select:focus { border-color:var(--accent); }
+  .btn-add { padding:9px 18px; background:var(--gold); border:1px solid var(--gold); color:var(--bg0); font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+  .btn-add:hover { background:#7a5520; border-color:#7a5520; }
+
+  .error-banner { background:var(--crimson-bg); border:1px solid rgba(139,38,53,0.15); padding:7px 20px; font-size:10px; color:var(--crimson); display:flex; align-items:center; gap:6px; margin:0 20px 16px; }
+  .error-banner::before { content:"✕"; }
+  .saved-banner { background:var(--jade-bg); border-bottom:1px solid rgba(30,107,80,0.15); padding:8px 40px; font-size:11px; color:var(--jade); display:flex; align-items:center; gap:6px; letter-spacing:0.04em; }
+  .saved-banner::before { content:"✓"; }
+
+  .empty-state { padding:40px; text-align:center; color:var(--muted); font-size:12px; }
+</style>
+<AdminLayout
+  title={t.users_title}
+  activeNav="users"
+  breadcrumbs={[{label: t.nav_dashboard, href: '/orbiter'}, {label: t.users_title}]}
+  collections={allCollections}
+  podInfo={`v${formatVersion} format`}
+  locale={locale}
+>
+  {saved   && <div class="saved-banner">{t.users_saved}</div>}
+  {deleted && <div class="saved-banner">{t.users_deleted}</div>}
+
+  <div class="main-inner">
+    <div class="main-header">
+      <div class="main-title">{t.users_title}</div>
+    </div>
+
+    <!-- User list -->
+    {users.length > 0 ? (
+      <div class="user-table">
+        <div class="user-thead">
+          <div class="user-thead-cell">{t.users_username}</div>
+          <div class="user-thead-cell">{t.users_role}</div>
+          <div class="user-thead-cell">{t.users_last_login}</div>
+          <div class="user-thead-cell"></div>
+        </div>
+        {users.map(u => (
+          <div class={`user-row ${u.id === _sessUser.id ? 'is-self' : ''}`}>
+            <div class="user-name">
+              {u.username}
+              {u.id === _sessUser.id && <span class="user-self-tag">you</span>}
+            </div>
+            <div>
+              <span class={`role-badge ${u.role}`}>{u.role === 'admin' ? t.users_role_admin : t.users_role_editor}</span>
+            </div>
+            <div class="user-date">
+              {u.last_login
+                ? new Date(u.last_login).toLocaleDateString(adminLocale)
+                : '—'}
+            </div>
+            <div>
+              <form method="POST">
+                <input type="hidden" name="_action" value="delete-user" />
+                <input type="hidden" name="user_id" value={u.id} />
+                <button
+                  type="submit"
+                  class="btn-delete"
+                  disabled={u.id === _sessUser.id}
+                  onclick={`return confirm('${t.users_delete_confirm}')`}
+                >{t.users_delete}</button>
+              </form>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div class="empty-state">{t.users_empty}</div>
+    )}
+
+    <!-- Add user form -->
+    <div class="add-group">
+      <div class="group-header">{t.users_add}</div>
+      <form method="POST">
+        <input type="hidden" name="_action" value="create-user" />
+        <div class="add-row">
+          <div class="add-field">
+            <label class="add-label">{t.users_username}</label>
+            <input class="field-input" type="text" name="username" autocomplete="off" required placeholder="username" />
+          </div>
+          <div class="add-field">
+            <label class="add-label">{t.users_password} — {t.users_pw_desc}</label>
+            <input class="field-input" type="password" name="password" autocomplete="new-password" required minlength="8" />
+          </div>
+          <div class="add-field">
+            <label class="add-label">{t.users_role}</label>
+            <select class="field-select" name="role">
+              <option value="editor">{t.users_role_editor}</option>
+              <option value="admin">{t.users_role_admin}</option>
+            </select>
+          </div>
+        </div>
+        {formError && <div class="error-banner">{formError}</div>}
+        <div style="padding:0 20px 16px;display:flex;justify-content:flex-end;">
+          <button type="submit" class="btn-add">+ {t.users_add}</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</AdminLayout>

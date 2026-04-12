@@ -1,0 +1,81 @@
+---
+export const prerender = false;
+
+// Service Worker for Orbiter admin PWA.
+// Served at /orbiter/sw.js (scope: /orbiter/).
+// Strategy:
+//   - Static assets (fonts, JS, CSS): cache-first
+//   - Admin HTML pages: network-first with offline fallback
+
+const CACHE   = 'orb-v1';
+const OFFLINE  = '/orbiter/offline';
+
+const PRECACHE = [
+  '/orbiter',
+  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap',
+];
+
+const sw = `
+const CACHE   = '${CACHE}';
+const OFFLINE  = '${OFFLINE}';
+const PRECACHE = ${JSON.stringify(PRECACHE)};
+
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open(CACHE).then(c => c.addAll(PRECACHE)).then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', (e) => {
+  const url = new URL(e.request.url);
+
+  // Skip non-GET and cross-origin (except Google Fonts)
+  if (e.request.method !== 'GET') return;
+  if (url.origin !== self.location.origin &&
+      !url.hostname.includes('fonts.g')) return;
+
+  // Cache-first: fonts, static assets
+  if (url.hostname.includes('fonts.g') ||
+      url.pathname.match(/\\.(css|js|woff2?|ttf|svg|png|webp|ico)$/)) {
+    e.respondWith(
+      caches.match(e.request).then(cached => {
+        if (cached) return cached;
+        return fetch(e.request).then(res => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE).then(c => c.put(e.request, clone));
+          }
+          return res;
+        });
+      })
+    );
+    return;
+  }
+
+  // Network-first: admin HTML pages
+  if (url.pathname.startsWith('/orbiter')) {
+    e.respondWith(
+      fetch(e.request).catch(() =>
+        caches.match(e.request).then(cached => cached ?? caches.match(OFFLINE))
+      )
+    );
+  }
+});
+`;
+
+return new Response(sw, {
+  headers: {
+    'Content-Type': 'application/javascript',
+    'Cache-Control': 'no-cache',
+    'Service-Worker-Allowed': '/orbiter',
+  },
+});
+---

@@ -9,8 +9,12 @@
   },
   "files": [
     "src",
-    "routes"
+    "routes",
+    "styles"
   ],
+  "scripts": {
+    "build": "echo 'No build step'"
+  },
   "engines": {
     "node": ">=18.0.0"
   },

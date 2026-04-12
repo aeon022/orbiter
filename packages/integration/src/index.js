@@ -96,6 +96,30 @@ export default function orbiter(options = {}) {
           pattern:    '/orbiter/import',
           entrypoint: resolve(routesDir, 'import.astro'),
         });
+        injectRoute({
+          pattern:    '/orbiter/users',
+          entrypoint: resolve(routesDir, 'users.astro'),
+        });
+        injectRoute({
+          pattern:    '/orbiter/manifest.webmanifest',
+          entrypoint: resolve(routesDir, 'manifest.astro'),
+        });
+        injectRoute({
+          pattern:    '/orbiter/icon-192',
+          entrypoint: resolve(routesDir, 'icon-192.js'),
+        });
+        injectRoute({
+          pattern:    '/orbiter/icon-512',
+          entrypoint: resolve(routesDir, 'icon-512.js'),
+        });
+        injectRoute({
+          pattern:    '/orbiter/sw.js',
+          entrypoint: resolve(routesDir, 'sw.astro'),
+        });
+        injectRoute({
+          pattern:    '/orbiter/offline',
+          entrypoint: resolve(routesDir, 'offline.astro'),
+        });
 
         // ── Vite virtual modules ─────────────────
         updateConfig({
@@ -165,6 +189,28 @@ export function getCollection(name) {
 export function getEntry(collection, slug) {
   const entries = collections[collection] ?? [];
   return Promise.resolve(entries.find(e => e.slug === slug) ?? null);
+}
+
+/**
+ * Returns all base entries (no locale variants) for a collection.
+ * Base entries are those whose slug does not contain '--'.
+ */
+export function getLocaleCollection(name, loc) {
+  const sep = '--';
+  const all = collections[name] ?? [];
+  if (!loc) return Promise.resolve(all.filter(e => !e.slug.includes(sep)));
+  return Promise.resolve(all.filter(e => e.slug.endsWith(sep + loc)));
+}
+
+/**
+ * Returns a locale variant for a base slug, or falls back to the base entry.
+ */
+export function getLocaleEntry(collection, baseSlug, loc) {
+  const sep = '--';
+  const entries = collections[collection] ?? [];
+  const variant = loc ? entries.find(e => e.slug === baseSlug + sep + loc) : null;
+  if (variant) return Promise.resolve(variant);
+  return Promise.resolve(entries.find(e => e.slug === baseSlug) ?? null);
 }
 `;
                   }

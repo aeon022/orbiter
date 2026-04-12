@@ -1,0 +1,30 @@
+---
+export const prerender = false;
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbiter — Offline</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg0:#f5f2ec; --text:#3a3228; --muted:#a09890; --gold:#9a6e30; --sans:"Inter",system-ui,sans-serif; --serif:"Noto Serif JP",serif; }
+    html, body { background: var(--bg0); color: var(--text); font-family: var(--sans); font-size: 14px; height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .wrap { text-align: center; padding: 40px; }
+    .mark { width: 48px; height: 48px; border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--gold); font-family: monospace; margin: 0 auto 24px; }
+    h1 { font-family: var(--serif); font-weight: 200; font-size: 28px; letter-spacing: 0.05em; margin-bottom: 12px; }
+    p { color: var(--muted); font-size: 13px; line-height: 1.7; }
+    a { color: var(--gold); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="mark">OR</div>
+    <h1>You're offline</h1>
+    <p>No network connection.<br/>
+       <a href="/orbiter">Try again</a> when you're back online.</p>
+  </div>
+</body>
+</html>

@@ -14,7 +14,7 @@ your-site/
             └── [slug].astro
 ```
 
-> **Status:** Active development — Phase 4 in progress. Not yet published to npm.
+> **Status:** Active development — Phase 4 complete. Not yet published to npm.
 > Use the demo to try it locally (see [Quick Start](#quick-start) below).
 
 ---
@@ -133,11 +133,17 @@ The integration injects a complete admin UI under `/orbiter` using Astro's `inje
 | `/orbiter/media` | Media library |
 | `/orbiter/media/[id]` | Serve a media file (BLOB → HTTP) |
 | `/orbiter/schema` | Schema editor |
-| `/orbiter/settings` | Site settings |
+| `/orbiter/settings` | Site settings + account |
+| `/orbiter/users` | User management (admin only) |
 | `/orbiter/build` | Build trigger |
+| `/orbiter/import` | WordPress importer |
 | `/orbiter/login` | Login page |
+| `/orbiter/logout` | Logout |
 | `/orbiter/setup` | First-run setup wizard |
 | `/orbiter/search` | Command palette search API |
+| `/orbiter/manifest.webmanifest` | PWA manifest |
+| `/orbiter/sw.js` | Service worker |
+| `/orbiter/offline` | Offline fallback page |
 
 ---
 
@@ -147,6 +153,9 @@ If you want to add Orbiter to your own Astro project (rather than the demo):
 
 ```bash
 npm install @a83/orbiter-core @a83/orbiter-integration @astrojs/node@^9
+
+# Optional — CLI for scaffolding and user management
+npm install -g @a83/orbiter-cli
 ```
 
 `@astrojs/node@^9` is the adapter for self-hosted Node.js deployments — it targets **Astro 5**. (`@astrojs/node@^10` requires Astro 6 and is not compatible.) See [Adapters & Deployment](#adapters--deployment) for alternatives (Netlify, Vercel, Docker).
@@ -156,6 +165,16 @@ npm install @a83/orbiter-core @a83/orbiter-integration @astrojs/node@^9
 ---
 
 ## Setting Up a New Project
+
+### 0. Scaffold with the CLI (optional)
+
+The fastest way to set up a new project:
+
+```bash
+npx @a83/orbiter-cli init my-site
+```
+
+This creates the project folder, `astro.config.mjs`, a `content.pod` with a default Posts collection, and an admin user — all in one command. Then skip to [Use content in your pages](#5-use-content-in-your-pages).
 
 ### 1. Create the pod file
 
@@ -311,6 +330,13 @@ getCollection(name: string): Promise<Entry[]>
 
 // Get a single entry by slug
 getEntry(collection: string, slug: string): Promise<Entry | null>
+
+// Get all entries for a specific locale (slug--locale variants only)
+// Pass no locale to get base entries (no locale suffix)
+getLocaleCollection(name: string, locale?: string): Promise<Entry[]>
+
+// Get a locale variant, falling back to the base entry if the variant doesn't exist
+getLocaleEntry(collection: string, baseSlug: string, locale: string): Promise<Entry | null>
 
 // Default locale (from Settings → Default Language)
 locale: string   // e.g. "de"
@@ -635,7 +661,157 @@ const token = generateToken(); // → hex string
 
 ### User roles
 
-Currently two roles are supported: `admin` and `editor`. Role is stored in `_users`. Role-based permissions are not yet enforced in the UI — all authenticated users have full access. This will be expanded in a future phase.
+Two roles: `admin` and `editor`. Role is stored in `_users`.
+
+| Feature | editor | admin |
+|---------|--------|-------|
+| Create / edit / delete entries | ✅ | ✅ |
+| Manage media | ✅ | ✅ |
+| Edit schema | ✅ | ✅ |
+| Site settings | ✅ | ✅ |
+| Manage users | ❌ | ✅ |
+
+### Multi-user management
+
+Admins can add and remove users at `/orbiter/users`. Each user has a username, hashed password, and role (`admin` or `editor`). Users cannot delete their own account.
+
+Users can change their own username in **Settings → Account** (requires current password confirmation).
+
+---
+
+## Multilingual Entries (i18n)
+
+Orbiter uses a `slug--locale` convention for multilingual content. The base entry has no suffix; locale variants append `--{locale}`:
+
+```
+my-post          ← default / primary entry
+my-post--de      ← German variant
+my-post--fr      ← French variant
+```
+
+### Creating locale variants
+
+In the entry editor, a **locale switcher** appears at the top of the meta panel when locales are configured in Settings. Click a locale pill to jump to or create the variant. New locale variants are pre-filled with the primary entry's content so you only need to translate — not re-enter metadata.
+
+### Configuring locales
+
+In **Settings → Language**, set:
+- **Default locale** — e.g. `en`
+- **All locales** — comma-separated, e.g. `en, de, fr`
+
+These values are exported from `orbiter:collections`:
+
+```js
+import { locale, locales } from 'orbiter:collections';
+// locale  → "en"
+// locales → ["en", "de", "fr"]
+```
+
+### Fetching locale content
+
+```astro
+---
+import { getLocaleCollection, getLocaleEntry, locales } from 'orbiter:collections';
+
+// All German entries (slug--de variants)
+const posts = await getLocaleCollection('posts', 'de');
+
+// A specific entry, German if it exists, otherwise falls back to base
+const post = await getLocaleEntry('posts', 'my-post', 'de');
+---
+```
+
+### Static paths for multilingual sites
+
+```astro
+---
+import { getCollection, locales } from 'orbiter:collections';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts');
+  // Only base entries (no -- suffix)
+  const basePosts = posts.filter(p => !p.slug.includes('--'));
+  return basePosts.flatMap(post =>
+    locales.map(loc => ({
+      params: { slug: post.slug, lang: loc },
+    }))
+  );
+}
+---
+```
+
+---
+
+## CLI
+
+The `@a83/orbiter-cli` package provides three commands for project setup and content operations.
+
+### `orbiter init`
+
+Scaffold a new Astro + Orbiter project interactively:
+
+```bash
+npx @a83/orbiter-cli init my-site
+```
+
+Prompts for project name, site name, locale, admin credentials, and whether to run `npm install`. Creates:
+- `package.json` with Astro + Orbiter dependencies
+- `astro.config.mjs` pre-configured with the Node adapter
+- `src/pages/index.astro` with a working content example
+- `content.pod` with a default Posts collection and the admin user
+- `.gitignore` (excludes `*.pod`)
+
+### `orbiter add-user`
+
+Add a user to an existing `.pod` without starting the dev server:
+
+```bash
+npx @a83/orbiter-cli add-user
+npx @a83/orbiter-cli add-user --pod ./my-content.pod
+```
+
+Prompts for username, password, and role (`editor` or `admin`).
+
+### `orbiter export`
+
+Export published content to JSON or Markdown files:
+
+```bash
+# JSON (default)
+npx @a83/orbiter-cli export --pod ./content.pod --out ./export
+
+# Markdown (YAML frontmatter + body)
+npx @a83/orbiter-cli export --pod ./content.pod --out ./export --format md
+
+# Single collection
+npx @a83/orbiter-cli export --pod ./content.pod --collection posts
+```
+
+Output structure mirrors the collection hierarchy:
+
+```
+export/
+├── posts/
+│   ├── my-first-post.json
+│   └── getting-started.json
+└── pages/
+    └── about.json
+```
+
+---
+
+## PWA (Progressive Web App)
+
+The Orbiter admin is installable as a PWA on mobile and desktop. No configuration needed — it works automatically.
+
+**What's included:**
+- **Web App Manifest** at `/orbiter/manifest.webmanifest` — enables "Add to Home Screen" on iOS/Android and "Install" in Chrome/Edge
+- **Service Worker** at `/orbiter/sw.js` — caches static assets (fonts, CSS, JS) for fast repeat loads; network-first for admin HTML pages
+- **Offline page** at `/orbiter/offline` — shown when navigating to an admin page without a network connection
+- **SVG icons** at `/orbiter/icon-192` and `/orbiter/icon-512`
+- **Theme color** `#9a6e30` (gold) — used by the browser chrome on mobile
+
+The service worker scope is `/orbiter/` — it does not affect your public site pages.
 
 ---
 
@@ -874,25 +1050,49 @@ orbiter/
 │   │       ├── pod.js           ← createPod / openPod
 │   │       └── auth.js          ← hashPassword / verifyPassword / generateToken
 │   │
-│   └── integration/             ← @a83/orbiter-integration
+│   ├── integration/             ← @a83/orbiter-integration
+│   │   ├── src/
+│   │   │   ├── index.js         ← Astro integration, virtual modules, injectRoute
+│   │   │   ├── admin-utils.js   ← client-side JS (theme, dark mode, command palette)
+│   │   │   ├── i18n.js          ← EN/DE translations
+│   │   │   └── wp-importer.js   ← WordPress XML importer
+│   │   ├── routes/
+│   │   │   ├── AdminLayout.astro       ← shared layout (topbar, sidebar, dark mode)
+│   │   │   ├── dashboard.astro
+│   │   │   ├── collection.astro
+│   │   │   ├── editor.astro            ← entry editor + locale switcher
+│   │   │   ├── media.astro
+│   │   │   ├── media-serve.astro
+│   │   │   ├── schema.astro
+│   │   │   ├── settings.astro          ← site settings + account
+│   │   │   ├── users.astro             ← user management (admin only)
+│   │   │   ├── build.astro
+│   │   │   ├── login.astro
+│   │   │   ├── logout.astro
+│   │   │   ├── setup.astro
+│   │   │   ├── import.astro
+│   │   │   ├── search.astro
+│   │   │   ├── manifest.astro          ← PWA manifest
+│   │   │   ├── sw.astro                ← service worker
+│   │   │   ├── offline.astro           ← offline fallback
+│   │   │   ├── icon-192.js             ← PWA icon (192×192 SVG)
+│   │   │   ├── icon-512.js             ← PWA icon (512×512 SVG)
+│   │   │   └── SidebarCollections.astro
+│   │   └── styles/
+│   │       └── admin.css
+│   │
+│   └── cli/                     ← @a83/orbiter-cli
+│       ├── bin/
+│       │   └── orbiter.js       ← CLI entry point
 │       ├── src/
-│       │   ├── index.js         ← Astro integration, virtual modules, injectRoute
-│       │   ├── admin-utils.js   ← client-side JS (theme, dark mode, command palette)
-│       │   └── i18n.js          ← EN/DE translations
-│       └── routes/
-│           ├── AdminLayout.astro
-│           ├── dashboard.astro
-│           ├── collection.astro
-│           ├── editor.astro
-│           ├── media.astro
-│           ├── media-serve.astro
-│           ├── schema.astro
-│           ├── settings.astro
-│           ├── build.astro
-│           ├── login.astro
-│           ├── setup.astro
-│           ├── search.astro
-│           └── SidebarCollections.astro
+│       │   ├── init.js          ← orbiter init
+│       │   ├── add-user.js      ← orbiter add-user
+│       │   ├── export.js        ← orbiter export
+│       │   └── prompt.js        ← readline prompts (no deps)
+│       └── templates/
+│           ├── astro.config.mjs
+│           ├── package.json
+│           └── index.astro
 │
 └── package.json                 ← npm workspace root
 ```
@@ -907,7 +1107,8 @@ orbiter/
 | `npm run build:all` | Build all packages |
 | `npm run publish:core` | Publish `@a83/orbiter-core` to npm |
 | `npm run publish:integration` | Publish `@a83/orbiter-integration` to npm |
-| `npm run publish:all` | Publish both packages sequentially |
+| `npm run publish:cli` | Publish `@a83/orbiter-cli` to npm |
+| `npm run publish:all` | Publish all three packages sequentially |
 
 ---
 
@@ -945,9 +1146,10 @@ npm whoami   # confirm you're authenticated
 ```bash
 npm version patch --workspace=packages/core
 npm version patch --workspace=packages/integration
+npm version patch --workspace=packages/cli
 ```
 
-Both packages follow [Semantic Versioning](https://semver.org). If you bump `@a83/orbiter-core`'s major version, update the peer dependency in `packages/integration/package.json`.
+All packages follow [Semantic Versioning](https://semver.org). If you bump `@a83/orbiter-core`'s major version, update the peer dependency in `packages/integration/package.json` and `packages/cli/package.json`.
 
 ### Dry run
 
@@ -963,13 +1165,16 @@ Verify: no secrets, no demo files, no `.pod` files.
 ### Publish
 
 ```bash
-# Core first (integration depends on it)
+# Core first (integration and CLI depend on it)
 npm publish --workspace=packages/core --access=public
 
 # Then integration
 npm publish --workspace=packages/integration --access=public
 
-# Or both at once:
+# Then CLI
+npm publish --workspace=packages/cli --access=public
+
+# Or all at once:
 npm run publish:all
 ```
 
@@ -981,6 +1186,7 @@ npm run publish:all
 # Verify packages are live
 npm info @a83/orbiter-core
 npm info @a83/orbiter-integration
+npm info @a83/orbiter-cli
 
 # Tag the release
 git tag v0.1.0
@@ -990,9 +1196,9 @@ git push origin v0.1.0
 ### Release checklist
 
 ```
-[ ] Both package versions bumped
-[ ] @a83/orbiter-core version in integration's package.json updated (major bumps only)
-[ ] npm pack --dry-run is clean (no secrets, no demo files, no .pod files)
+[ ] All three package versions bumped (core, integration, cli)
+[ ] @a83/orbiter-core version in integration's and cli's package.json updated (major bumps only)
+[ ] npm pack --dry-run is clean for all three (no secrets, no demo files, no .pod files)
 [ ] npm whoami confirms correct account
 [ ] git status is clean
 ```
@@ -1005,8 +1211,8 @@ git push origin v0.1.0
 |-------|------|--------|-------|
 | 01 | Ignition | ✅ Done | Core DB, virtual modules, basic admin routes |
 | 02 | Bridge | ✅ Done | Full admin UI, media library, build trigger, auth |
-| 03 | Warp | ✅ Done | Block editor, version history, themes, i18n, light mode, relation fields |
-| 04 | Orbit | 🔄 Active | npm publish, Astro 5, media categories, public launch |
+| 03 | Warp | ✅ Done | Block editor, version history, themes, i18n, relation fields |
+| 04 | Orbit | ✅ Done | Multi-user, i18n per-entry, CLI, PWA, npm publish prep |
 
 **Phase 3 delivered:**
 - Richtext block editor with live split-pane Markdown preview
@@ -1019,6 +1225,18 @@ git push origin v0.1.0
 - Command palette (`⌘ K`) — search content and navigation from any page
 - Setup wizard with preset collection templates
 - Media library — BLOB storage, folder categories, type filter, inline video preview
+- Shared `AdminLayout` — unified topbar, sidebar, dark mode across all routes
+
+**Phase 4 delivered:**
+- Multi-user management — admin-only `/orbiter/users` (create, delete, role assignment)
+- Account settings — username change with password confirmation
+- Role-based sidebar — Users link visible to admins only
+- i18n per entry — `slug--locale` convention, locale switcher in editor, pre-fill from primary
+- `getLocaleCollection` and `getLocaleEntry` in `orbiter:collections` virtual module
+- Locale badge in collection list for translated entries
+- CLI (`@a83/orbiter-cli`) — `orbiter init`, `orbiter add-user`, `orbiter export`
+- PWA — installable admin, service worker, offline page, SVG icons, manifest
+- npm publish prep — all three packages pack-ready with correct `files` and exports
 
 ---
 
@@ -1027,7 +1245,8 @@ git push origin v0.1.0
 | Package | Version | Description |
 |---------|---------|-------------|
 | `@a83/orbiter-core` | 0.1.0 | SQLite engine — `OrbiterDB`, `createPod`, `openPod`, `hashPassword` |
-| `@a83/orbiter-integration` | 0.1.0 | Astro integration — virtual modules, injected admin routes, admin UI |
+| `@a83/orbiter-integration` | 0.1.0 | Astro integration — virtual modules, injected admin routes, admin UI, PWA |
+| `@a83/orbiter-cli` | 0.1.0 | CLI — `orbiter init`, `orbiter add-user`, `orbiter export` |
 
 ---
 

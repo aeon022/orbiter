@@ -28,8 +28,9 @@ const {
 
 const t = useTranslations(locale);
 
-// Enrich collections with parent relationship from _meta
-const _pdb = openPod(podPath);
+// Enrich collections with parent relationship + read current user role
+const _pdb      = openPod(podPath);
+const _sessRole = (_pdb.checkSession(Astro.cookies.get('orb_sess')?.value ?? '') as any)?.role ?? 'editor';
 const collectionsWithParent = collections.map((c: any) => ({
   ...c,
   parent: _pdb.getMeta(`collection.${c.id}.parent`) ?? null,
@@ -47,7 +48,13 @@ for (const c of collectionsWithParent.filter((c: any) => c.parent)) {
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f5f2ec'/><rect x='5' y='5' width='22' height='22' fill='none' stroke='%239a6e30' stroke-width='1.5'/><text x='16' y='21' font-family='monospace' font-size='11' fill='%239a6e30' text-anchor='middle'>OR</text></svg>" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#9a6e30" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Orbiter" />
+  <link rel="manifest" href="/orbiter/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/orbiter/icon-192" />
   <title>Orbiter — {title}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
@@ -181,6 +188,11 @@ for (const c of collectionsWithParent.filter((c: any) => c.parent)) {
       <a href="/orbiter/settings" class={`nav-item ${activeNav === 'settings' ? 'active' : ''}`}>
         <span class="nav-icon">◎</span>{t.nav_settings}
       </a>
+      {_sessRole === 'admin' && (
+        <a href="/orbiter/users" class={`nav-item ${activeNav === 'users' ? 'active' : ''}`}>
+          <span class="nav-icon">◉</span>{t.nav_users}
+        </a>
+      )}
       <div class="sidebar-pod">
         <div class="sidebar-pod-name">content.pod</div>
         <div>{podInfo}</div>
@@ -195,5 +207,11 @@ for (const c of collectionsWithParent.filter((c: any) => c.parent)) {
 
   </div>
   <script set:html={adminUtils} is:inline></script>
+  <script is:inline>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/orbiter/sw.js', { scope: '/orbiter/' })
+        .catch(() => {}); // silently ignore (e.g. in dev with HTTPS requirement)
+    }
+  </script>
 </body>
 </html>

@@ -16,6 +16,7 @@ const t = useTranslations(locale);
 
 // ── Handle POST ───────────────────────────────────────────────────────
 let pwError = '', pwSaved = false;
+let unError = '', unSaved = false;
 
 if (Astro.request.method === 'POST') {
   const form   = await Astro.request.formData();
@@ -38,6 +39,30 @@ if (Astro.request.method === 'POST') {
       db.db.prepare('UPDATE _users SET password = ? WHERE id = ?').run(hash, _sessUser.id);
       db.close();
       return Astro.redirect('/orbiter/settings?pwsaved=1');
+    }
+    db.close();
+
+  } else if (action === 'change-username') {
+    const newUsername = form.get('new_username')?.toString().trim() ?? '';
+    const currentPw   = form.get('current_password_un')?.toString() ?? '';
+
+    const user  = db.getUserByUsername(_sessUser.username);
+    const valid = user ? await verifyPassword(currentPw, user.password) : false;
+
+    if (!valid)           unError = t.settings_pw_wrong;
+    else if (!newUsername) unError = t.settings_username_empty;
+    else if (newUsername === _sessUser.username) {
+      db.close();
+      return Astro.redirect('/orbiter/settings?unsaved=1');
+    } else {
+      const taken = db.db.prepare('SELECT id FROM _users WHERE username = ? AND id != ?').get(newUsername, _sessUser.id);
+      if (taken) {
+        unError = t.settings_username_taken;
+      } else {
+        db.db.prepare('UPDATE _users SET username = ? WHERE id = ?').run(newUsername, _sessUser.id);
+        db.close();
+        return Astro.redirect('/orbiter/settings?unsaved=1');
+      }
     }
     db.close();
 
@@ -77,6 +102,7 @@ db.close();
 
 const saved   = Astro.url.searchParams.get('saved')   === '1';
 pwSaved = pwSaved || Astro.url.searchParams.get('pwsaved') === '1';
+unSaved = unSaved || Astro.url.searchParams.get('unsaved') === '1';
 ---
 <style>
   .main-inner { padding:32px 40px; max-width:680px; }
@@ -225,6 +251,30 @@ pwSaved = pwSaved || Astro.url.searchParams.get('pwsaved') === '1';
         </div>
         <div class="save-row" style="padding-right:40px;padding-bottom:14px;">
           <button type="submit" class="btn-save">{t.settings_pw_save}</button>
+        </div>
+      </form>
+
+      <!-- Change username -->
+      <form method="POST" style="border-top:1px solid var(--line2);">
+        <input type="hidden" name="_action" value="change-username" />
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">{t.settings_username_new}</div>
+            <div class="setting-desc">{t.settings_username_label}: <strong>{_sessUser.username}</strong></div>
+          </div>
+          <input class="field-input" type="text" name="new_username" autocomplete="username" required
+            placeholder={_sessUser.username} />
+        </div>
+        <div class="setting-row">
+          <div><div class="setting-label">{t.settings_username_pw}</div></div>
+          <input class="field-input" type="password" name="current_password_un" autocomplete="current-password" required />
+        </div>
+        <div style="padding:0 40px 14px;">
+          {unError && <div class="error-banner">{unError}</div>}
+          {unSaved && <div class="saved-banner" style="margin-top:8px;">{t.settings_username_saved}</div>}
+        </div>
+        <div class="save-row" style="padding-right:40px;padding-bottom:14px;">
+          <button type="submit" class="btn-save">{t.settings_username_save}</button>
         </div>
       </form>
     </div>
