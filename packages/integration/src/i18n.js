@@ -307,7 +307,7 @@ export const translations = {
 
     // ── Import ────────────────────────────────────────────────────────
     import_title:         'Import',
-    import_sub:           'WordPress WXR (XML) → Orbiter pod',
+    import_sub:           'WordPress WXR (XML) · Markdown → Orbiter pod',
     import_file_label:    'WordPress export file',
     import_drop:          'Drop .xml file here or click to browse',
     import_drop_sub:      'WordPress → Tools → Export → All content → Download export file',
@@ -645,7 +645,7 @@ export const translations = {
 
     // ── Import ────────────────────────────────────────────────────────
     import_title:         'Import',
-    import_sub:           'WordPress WXR (XML) → Orbiter Pod',
+    import_sub:           'WordPress WXR (XML) · Markdown → Orbiter Pod',
     import_file_label:    'WordPress-Exportdatei',
     import_drop:          '.xml-Datei hier ablegen oder klicken',
     import_drop_sub:      'WordPress → Werkzeuge → Exportieren → Alle Inhalte → Exportdatei herunterladen',
