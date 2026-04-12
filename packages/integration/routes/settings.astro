@@ -75,7 +75,9 @@ if (Astro.request.method === 'POST') {
 
   } else {
     // Site settings
-    const fields = ['site.name', 'site.url', 'site.description', 'site.locale', 'site.locales', 'build.webhook_url', 'github.token', 'github.repo', 'github.branch'];
+    const fields = ['site.name', 'site.url', 'site.description', 'site.locale', 'site.locales', 'build.webhook_url', 'github.token', 'github.repo', 'github.branch', 'api.token'];
+    // api.enabled is a checkbox — only present in form when checked
+    db.setMeta('api.enabled', form.get('api.enabled') ? '1' : '0');
     for (const key of fields) {
       db.setMeta(key, form.get(key)?.toString() ?? '');
     }
@@ -96,6 +98,8 @@ const meta    = {
   githubToken:   db.getMeta('github.token')      ?? '',
   githubRepo:    db.getMeta('github.repo')       ?? '',
   githubBranch:  db.getMeta('github.branch')     ?? 'main',
+  apiEnabled:    db.getMeta('api.enabled')       === '1',
+  apiToken:      db.getMeta('api.token')         ?? '',
 };
 const formatVersion  = db.getMeta('format_version') ?? '1';
 const allCollections = db.getCollections().map(c => ({
@@ -246,6 +250,28 @@ unSaved = unSaved || Astro.url.searchParams.get('unsaved') === '1';
             <div class="setting-desc">{t.settings_github_branch_desc}</div>
           </div>
           <input class="field-input" name="github.branch" value={meta.githubBranch} placeholder="main" />
+        </div>
+      </div>
+
+      <!-- API -->
+      <div class="settings-group">
+        <div class="group-header">{t.settings_api}</div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">{t.settings_api_enabled}</div>
+            <div class="setting-desc">{t.settings_api_enabled_desc} <code style="font-size:9px;background:var(--bg3);padding:1px 5px;">/orbiter/api/[collection]</code></div>
+          </div>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" name="api.enabled" value="1" checked={meta.apiEnabled} style="accent-color:var(--accent);width:14px;height:14px;" />
+            <span style="font-size:11px;color:var(--text);font-family:var(--mono);">{t.settings_api_enabled}</span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">{t.settings_api_token}</div>
+            <div class="setting-desc">{t.settings_api_token_desc}</div>
+          </div>
+          <input class="field-input" type="password" name="api.token" value={meta.apiToken} autocomplete="off" placeholder={t.settings_api_token_placeholder} />
         </div>
       </div>
 

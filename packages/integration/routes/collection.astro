@@ -17,24 +17,57 @@ const db  = openPod(podPath);
 const col = db.getCollection(collectionId);
 if (!col) return Astro.redirect('/orbiter');
 
-// Inline status toggle
+const JSON_HEADERS = { 'Content-Type': 'application/json' };
+const sqliteNow = () => new Date().toISOString().replace('T',' ').replace(/\.\d{3}Z$/,'');
+
 if (Astro.request.method === 'POST') {
   const body = await Astro.request.json().catch(() => null);
+
+  // Toggle status
   if (body?.action === 'toggle-status' && body?.slug) {
     const entry = db.getEntry(collectionId, body.slug);
     if (entry) {
       const newStatus = entry.status === 'published' ? 'draft' : 'published';
-      const sqliteNow = () => new Date().toISOString().replace('T',' ').replace(/\.\d{3}Z$/,'');
       db.db.prepare('UPDATE _entries SET status=?, updated_at=? WHERE id=?')
         .run(newStatus, sqliteNow(), entry.id);
       db.close();
-      return new Response(JSON.stringify({ ok: true, status: newStatus }), {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return new Response(JSON.stringify({ ok: true, status: newStatus }), { headers: JSON_HEADERS });
     }
   }
+
+  // Duplicate entry
+  if (body?.action === 'duplicate' && body?.slug) {
+    const raw = db.db.prepare('SELECT * FROM _entries WHERE collection_id=? AND slug=?').get(collectionId, body.slug) as any;
+    if (raw) {
+      let base = `${body.slug}-copy`, finalSlug = base, n = 1;
+      while (db.db.prepare('SELECT id FROM _entries WHERE collection_id=? AND slug=?').get(collectionId, finalSlug)) {
+        finalSlug = `${base}-${++n}`;
+      }
+      db.db.prepare('INSERT INTO _entries (id, collection_id, slug, data, status) VALUES (?,?,?,?,?)')
+        .run(crypto.randomUUID(), collectionId, finalSlug, raw.data, 'draft');
+      db.close();
+      return new Response(JSON.stringify({ ok: true, newSlug: finalSlug }), { headers: JSON_HEADERS });
+    }
+  }
+
+  // Bulk action
+  if (body?.action === 'bulk' && Array.isArray(body?.slugs) && body?.bulkAction) {
+    const { slugs, bulkAction } = body as any;
+    if (bulkAction === 'publish' || bulkAction === 'unpublish') {
+      const st   = bulkAction === 'publish' ? 'published' : 'draft';
+      const stmt = db.db.prepare('UPDATE _entries SET status=?,updated_at=? WHERE collection_id=? AND slug=?');
+      db.db.transaction(() => { for (const s of slugs) stmt.run(st, sqliteNow(), collectionId, s); })();
+    } else if (bulkAction === 'delete') {
+      const delV = db.db.prepare('DELETE FROM _versions WHERE entry_id = (SELECT id FROM _entries WHERE collection_id=? AND slug=?)');
+      const delE = db.db.prepare('DELETE FROM _entries WHERE collection_id=? AND slug=?');
+      db.db.transaction(() => { for (const s of slugs) { delV.run(collectionId, s); delE.run(collectionId, s); } })();
+    }
+    db.close();
+    return new Response(JSON.stringify({ ok: true, count: slugs.length }), { headers: JSON_HEADERS });
+  }
+
   db.close();
-  return new Response(JSON.stringify({ ok: false }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify({ ok: false }), { status: 400, headers: JSON_HEADERS });
 }
 
 const entries        = db.getEntries(collectionId);
@@ -86,25 +119,39 @@ const visible = filter === 'published' ? published
 
   /* Entry table */
   .entry-table { }
-  .entry-thead { display:grid; grid-template-columns:3fr 1.8fr 100px 90px; gap:0; padding:7px 16px 7px 32px; border-bottom:1px solid var(--line); background:var(--bg1); }
+  .entry-thead { display:grid; grid-template-columns:36px 3fr 1.8fr 100px 120px; gap:0; padding:7px 16px 7px 12px; border-bottom:1px solid var(--line); background:var(--bg1); align-items:center; }
   .entry-thead-cell { font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); }
-  .entry-row { display:grid; grid-template-columns:3fr 1.8fr 100px 90px; gap:0; align-items:center; padding:0 16px 0 32px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; position:relative; }
+  .entry-row { display:grid; grid-template-columns:36px 3fr 1.8fr 100px 120px; gap:0; align-items:center; padding:0 16px 0 12px; border-bottom:1px solid var(--line2); transition:background 0.1s; position:relative; }
   .entry-row:hover { background:var(--bg2); }
   .entry-row::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; transition:background 0.2s; }
   .entry-row.published::before { background:var(--jade); }
   .entry-row.draft::before { background:var(--gold); opacity:0.5; }
+  .entry-check { display:flex; align-items:center; padding:0 4px; }
+  .row-check { accent-color:var(--accent); cursor:pointer; width:13px; height:13px; }
   .entry-cell { padding:12px 16px 12px 0; min-width:0; }
+  .entry-cell-link { display:block; text-decoration:none; padding:12px 16px 12px 0; min-width:0; overflow:hidden; }
   .entry-name { font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; }
   .entry-slug { font-size:9px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:0.02em; }
   .entry-subtitle { font-size:9px; color:var(--accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:0.02em; }
   .locale-badge { display:inline-block; font-size:8px; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); background:var(--accent-bg); border:1px solid rgba(61,79,168,0.18); padding:1px 5px; margin-left:6px; vertical-align:middle; }
   .entry-date { font-size:11px; color:var(--mid); }
+  .entry-actions { display:flex; align-items:center; gap:6px; }
   .status-toggle { font-size:9px; letter-spacing:0.04em; background:none; border:1px solid transparent; padding:2px 7px; cursor:pointer; font-family:var(--mono); transition:all 0.15s; white-space:nowrap; }
   .status-toggle.published { color:var(--jade); border-color:rgba(30,107,80,0.2); background:var(--jade-bg); }
   .status-toggle.draft { color:var(--gold); border-color:rgba(154,110,48,0.2); background:var(--gold-bg); }
   .status-toggle:hover { opacity:0.7; }
-  .entry-arrow { font-size:11px; color:var(--line); padding:12px 20px 12px 0; transition:color 0.12s; text-align:right; }
-  .entry-row:hover .entry-arrow { color:var(--mid); }
+  .btn-dup { background:none; border:1px solid var(--line); color:var(--muted); font-size:11px; padding:2px 6px; cursor:pointer; opacity:0; transition:opacity 0.15s,color 0.12s,border-color 0.12s; line-height:1; }
+  .entry-row:hover .btn-dup { opacity:1; }
+  .btn-dup:hover { color:var(--heading); border-color:var(--mid); }
+
+  /* Bulk bar */
+  .bulk-bar { position:sticky; bottom:0; background:var(--bg2); border-top:1px solid var(--line); padding:10px 24px; display:none; align-items:center; gap:10px; z-index:20; box-shadow:0 -2px 8px rgba(0,0,0,0.06); }
+  .bulk-bar.visible { display:flex; }
+  .bulk-count { font-size:11px; color:var(--text); margin-right:4px; }
+  .btn-bulk { font-size:9px; padding:5px 12px; border:1px solid var(--line); background:transparent; color:var(--mid); font-family:var(--mono); letter-spacing:0.08em; cursor:pointer; transition:all 0.15s; }
+  .btn-bulk:hover { color:var(--heading); border-color:var(--mid); background:var(--bg3); }
+  .btn-bulk.danger:hover { color:var(--crimson); border-color:var(--crimson); background:var(--crimson-bg); }
+  .btn-bulk-close { margin-left:auto; background:none; border:none; color:var(--muted); font-size:14px; cursor:pointer; padding:2px 6px; }
 
   /* Empty */
   .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:60px; color:var(--muted); }
@@ -155,14 +202,18 @@ const visible = filter === 'published' ? published
   {visible.length > 0 ? (
     <div class="entry-table">
       <div class="entry-thead">
+        <div class="entry-check"><input type="checkbox" id="check-all" class="row-check" onchange="toggleAll(this)" /></div>
         <div class="entry-thead-cell">{t.col_title}</div>
         <div class="entry-thead-cell">{t.col_slug}</div>
         <div class="entry-thead-cell">{t.col_modified}</div>
         <div class="entry-thead-cell">{t.col_status}</div>
       </div>
       {visible.map(entry => (
-        <a href={`/orbiter/${collectionId}/${entry.slug}`} class={`entry-row ${entry.status}`}>
-          <div class="entry-cell">
+        <div class={`entry-row ${entry.status}`}>
+          <div class="entry-check">
+            <input type="checkbox" class="row-check" data-slug={entry.slug} onchange="updateBulkBar()" onclick="event.stopPropagation()" />
+          </div>
+          <a href={`/orbiter/${collectionId}/${entry.slug}`} class="entry-cell-link">
             <div class="entry-name">
               {entry.data?.title ?? entry.slug}
               {entry.slug.includes('--') && (
@@ -179,18 +230,28 @@ const visible = filter === 'published' ? published
             ) : (
               <div class="entry-slug">/{collectionId}/{entry.slug}</div>
             )}
-          </div>
-          <div class="entry-cell">
+          </a>
+          <a href={`/orbiter/${collectionId}/${entry.slug}`} class="entry-cell-link">
             <div class="entry-slug">{entry.slug}</div>
-          </div>
-          <div class="entry-cell">
+          </a>
+          <a href={`/orbiter/${collectionId}/${entry.slug}`} class="entry-cell-link">
             <div class="entry-date">{new Date(entry.updated_at).toLocaleDateString(adminLocale)}</div>
+          </a>
+          <div class="entry-actions" onclick="event.stopPropagation()">
+            <button class={`status-toggle ${entry.status}`} data-slug={entry.slug} onclick="toggleStatus(this.parentElement)">{entry.status === 'published' ? t.col_live : t.col_draft_dot}</button>
+            <button class="btn-dup" title="Duplicate" onclick={`duplicateEntry('${entry.slug}',this)`}>⎘</button>
           </div>
-          <div class="entry-cell" onclick="event.preventDefault();toggleStatus(this)">
-            <button class={`status-toggle ${entry.status}`} data-slug={entry.slug}>{entry.status === 'published' ? t.col_live : t.col_draft_dot}</button>
-          </div>
-        </a>
+        </div>
       ))}
+
+      <!-- Bulk action bar -->
+      <div class="bulk-bar" id="bulk-bar">
+        <span class="bulk-count" id="bulk-count"></span>
+        <button class="btn-bulk" onclick="bulkAction('publish')">{t.col_bulk_publish}</button>
+        <button class="btn-bulk" onclick="bulkAction('unpublish')">{t.col_bulk_unpublish}</button>
+        <button class="btn-bulk danger" onclick="bulkAction('delete')">{t.col_bulk_delete}</button>
+        <button class="btn-bulk-close" onclick="clearBulk()">✕</button>
+      </div>
     </div>
   ) : (
     <div class="empty-state">
@@ -202,30 +263,70 @@ const visible = filter === 'published' ? published
     </div>
   )}
 
-  <script define:vars={{ collectionId, colLive: t.col_live, colDraft: t.col_draft_dot }}>
+  <script define:vars={{ collectionId, colLive: t.col_live, colDraft: t.col_draft_dot, colDeleteConfirm: t.col_bulk_delete_confirm }}>
+    const API = '/orbiter/' + collectionId;
+
     window.toggleStatus = async function(cell) {
       const btn  = cell.querySelector('.status-toggle');
       const slug = btn?.dataset.slug;
       if (!btn || !slug || btn.dataset.busy) return;
       btn.dataset.busy = '1';
       try {
-        const res  = await fetch('/orbiter/' + collectionId, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'toggle-status', slug }),
-        });
+        const res  = await fetch(API, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'toggle-status', slug }) });
         const json = await res.json();
         if (json.ok) {
-          const newStatus = json.status;
-          btn.textContent = newStatus === 'published' ? colLive : colDraft;
-          btn.className   = 'status-toggle ' + newStatus;
+          const s = json.status;
+          btn.textContent = s === 'published' ? colLive : colDraft;
+          btn.className   = 'status-toggle ' + s;
           const row = cell.closest('.entry-row');
-          row.classList.remove('published', 'draft');
-          row.classList.add(newStatus);
+          row.classList.remove('published','draft');
+          row.classList.add(s);
         }
       } catch {}
       delete btn.dataset.busy;
-    }
+    };
+
+    window.duplicateEntry = async function(slug, btn) {
+      if (btn) { btn.disabled = true; btn.textContent = '…'; }
+      try {
+        const res  = await fetch(API, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'duplicate', slug }) });
+        const json = await res.json();
+        if (json.ok) location.href = '/orbiter/' + collectionId + '/' + json.newSlug;
+      } catch {}
+      if (btn) { btn.disabled = false; btn.textContent = '⎘'; }
+    };
+
+    window.updateBulkBar = function() {
+      const checked = [...document.querySelectorAll('.row-check:checked')].filter(c => c.id !== 'check-all');
+      const bar     = document.getElementById('bulk-bar');
+      const countEl = document.getElementById('bulk-count');
+      const allCb   = document.getElementById('check-all');
+      const all     = document.querySelectorAll('.row-check:not(#check-all)');
+      bar.classList.toggle('visible', checked.length > 0);
+      if (countEl) countEl.textContent = checked.length + ' selected';
+      if (allCb) { allCb.indeterminate = checked.length > 0 && checked.length < all.length; allCb.checked = checked.length === all.length && all.length > 0; }
+    };
+
+    window.toggleAll = function(cb) {
+      document.querySelectorAll('.row-check:not(#check-all)').forEach(c => c.checked = cb.checked);
+      updateBulkBar();
+    };
+
+    window.clearBulk = function() {
+      document.querySelectorAll('.row-check').forEach(c => c.checked = false);
+      updateBulkBar();
+    };
+
+    window.bulkAction = async function(action) {
+      const slugs = [...document.querySelectorAll('.row-check:not(#check-all):checked')].map(c => c.dataset.slug);
+      if (!slugs.length) return;
+      if (action === 'delete' && !confirm(colDeleteConfirm.replace('{n}', slugs.length))) return;
+      try {
+        const res = await fetch(API, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'bulk', slugs, bulkAction: action }) });
+        const json = await res.json();
+        if (json.ok) location.reload();
+      } catch {}
+    };
   </script>
 
 </AdminLayout>

@@ -128,6 +128,10 @@ export default function orbiter(options = {}) {
           pattern:    '/orbiter/github-workflow',
           entrypoint: resolve(routesDir, 'github-workflow.js'),
         });
+        injectRoute({
+          pattern:    '/orbiter/api/[collection]',
+          entrypoint: resolve(routesDir, 'api-collection.js'),
+        });
 
         // ── Vite virtual modules ─────────────────
         updateConfig({

@@ -58,6 +58,73 @@ if (Astro.request.method === 'POST') {
     }
   }
 
+  // ── Markdown import ────────────────────────────────────────────────────
+  else if (action === 'import-md') {
+    const file       = form.get('md_files') as any;
+    const targetCol  = form.get('md_collection')?.toString() ?? '';
+    const onDup      = (form.get('on_duplicate')?.toString() ?? 'skip') as 'skip' | 'overwrite';
+
+    if (!file || file.size === 0) {
+      errorMsg = t.import_no_file; phase = 'upload';
+    } else if (!targetCol) {
+      errorMsg = 'Please select a target collection.'; phase = 'upload';
+    } else {
+      try {
+        const db4 = openPod(podPath);
+        const col4 = db4.getCollection(targetCol);
+        if (!col4) throw new Error(`Collection "${targetCol}" not found`);
+
+        // Parse frontmatter: supports single .md or multiple files from <input multiple>
+        const allFiles: File[] = form.getAll('md_files').filter((f: any) => f instanceof File && f.size > 0) as File[];
+        let imported = 0, skipped = 0;
+
+        function parseFrontmatter(text: string): { data: Record<string, any>; body: string } {
+          const m = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+          if (!m) return { data: {}, body: text.trim() };
+          const data: Record<string, any> = {};
+          for (const line of m[1].split('\n')) {
+            const kv = line.match(/^(\w[\w-]*):\s*(.+)$/);
+            if (!kv) continue;
+            let val: any = kv[2].trim();
+            if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1);
+            else if (val === 'true') val = true;
+            else if (val === 'false') val = false;
+            else if (!isNaN(Number(val)) && val !== '') val = Number(val);
+            data[kv[1]] = val;
+          }
+          return { data, body: m[2].trim() };
+        }
+
+        const sqliteNow2 = () => new Date().toISOString().replace('T',' ').replace(/\.\d{3}Z$/,'');
+        for (const f of allFiles) {
+          const text   = await f.text();
+          const parsed = parseFrontmatter(text);
+          const slug   = (parsed.data.slug ?? f.name.replace(/\.md$/, '').toLowerCase().replace(/\s+/g, '-')) as string;
+          delete parsed.data.slug;
+          const entryData = { ...parsed.data, body: parsed.data.body ?? parsed.body };
+          const status    = (parsed.data.status ?? 'draft') as string; delete entryData.status;
+
+          const existing = db4.getEntry(targetCol, slug);
+          if (existing && onDup === 'skip') { skipped++; continue; }
+
+          if (existing) {
+            db4.db.prepare('UPDATE _entries SET data=?,status=?,updated_at=? WHERE id=?')
+              .run(JSON.stringify(entryData), status, sqliteNow2(), existing.id);
+          } else {
+            db4.db.prepare('INSERT INTO _entries (id,collection_id,slug,data,status) VALUES (?,?,?,?,?)')
+              .run(crypto.randomUUID(), targetCol, slug, JSON.stringify(entryData), status);
+          }
+          imported++;
+        }
+        db4.close();
+        importResults = { type: 'markdown', imported, skipped };
+        phase = 'done';
+      } catch (e: any) {
+        errorMsg = e.message ?? 'Import failed'; phase = 'upload';
+      }
+    }
+  }
+
   // ── Import: execute with chosen options ─────────────────────────────────
   else if (action === 'import') {
     const token       = form.get('import_token')?.toString() ?? '';
@@ -199,28 +266,72 @@ _sideDb.close();
 
     {/* ── Phase: Upload ─────────────────────────────────────────────────── */}
     {phase === 'upload' && (
-      <form method="POST" enctype="multipart/form-data" id="upload-form">
-        <input type="hidden" name="_action" value="analyze" />
-
-        <div class="section">
-          <div class="section-head">{t.import_file_label}</div>
-          <div class="drop-zone" id="drop-zone">
-            <input type="file" name="wxr_file" id="wxr-file" accept=".xml,text/xml,application/xml" required />
-            <div class="drop-icon">⊞</div>
-            <div class="drop-label">{t.import_drop}</div>
-            <div class="drop-sub">{t.import_drop_sub}</div>
-            <div class="drop-chosen" id="drop-chosen"></div>
-          </div>
+      <div>
+        <!-- Import tabs -->
+        <div style="display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:24px;">
+          <button id="tab-wp" onclick="switchTab('wp')" style="font-size:10px;padding:8px 18px;border:none;border-bottom:2px solid var(--gold);background:none;color:var(--heading);font-family:var(--mono);cursor:pointer;letter-spacing:0.06em;">WordPress</button>
+          <button id="tab-md" onclick="switchTab('md')" style="font-size:10px;padding:8px 18px;border:none;border-bottom:2px solid transparent;background:none;color:var(--muted);font-family:var(--mono);cursor:pointer;letter-spacing:0.06em;">Markdown</button>
         </div>
 
-        <div class="import-actions">
-          <button type="submit"
-            style="padding:9px 28px;background:var(--gold);border:1px solid var(--gold);color:var(--bg0);font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;"
-            onmouseenter="this.style.background='var(--btn-hover,#7a5520)';this.style.borderColor='var(--btn-hover,#7a5520)'"
-            onmouseleave="this.style.background='var(--gold)';this.style.borderColor='var(--gold)'"
-          >{t.import_analyse}</button>
+        <!-- WordPress tab -->
+        <div id="pane-wp">
+          <form method="POST" enctype="multipart/form-data" id="upload-form">
+            <input type="hidden" name="_action" value="analyze" />
+            <div class="section">
+              <div class="section-head">{t.import_file_label}</div>
+              <div class="drop-zone" id="drop-zone">
+                <input type="file" name="wxr_file" id="wxr-file" accept=".xml,text/xml,application/xml" required />
+                <div class="drop-icon">⊞</div>
+                <div class="drop-label">{t.import_drop}</div>
+                <div class="drop-sub">{t.import_drop_sub}</div>
+                <div class="drop-chosen" id="drop-chosen"></div>
+              </div>
+            </div>
+            <div class="import-actions">
+              <button type="submit"
+                style="padding:9px 28px;background:var(--gold);border:1px solid var(--gold);color:var(--bg0);font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;"
+                onmouseenter="this.style.background='var(--btn-hover,#7a5520)';this.style.borderColor='var(--btn-hover,#7a5520)'"
+                onmouseleave="this.style.background='var(--gold)';this.style.borderColor='var(--gold)'"
+              >{t.import_analyse}</button>
+            </div>
+          </form>
         </div>
-      </form>
+
+        <!-- Markdown tab -->
+        <div id="pane-md" style="display:none;">
+          <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="_action" value="import-md" />
+            <div class="section">
+              <div class="section-head">Target collection</div>
+              <select name="md_collection" required style="width:100%;background:var(--bg0);border:1px solid var(--line);padding:8px 10px;color:var(--heading);font-family:var(--mono);font-size:12px;outline:none;appearance:none;margin-bottom:16px;">
+                <option value="">— select collection —</option>
+                {allCollections.map((c: any) => <option value={c.id}>{c.label}</option>)}
+              </select>
+              <div class="section-head" style="margin-top:16px;">Markdown files</div>
+              <div class="drop-zone" style="margin-top:8px;">
+                <input type="file" name="md_files" accept=".md,text/markdown" multiple required />
+                <div class="drop-icon">◈</div>
+                <div class="drop-label">Drop .md files here or click to browse</div>
+                <div class="drop-sub">Frontmatter (--- YAML ---) is parsed automatically. Fields map to collection schema.</div>
+              </div>
+            </div>
+            <div class="section">
+              <div class="section-head">On duplicate slug</div>
+              <div style="display:flex;gap:16px;margin-top:4px;">
+                <label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer;"><input type="radio" name="on_duplicate" value="skip" checked /> Skip</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer;"><input type="radio" name="on_duplicate" value="overwrite" /> Overwrite</label>
+              </div>
+            </div>
+            <div class="import-actions">
+              <button type="submit"
+                style="padding:9px 28px;background:var(--gold);border:1px solid var(--gold);color:var(--bg0);font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;"
+                onmouseenter="this.style.background='var(--btn-hover,#7a5520)';this.style.borderColor='var(--btn-hover,#7a5520)'"
+                onmouseleave="this.style.background='var(--gold)';this.style.borderColor='var(--gold)'"
+              >Import Markdown</button>
+            </div>
+          </form>
+        </div>
+      </div>
     )}
 
     {/* ── Phase: Preview ────────────────────────────────────────────────── */}
@@ -312,56 +423,77 @@ _sideDb.close();
         <div class="section">
           <div class="section-head">{t.import_done}</div>
 
-          {importResults.collections.length > 0 && (
-            <div class="result-row">
-              <span class="result-ok">◈</span>
-              <span>{t.import_created_cols}: <strong>{importResults.collections.join(', ')}</strong></span>
-            </div>
-          )}
-
-          <div class="result-row">
-            <span class="result-num result-ok">{importResults.imported}</span>
-            <span>{t.import_n_imported}</span>
-          </div>
-
-          {importResults.overwritten > 0 && (
-            <div class="result-row">
-              <span class="result-num result-warn">{importResults.overwritten}</span>
-              <span>{t.import_n_overwritten}</span>
-            </div>
-          )}
-
-          {importResults.skipped > 0 && (
-            <div class="result-row">
-              <span class="result-num" style="color:var(--muted)">{importResults.skipped}</span>
-              <span style="color:var(--muted)">{t.import_n_skipped}</span>
-            </div>
-          )}
-
-          {importResults.mediaOk > 0 && (
-            <div class="result-row">
-              <span class="result-num result-ok">{importResults.mediaOk}</span>
-              <span>{t.import_n_media_ok}</span>
-            </div>
-          )}
-
-          {importResults.mediaFailed > 0 && (
-            <div class="result-row">
-              <span class="result-num result-warn">{importResults.mediaFailed}</span>
-              <span style="color:var(--gold)">{t.import_n_media_fail}</span>
-            </div>
-          )}
-
-          {importResults.errors.length > 0 && (
-            <div style="margin-top:16px;">
-              <div class="section-head">{t.import_errors} ({importResults.errors.length})</div>
-              {importResults.errors.slice(0, 20).map((e: string) => (
-                <div class="result-err">{e}</div>
-              ))}
-              {importResults.errors.length > 20 && (
-                <div class="result-err">… and {importResults.errors.length - 20} more</div>
+          {/* ── Markdown result ── */}
+          {importResults.type === 'markdown' && (
+            <>
+              <div class="result-row">
+                <span class="result-num result-ok">{importResults.imported}</span>
+                <span>{t.import_n_imported}</span>
+              </div>
+              {importResults.skipped > 0 && (
+                <div class="result-row">
+                  <span class="result-num" style="color:var(--muted)">{importResults.skipped}</span>
+                  <span style="color:var(--muted)">{t.import_n_skipped}</span>
+                </div>
               )}
-            </div>
+            </>
+          )}
+
+          {/* ── WordPress result ── */}
+          {importResults.type !== 'markdown' && (
+            <>
+              {importResults.collections?.length > 0 && (
+                <div class="result-row">
+                  <span class="result-ok">◈</span>
+                  <span>{t.import_created_cols}: <strong>{importResults.collections.join(', ')}</strong></span>
+                </div>
+              )}
+
+              <div class="result-row">
+                <span class="result-num result-ok">{importResults.imported}</span>
+                <span>{t.import_n_imported}</span>
+              </div>
+
+              {importResults.overwritten > 0 && (
+                <div class="result-row">
+                  <span class="result-num result-warn">{importResults.overwritten}</span>
+                  <span>{t.import_n_overwritten}</span>
+                </div>
+              )}
+
+              {importResults.skipped > 0 && (
+                <div class="result-row">
+                  <span class="result-num" style="color:var(--muted)">{importResults.skipped}</span>
+                  <span style="color:var(--muted)">{t.import_n_skipped}</span>
+                </div>
+              )}
+
+              {importResults.mediaOk > 0 && (
+                <div class="result-row">
+                  <span class="result-num result-ok">{importResults.mediaOk}</span>
+                  <span>{t.import_n_media_ok}</span>
+                </div>
+              )}
+
+              {importResults.mediaFailed > 0 && (
+                <div class="result-row">
+                  <span class="result-num result-warn">{importResults.mediaFailed}</span>
+                  <span style="color:var(--gold)">{t.import_n_media_fail}</span>
+                </div>
+              )}
+
+              {importResults.errors?.length > 0 && (
+                <div style="margin-top:16px;">
+                  <div class="section-head">{t.import_errors} ({importResults.errors.length})</div>
+                  {importResults.errors.slice(0, 20).map((e: string) => (
+                    <div class="result-err">{e}</div>
+                  ))}
+                  {importResults.errors.length > 20 && (
+                    <div class="result-err">… and {importResults.errors.length - 20} more</div>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -381,6 +513,31 @@ _sideDb.close();
 </AdminLayout>
 
 <script>
+  // Tab switching
+  function switchTab(tab: string) {
+    const wpPane = document.getElementById('pane-wp');
+    const mdPane = document.getElementById('pane-md');
+    const wpBtn  = document.getElementById('tab-wp');
+    const mdBtn  = document.getElementById('tab-md');
+    if (!wpPane || !mdPane || !wpBtn || !mdBtn) return;
+    if (tab === 'wp') {
+      wpPane.style.display = '';
+      mdPane.style.display = 'none';
+      (wpBtn as HTMLButtonElement).style.borderBottomColor = 'var(--gold)';
+      (wpBtn as HTMLButtonElement).style.color = 'var(--heading)';
+      (mdBtn as HTMLButtonElement).style.borderBottomColor = 'transparent';
+      (mdBtn as HTMLButtonElement).style.color = 'var(--muted)';
+    } else {
+      wpPane.style.display = 'none';
+      mdPane.style.display = '';
+      (mdBtn as HTMLButtonElement).style.borderBottomColor = 'var(--gold)';
+      (mdBtn as HTMLButtonElement).style.color = 'var(--heading)';
+      (wpBtn as HTMLButtonElement).style.borderBottomColor = 'transparent';
+      (wpBtn as HTMLButtonElement).style.color = 'var(--muted)';
+    }
+  }
+  (window as any).switchTab = switchTab;
+
   // File picker: show filename + drag styling
   const dz   = document.getElementById('drop-zone');
   const inp  = document.getElementById('wxr-file') as HTMLInputElement;
