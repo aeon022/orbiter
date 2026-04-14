@@ -73,12 +73,34 @@ const tradeoffs = [
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Orbiter — CMS in one file</title>
   <meta name="description" content="A CMS for Astro where your entire site — content, media, schema, users — lives in one portable SQLite file. Zero external dependencies." />
+  <link rel="canonical" href="https://orbiter.sh/" />
+  <meta property="og:type" content="website" />
   <meta property="og:title" content="Orbiter — CMS in one file" />
   <meta property="og:description" content="Content, media, schema, users — all in a single .pod file. Copy it anywhere. Built for Astro." />
-  <meta property="og:url" content="https://orbiter.sh" />
+  <meta property="og:url" content="https://orbiter.sh/" />
+  <meta property="og:image" content="https://orbiter.sh/screenshots/dashboard.webp" />
+  <meta property="og:image:width" content="1280" />
+  <meta property="og:image:height" content="800" />
+  <meta property="og:site_name" content="Orbiter" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Orbiter — CMS in one file" />
+  <meta name="twitter:description" content="Content, media, schema, users — all in a single .pod file. Copy it anywhere. Built for Astro." />
+  <meta name="twitter:image" content="https://orbiter.sh/screenshots/dashboard.webp" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="manifest" href="/site.webmanifest" />
   <meta name="theme-color" content="#8b7cf8" />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Orbiter",
+    "url": "https://orbiter.sh",
+    "description": "A CMS for Astro where your entire site — content, media, schema, users — lives in one portable SQLite file.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://opensource.org/licenses/MIT",
+    "author": { "@type": "Organization", "name": "Abteilung83", "url": "https://abteilung83.at" }
+  })} />
 </head>
 <body id="top">
 
