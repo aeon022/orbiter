@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- background -->
+  <rect width="32" height="32" rx="7" fill="#07070f"/>
+
+  <!-- back arc of ring (behind planet) -->
+  <ellipse cx="16" cy="16" rx="12" ry="4.5"
+    fill="none"
+    stroke="rgba(139,124,248,0.35)"
+    stroke-width="1.5"
+    transform="rotate(-22 16 16)"
+    stroke-dasharray="18 20"
+    stroke-dashoffset="0"/>
+
+  <!-- planet -->
+  <circle cx="16" cy="16" r="6.5" fill="url(#planet-grad)"/>
+
+  <!-- planet highlight -->
+  <circle cx="14" cy="13.5" r="2.2" fill="rgba(255,255,255,0.12)"/>
+
+  <!-- front arc of ring (over planet) -->
+  <ellipse cx="16" cy="16" rx="12" ry="4.5"
+    fill="none"
+    stroke="#8b7cf8"
+    stroke-width="1.5"
+    transform="rotate(-22 16 16)"
+    stroke-dasharray="20 18"
+    stroke-dashoffset="-18"/>
+
+  <!-- satellite dot -->
+  <circle cx="27.2" cy="12.4" r="1.8" fill="#c4b9ff"/>
+  <circle cx="27.2" cy="12.4" r="3" fill="rgba(196,185,255,0.25)"/>
+
+  <defs>
+    <radialGradient id="planet-grad" cx="40%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#a89eff"/>
+      <stop offset="100%" stop-color="#6c5ce7"/>
+    </radialGradient>
+  </defs>
+</svg>
