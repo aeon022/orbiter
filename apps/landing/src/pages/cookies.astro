@@ -1,0 +1,121 @@
+---
+import '../styles/landing.css';
+import '../styles/legal.css';
+import CookieBanner from '../components/CookieBanner.astro';
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cookie Policy — Orbiter</title>
+  <meta name="description" content="Cookie Policy for orbiter.sh" />
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+</head>
+<body id="top">
+
+  <nav>
+    <a href="/" class="nav-logo">🪐 <span>Orbiter</span></a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="https://github.com/aeon022/orbiter">GitHub</a>
+    </div>
+  </nav>
+
+  <main class="legal-page">
+    <div class="legal-header">
+      <div class="legal-label">Legal</div>
+      <h1>Cookie Policy</h1>
+      <p class="legal-meta">Last updated: April 2026 · Applies to orbiter.sh</p>
+    </div>
+
+    <div class="legal-body">
+
+      <h2>Short version</h2>
+      <p>
+        <strong>orbiter.sh uses no tracking cookies and no analytics.</strong> This page exists to be transparent about the minimal technical cookies that may be set by the hosting infrastructure.
+      </p>
+
+      <h2>What is a cookie?</h2>
+      <p>
+        A cookie is a small text file stored in your browser by a website you visit. Cookies can serve different purposes: some are technically necessary for a site to function, others are used for analytics or advertising.
+      </p>
+
+      <h2>Cookies we use</h2>
+
+      <div class="cookie-table">
+        <div class="cookie-row cookie-row-head">
+          <span>Cookie</span>
+          <span>Type</span>
+          <span>Purpose</span>
+          <span>Duration</span>
+        </div>
+        <div class="cookie-row">
+          <span class="cookie-name">__cf_bm</span>
+          <span><span class="cookie-badge badge-necessary">Necessary</span></span>
+          <span>Cloudflare bot management — set only if the hosting provider uses Cloudflare. Does not track you personally.</span>
+          <span>30 min</span>
+        </div>
+        <div class="cookie-row">
+          <span class="cookie-name">_cfuvid</span>
+          <span><span class="cookie-badge badge-necessary">Necessary</span></span>
+          <span>Cloudflare rate limiting. Not used for tracking or advertising.</span>
+          <span>Session</span>
+        </div>
+      </div>
+
+      <p class="cookie-note">
+        Depending on your hosting region, none of the above cookies may be set at all. We do not set any first-party cookies ourselves.
+      </p>
+
+      <h2>What we do NOT use</h2>
+      <ul>
+        <li>No Google Analytics, Google Tag Manager, or any Google tracking</li>
+        <li>No Meta Pixel or social media tracking</li>
+        <li>No advertising or retargeting cookies</li>
+        <li>No session tracking or user profiling</li>
+        <li>No A/B testing frameworks</li>
+      </ul>
+
+      <h2>Managing cookies</h2>
+      <p>
+        You can control and delete cookies through your browser settings. The following links explain how to do this in the most common browsers:
+      </p>
+      <ul>
+        <li><a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener noreferrer">Google Chrome</a></li>
+        <li><a href="https://support.mozilla.org/en-US/kb/clear-cookies-and-site-data-firefox" target="_blank" rel="noopener noreferrer">Mozilla Firefox</a></li>
+        <li><a href="https://support.apple.com/guide/safari/manage-cookies-sfri11471/mac" target="_blank" rel="noopener noreferrer">Safari</a></li>
+        <li><a href="https://support.microsoft.com/en-us/windows/delete-and-manage-cookies-168dab11-0753-043d-7c16-ede5947fc64d" target="_blank" rel="noopener noreferrer">Microsoft Edge</a></li>
+      </ul>
+      <p>
+        Note that disabling technically necessary cookies may affect the basic functioning of this website.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        Questions about this Cookie Policy can be directed to <a href="mailto:post@abteilung83.com">post@abteilung83.com</a>.
+      </p>
+      <p>
+        See also our <a href="/privacy">Privacy Policy</a>.
+      </p>
+
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-left">
+      <span class="footer-logo">🪐 Orbiter</span>
+      <span class="footer-meta">MIT License · Built by <a href="https://abteilung83.at">Abteilung83</a></span>
+    </div>
+    <div class="footer-links">
+      <a href="/privacy">Privacy</a>
+      <a href="/cookies">Cookies</a>
+      <a href="https://abteilung83.at/imprint">Imprint</a>
+    </div>
+  </footer>
+
+  <CookieBanner />
+</body>
+</html>

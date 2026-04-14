@@ -1,0 +1,475 @@
+---
+import '../styles/landing.css';
+import FooterSignature from '../components/FooterSignature.astro';
+import CookieBanner from '../components/CookieBanner.astro';
+const features = [
+  {
+    icon: '◈',
+    title: 'One file. Everything.',
+    body: 'Content, media, schema, users, sessions — all in a single <code>.pod</code> file. Copy it anywhere. Back it up with <code>cp</code>.',
+  },
+  {
+    icon: '⬡',
+    title: 'Astro-native',
+    body: 'One line in <code>astro.config.mjs</code> injects a full admin UI at <code>/orbiter</code> via <code>injectRoute</code>. Nothing added to <code>src/pages</code>.',
+  },
+  {
+    icon: '⌗',
+    title: 'Familiar content API',
+    body: 'Read content with <code>getCollection</code> and <code>getEntry</code> — same shape as Astro\'s built-in content collections.',
+  },
+  {
+    icon: '▦',
+    title: 'Schema editor',
+    body: 'Add or change fields in the admin without writing migrations. Changes apply immediately.',
+  },
+  {
+    icon: '◫',
+    title: 'Media library',
+    body: 'Images and files stored as BLOBs directly in the pod. No CDN to configure, no broken paths after deploy.',
+  },
+  {
+    icon: '⟳',
+    title: 'Version history',
+    body: 'Every publish creates a snapshot. Roll back to any previous version of any entry.',
+  },
+  {
+    icon: '⊞',
+    title: 'JSON API',
+    body: '<code>GET /orbiter/api/[collection]</code> — optional Bearer token, ready to use from any frontend.',
+  },
+  {
+    icon: '⇅',
+    title: 'GitHub sync',
+    body: 'On serverless platforms like Netlify and Vercel, pack your pod into a git commit and trigger a rebuild. No data loss between deploys.',
+  },
+  {
+    icon: '↓',
+    title: 'Import',
+    body: 'Migrate from WordPress (WXR export) or bring in Markdown files. Done in the admin, no CLI needed.',
+  },
+];
+
+const tradeoffs = [
+  {
+    title: 'Not for large media libraries',
+    body: 'SQLite BLOB storage is convenient for content sites but not for thousands of high-res images. If your media library is in the gigabytes, this isn\'t the right tool.',
+  },
+  {
+    title: 'Serverless requires extra steps',
+    body: 'Netlify and Vercel don\'t persist filesystem writes between deploys. The GitHub sync mode works around this, but it adds steps. A VPS or Coolify gives you a better experience.',
+  },
+  {
+    title: 'Built for small teams',
+    body: 'Two people editing the same entry at the same moment will get last-write-wins. Fine for a team of 1–5. Not designed for large editorial teams working in parallel.',
+  },
+];
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbiter — CMS in one file</title>
+  <meta name="description" content="A CMS for Astro where your entire site — content, media, schema, users — lives in one portable SQLite file. Zero external dependencies." />
+  <meta property="og:title" content="Orbiter — CMS in one file" />
+  <meta property="og:description" content="Content, media, schema, users — all in a single .pod file. Copy it anywhere. Built for Astro." />
+  <meta property="og:url" content="https://orbiter.sh" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+</head>
+<body id="top">
+
+  <!-- BACK TO TOP -->
+  <button id="back-to-top" aria-label="Back to top" title="Back to top">↑</button>
+
+  <!-- SCROLL PROGRESS -->
+  <div id="scroll-progress" aria-hidden="true"></div>
+
+  <!-- BACKGROUND -->
+  <canvas id="starfield" aria-hidden="true"></canvas>
+  <div class="nebula nebula-1" aria-hidden="true"></div>
+  <div class="nebula nebula-2" aria-hidden="true"></div>
+  <div class="nebula nebula-3" aria-hidden="true"></div>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#top" class="nav-logo">🪐 <span>Orbiter</span></a>
+    <div class="nav-links">
+      <a href="#how-it-works" data-section="how-it-works">How it works</a>
+      <a href="#features" data-section="features">Features</a>
+      <a href="https://github.com/aeon022/orbiter">GitHub</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <!-- orbital decoration -->
+    <div class="orbit-wrap" aria-hidden="true">
+      <div class="orbit orbit-1"></div>
+      <div class="orbit orbit-2"></div>
+      <div class="orbit orbit-3"></div>
+    </div>
+
+    <div class="hero-badge">v0.1.0 — now on npm</div>
+    <h1>Your entire CMS<br />in <span>one file.</span></h1>
+    <p class="hero-sub">
+      Content, media, schema, users — all in a single <code>.pod</code> file.
+      Copy it anywhere. No database server. No cloud account.
+      Built for Astro.
+    </p>
+    <div class="hero-actions">
+      <a href="https://github.com/aeon022/orbiter" class="btn btn-primary">GitHub →</a>
+      <a href="#how-it-works" class="btn btn-secondary">How it works</a>
+      <a href="https://buy.polar.sh/polar_cl_SFvmYDegcsKDv8O8ZylLlIiXzyNRM7Br9nBx942rj4Q" target="_blank" rel="noopener noreferrer" class="btn btn-support">Support Orbiter ☕</a>
+    </div>
+    <div class="install-block">
+      <span class="prompt">$</span>
+      <span class="cmd">npm install @a83/orbiter-integration</span>
+    </div>
+  </div>
+
+  <!-- SCREENSHOTS -->
+  <section id="screenshots" class="screenshots-section">
+    <h2 class="reveal">See it in action</h2>
+    <p class="section-lead reveal reveal-delay-1">A full CMS admin — injected into your Astro app. No separate service to run.</p>
+
+    <div class="screenshot-main reveal reveal-delay-2">
+      <div class="screenshot-frame" id="ss-main-frame">
+        <img id="ss-main-img" src="/screenshots/dashboard.webp" alt="Orbiter Dashboard" width="1390" height="839" />
+      </div>
+      <div class="screenshot-caption" id="ss-main-caption">Dashboard — 21 entries across 6 collections, recently changed, live/draft status</div>
+    </div>
+
+    <div class="screenshot-grid">
+      <button class="screenshot-thumb" data-src="/screenshots/dashboard.webp" data-caption="Dashboard — 21 entries across 6 collections, recently changed, live/draft status" aria-label="Show Dashboard screenshot">
+        <div class="screenshot-frame">
+          <img src="/screenshots/dashboard.webp" alt="Orbiter Dashboard" width="1390" height="839" loading="lazy" />
+        </div>
+        <div class="screenshot-caption">Dashboard</div>
+      </button>
+      <button class="screenshot-thumb" data-src="/screenshots/login.webp" data-caption="Login screen" aria-label="Show Login screenshot">
+        <div class="screenshot-frame">
+          <img src="/screenshots/login.webp" alt="Orbiter Login" width="1390" height="839" loading="lazy" />
+        </div>
+        <div class="screenshot-caption">Login</div>
+      </button>
+      <button class="screenshot-thumb" data-src="/screenshots/settings.webp" data-caption="Settings — site config, GitHub sync mode, API token" aria-label="Show Settings screenshot">
+        <div class="screenshot-frame">
+          <img src="/screenshots/settings.webp" alt="Orbiter Settings" width="1390" height="839" loading="lazy" />
+        </div>
+        <div class="screenshot-caption">Settings &amp; GitHub sync</div>
+      </button>
+      <button class="screenshot-thumb" data-src="/screenshots/import.webp" data-caption="Import Tool — WordPress WXR and Markdown files" aria-label="Show Import screenshot">
+        <div class="screenshot-frame">
+          <img src="/screenshots/import.webp" alt="Orbiter Import Tool" width="1390" height="839" loading="lazy" />
+        </div>
+        <div class="screenshot-caption">Import Tool</div>
+      </button>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how-it-works">
+    <h2 class="reveal">How it works</h2>
+    <p class="section-lead reveal reveal-delay-1">Your entire CMS lives next to your source code — in one file.</p>
+
+    <div class="file-visual reveal reveal-delay-2">
+      <span class="dim">your-site/</span><br />
+      <span class="dim">├── astro.config.mjs</span><br />
+      <div class="file-highlight">
+        ├── content.pod &nbsp;&nbsp;<span class="acc">← your entire CMS</span>
+      </div>
+      <span class="dim">└── src/pages/</span>
+    </div>
+
+    <div class="steps">
+      <div class="reveal">
+        <div class="step-label">Step 1 — Install</div>
+        <pre><code>npm install @a83/orbiter-integration</code></pre>
+      </div>
+      <div class="reveal reveal-delay-1">
+        <div class="step-label">Step 2 — Add to astro.config.mjs</div>
+        <pre><code><span class="dim">import</span> orbiter <span class="dim">from</span> <span class="grn">'@a83/orbiter-integration'</span><span class="dim">;</span>
+
+<span class="dim">export default</span> defineConfig(&#123;
+  output: <span class="grn">'server'</span>,
+  integrations: [orbiter(&#123; pod: <span class="grn">'./content.pod'</span> &#125;)],
+&#125;);</code></pre>
+      </div>
+      <div class="reveal reveal-delay-2">
+        <div class="step-label">Step 3 — Read content</div>
+        <pre><code><span class="dim">import</span> &#123; getCollection &#125; <span class="dim">from</span> <span class="grn">'orbiter:collections'</span><span class="dim">;</span>
+
+<span class="dim">const</span> posts = <span class="dim">await</span> getCollection(<span class="grn">'posts'</span>);</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <h2 class="reveal">What's included</h2>
+    <p class="section-lead reveal reveal-delay-1">A full CMS admin at <code>/orbiter</code> — injected into your Astro app, nothing added to <code>src/pages</code>.</p>
+
+    <div class="grid reveal">
+      {features.map(f => (
+        <div class="feature">
+          <span class="feature-icon">{f.icon}</span>
+          <div class="feature-title">{f.title}</div>
+          <div class="feature-body" set:html={f.body} />
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- TRADEOFFS -->
+  <section id="tradeoffs">
+    <h2 class="reveal">Honest tradeoffs</h2>
+    <p class="section-lead reveal reveal-delay-1">Orbiter is the right tool for small teams and content sites. Here's where it isn't.</p>
+
+    <div class="tradeoffs">
+      {tradeoffs.map((t, i) => (
+        <div class={`tradeoff reveal reveal-delay-${i + 1}`}>
+          <div class="tradeoff-title">{t.title}</div>
+          <div class="tradeoff-body">{t.body}</div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <h2 class="reveal">Try it in 60 seconds.</h2>
+    <p class="reveal reveal-delay-1">Clone the repo and run the demo — admin at <code>localhost:8080/orbiter</code>, login: <code>admin / admin</code>.</p>
+    <div class="reveal reveal-delay-2" style="display:flex; flex-direction:column; gap:14px; align-items:center;">
+      <pre><code><span class="dim">git clone</span> https://github.com/aeon022/orbiter.git
+<span class="dim">cd</span> orbiter <span class="dim">&&</span> npm install <span class="dim">&&</span> npm run seed <span class="dim">&&</span> npm run dev</code></pre>
+      <span class="dim" style="font-size:.83rem;">or scaffold a new project: <code>npm install -g @a83/orbiter-cli</code> → <code>orbiter init my-site</code></span>
+    </div>
+
+    <div class="support-block reveal reveal-delay-3">
+      <div class="support-text">
+        <div class="support-title">Like what you see?</div>
+        <div class="support-sub">Orbiter is free and open source. If it saves you time, consider supporting its development.</div>
+      </div>
+      <a href="https://buy.polar.sh/polar_cl_SFvmYDegcsKDv8O8ZylLlIiXzyNRM7Br9nBx942rj4Q" target="_blank" rel="noopener noreferrer" class="btn btn-support btn-support-lg">Support Orbiter ☕</a>
+    </div>
+  </section>
+
+  <!-- BUILT BY -->
+  <div class="built-by reveal">
+    <div class="built-by-label">Built by</div>
+    <div class="built-by-body">
+      <a href="https://abteilung83.at" target="_blank" rel="noopener noreferrer" class="built-by-name">Abteilung83</a>
+      <p class="built-by-desc">Advanced Web Architecture &amp; Digital Systems Engineering — Less Noise. Nice Data. No Bloat.</p>
+      <a href="https://abteilung83.at" target="_blank" rel="noopener noreferrer" class="built-by-link">abteilung83.at →</a>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-left">
+      <span class="footer-logo">🪐 Orbiter</span>
+      <span class="footer-meta">MIT License · Built by <a href="https://abteilung83.at">Abteilung83</a></span>
+      <span class="footer-meta"><a href="mailto:post@abteilung83.com">post@abteilung83.com</a> · Graz, Austria</span>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/aeon022/orbiter">GitHub</a>
+      <a href="https://www.npmjs.com/package/@a83/orbiter-integration">npm</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/cookies">Cookies</a>
+      <a href="https://abteilung83.at/imprint">Imprint</a>
+    </div>
+  </footer>
+
+  <FooterSignature />
+  <CookieBanner />
+
+</body>
+</html>
+
+<script>
+// ── STARFIELD ──────────────────────────────────────────────
+const canvas = document.getElementById('starfield') as HTMLCanvasElement;
+const ctx = canvas.getContext('2d')!;
+
+interface Star {
+  x: number; y: number;
+  r: number;
+  vx: number; vy: number;
+  base: number;
+  phase: number;
+  speed: number;
+}
+
+let W = 0, H = 0;
+let stars: Star[] = [];
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+
+function initStars(n = 140) {
+  stars = Array.from({ length: n }, () => ({
+    x:     Math.random() * W,
+    y:     Math.random() * H,
+    r:     Math.random() * 1.4 + 0.3,
+    vx:    (Math.random() - 0.5) * 0.12,
+    vy:    (Math.random() - 0.5) * 0.12,
+    base:  Math.random() * 0.55 + 0.15,
+    phase: Math.random() * Math.PI * 2,
+    speed: Math.random() * 0.018 + 0.004,
+  }));
+}
+
+function drawStars() {
+  ctx.clearRect(0, 0, W, H);
+  for (const s of stars) {
+    s.phase += s.speed;
+    const a = s.base + Math.sin(s.phase) * 0.18;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(210,215,255,${a})`;
+    ctx.fill();
+    s.x += s.vx;
+    s.y += s.vy;
+    if (s.x < -2)  s.x = W + 2;
+    if (s.x > W+2) s.x = -2;
+    if (s.y < -2)  s.y = H + 2;
+    if (s.y > H+2) s.y = -2;
+  }
+  requestAnimationFrame(drawStars);
+}
+
+resize();
+initStars();
+drawStars();
+window.addEventListener('resize', () => { resize(); initStars(); });
+
+// ── SCROLL REVEAL ──────────────────────────────────────────
+const observer = new IntersectionObserver(
+  (entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  },
+  { threshold: 0.12, rootMargin: '0px 0px -50px 0px' }
+);
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── SCREENSHOT GALLERY ─────────────────────────────────────
+const mainImg     = document.getElementById('ss-main-img') as HTMLImageElement;
+const mainCaption = document.getElementById('ss-main-caption') as HTMLElement;
+const mainFrame   = document.getElementById('ss-main-frame') as HTMLElement;
+const thumbs      = document.querySelectorAll<HTMLButtonElement>('.screenshot-thumb');
+
+function setActive(btn: HTMLButtonElement) {
+  thumbs.forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function switchScreenshot(btn: HTMLButtonElement) {
+  const src     = btn.dataset.src!;
+  const caption = btn.dataset.caption!;
+  if (mainImg.src.endsWith(src)) return;
+
+  mainFrame.classList.add('ss-fade');
+  setTimeout(() => {
+    mainImg.src = src;
+    mainImg.alt = caption;
+    mainCaption.textContent = caption;
+    mainFrame.classList.remove('ss-fade');
+  }, 180);
+
+  setActive(btn);
+}
+
+thumbs.forEach(btn => {
+  btn.addEventListener('click', () => switchScreenshot(btn));
+});
+
+// mark first thumb active on load
+if (thumbs[0]) thumbs[0].classList.add('active');
+
+// ── ACTIVE NAV ─────────────────────────────────────────────
+const navLinks = document.querySelectorAll<HTMLAnchorElement>('[data-section]');
+const sections = ['how-it-works', 'features', 'tradeoffs']
+  .map(id => document.getElementById(id))
+  .filter(Boolean) as HTMLElement[];
+
+const sectionObserver = new IntersectionObserver(
+  (entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        navLinks.forEach(a => {
+          a.classList.toggle('active', a.dataset.section === id);
+        });
+      }
+    });
+  },
+  { threshold: 0.3 }
+);
+
+sections.forEach(s => sectionObserver.observe(s));
+
+// ── SCROLL PROGRESS BAR ────────────────────────────────────
+const progressBar = document.getElementById('scroll-progress') as HTMLDivElement;
+
+function updateProgress() {
+  const scrolled = window.scrollY;
+  const total    = document.documentElement.scrollHeight - window.innerHeight;
+  const pct      = total > 0 ? (scrolled / total) * 100 : 0;
+  progressBar.style.width = `${pct}%`;
+  progressBar.classList.toggle('visible', scrolled > 80);
+}
+
+// ── NAV SCROLL STATE ───────────────────────────────────────
+const nav = document.querySelector('nav') as HTMLElement;
+
+function updateScroll() {
+  const scrolled = window.scrollY > 60;
+  nav.classList.toggle('scrolled', scrolled);
+  updateProgress();
+}
+
+window.addEventListener('scroll', updateScroll, { passive: true });
+
+// ── BACK TO TOP ────────────────────────────────────────────
+const topBtn = document.getElementById('back-to-top') as HTMLButtonElement;
+
+window.addEventListener('scroll', () => {
+  topBtn.classList.toggle('visible', window.scrollY > 400);
+}, { passive: true });
+
+topBtn.addEventListener('click', () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// ── SMOOTH SCROLL + SECTION FLASH ──────────────────────────
+document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const id = a.getAttribute('href')!.slice(1);
+    const target = id === 'top' ? document.body : document.getElementById(id);
+    if (!target) return;
+    e.preventDefault();
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    history.pushState(null, '', id === 'top' ? '/' : `#${id}`);
+
+    // flash the target section after scroll lands
+    if (id !== 'top') {
+      setTimeout(() => {
+        target.classList.add('section-flash');
+        target.addEventListener('animationend', () => {
+          target.classList.remove('section-flash');
+        }, { once: true });
+      }, 600);
+    }
+  });
+});
+</script>

@@ -1,0 +1,147 @@
+---
+---
+
+<div id="cookie-banner" role="dialog" aria-label="Cookie notice" aria-live="polite">
+  <div class="cb-inner">
+    <div class="cb-text">
+      <span class="cb-title">This site uses no tracking cookies.</span>
+      <span class="cb-sub">Only technically necessary infrastructure cookies may be set. No analytics. No advertising.</span>
+      <a href="/cookies" class="cb-link">Cookie Policy</a>
+    </div>
+    <div class="cb-actions">
+      <a href="/cookies" class="cb-btn cb-btn-secondary">Details</a>
+      <button id="cb-accept" class="cb-btn cb-btn-primary">Got it</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  #cookie-banner {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(120px);
+    width: calc(100% - 48px);
+    max-width: 780px;
+    z-index: 500;
+    opacity: 0;
+    transition: transform .4s cubic-bezier(.16,1,.3,1), opacity .4s ease;
+    pointer-events: none;
+  }
+
+  #cookie-banner.visible {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  #cookie-banner.hiding {
+    transform: translateX(-50%) translateY(120px);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .cb-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 16px 20px;
+    background: rgba(13,13,26,.95);
+    border: 1px solid rgba(139,124,248,.25);
+    border-radius: 12px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 8px 40px rgba(0,0,0,.6), 0 0 0 1px rgba(139,124,248,.08);
+  }
+
+  .cb-text {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 0.84rem;
+    line-height: 1.5;
+  }
+
+  .cb-title {
+    color: #e0e0f0;
+    font-weight: 500;
+  }
+
+  .cb-sub {
+    color: #6060a0;
+  }
+
+  .cb-link {
+    color: #8b7cf8;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+  .cb-link:hover { opacity: .8; }
+
+  .cb-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .cb-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-size: 0.84rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity .15s, box-shadow .2s;
+    text-decoration: none;
+    border: none;
+  }
+
+  .cb-btn-secondary {
+    background: transparent;
+    color: #6060a0;
+    border: 1px solid #1a1a30;
+  }
+  .cb-btn-secondary:hover { color: #e0e0f0; text-decoration: none; }
+
+  .cb-btn-primary {
+    background: #8b7cf8;
+    color: #fff;
+    box-shadow: 0 0 16px rgba(139,124,248,.3);
+  }
+  .cb-btn-primary:hover {
+    opacity: .9;
+    box-shadow: 0 0 24px rgba(139,124,248,.5);
+  }
+
+  @media (max-width: 600px) {
+    #cookie-banner { bottom: 16px; width: calc(100% - 32px); }
+    .cb-inner { flex-direction: column; align-items: flex-start; gap: 14px; }
+    .cb-actions { width: 100%; }
+    .cb-btn { flex: 1; justify-content: center; }
+  }
+</style>
+
+<script>
+  const STORAGE_KEY = 'orbiter_cookie_consent';
+  const banner = document.getElementById('cookie-banner') as HTMLElement;
+  const acceptBtn = document.getElementById('cb-accept') as HTMLButtonElement;
+
+  function dismiss() {
+    banner.classList.remove('visible');
+    banner.classList.add('hiding');
+    localStorage.setItem(STORAGE_KEY, 'accepted');
+  }
+
+  if (!localStorage.getItem(STORAGE_KEY)) {
+    // slight delay so page load animation finishes first
+    setTimeout(() => banner.classList.add('visible'), 1200);
+  }
+
+  acceptBtn.addEventListener('click', dismiss);
+</script>

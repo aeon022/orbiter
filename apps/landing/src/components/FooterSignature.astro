@@ -1,0 +1,233 @@
+---
+/**
+ * ABTEILUNG83 - Pure Black Terminal Signature + Glitch Effect
+ * "Less Noise. Nice Data. No Bloat."
+ */
+const gitHash = import.meta.env.PUBLIC_GIT_HASH || 'void';
+const buildDate = new Date().toLocaleDateString('de-AT', {
+  year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+});
+---
+
+<div class="ab83-sig">
+  <div class="ab83-inner">
+    <div class="ab83-row">
+
+      <div class="ab83-meta">
+        <div id="ab83-trigger" class="ab83-cmd">
+          <span class="ab83-prompt">❯</span>
+          <span class="ab83-cmd-text">./ab83_init --status</span>
+        </div>
+        <div class="ab83-kv">
+          <span class="ab83-key">hash:</span>
+          <span class="ab83-val">{gitHash}</span>
+        </div>
+        <div class="ab83-kv">
+          <span class="ab83-key">build:</span>
+          <span class="ab83-val">{buildDate}</span>
+        </div>
+      </div>
+
+      <div class="ab83-links">
+        <a
+          href="https://abteilung83.at"
+          target="_blank"
+          id="glitch-link"
+          data-value="ABTEILUNG83"
+          rel="noopener noreferrer"
+          class="ab83-architect"
+        >Architect</a>
+        <span class="ab83-slash" aria-hidden="true">/</span>
+        <a href="https://astro.build" target="_blank" rel="noopener noreferrer" class="ab83-astro">
+          ASTRO_CORE
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+  .ab83-sig {
+    width: 100%;
+    background: #000;
+    padding: 14px 0;
+    border-top: 1px solid #18181b;
+    user-select: none;
+    overflow: hidden;
+    margin: 0 -24px;
+    width: calc(100% + 48px);
+  }
+
+  .ab83-inner {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  .ab83-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    font-family: 'SF Mono', 'Fira Code', ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+
+  @media (min-width: 768px) {
+    .ab83-row {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+  }
+
+  /* META (left side) */
+  .ab83-meta {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) auto auto;
+    align-items: center;
+    column-gap: 16px;
+    row-gap: 4px;
+    color: #3f3f46;
+    width: 100%;
+  }
+
+  @media (min-width: 768px) {
+    .ab83-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+      width: auto;
+      flex: 1;
+    }
+  }
+
+  .ab83-cmd {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: crosshair;
+    min-width: 0;
+  }
+
+  .ab83-cmd:hover .ab83-prompt { color: #fff; }
+  .ab83-cmd:hover .ab83-cmd-text { color: #d4d4d8; }
+
+  .ab83-prompt {
+    color: #10b981;
+    font-weight: 900;
+    animation: ab83-pulse 2s ease-in-out infinite;
+    transition: color .15s;
+    flex-shrink: 0;
+  }
+
+  @keyframes ab83-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: .4; }
+  }
+
+  .ab83-cmd-text {
+    color: #52525b;
+    transition: color .15s;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ab83-kv {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    justify-content: flex-end;
+  }
+
+  @media (min-width: 768px) {
+    .ab83-kv { justify-content: flex-start; }
+  }
+
+  .ab83-key { opacity: .5; }
+  .ab83-val { color: #71717a; }
+
+  /* LINKS (right side) */
+  .ab83-links {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  @media (min-width: 768px) {
+    .ab83-links {
+      width: auto;
+      flex-shrink: 0;
+      justify-content: flex-end;
+    }
+  }
+
+  .ab83-architect {
+    color: #10b981;
+    font-weight: 700;
+    letter-spacing: .2em;
+    transition: color .15s;
+    text-decoration: none;
+    display: inline-block;
+    min-width: 11ch;
+  }
+  .ab83-architect:hover { color: #34d399; text-decoration: none; }
+
+  .ab83-slash {
+    color: #27272a;
+    margin-left: -8px;
+  }
+
+  .ab83-astro {
+    color: #71717a;
+    font-size: 9px;
+    transition: color .15s;
+    text-decoration: none;
+  }
+  .ab83-astro:hover { color: #f97316; text-decoration: none; }
+</style>
+
+<script>
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&";
+  const glitchLink = document.getElementById('glitch-link') as HTMLAnchorElement | null;
+  let interval: ReturnType<typeof setInterval> | null = null;
+
+  glitchLink?.addEventListener('mouseenter', () => {
+    let iteration = 0;
+    const newText = glitchLink.dataset.value!;
+    if (interval) clearInterval(interval);
+
+    interval = setInterval(() => {
+      glitchLink.innerText = newText
+        .split('')
+        .map((_, index) => {
+          if (index < iteration) return newText[index];
+          return letters[Math.floor(Math.random() * 26)];
+        })
+        .join('');
+
+      if (iteration >= newText.length) clearInterval(interval!);
+      iteration += 1 / 3;
+    }, 30);
+  });
+
+  glitchLink?.addEventListener('mouseleave', () => {
+    if (interval) clearInterval(interval);
+    glitchLink.innerText = 'Architect';
+  });
+
+  const trigger = document.getElementById('ab83-trigger');
+  trigger?.addEventListener('click', () => {
+    console.clear();
+    console.log('%c❯ SYSTEM_CHECK: ABTEILUNG83 CORE ONLINE', 'color: #10b981; font-weight: bold; font-family: monospace;');
+    console.table({ architect: 'ABTEILUNG83', status: 'Stable', glitch_module: 'Active' });
+  });
+</script>
