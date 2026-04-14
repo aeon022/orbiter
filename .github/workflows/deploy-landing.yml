@@ -23,15 +23,13 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: apps/landing/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        working-directory: apps/landing
-        run: npm install
+        run: npm install --workspace=apps/landing
 
       - name: Build
-        working-directory: apps/landing
-        run: npm run build
+        run: npm run build --workspace=apps/landing
         env:
           PUBLIC_GIT_HASH: ${{ github.sha }}
 
