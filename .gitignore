@@ -20,3 +20,6 @@ Thumbs.db
 # Editor
 .vscode/settings.json
 .idea/
+
+# Local documents (drafts, notes, posts)
+documents/
