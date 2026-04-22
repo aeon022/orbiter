@@ -147,10 +147,8 @@ const faqs = [
   <link rel="manifest" href="/site.webmanifest" />
   <meta name="theme-color" content="#8b7cf8" />
 
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+  <!-- Local font (no external request) -->
+  <link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
 
   <!-- Structured data -->
   <script type="application/ld+json" set:html={JSON.stringify({
@@ -231,6 +229,9 @@ const faqs = [
       <div class="install-block">
         <span class="prompt">$</span>
         <span class="cmd">npm install @a83/orbiter-integration</span>
+        <button class="copy-btn" data-copy="npm install @a83/orbiter-integration" aria-label="Copy install command" title="Copy to clipboard">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
       </div>
 
       <!-- Hero dashboard preview -->
@@ -834,6 +835,8 @@ const faqs = [
 </html>
 
 <script>
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 // ── STARFIELD ──────────────────────────────────────────────
 const canvas = document.getElementById('starfield') as HTMLCanvasElement;
 const ctx    = canvas.getContext('2d')!;
@@ -887,10 +890,12 @@ function drawStars() {
   requestAnimationFrame(drawStars);
 }
 
-resize();
-initStars();
-drawStars();
-window.addEventListener('resize', () => { resize(); initStars(); });
+if (!reducedMotion) {
+  resize();
+  initStars();
+  drawStars();
+  window.addEventListener('resize', () => { resize(); initStars(); });
+}
 
 // ── HERO PARALLAX + TILT ───────────────────────────────────
 const heroInner    = document.querySelector('.hero-inner')         as HTMLElement;
@@ -924,7 +929,9 @@ function updateParallax() {
   orbitWrap.style.transform = `translate(-50%, -54%) translateY(${scrollY * 0.1}px)`;
 }
 
-window.addEventListener('scroll', updateParallax, { passive: true });
+if (!reducedMotion) {
+  window.addEventListener('scroll', updateParallax, { passive: true });
+}
 
 // ── SCROLL REVEAL ──────────────────────────────────────────
 const revealObserver = new IntersectionObserver(
@@ -1064,6 +1071,24 @@ document.querySelectorAll<HTMLButtonElement>('.faq-toggle').forEach(btn => {
       item.classList.add('open');
       btn.setAttribute('aria-expanded', 'true');
     }
+  });
+});
+
+// ── COPY BUTTONS ───────────────────────────────────────────
+document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const text = btn.dataset.copy ?? btn.closest('[data-copy]')?.getAttribute('data-copy') ?? '';
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      btn.classList.add('copied');
+      const icon = btn.querySelector('svg')!;
+      icon.innerHTML = '<polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        icon.innerHTML = '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>';
+      }, 1800);
+    } catch (_) {}
   });
 });
 
