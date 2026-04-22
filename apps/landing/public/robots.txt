@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /orbiter/
 
-Sitemap: https://orbiter.sh/sitemap.xml
+Sitemap: https://orbiter.sh/sitemap-index.xml

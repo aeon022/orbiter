@@ -56,6 +56,18 @@ const press = [
   },
 ];
 
+// GitHub stars — fetched at build time (SSG, no client JS needed)
+let ghStars = 0;
+try {
+  const ghRes = await fetch('https://api.github.com/repos/aeon022/orbiter', {
+    headers: { 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' }
+  });
+  if (ghRes.ok) {
+    const ghData = await ghRes.json();
+    ghStars = ghData.stargazers_count ?? 0;
+  }
+} catch (_) {}
+
 const faqs = [
   {
     q: 'What is a .pod file?',
@@ -176,9 +188,23 @@ const faqs = [
       <a href="#features"     data-section="features">Features</a>
       <a href="#pricing"      data-section="pricing">Pricing</a>
       <a href="#faq"          data-section="faq">FAQ</a>
-      <a href="https://github.com/aeon022/orbiter" class="nav-cta">GitHub →</a>
+      <a href="https://github.com/aeon022/orbiter" class="nav-cta" target="_blank" rel="noopener">
+        ★ {ghStars > 0 ? ghStars : 'GitHub'}
+      </a>
     </div>
+    <button class="nav-hamburger" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobile-menu">
+      <span></span><span></span><span></span>
+    </button>
   </nav>
+
+  <!-- MOBILE MENU -->
+  <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
+    <a href="#how-it-works">How it works</a>
+    <a href="#features">Features</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
+    <a href="https://github.com/aeon022/orbiter" class="mobile-menu-cta" target="_blank" rel="noopener">★ GitHub {ghStars > 0 ? `(${ghStars})` : ''}</a>
+  </div>
 
   <!-- HERO -->
   <div class="hero">
@@ -294,20 +320,20 @@ const faqs = [
     </div>
 
     <div class="screenshot-grid">
-      <button class="screenshot-thumb" data-src="/screenshots/dashboard.webp" data-caption="Dashboard — entry counts per collection, recently changed, live/draft status" aria-label="Show Dashboard screenshot">
-        <div class="screenshot-frame"><img src="/screenshots/dashboard.webp" alt="Orbiter Dashboard" width="1390" height="839" loading="lazy" /></div>
+      <button class="screenshot-thumb" data-src="/screenshots/dashboard.webp" data-caption="Dashboard — entry counts per collection, recently changed, live/draft status" aria-label="Dashboard">
+        <div class="screenshot-frame"><img src="/screenshots/dashboard.webp" alt="" width="1390" height="839" loading="lazy" /></div>
         <div class="screenshot-caption">Dashboard</div>
       </button>
-      <button class="screenshot-thumb" data-src="/screenshots/login.webp" data-caption="Login screen" aria-label="Show Login screenshot">
-        <div class="screenshot-frame"><img src="/screenshots/login.webp" alt="Orbiter Login" width="1390" height="839" loading="lazy" /></div>
+      <button class="screenshot-thumb" data-src="/screenshots/login.webp" data-caption="Login screen" aria-label="Login">
+        <div class="screenshot-frame"><img src="/screenshots/login.webp" alt="" width="1390" height="839" loading="lazy" /></div>
         <div class="screenshot-caption">Login</div>
       </button>
-      <button class="screenshot-thumb" data-src="/screenshots/settings.webp" data-caption="Settings — site config, GitHub sync mode, API token" aria-label="Show Settings screenshot">
-        <div class="screenshot-frame"><img src="/screenshots/settings.webp" alt="Orbiter Settings" width="1390" height="839" loading="lazy" /></div>
+      <button class="screenshot-thumb" data-src="/screenshots/settings.webp" data-caption="Settings — site config, GitHub sync mode, API token" aria-label="Settings &amp; GitHub sync">
+        <div class="screenshot-frame"><img src="/screenshots/settings.webp" alt="" width="1390" height="839" loading="lazy" /></div>
         <div class="screenshot-caption">Settings &amp; GitHub sync</div>
       </button>
-      <button class="screenshot-thumb" data-src="/screenshots/import.webp" data-caption="Import Tool — WordPress WXR and Markdown files" aria-label="Show Import screenshot">
-        <div class="screenshot-frame"><img src="/screenshots/import.webp" alt="Orbiter Import Tool" width="1390" height="839" loading="lazy" /></div>
+      <button class="screenshot-thumb" data-src="/screenshots/import.webp" data-caption="Import Tool — WordPress WXR and Markdown files" aria-label="Import Tool">
+        <div class="screenshot-frame"><img src="/screenshots/import.webp" alt="" width="1390" height="839" loading="lazy" /></div>
         <div class="screenshot-caption">Import Tool</div>
       </button>
     </div>
@@ -502,17 +528,17 @@ const faqs = [
       <table class="comparison-table">
         <thead>
           <tr>
-            <th></th>
-            <th class="col-orbiter">🪐 Orbiter</th>
-            <th>Decap CMS</th>
-            <th>Keystatic</th>
-            <th>Tina CMS</th>
-            <th>Payload CMS</th>
+            <th scope="col"></th>
+            <th scope="col" class="col-orbiter">🪐 Orbiter</th>
+            <th scope="col">Decap CMS</th>
+            <th scope="col">Keystatic</th>
+            <th scope="col">Tina CMS</th>
+            <th scope="col">Payload CMS</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>Storage</td>
+            <th scope="row">Storage</th>
             <td class="col-orbiter">SQLite file</td>
             <td class="col-other">Git</td>
             <td class="col-other">Git / files</td>
@@ -520,7 +546,7 @@ const faqs = [
             <td class="col-other">Postgres / MongoDB</td>
           </tr>
           <tr>
-            <td>External service</td>
+            <th scope="row">External service</th>
             <td class="col-orbiter"><span class="badge-yes">✓ None</span></td>
             <td class="col-other">GitHub OAuth required</td>
             <td class="col-other">GitHub / local</td>
@@ -528,7 +554,7 @@ const faqs = [
             <td class="col-other"><span class="badge-yes">✓ None</span></td>
           </tr>
           <tr>
-            <td>Setup</td>
+            <th scope="row">Setup</th>
             <td class="col-orbiter">npm install + 3 lines</td>
             <td class="col-other">YAML config file</td>
             <td class="col-other">Config file</td>
@@ -536,7 +562,7 @@ const faqs = [
             <td class="col-other">Full backend setup</td>
           </tr>
           <tr>
-            <td>Astro support</td>
+            <th scope="row">Astro support</th>
             <td class="col-orbiter"><span class="badge-yes">✓ Native</span></td>
             <td class="col-other"><span class="badge-partial">~ Plugin</span></td>
             <td class="col-other"><span class="badge-yes">✓ Native</span></td>
@@ -544,7 +570,7 @@ const faqs = [
             <td class="col-other"><span class="badge-no">Manual</span></td>
           </tr>
           <tr>
-            <td>Media storage</td>
+            <th scope="row">Media storage</th>
             <td class="col-orbiter">In pod (BLOBs)</td>
             <td class="col-other">External CDN</td>
             <td class="col-other">External CDN</td>
@@ -552,7 +578,7 @@ const faqs = [
             <td class="col-other">DB / S3</td>
           </tr>
           <tr>
-            <td>Version history</td>
+            <th scope="row">Version history</th>
             <td class="col-orbiter"><span class="badge-yes">✓ Built-in</span></td>
             <td class="col-other">Git history</td>
             <td class="col-other">Git history</td>
@@ -560,7 +586,7 @@ const faqs = [
             <td class="col-other">Custom / code</td>
           </tr>
           <tr>
-            <td>Schema editor UI</td>
+            <th scope="row">Schema editor UI</th>
             <td class="col-orbiter"><span class="badge-yes">✓ Yes</span></td>
             <td class="col-other"><span class="badge-no">YAML only</span></td>
             <td class="col-other"><span class="badge-no">Config only</span></td>
@@ -568,7 +594,7 @@ const faqs = [
             <td class="col-other"><span class="badge-no">Code only</span></td>
           </tr>
           <tr>
-            <td>Offline admin</td>
+            <th scope="row">Offline admin</th>
             <td class="col-orbiter"><span class="badge-yes">✓ Yes</span></td>
             <td class="col-other"><span class="badge-no">No</span></td>
             <td class="col-other"><span class="badge-partial">~ Local only</span></td>
@@ -576,7 +602,7 @@ const faqs = [
             <td class="col-other"><span class="badge-yes">✓ Yes</span></td>
           </tr>
           <tr>
-            <td>Backup</td>
+            <th scope="row">Backup</th>
             <td class="col-orbiter"><code>cp content.pod</code></td>
             <td class="col-other"><code>git push</code></td>
             <td class="col-other"><code>git push</code></td>
@@ -584,7 +610,7 @@ const faqs = [
             <td class="col-other">DB dump</td>
           </tr>
           <tr>
-            <td>Serverless deploy</td>
+            <th scope="row">Serverless deploy</th>
             <td class="col-orbiter"><span class="badge-yes">✓ Git sync mode</span></td>
             <td class="col-other"><span class="badge-yes">✓ Git-native</span></td>
             <td class="col-other"><span class="badge-yes">✓ Git-native</span></td>
@@ -592,7 +618,7 @@ const faqs = [
             <td class="col-other"><span class="badge-no">DB required</span></td>
           </tr>
           <tr>
-            <td>License</td>
+            <th scope="row">License</th>
             <td class="col-orbiter"><span class="badge-yes">MIT free</span></td>
             <td class="col-other">MIT free</td>
             <td class="col-other">MIT free</td>
@@ -1039,5 +1065,37 @@ document.querySelectorAll<HTMLButtonElement>('.faq-toggle').forEach(btn => {
       btn.setAttribute('aria-expanded', 'true');
     }
   });
+});
+
+// ── MOBILE HAMBURGER ───────────────────────────────────────
+const hamburger   = document.querySelector<HTMLButtonElement>('.nav-hamburger')!;
+const mobileMenu  = document.getElementById('mobile-menu')!;
+
+function openMenu() {
+  hamburger.setAttribute('aria-expanded', 'true');
+  mobileMenu.classList.add('is-open');
+  mobileMenu.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMenu() {
+  hamburger.setAttribute('aria-expanded', 'false');
+  mobileMenu.classList.remove('is-open');
+  mobileMenu.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+hamburger.addEventListener('click', () => {
+  hamburger.getAttribute('aria-expanded') === 'true' ? closeMenu() : openMenu();
+});
+
+// close on any link click inside mobile menu
+mobileMenu.querySelectorAll('a').forEach(a => {
+  a.addEventListener('click', () => closeMenu());
+});
+
+// close on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeMenu();
 });
 </script>
