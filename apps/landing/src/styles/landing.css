@@ -1616,6 +1616,15 @@ html.is-leaving body {
   box-shadow: 0 0 20px rgba(139,124,248,.35);
 }
 
+#back-to-top.launching {
+  transform: translateY(-6px) scale(1.15);
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 28px rgba(139,124,248,.5);
+  transition: transform .15s ease, background .1s, color .1s, box-shadow .1s;
+}
+
 
 /* ===== METRICS STRIP ===== */
 

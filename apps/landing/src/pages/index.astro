@@ -1035,8 +1035,32 @@ window.addEventListener('scroll', () => {
   topBtn.classList.toggle('visible', window.scrollY > 400);
 }, { passive: true });
 
+function easeInOutCubic(t: number) {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+function smoothScrollTop() {
+  const start     = window.scrollY;
+  if (start === 0) return;
+  // duration scales with distance so short scrolls aren't sluggish
+  const duration  = Math.min(900, Math.max(400, start * 0.4));
+  const startTime = performance.now();
+
+  function step(now: number) {
+    const elapsed  = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    window.scrollTo(0, start * (1 - easeInOutCubic(progress)));
+    if (progress < 1) requestAnimationFrame(step);
+  }
+
+  requestAnimationFrame(step);
+}
+
 topBtn.addEventListener('click', () => {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // brief lift animation, then scroll
+  topBtn.classList.add('launching');
+  setTimeout(() => topBtn.classList.remove('launching'), 220);
+  smoothScrollTop();
 });
 
 // ── SMOOTH SCROLL + SECTION FLASH ──────────────────────────
@@ -1051,7 +1075,7 @@ document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach(a => {
     e.preventDefault();
 
     if (!id || id === 'top') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      smoothScrollTop();
       history.pushState(null, '', '/');
       return;
     }
