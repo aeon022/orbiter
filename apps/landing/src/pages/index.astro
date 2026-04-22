@@ -357,22 +357,31 @@ const faqs = [
     <div class="steps">
       <div class="reveal">
         <div class="step-label">Step 1 — Install</div>
-        <pre><code>npm install @a83/orbiter-integration</code></pre>
+        <div class="code-block">
+          <pre><code>npm install @a83/orbiter-integration</code></pre>
+          <button class="copy-btn code-copy-btn" aria-label="Copy code" title="Copy to clipboard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
       </div>
       <div class="reveal reveal-delay-1">
         <div class="step-label">Step 2 — Add to astro.config.mjs</div>
-        <pre><code><span class="dim">import</span> orbiter <span class="dim">from</span> <span class="grn">'@a83/orbiter-integration'</span><span class="dim">;</span>
+        <div class="code-block">
+          <pre><code><span class="dim">import</span> orbiter <span class="dim">from</span> <span class="grn">'@a83/orbiter-integration'</span><span class="dim">;</span>
 
 <span class="dim">export default</span> defineConfig(&#123;
   output: <span class="grn">'server'</span>,
   integrations: [orbiter(&#123; pod: <span class="grn">'./content.pod'</span> &#125;)],
 &#125;);</code></pre>
+          <button class="copy-btn code-copy-btn" aria-label="Copy code" title="Copy to clipboard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
       </div>
       <div class="reveal reveal-delay-2">
         <div class="step-label">Step 3 — Read content in your pages</div>
-        <pre><code><span class="dim">import</span> &#123; getCollection &#125; <span class="dim">from</span> <span class="grn">'orbiter:collections'</span><span class="dim">;</span>
+        <div class="code-block">
+          <pre><code><span class="dim">import</span> &#123; getCollection &#125; <span class="dim">from</span> <span class="grn">'orbiter:collections'</span><span class="dim">;</span>
 
 <span class="dim">const</span> posts = <span class="dim">await</span> getCollection(<span class="grn">'posts'</span>);</code></pre>
+          <button class="copy-btn code-copy-btn" aria-label="Copy code" title="Copy to clipboard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
       </div>
     </div>
   </section>
@@ -750,8 +759,11 @@ const faqs = [
     <h2 class="reveal">Try it in 60 seconds.</h2>
     <p class="reveal reveal-delay-1">Clone the repo and run the demo — admin at <code>localhost:8080/orbiter</code>, login: <code>admin / admin</code>.</p>
     <div class="reveal reveal-delay-2" style="display:flex; flex-direction:column; gap:14px; align-items:center;">
-      <pre><code><span class="dim">git clone</span> https://github.com/aeon022/orbiter.git
+      <div class="code-block" style="width:100%; max-width:620px;">
+        <pre><code><span class="dim">git clone</span> https://github.com/aeon022/orbiter.git
 <span class="dim">cd</span> orbiter <span class="dim">&&</span> npm install <span class="dim">&&</span> npm run seed <span class="dim">&&</span> npm run dev</code></pre>
+        <button class="copy-btn code-copy-btn" aria-label="Copy code" title="Copy to clipboard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2 2v1"/></svg></button>
+      </div>
       <span class="dim" style="font-size:.83rem;">or scaffold a new project: <code>npm install -g @a83/orbiter-cli</code> → <code>orbiter init my-site</code></span>
     </div>
 
@@ -1075,18 +1087,23 @@ document.querySelectorAll<HTMLButtonElement>('.faq-toggle').forEach(btn => {
 });
 
 // ── COPY BUTTONS ───────────────────────────────────────────
+const COPY_ICON  = '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>';
+const CHECK_ICON = '<polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+
 document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach(btn => {
   btn.addEventListener('click', async () => {
-    const text = btn.dataset.copy ?? btn.closest('[data-copy]')?.getAttribute('data-copy') ?? '';
+    // data-copy wins; code-copy-btn falls back to sibling <pre> text
+    const text = btn.dataset.copy
+      ?? btn.closest('.code-block')?.querySelector('pre')?.textContent?.trim()
+      ?? '';
     if (!text) return;
     try {
       await navigator.clipboard.writeText(text);
       btn.classList.add('copied');
-      const icon = btn.querySelector('svg')!;
-      icon.innerHTML = '<polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+      btn.querySelector('svg')!.innerHTML = CHECK_ICON;
       setTimeout(() => {
         btn.classList.remove('copied');
-        icon.innerHTML = '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>';
+        btn.querySelector('svg')!.innerHTML = COPY_ICON;
       }, 1800);
     } catch (_) {}
   });

@@ -501,6 +501,23 @@ h1 span {
 .install-block .prompt { color: rgba(139,124,248,.5); user-select: none; }
 .install-block .cmd   { color: var(--text); }
 
+.code-block {
+  position: relative;
+}
+
+.code-block .copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  opacity: 0;
+  transition: opacity .2s ease, color .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.code-block:hover .copy-btn,
+.code-block .copy-btn:focus-visible {
+  opacity: 1;
+}
+
 .copy-btn {
   display: inline-flex;
   align-items: center;
