@@ -2,66 +2,104 @@
 import '../styles/landing.css';
 import FooterSignature from '../components/FooterSignature.astro';
 import CookieBanner from '../components/CookieBanner.astro';
+import PageTransition from '../components/PageTransition.astro';
+
 const features = [
-  {
-    icon: '◈',
-    title: 'One file. Everything.',
-    body: 'Content, media, schema, users, sessions — all in a single <code>.pod</code> file. Copy it anywhere. Back it up with <code>cp</code>.',
-  },
-  {
-    icon: '⬡',
-    title: 'Astro-native',
-    body: 'One line in <code>astro.config.mjs</code> injects a full admin UI at <code>/orbiter</code> via <code>injectRoute</code>. Nothing added to <code>src/pages</code>.',
-  },
-  {
-    icon: '⌗',
-    title: 'Familiar content API',
-    body: 'Read content with <code>getCollection</code> and <code>getEntry</code> — same shape as Astro\'s built-in content collections.',
-  },
-  {
-    icon: '▦',
-    title: 'Schema editor',
-    body: 'Add or change fields in the admin without writing migrations. Changes apply immediately.',
-  },
-  {
-    icon: '◫',
-    title: 'Media library',
-    body: 'Images and files stored as BLOBs directly in the pod. No CDN to configure, no broken paths after deploy.',
-  },
-  {
-    icon: '⟳',
-    title: 'Version history',
-    body: 'Every publish creates a snapshot. Roll back to any previous version of any entry.',
-  },
-  {
-    icon: '⊞',
-    title: 'JSON API',
-    body: '<code>GET /orbiter/api/[collection]</code> — optional Bearer token, ready to use from any frontend.',
-  },
-  {
-    icon: '⇅',
-    title: 'GitHub sync',
-    body: 'On serverless platforms like Netlify and Vercel, pack your pod into a git commit and trigger a rebuild. No data loss between deploys.',
-  },
-  {
-    icon: '↓',
-    title: 'Import',
-    body: 'Migrate from WordPress (WXR export) or bring in Markdown files. Done in the admin, no CLI needed.',
-  },
+  { icon: '◈', title: 'One file. Everything.',        body: 'Content, media, schema, users, sessions — all in a single <code>.pod</code> file. Copy it anywhere. Back it up with <code>cp</code>.' },
+  { icon: '⬡', title: 'Astro-native',                 body: 'One line in <code>astro.config.mjs</code> injects a full admin UI at <code>/orbiter</code> via <code>injectRoute</code>. Nothing added to <code>src/pages</code>.' },
+  { icon: '⌗', title: 'Familiar content API',         body: 'Read content with <code>getCollection</code> and <code>getEntry</code> — same shape as Astro\'s built-in content collections.' },
+  { icon: '▦', title: 'Schema editor',                body: 'Add or change fields in the admin without writing migrations. Changes apply immediately.' },
+  { icon: '◫', title: 'Media library',                body: 'Images and files stored as BLOBs directly in the pod. No CDN to configure, no broken paths after deploy.' },
+  { icon: '⟳', title: 'Version history',              body: 'Every save creates a snapshot. Roll back to any previous version of any entry directly in the admin.' },
+  { icon: '⊞', title: 'JSON API',                     body: '<code>GET /orbiter/api/[collection]</code> — optional Bearer token, ready to use from any frontend or mobile app.' },
+  { icon: '⇅', title: 'Git sync mode',                 body: '<code>orbiter unpack</code> extracts media BLOBs to files, <code>orbiter pack</code> restores them. Commit your pod + media to Git — a GitHub Actions template is included for automatic rebuilds.' },
+  { icon: '↓', title: 'Import',                       body: 'Migrate from WordPress (WXR export) or bring in Markdown files. Done in the admin, no CLI needed.' },
+  { icon: '🌍', title: 'Multilingual',                body: 'Per-entry locale variants with <code>slug--locale</code> convention. <code>getLocaleCollection()</code> and locale fallback support built in.' },
+  { icon: '⌘', title: 'Command palette',              body: '<code>⌘K</code> fuzzy search across all content and navigation. Installable as a PWA on mobile and desktop.' },
+  { icon: '👥', title: 'Multi-user & roles',           body: 'Admin and editor roles. Manage users in the UI — no config file, no code change.' },
 ];
 
 const tradeoffs = [
+  { title: 'Not for large media libraries',  body: 'SQLite BLOB storage is convenient for content sites but not for thousands of high-res images. If your media library is in the gigabytes, this isn\'t the right tool.' },
+  { title: 'Serverless requires extra steps', body: 'Netlify and Vercel don\'t persist filesystem writes between deploys. The GitHub sync mode works around this, but it adds steps. A VPS or Coolify gives you a better experience.' },
+  { title: 'Built for small teams',          body: 'Two people editing the same entry at the same moment will get last-write-wins. Fine for a team of 1–5. Not designed for large editorial teams working in parallel.' },
+];
+
+const press = [
   {
-    title: 'Not for large media libraries',
-    body: 'SQLite BLOB storage is convenient for content sites but not for thousands of high-res images. If your media library is in the gigabytes, this isn\'t the right tool.',
+    platform: 'reddit',
+    label: 'Reddit · r/cms',
+    title: 'Orbiter is now on npm — plus bulk actions, JSON API, and version history',
+    snippet: 'Just shipped v0.1.0: multi-user auth, a full JSON API, version snapshots, and GitHub sync. Everything in one .pod file.',
+    href: 'https://www.reddit.com/r/cms/comments/1sl6klg/orbiter_is_now_on_npm_plus_bulk_actions_json_api/',
   },
   {
-    title: 'Serverless requires extra steps',
-    body: 'Netlify and Vercel don\'t persist filesystem writes between deploys. The GitHub sync mode works around this, but it adds steps. A VPS or Coolify gives you a better experience.',
+    platform: 'devto',
+    label: 'dev.to',
+    title: 'I built a CMS that fits in one file — here\'s why and how',
+    snippet: 'Every CMS I\'ve tried for Astro comes with the same overhead: a database to provision, a media CDN to configure...',
+    href: 'https://dev.to/gerwin_weiher_7bf091b81c9/i-built-a-cms-that-fits-in-one-file-heres-why-and-how-h1f',
   },
   {
-    title: 'Built for small teams',
-    body: 'Two people editing the same entry at the same moment will get last-write-wins. Fine for a team of 1–5. Not designed for large editorial teams working in parallel.',
+    platform: 'x',
+    label: 'X · @gerwinweiher',
+    title: 'Orbiter — CMS in one SQLite file for Astro',
+    snippet: 'One file. No database server. No cloud account. Built for Astro. Copy it anywhere, back it up with cp.',
+    href: 'https://x.com/gerwinweiher/status/2044049737188249823',
+  },
+  {
+    platform: 'hn',
+    label: 'Hacker News',
+    title: 'Show HN: Orbiter — CMS in one SQLite file for Astro',
+    snippet: 'Hacker News discussion — community feedback, use cases, and technical questions.',
+    href: 'https://news.ycombinator.com/item?id=47765327',
+  },
+];
+
+const faqs = [
+  {
+    q: 'What is a .pod file?',
+    a: 'A <code>.pod</code> file is a standard SQLite database — just with a custom extension. You can open it with any SQLite GUI (TablePlus, DB Browser for SQLite, DBeaver) and inspect or query your content directly. The extension makes it easy to identify in your project.',
+  },
+  {
+    q: 'Do I need a database server?',
+    a: 'No. SQLite runs in-process alongside your Astro server. Nothing to provision, nothing to pay for, nothing to configure separately. The database <em>is</em> the file.',
+  },
+  {
+    q: 'Does it work on Netlify or Vercel?',
+    a: 'Yes, with a note: serverless platforms don\'t persist filesystem writes between function invocations. Your content is available at build time for static generation, but for editing you need a persistent Node.js server (VPS, Railway, Coolify). Netlify/Vercel are great for hosting the frontend — run the Orbiter admin on a persistent server.',
+  },
+  {
+    q: 'How do I back up my content?',
+    a: '<code>cp content.pod backup.pod</code>. That\'s it. Every entry, every media file, every schema definition, every user account — in one file. Schedule a cron job, sync to S3, commit it to git. Standard file tooling works.',
+  },
+  {
+    q: 'Can multiple people edit at the same time?',
+    a: 'Orbiter supports multiple users with admin and editor roles. Two people editing the <em>same entry simultaneously</em> uses last-write-wins semantics. Fine for teams of 1–5 people, not designed for large editorial teams editing in parallel.',
+  },
+  {
+    q: 'Is there a REST API?',
+    a: '<code>GET /orbiter/api/[collection]</code> returns all published entries as JSON. Supports optional Bearer token authentication. Works from any frontend, mobile app, or external service without extra setup.',
+  },
+  {
+    q: 'Can I import from WordPress?',
+    a: 'Yes. Export your WordPress site as WXR (the standard WordPress XML export) and import it via the Orbiter admin. Text content, post dates, and categories are converted. HTML body text is transformed to Markdown automatically.',
+  },
+  {
+    q: 'What Astro output mode do I need?',
+    a: '<code>output: \'server\'</code> or <code>output: \'hybrid\'</code>. The admin UI needs a running server. Static-only (<code>output: \'static\'</code>) is not supported because there\'s nothing to serve the admin routes at runtime.',
+  },
+  {
+    q: 'Can I inspect the database directly?',
+    a: 'Yes. Open <code>content.pod</code> with any SQLite GUI — TablePlus, DB Browser for SQLite, DBeaver, or the <code>sqlite3</code> CLI. Tables are <code>_collections</code>, <code>_entries</code>, <code>_media</code>, <code>_users</code>, <code>_sessions</code>, and <code>_versions</code>.',
+  },
+  {
+    q: 'Is it production-ready?',
+    a: 'Orbiter is at v0.1.0 — published to npm, actively maintained, and used in real projects. The API may evolve before v1.0. It\'s suitable for personal sites, client projects, and small teams. Check the GitHub issues for anything relevant to your use case.',
+  },
+  {
+    q: 'What\'s the license?',
+    a: 'MIT License. Use it for any project including commercial ones. Modify it, fork it, distribute it. No attribution required (though appreciated). The source is on GitHub and stays open source.',
   },
 ];
 ---
@@ -71,24 +109,38 @@ const tradeoffs = [
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Orbiter — CMS in one file</title>
-  <meta name="description" content="A CMS for Astro where your entire site — content, media, schema, users — lives in one portable SQLite file. Zero external dependencies." />
+  <title>Orbiter — CMS in one file for Astro</title>
+  <meta name="description" content="A CMS for Astro where your entire site — content, media, schema, users — lives in one portable SQLite file. Zero external dependencies. MIT License." />
   <link rel="canonical" href="https://orbiter.sh/" />
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="Orbiter — CMS in one file" />
+
+  <!-- Open Graph -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:title"       content="Orbiter — CMS in one file" />
   <meta property="og:description" content="Content, media, schema, users — all in a single .pod file. Copy it anywhere. Built for Astro." />
-  <meta property="og:url" content="https://orbiter.sh/" />
-  <meta property="og:image" content="https://orbiter.sh/screenshots/dashboard.webp" />
+  <meta property="og:url"         content="https://orbiter.sh/" />
+  <meta property="og:image"       content="https://orbiter.sh/screenshots/dashboard.webp" />
   <meta property="og:image:width" content="1280" />
-  <meta property="og:image:height" content="800" />
-  <meta property="og:site_name" content="Orbiter" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Orbiter — CMS in one file" />
+  <meta property="og:image:height"content="800" />
+  <meta property="og:site_name"   content="Orbiter" />
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content="Orbiter — CMS in one file" />
   <meta name="twitter:description" content="Content, media, schema, users — all in a single .pod file. Copy it anywhere. Built for Astro." />
-  <meta name="twitter:image" content="https://orbiter.sh/screenshots/dashboard.webp" />
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <meta name="twitter:image"       content="https://orbiter.sh/screenshots/dashboard.webp" />
+  <meta name="twitter:site"        content="@gerwinweiher" />
+
+  <!-- Icons & PWA -->
+  <link rel="icon"     href="/favicon.svg" type="image/svg+xml" />
   <link rel="manifest" href="/site.webmanifest" />
   <meta name="theme-color" content="#8b7cf8" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+
+  <!-- Structured data -->
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -121,8 +173,10 @@ const tradeoffs = [
     <a href="#top" class="nav-logo">🪐 <span>Orbiter</span></a>
     <div class="nav-links">
       <a href="#how-it-works" data-section="how-it-works">How it works</a>
-      <a href="#features" data-section="features">Features</a>
-      <a href="https://github.com/aeon022/orbiter">GitHub</a>
+      <a href="#features"     data-section="features">Features</a>
+      <a href="#pricing"      data-section="pricing">Pricing</a>
+      <a href="#faq"          data-section="faq">FAQ</a>
+      <a href="https://github.com/aeon022/orbiter" class="nav-cta">GitHub →</a>
     </div>
   </nav>
 
@@ -135,23 +189,97 @@ const tradeoffs = [
       <div class="orbit orbit-3"></div>
     </div>
 
-    <div class="hero-badge">v0.1.0 — now on npm</div>
-    <h1>Your entire CMS<br />in <span>one file.</span></h1>
-    <p class="hero-sub">
-      Content, media, schema, users — all in a single <code>.pod</code> file.
-      Copy it anywhere. No database server. No cloud account.
-      Built for Astro.
-    </p>
-    <div class="hero-actions">
-      <a href="https://github.com/aeon022/orbiter" class="btn btn-primary">GitHub →</a>
-      <a href="#how-it-works" class="btn btn-secondary">How it works</a>
-      <a href="https://buy.polar.sh/polar_cl_SFvmYDegcsKDv8O8ZylLlIiXzyNRM7Br9nBx942rj4Q" target="_blank" rel="noopener noreferrer" class="btn btn-support">Support Orbiter ☕</a>
+    <div class="hero-inner">
+      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">v0.1.0 — now on npm · Changelog →</a>
+      <h1>Your entire CMS<br />in <span>one file.</span></h1>
+      <p class="hero-sub">
+        Content, media, schema, users — all in a single <code>.pod</code> file.
+        Copy it anywhere. No database server. No cloud account.
+        Built for Astro.
+      </p>
+      <div class="hero-actions">
+        <a href="https://github.com/aeon022/orbiter" class="btn btn-primary">View on GitHub →</a>
+        <a href="#how-it-works" class="btn btn-secondary">How it works</a>
+        <a href="https://buy.polar.sh/polar_cl_SFvmYDegcsKDv8O8ZylLlIiXzyNRM7Br9nBx942rj4Q" target="_blank" rel="noopener noreferrer" class="btn btn-support">Support Orbiter ☕</a>
+      </div>
+      <div class="install-block">
+        <span class="prompt">$</span>
+        <span class="cmd">npm install @a83/orbiter-integration</span>
+      </div>
+
+      <!-- Hero dashboard preview -->
+      <div class="hero-preview">
+        <div class="hero-preview-frame">
+          <div class="hero-preview-bar">
+            <div class="hero-preview-dot"></div>
+            <div class="hero-preview-dot"></div>
+            <div class="hero-preview-dot"></div>
+            <div class="hero-preview-url">
+              <span>localhost:4321/orbiter</span>
+            </div>
+          </div>
+          <img src="/screenshots/dashboard.webp" alt="Orbiter admin dashboard" width="1390" height="839" />
+        </div>
+      </div>
     </div>
-    <div class="install-block">
-      <span class="prompt">$</span>
-      <span class="cmd">npm install @a83/orbiter-integration</span>
+
+    <!-- Scroll hint -->
+    <div class="scroll-hint" aria-hidden="true">
+      <div class="scroll-hint-line"></div>
     </div>
   </div>
+
+  <!-- METRICS STRIP -->
+  <div class="metrics-strip" aria-label="Key facts">
+    <div class="metric">
+      <span class="metric-value">0</span>
+      <span class="metric-label">cloud deps</span>
+    </div>
+    <div class="metric">
+      <span class="metric-value">MIT</span>
+      <span class="metric-label">license</span>
+    </div>
+    <div class="metric">
+      <span class="metric-value">1 file</span>
+      <span class="metric-label">everything</span>
+    </div>
+    <div class="metric">
+      <span class="metric-value">offline</span>
+      <span class="metric-label">works without internet</span>
+    </div>
+    <div class="metric">
+      <span class="metric-value">&lt; 5 min</span>
+      <span class="metric-label">to first admin</span>
+    </div>
+  </div>
+
+  <!-- PRESS / AS SEEN ON -->
+  <section class="press-section">
+    <div class="press-label reveal">As written about on</div>
+    <div class="press-grid">
+      {press.map((item, i) => (
+        <a
+          href={item.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          class={`press-card reveal reveal-delay-${i + 1}`}
+        >
+          <div class="press-platform">
+            <div class={`press-icon ${item.platform}`}>
+              {item.platform === 'reddit' && 'r/'}
+              {item.platform === 'devto'  && 'D'}
+              {item.platform === 'x'      && 'X'}
+              {item.platform === 'hn'     && 'Y'}
+            </div>
+            {item.label}
+          </div>
+          <div class="press-title">{item.title}</div>
+          <div class="press-snippet">{item.snippet}</div>
+          <div class="press-arrow">Read article →</div>
+        </a>
+      ))}
+    </div>
+  </section>
 
   <!-- SCREENSHOTS -->
   <section id="screenshots" class="screenshots-section">
@@ -162,32 +290,24 @@ const tradeoffs = [
       <div class="screenshot-frame" id="ss-main-frame">
         <img id="ss-main-img" src="/screenshots/dashboard.webp" alt="Orbiter Dashboard" width="1390" height="839" />
       </div>
-      <div class="screenshot-caption" id="ss-main-caption">Dashboard — 21 entries across 6 collections, recently changed, live/draft status</div>
+      <div class="screenshot-caption" id="ss-main-caption">Dashboard — entry counts per collection, recently changed, live/draft status</div>
     </div>
 
     <div class="screenshot-grid">
-      <button class="screenshot-thumb" data-src="/screenshots/dashboard.webp" data-caption="Dashboard — 21 entries across 6 collections, recently changed, live/draft status" aria-label="Show Dashboard screenshot">
-        <div class="screenshot-frame">
-          <img src="/screenshots/dashboard.webp" alt="Orbiter Dashboard" width="1390" height="839" loading="lazy" />
-        </div>
+      <button class="screenshot-thumb" data-src="/screenshots/dashboard.webp" data-caption="Dashboard — entry counts per collection, recently changed, live/draft status" aria-label="Show Dashboard screenshot">
+        <div class="screenshot-frame"><img src="/screenshots/dashboard.webp" alt="Orbiter Dashboard" width="1390" height="839" loading="lazy" /></div>
         <div class="screenshot-caption">Dashboard</div>
       </button>
       <button class="screenshot-thumb" data-src="/screenshots/login.webp" data-caption="Login screen" aria-label="Show Login screenshot">
-        <div class="screenshot-frame">
-          <img src="/screenshots/login.webp" alt="Orbiter Login" width="1390" height="839" loading="lazy" />
-        </div>
+        <div class="screenshot-frame"><img src="/screenshots/login.webp" alt="Orbiter Login" width="1390" height="839" loading="lazy" /></div>
         <div class="screenshot-caption">Login</div>
       </button>
       <button class="screenshot-thumb" data-src="/screenshots/settings.webp" data-caption="Settings — site config, GitHub sync mode, API token" aria-label="Show Settings screenshot">
-        <div class="screenshot-frame">
-          <img src="/screenshots/settings.webp" alt="Orbiter Settings" width="1390" height="839" loading="lazy" />
-        </div>
+        <div class="screenshot-frame"><img src="/screenshots/settings.webp" alt="Orbiter Settings" width="1390" height="839" loading="lazy" /></div>
         <div class="screenshot-caption">Settings &amp; GitHub sync</div>
       </button>
       <button class="screenshot-thumb" data-src="/screenshots/import.webp" data-caption="Import Tool — WordPress WXR and Markdown files" aria-label="Show Import screenshot">
-        <div class="screenshot-frame">
-          <img src="/screenshots/import.webp" alt="Orbiter Import Tool" width="1390" height="839" loading="lazy" />
-        </div>
+        <div class="screenshot-frame"><img src="/screenshots/import.webp" alt="Orbiter Import Tool" width="1390" height="839" loading="lazy" /></div>
         <div class="screenshot-caption">Import Tool</div>
       </button>
     </div>
@@ -222,7 +342,7 @@ const tradeoffs = [
 &#125;);</code></pre>
       </div>
       <div class="reveal reveal-delay-2">
-        <div class="step-label">Step 3 — Read content</div>
+        <div class="step-label">Step 3 — Read content in your pages</div>
         <pre><code><span class="dim">import</span> &#123; getCollection &#125; <span class="dim">from</span> <span class="grn">'orbiter:collections'</span><span class="dim">;</span>
 
 <span class="dim">const</span> posts = <span class="dim">await</span> getCollection(<span class="grn">'posts'</span>);</code></pre>
@@ -246,6 +366,340 @@ const tradeoffs = [
     </div>
   </section>
 
+  <!-- MANIFESTO: Your data. No strings attached. -->
+  <section id="ownership" class="manifesto-section">
+    <div class="manifesto-inner">
+
+      <!-- Left: text + facts -->
+      <div>
+        <div class="manifesto-eyebrow reveal">No cloud. No lock-in. No compromise.</div>
+        <h2 class="manifesto-headline reveal reveal-delay-1">Your data.<br />No strings attached.</h2>
+        <p class="manifesto-body reveal reveal-delay-2">
+          Every other CMS gives your content to a cloud. Orbiter gives it to you.
+          A single <code>.pod</code> file — on your disk, in your repo, on your server.
+          Copy it, encrypt it, email it. No account required. No monthly invoice.
+          No vendor who can change pricing, shut down, or hold your data hostage.
+        </p>
+        <div class="manifesto-facts reveal reveal-delay-3">
+          <div class="fact-item">
+            <div class="fact-icon">📁</div>
+            <div class="fact-text">
+              <div class="fact-title">Backup in one command</div>
+              <div class="fact-desc"><code>cp content.pod backup.pod</code> — that's your entire CMS. A 500-entry blog with images typically weighs under 50 MB.</div>
+            </div>
+          </div>
+          <div class="fact-item">
+            <div class="fact-icon">✈️</div>
+            <div class="fact-text">
+              <div class="fact-title">Works completely offline</div>
+              <div class="fact-desc">Run <code>npm run dev</code> on your laptop with no internet. Edit content on a plane. No API calls, no auth endpoints, no CDN.</div>
+            </div>
+          </div>
+          <div class="fact-item">
+            <div class="fact-icon">🔍</div>
+            <div class="fact-text">
+              <div class="fact-title">Fully inspectable, always</div>
+              <div class="fact-desc">Open your pod with any SQLite GUI. Run ad-hoc queries. No black box, no proprietary format, no data you can't read yourself.</div>
+            </div>
+          </div>
+          <div class="fact-item">
+            <div class="fact-icon">⚖️</div>
+            <div class="fact-text">
+              <div class="fact-title">MIT License — genuinely free</div>
+              <div class="fact-desc">Use it commercially, fork it, sell products built with it. No "open core" bait-and-switch. The full source ships with your project.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: terminal -->
+      <div class="terminal-wrap reveal reveal-delay-2">
+        <div class="terminal" aria-label="SQLite terminal showing Orbiter pod inspection">
+          <div class="terminal-bar">
+            <div class="terminal-dot"></div>
+            <div class="terminal-dot"></div>
+            <div class="terminal-dot"></div>
+            <div class="terminal-title">sqlite3 content.pod</div>
+          </div>
+          <div class="terminal-body">
+            <span class="t-comment"># open your CMS like any other database</span><br />
+            <span class="t-prompt">$ </span><span class="t-cmd">sqlite3 content.pod</span>
+            <span class="t-spacer"></span>
+            <span class="t-comment"># list all tables</span><br />
+            <span class="t-prompt">sqlite&gt; </span><span class="t-cmd">.tables</span><br />
+            <span class="t-table">_collections&nbsp;&nbsp;_entries&nbsp;&nbsp;_media&nbsp;&nbsp;_users&nbsp;&nbsp;_versions</span>
+            <span class="t-spacer"></span>
+            <span class="t-comment"># inspect recent entries</span><br />
+            <span class="t-prompt">sqlite&gt; </span><span class="t-cmd">SELECT slug, status, updated_at</span><br />
+            <span class="t-prompt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="t-cmd">FROM _entries ORDER BY updated_at DESC LIMIT 4;</span><br />
+            <span class="t-key">my-first-post&nbsp;&nbsp;&nbsp;</span><span class="t-val-green">published</span>&nbsp;&nbsp;<span class="t-val-muted">2025-04-20</span><br />
+            <span class="t-key">about-orbiter&nbsp;&nbsp;&nbsp;</span><span class="t-val-green">published</span>&nbsp;&nbsp;<span class="t-val-muted">2025-04-19</span><br />
+            <span class="t-key">new-draft&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="t-val-amber">draft&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;<span class="t-val-muted">2025-04-18</span><br />
+            <span class="t-key">hello-world&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="t-val-green">published</span>&nbsp;&nbsp;<span class="t-val-muted">2025-04-15</span>
+            <span class="t-spacer"></span>
+            <span class="t-comment"># how many media files?</span><br />
+            <span class="t-prompt">sqlite&gt; </span><span class="t-cmd">SELECT COUNT(*) || ' files, ' ||</span><br />
+            <span class="t-prompt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="t-cmd">ROUND(SUM(LENGTH(data))/1048576.0, 1) || ' MB'</span><br />
+            <span class="t-prompt">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="t-cmd">FROM _media;</span><br />
+            <span class="t-num">47 files, 18.3 MB</span>
+            <span class="t-spacer"></span>
+            <span class="t-comment"># version history — every save is a snapshot</span><br />
+            <span class="t-prompt">sqlite&gt; </span><span class="t-cmd">SELECT COUNT(*) FROM _versions;</span><br />
+            <span class="t-num">312</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- HOSTING / WORKS ON -->
+  <section class="hosting-section">
+    <div class="hosting-label reveal">Runs on any Node.js host</div>
+    <div class="hosting-logos reveal reveal-delay-1">
+      <span class="hosting-chip">
+        <span class="hosting-dot" style="background:#E54D2E"></span>
+        Railway
+      </span>
+      <span class="hosting-chip">
+        <span class="hosting-dot" style="background:#6C47FF"></span>
+        Coolify
+      </span>
+      <span class="hosting-chip">
+        <span class="hosting-dot" style="background:#7B3FE4"></span>
+        Fly.io
+      </span>
+      <span class="hosting-chip">
+        <span class="hosting-dot" style="background:#46E3B7"></span>
+        Render
+      </span>
+      <span class="hosting-chip">
+        <span class="hosting-dot" style="background:#D50C2D"></span>
+        Hetzner
+      </span>
+      <span class="hosting-chip">
+        <span class="hosting-dot" style="background:#339933"></span>
+        Node.js
+      </span>
+      <span class="hosting-chip" title="via Git sync mode">
+        <span class="hosting-dot" style="background:#2DA44E"></span>
+        GitHub Pages*
+      </span>
+      <span class="hosting-chip" title="via Git sync mode">
+        <span class="hosting-dot" style="background:#00C7B7"></span>
+        Netlify*
+      </span>
+    </div>
+    <div class="hosting-note reveal reveal-delay-2">* serverless platforms use <a href="#how-it-works">Git sync mode</a> — content is committed to the repo before each build</div>
+  </section>
+
+  <!-- COMPARISON -->
+  <section id="comparison" class="comparison-section">
+    <h2 class="reveal">How Orbiter compares</h2>
+    <p class="section-lead reveal reveal-delay-1">Other CMS options for Astro — and where Orbiter fits in.</p>
+
+    <div class="comparison-wrap reveal reveal-delay-2">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="col-orbiter">🪐 Orbiter</th>
+            <th>Decap CMS</th>
+            <th>Keystatic</th>
+            <th>Tina CMS</th>
+            <th>Payload CMS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Storage</td>
+            <td class="col-orbiter">SQLite file</td>
+            <td class="col-other">Git</td>
+            <td class="col-other">Git / files</td>
+            <td class="col-other">Git + cloud</td>
+            <td class="col-other">Postgres / MongoDB</td>
+          </tr>
+          <tr>
+            <td>External service</td>
+            <td class="col-orbiter"><span class="badge-yes">✓ None</span></td>
+            <td class="col-other">GitHub OAuth required</td>
+            <td class="col-other">GitHub / local</td>
+            <td class="col-other">Tina Cloud (free tier)</td>
+            <td class="col-other"><span class="badge-yes">✓ None</span></td>
+          </tr>
+          <tr>
+            <td>Setup</td>
+            <td class="col-orbiter">npm install + 3 lines</td>
+            <td class="col-other">YAML config file</td>
+            <td class="col-other">Config file</td>
+            <td class="col-other">Config + dashboard</td>
+            <td class="col-other">Full backend setup</td>
+          </tr>
+          <tr>
+            <td>Astro support</td>
+            <td class="col-orbiter"><span class="badge-yes">✓ Native</span></td>
+            <td class="col-other"><span class="badge-partial">~ Plugin</span></td>
+            <td class="col-other"><span class="badge-yes">✓ Native</span></td>
+            <td class="col-other"><span class="badge-partial">~ Plugin</span></td>
+            <td class="col-other"><span class="badge-no">Manual</span></td>
+          </tr>
+          <tr>
+            <td>Media storage</td>
+            <td class="col-orbiter">In pod (BLOBs)</td>
+            <td class="col-other">External CDN</td>
+            <td class="col-other">External CDN</td>
+            <td class="col-other">External CDN</td>
+            <td class="col-other">DB / S3</td>
+          </tr>
+          <tr>
+            <td>Version history</td>
+            <td class="col-orbiter"><span class="badge-yes">✓ Built-in</span></td>
+            <td class="col-other">Git history</td>
+            <td class="col-other">Git history</td>
+            <td class="col-other">Git history</td>
+            <td class="col-other">Custom / code</td>
+          </tr>
+          <tr>
+            <td>Schema editor UI</td>
+            <td class="col-orbiter"><span class="badge-yes">✓ Yes</span></td>
+            <td class="col-other"><span class="badge-no">YAML only</span></td>
+            <td class="col-other"><span class="badge-no">Config only</span></td>
+            <td class="col-other"><span class="badge-no">Config only</span></td>
+            <td class="col-other"><span class="badge-no">Code only</span></td>
+          </tr>
+          <tr>
+            <td>Offline admin</td>
+            <td class="col-orbiter"><span class="badge-yes">✓ Yes</span></td>
+            <td class="col-other"><span class="badge-no">No</span></td>
+            <td class="col-other"><span class="badge-partial">~ Local only</span></td>
+            <td class="col-other"><span class="badge-no">No</span></td>
+            <td class="col-other"><span class="badge-yes">✓ Yes</span></td>
+          </tr>
+          <tr>
+            <td>Backup</td>
+            <td class="col-orbiter"><code>cp content.pod</code></td>
+            <td class="col-other"><code>git push</code></td>
+            <td class="col-other"><code>git push</code></td>
+            <td class="col-other">Tina Cloud + git</td>
+            <td class="col-other">DB dump</td>
+          </tr>
+          <tr>
+            <td>Serverless deploy</td>
+            <td class="col-orbiter"><span class="badge-yes">✓ Git sync mode</span></td>
+            <td class="col-other"><span class="badge-yes">✓ Git-native</span></td>
+            <td class="col-other"><span class="badge-yes">✓ Git-native</span></td>
+            <td class="col-other"><span class="badge-yes">✓ Git-native</span></td>
+            <td class="col-other"><span class="badge-no">DB required</span></td>
+          </tr>
+          <tr>
+            <td>License</td>
+            <td class="col-orbiter"><span class="badge-yes">MIT free</span></td>
+            <td class="col-other">MIT free</td>
+            <td class="col-other">MIT free</td>
+            <td class="col-other">MIT + paid tiers</td>
+            <td class="col-other">MIT free</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PRICING / LICENSING -->
+  <section id="pricing" class="pricing-section">
+    <h2 class="reveal">Pricing</h2>
+    <p class="section-lead reveal reveal-delay-1">
+      Orbiter is open source under the MIT License — free for personal and commercial use, forever.
+      If it saves you time, consider supporting its development.
+    </p>
+
+    <div class="pricing-grid">
+      <!-- Free tier -->
+      <div class="pricing-card pricing-highlighted reveal reveal-delay-1">
+        <div class="pricing-corner-glow" aria-hidden="true"></div>
+        <div>
+          <div class="pricing-badge free">Open Source</div>
+          <div class="pricing-name" style="margin-top:12px;">Free forever</div>
+        </div>
+        <div class="pricing-price">
+          <span class="pricing-amount">$0</span>
+          <span class="pricing-period">/ always</span>
+        </div>
+        <div class="pricing-license-badge">
+          <span>⚖</span> MIT License
+        </div>
+        <ul class="pricing-features">
+          <li>Full source code on GitHub</li>
+          <li>Commercial use allowed</li>
+          <li>Modify and distribute freely</li>
+          <li>No attribution required</li>
+          <li>Self-hosted — your data, your server</li>
+          <li>All features included, no paywalls</li>
+          <li class="muted-feature">Community support via GitHub Issues</li>
+        </ul>
+        <div class="pricing-cta">
+          <a href="https://github.com/aeon022/orbiter" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-full">
+            View on GitHub →
+          </a>
+        </div>
+      </div>
+
+      <!-- Support tier -->
+      <div class="pricing-card pricing-support reveal reveal-delay-2">
+        <div class="pricing-corner-glow amber" aria-hidden="true"></div>
+        <div>
+          <div class="pricing-badge support">Support</div>
+          <div class="pricing-name" style="margin-top:12px;">Buy us a coffee</div>
+        </div>
+        <div class="pricing-price">
+          <span class="pricing-amount" style="color: var(--amber);">☕</span>
+          <span class="pricing-period">one-time or recurring</span>
+        </div>
+        <p class="pricing-desc">
+          Orbiter is free and stays free. If it saves you time or earns you money,
+          consider supporting ongoing development — new features, bug fixes, and long-term maintenance.
+        </p>
+        <ul class="pricing-features">
+          <li>Same MIT License (still free)</li>
+          <li>Help fund active development</li>
+          <li>Prioritized GitHub issue responses</li>
+          <li>Mention in README supporters list</li>
+          <li class="muted-feature">Via Polar — any amount appreciated</li>
+        </ul>
+        <div class="pricing-cta">
+          <a
+            href="https://buy.polar.sh/polar_cl_SFvmYDegcsKDv8O8ZylLlIiXzyNRM7Br9nBx942rj4Q"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn btn-support btn-full btn-support-lg"
+          >
+            Support Orbiter ☕
+          </a>
+          <div class="pricing-note">No account needed · secure payment via Polar</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="faq-section">
+    <h2 class="reveal">Frequently asked questions</h2>
+    <p class="section-lead reveal reveal-delay-1">Everything you need to know before getting started.</p>
+
+    <div class="faq-list reveal reveal-delay-2">
+      {faqs.map((item, i) => (
+        <div class="faq-item">
+          <button class="faq-toggle" aria-expanded="false">
+            {item.q}
+            <span class="faq-toggle-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner" set:html={item.a} />
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+
   <!-- TRADEOFFS -->
   <section id="tradeoffs">
     <h2 class="reveal">Honest tradeoffs</h2>
@@ -254,8 +708,11 @@ const tradeoffs = [
     <div class="tradeoffs">
       {tradeoffs.map((t, i) => (
         <div class={`tradeoff reveal reveal-delay-${i + 1}`}>
-          <div class="tradeoff-title">{t.title}</div>
-          <div class="tradeoff-body">{t.body}</div>
+          <div class="tradeoff-warning">⚠</div>
+          <div class="tradeoff-content">
+            <div class="tradeoff-title">{t.title}</div>
+            <div class="tradeoff-body">{t.body}</div>
+          </div>
         </div>
       ))}
     </div>
@@ -277,6 +734,42 @@ const tradeoffs = [
         <div class="support-sub">Orbiter is free and open source. If it saves you time, consider supporting its development.</div>
       </div>
       <a href="https://buy.polar.sh/polar_cl_SFvmYDegcsKDv8O8ZylLlIiXzyNRM7Br9nBx942rj4Q" target="_blank" rel="noopener noreferrer" class="btn btn-support btn-support-lg">Support Orbiter ☕</a>
+    </div>
+
+    <div class="deploy-section reveal reveal-delay-4">
+      <div class="deploy-label">Deploy to production</div>
+      <div class="deploy-grid">
+        <a href="https://railway.app/new/template?template=https://github.com/aeon022/orbiter" target="_blank" rel="noopener noreferrer" class="deploy-card">
+          <div class="deploy-card-header">
+            <span class="deploy-card-name">
+              <span style="color:#E54D2E">●</span> Railway
+            </span>
+            <span class="deploy-badge rec">Recommended</span>
+          </div>
+          <div class="deploy-card-desc">Persistent filesystem, auto-deploys from GitHub. Best experience for Orbiter.</div>
+          <div class="deploy-card-cta">Deploy from GitHub →</div>
+        </a>
+        <a href="https://coolify.io" target="_blank" rel="noopener noreferrer" class="deploy-card">
+          <div class="deploy-card-header">
+            <span class="deploy-card-name">
+              <span style="color:#6C47FF">●</span> Coolify
+            </span>
+            <span class="deploy-badge free">Self-hosted</span>
+          </div>
+          <div class="deploy-card-desc">Run Orbiter on your own VPS with Coolify — open source Heroku alternative.</div>
+          <div class="deploy-card-cta">coolify.io →</div>
+        </a>
+        <a href="https://github.com/aeon022/orbiter#deployment" target="_blank" rel="noopener noreferrer" class="deploy-card">
+          <div class="deploy-card-header">
+            <span class="deploy-card-name">
+              <span style="color:#339933">●</span> Any Node.js host
+            </span>
+            <span class="deploy-badge any">Fly · Render · VPS</span>
+          </div>
+          <div class="deploy-card-desc">Fly.io, Render, Hetzner, or any server that runs Node.js. See the deployment docs.</div>
+          <div class="deploy-card-cta">Deployment guide →</div>
+        </a>
+      </div>
     </div>
   </section>
 
@@ -300,6 +793,7 @@ const tradeoffs = [
     <div class="footer-links">
       <a href="https://github.com/aeon022/orbiter">GitHub</a>
       <a href="https://www.npmjs.com/package/@a83/orbiter-integration">npm</a>
+      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer">Changelog</a>
       <a href="/privacy">Privacy</a>
       <a href="/cookies">Cookies</a>
       <a href="https://abteilung83.at/imprint">Imprint</a>
@@ -308,6 +802,7 @@ const tradeoffs = [
 
   <FooterSignature />
   <CookieBanner />
+  <PageTransition />
 
 </body>
 </html>
@@ -315,7 +810,7 @@ const tradeoffs = [
 <script>
 // ── STARFIELD ──────────────────────────────────────────────
 const canvas = document.getElementById('starfield') as HTMLCanvasElement;
-const ctx = canvas.getContext('2d')!;
+const ctx    = canvas.getContext('2d')!;
 
 interface Star {
   x: number; y: number;
@@ -334,7 +829,7 @@ function resize() {
   H = canvas.height = window.innerHeight;
 }
 
-function initStars(n = 140) {
+function initStars(n = 160) {
   stars = Array.from({ length: n }, () => ({
     x:     Math.random() * W,
     y:     Math.random() * H,
@@ -371,25 +866,57 @@ initStars();
 drawStars();
 window.addEventListener('resize', () => { resize(); initStars(); });
 
+// ── HERO PARALLAX + TILT ───────────────────────────────────
+const heroInner    = document.querySelector('.hero-inner')         as HTMLElement;
+const orbitWrap    = document.querySelector('.orbit-wrap')         as HTMLElement;
+const heroEl       = document.querySelector('.hero')               as HTMLElement;
+const previewFrame = document.querySelector('.hero-preview-frame') as HTMLElement;
+
+const TILT_MAX    = 18;    // initial rotateX (deg)
+const SCALE_START = 0.88;  // image scale at rest (tilted)
+const SCALE_END   = 1.06;  // image scale when flat (zoomed in)
+const TILT_END    = 720;   // scroll px over which tilt+zoom animate
+
+function updateParallax() {
+  const scrollY    = window.scrollY;
+  const heroHeight = heroEl.offsetHeight;
+
+  // ── image: tilt unwinds, scale zooms in ───────────────────
+  if (previewFrame) {
+    const p     = Math.min(1, scrollY / TILT_END);
+    const tiltX = TILT_MAX * (1 - p);
+    const scale = SCALE_START + (SCALE_END - SCALE_START) * p;
+    previewFrame.style.transform = `rotateX(${tiltX}deg) scale(${scale})`;
+  }
+
+  // ── text: parallax drift + slow fade ──────────────────────
+  if (scrollY > heroHeight + 200) return;
+  const progress = scrollY / heroHeight;
+  heroInner.style.transform = `translateY(${scrollY * 0.28}px)`;
+  // fade starts later (at 50% of hero height) and ends at 130%
+  heroInner.style.opacity = String(Math.max(0, 1 - Math.max(0, progress - 0.5) * 2.2));
+  orbitWrap.style.transform = `translate(-50%, -54%) translateY(${scrollY * 0.1}px)`;
+}
+
+window.addEventListener('scroll', updateParallax, { passive: true });
+
 // ── SCROLL REVEAL ──────────────────────────────────────────
-const observer = new IntersectionObserver(
-  (entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-        observer.unobserve(e.target);
-      }
-    });
-  },
-  { threshold: 0.12, rootMargin: '0px 0px -50px 0px' }
+const revealObserver = new IntersectionObserver(
+  (entries) => entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      revealObserver.unobserve(e.target);
+    }
+  }),
+  { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
 );
 
-document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
 // ── SCREENSHOT GALLERY ─────────────────────────────────────
-const mainImg     = document.getElementById('ss-main-img') as HTMLImageElement;
+const mainImg     = document.getElementById('ss-main-img')     as HTMLImageElement;
 const mainCaption = document.getElementById('ss-main-caption') as HTMLElement;
-const mainFrame   = document.getElementById('ss-main-frame') as HTMLElement;
+const mainFrame   = document.getElementById('ss-main-frame')   as HTMLElement;
 const thumbs      = document.querySelectorAll<HTMLButtonElement>('.screenshot-thumb');
 
 function setActive(btn: HTMLButtonElement) {
@@ -404,8 +931,8 @@ function switchScreenshot(btn: HTMLButtonElement) {
 
   mainFrame.classList.add('ss-fade');
   setTimeout(() => {
-    mainImg.src = src;
-    mainImg.alt = caption;
+    mainImg.src            = src;
+    mainImg.alt            = caption;
     mainCaption.textContent = caption;
     mainFrame.classList.remove('ss-fade');
   }, 180);
@@ -413,31 +940,23 @@ function switchScreenshot(btn: HTMLButtonElement) {
   setActive(btn);
 }
 
-thumbs.forEach(btn => {
-  btn.addEventListener('click', () => switchScreenshot(btn));
-});
-
-// mark first thumb active on load
+thumbs.forEach(btn => btn.addEventListener('click', () => switchScreenshot(btn)));
 if (thumbs[0]) thumbs[0].classList.add('active');
 
 // ── ACTIVE NAV ─────────────────────────────────────────────
 const navLinks = document.querySelectorAll<HTMLAnchorElement>('[data-section]');
-const sections = ['how-it-works', 'features', 'tradeoffs']
+const sections = ['how-it-works', 'features', 'comparison', 'pricing', 'faq', 'tradeoffs']
   .map(id => document.getElementById(id))
   .filter(Boolean) as HTMLElement[];
 
 const sectionObserver = new IntersectionObserver(
-  (entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        const id = e.target.id;
-        navLinks.forEach(a => {
-          a.classList.toggle('active', a.dataset.section === id);
-        });
-      }
-    });
-  },
-  { threshold: 0.3 }
+  (entries) => entries.forEach(e => {
+    if (e.isIntersecting) {
+      const id = e.target.id;
+      navLinks.forEach(a => a.classList.toggle('active', a.dataset.section === id));
+    }
+  }),
+  { threshold: 0.25 }
 );
 
 sections.forEach(s => sectionObserver.observe(s));
@@ -457,9 +976,9 @@ function updateProgress() {
 const nav = document.querySelector('nav') as HTMLElement;
 
 function updateScroll() {
-  const scrolled = window.scrollY > 60;
-  nav.classList.toggle('scrolled', scrolled);
+  nav.classList.toggle('scrolled', window.scrollY > 60);
   updateProgress();
+  updateParallax();
 }
 
 window.addEventListener('scroll', updateScroll, { passive: true });
@@ -476,23 +995,48 @@ topBtn.addEventListener('click', () => {
 });
 
 // ── SMOOTH SCROLL + SECTION FLASH ──────────────────────────
+// css scroll-behavior: smooth is set, but we need JS to:
+// a) handle the fixed-nav offset via scrollIntoView
+// b) add the section-flash highlight
 document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach(a => {
   a.addEventListener('click', e => {
-    const id = a.getAttribute('href')!.slice(1);
-    const target = id === 'top' ? document.body : document.getElementById(id);
-    if (!target) return;
-    e.preventDefault();
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    history.pushState(null, '', id === 'top' ? '/' : `#${id}`);
+    const id     = a.getAttribute('href')!.slice(1);
+    const target = id === 'top' ? null : document.getElementById(id);
 
-    // flash the target section after scroll lands
-    if (id !== 'top') {
-      setTimeout(() => {
-        target.classList.add('section-flash');
-        target.addEventListener('animationend', () => {
-          target.classList.remove('section-flash');
-        }, { once: true });
-      }, 600);
+    e.preventDefault();
+
+    if (!id || id === 'top') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      history.pushState(null, '', '/');
+      return;
+    }
+
+    if (!target) return;
+
+    // scroll-margin-top is set on sections via CSS, so scrollIntoView respects the fixed nav
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    history.pushState(null, '', `#${id}`);
+
+    setTimeout(() => {
+      target.classList.add('section-flash');
+      target.addEventListener('animationend', () => target.classList.remove('section-flash'), { once: true });
+    }, 550);
+  });
+});
+
+
+// ── FAQ ACCORDION ──────────────────────────────────────────
+document.querySelectorAll<HTMLButtonElement>('.faq-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item   = btn.closest('.faq-item') as HTMLElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(el => {
+      el.classList.remove('open');
+      el.querySelector<HTMLButtonElement>('.faq-toggle')?.setAttribute('aria-expanded', 'false');
+    });
+    if (!isOpen) {
+      item.classList.add('open');
+      btn.setAttribute('aria-expanded', 'true');
     }
   });
 });

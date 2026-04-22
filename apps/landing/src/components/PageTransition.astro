@@ -1,0 +1,24 @@
+<script>
+// Fade out before navigating to any local non-anchor page
+function navigateWithTransition(href: string) {
+  document.documentElement.classList.add('is-leaving');
+  // wait for CSS transition (0.22s) then navigate
+  setTimeout(() => { window.location.href = href; }, 230);
+}
+
+document.querySelectorAll<HTMLAnchorElement>('a[href]').forEach(a => {
+  const href = a.getAttribute('href') ?? '';
+  if (
+    href.startsWith('#') ||
+    href.startsWith('http') ||
+    href.startsWith('mailto') ||
+    href.startsWith('//') ||
+    a.target === '_blank'
+  ) return;
+
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    navigateWithTransition(a.href);
+  });
+});
+</script>
