@@ -1035,38 +1035,46 @@ window.addEventListener('scroll', () => {
   topBtn.classList.toggle('visible', window.scrollY > 400);
 }, { passive: true });
 
+// ── SMOOTH SCROLL (unified, cancellable) ───────────────────
 function easeInOutCubic(t: number) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-function smoothScrollTop() {
-  const start     = window.scrollY;
-  if (start === 0) return;
-  // duration scales with distance so short scrolls aren't sluggish
-  const duration  = Math.min(900, Math.max(400, start * 0.4));
+let scrollRaf: number | null = null;
+
+function smoothScrollTo(targetY: number) {
+  // cancel any running scroll animation
+  if (scrollRaf !== null) { cancelAnimationFrame(scrollRaf); scrollRaf = null; }
+
+  const start    = window.scrollY;
+  const distance = targetY - start;
+  if (Math.abs(distance) < 2) return;
+
+  const duration  = Math.min(900, Math.max(380, Math.abs(distance) * 0.4));
   const startTime = performance.now();
 
   function step(now: number) {
     const elapsed  = now - startTime;
     const progress = Math.min(elapsed / duration, 1);
-    window.scrollTo(0, start * (1 - easeInOutCubic(progress)));
-    if (progress < 1) requestAnimationFrame(step);
+    window.scrollTo(0, start + distance * easeInOutCubic(progress));
+    if (progress < 1) { scrollRaf = requestAnimationFrame(step); }
+    else { scrollRaf = null; }
   }
 
-  requestAnimationFrame(step);
+  scrollRaf = requestAnimationFrame(step);
 }
 
+// cancel custom animation on user-initiated wheel/touch so it doesn't fight
+window.addEventListener('wheel',      () => { if (scrollRaf) { cancelAnimationFrame(scrollRaf); scrollRaf = null; } }, { passive: true });
+window.addEventListener('touchstart', () => { if (scrollRaf) { cancelAnimationFrame(scrollRaf); scrollRaf = null; } }, { passive: true });
+
 topBtn.addEventListener('click', () => {
-  // brief lift animation, then scroll
   topBtn.classList.add('launching');
   setTimeout(() => topBtn.classList.remove('launching'), 220);
-  smoothScrollTop();
+  smoothScrollTo(0);
 });
 
-// ── SMOOTH SCROLL + SECTION FLASH ──────────────────────────
-// css scroll-behavior: smooth is set, but we need JS to:
-// a) handle the fixed-nav offset via scrollIntoView
-// b) add the section-flash highlight
+// ── ANCHOR SCROLL + SECTION FLASH ──────────────────────────
 document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach(a => {
   a.addEventListener('click', e => {
     const id     = a.getAttribute('href')!.slice(1);
@@ -1075,15 +1083,17 @@ document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach(a => {
     e.preventDefault();
 
     if (!id || id === 'top') {
-      smoothScrollTop();
+      smoothScrollTo(0);
       history.pushState(null, '', '/');
       return;
     }
 
     if (!target) return;
 
-    // scroll-margin-top is set on sections via CSS, so scrollIntoView respects the fixed nav
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // account for fixed nav height (scroll-margin-top is set in CSS as well)
+    const navH = (document.querySelector('nav') as HTMLElement)?.offsetHeight ?? 80;
+    const targetY = target.getBoundingClientRect().top + window.scrollY - navH - 16;
+    smoothScrollTo(targetY);
     history.pushState(null, '', `#${id}`);
 
     setTimeout(() => {
