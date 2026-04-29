@@ -28,6 +28,9 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
+      - name: Install librsvg (for OG card PNG generation)
+        run: sudo apt-get install -y librsvg2-bin
+
       - name: Install dependencies
         run: npm install --workspace=apps/landing
 

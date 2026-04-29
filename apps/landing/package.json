@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev --port 4321",
+    "prebuild": "rsvg-convert -w 1200 -h 630 scripts/og-card.svg -o public/og-card.png",
     "build": "astro build",
     "preview": "astro preview"
   },

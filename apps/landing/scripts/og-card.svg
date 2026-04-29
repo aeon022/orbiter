@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#07070f"/>
+      <stop offset="100%" stop-color="#0d0d1a"/>
+    </linearGradient>
+    <!-- Nebula glow top-left -->
+    <radialGradient id="nebula1" cx="15%" cy="20%" r="50%">
+      <stop offset="0%"   stop-color="#6c5ce7" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#07070f" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Nebula glow bottom-right -->
+    <radialGradient id="nebula2" cx="85%" cy="80%" r="45%">
+      <stop offset="0%"   stop-color="#8b7cf8" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#07070f" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Accent gradient for title -->
+    <linearGradient id="titleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="55%"  stop-color="#d4ccff"/>
+      <stop offset="100%" stop-color="#8b7cf8"/>
+    </linearGradient>
+    <!-- Orbital ring gradient -->
+    <linearGradient id="ring1grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#8b7cf8" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#8b7cf8" stop-opacity="0.05"/>
+    </linearGradient>
+    <linearGradient id="ring2grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#6c5ce7" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#6c5ce7" stop-opacity="0.02"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Base background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Nebula glows -->
+  <rect width="1200" height="630" fill="url(#nebula1)"/>
+  <rect width="1200" height="630" fill="url(#nebula2)"/>
+
+  <!-- Star field — static dots -->
+  <circle cx="92"  cy="48"  r="1.2" fill="#d0d8ff" opacity="0.6"/>
+  <circle cx="214" cy="112" r="0.8" fill="#d0d8ff" opacity="0.45"/>
+  <circle cx="340" cy="35"  r="1.0" fill="#d0d8ff" opacity="0.55"/>
+  <circle cx="530" cy="88"  r="0.7" fill="#d0d8ff" opacity="0.4"/>
+  <circle cx="680" cy="22"  r="1.1" fill="#d0d8ff" opacity="0.5"/>
+  <circle cx="820" cy="75"  r="0.9" fill="#d0d8ff" opacity="0.45"/>
+  <circle cx="970" cy="40"  r="1.3" fill="#d0d8ff" opacity="0.6"/>
+  <circle cx="1100" cy="90" r="0.8" fill="#d0d8ff" opacity="0.4"/>
+  <circle cx="155" cy="200" r="0.7" fill="#d0d8ff" opacity="0.35"/>
+  <circle cx="450" cy="170" r="1.0" fill="#d0d8ff" opacity="0.5"/>
+  <circle cx="750" cy="155" r="0.8" fill="#d0d8ff" opacity="0.4"/>
+  <circle cx="1050" cy="180" r="1.1" fill="#d0d8ff" opacity="0.5"/>
+  <circle cx="60"  cy="520" r="0.9" fill="#d0d8ff" opacity="0.4"/>
+  <circle cx="290" cy="560" r="1.2" fill="#d0d8ff" opacity="0.55"/>
+  <circle cx="920" cy="540" r="0.8" fill="#d0d8ff" opacity="0.4"/>
+  <circle cx="1140" cy="510" r="1.0" fill="#d0d8ff" opacity="0.5"/>
+
+  <!-- Orbital rings (decorative, right side) -->
+  <ellipse cx="960" cy="315" rx="220" ry="220" fill="none" stroke="url(#ring1grad)" stroke-width="1.2" opacity="0.6"/>
+  <ellipse cx="960" cy="315" rx="160" ry="160" fill="none" stroke="url(#ring2grad)" stroke-width="0.8" opacity="0.5"/>
+  <ellipse cx="960" cy="315" rx="100" ry="100" fill="none" stroke="#8b7cf8" stroke-width="0.6" opacity="0.2"/>
+
+  <!-- Planet dot -->
+  <circle cx="960" cy="315" r="28" fill="#1a1a30"/>
+  <circle cx="960" cy="315" r="28" fill="none" stroke="#8b7cf8" stroke-width="1.5" opacity="0.6"/>
+  <circle cx="955" cy="310" r="10" fill="#6c5ce7" opacity="0.8"/>
+  <circle cx="970" cy="318" r="5"  fill="#8b7cf8" opacity="0.5"/>
+
+  <!-- Border frame -->
+  <rect x="1" y="1" width="1198" height="628" rx="0" fill="none" stroke="#1a1a30" stroke-width="2"/>
+  <!-- Inner glow border -->
+  <rect x="24" y="24" width="1152" height="582" rx="12" fill="none" stroke="#8b7cf8" stroke-width="1" opacity="0.18"/>
+
+  <!-- Content: left block -->
+  <!-- Version badge -->
+  <rect x="72" y="108" width="90" height="26" rx="13" fill="none" stroke="#3a3080" stroke-width="1"/>
+  <rect x="72" y="108" width="90" height="26" rx="13" fill="#3a3080" opacity="0.4"/>
+  <text x="117" y="125" font-family="ui-monospace,monospace" font-size="11" fill="#8b7cf8" text-anchor="middle" letter-spacing="1">v0.1.0</text>
+
+  <!-- Logo / wordmark -->
+  <text x="72" y="240" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="88" font-weight="700" fill="url(#titleGrad)" letter-spacing="-2">Orbiter</text>
+
+  <!-- Tagline -->
+  <text x="72" y="298" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="26" font-weight="400" fill="#a0a0c0">CMS in one file for Astro</text>
+
+  <!-- Divider -->
+  <rect x="72" y="328" width="48" height="2" rx="1" fill="#8b7cf8" opacity="0.6"/>
+
+  <!-- Feature chips -->
+  <g transform="translate(72, 356)">
+    <!-- chip 1 -->
+    <rect x="0" y="0" width="152" height="34" rx="8" fill="#111128" stroke="#1a1a30" stroke-width="1"/>
+    <text x="18" y="22" font-family="ui-monospace,monospace" font-size="13" fill="#8b7cf8">$</text>
+    <text x="34" y="22" font-family="ui-monospace,monospace" font-size="13" fill="#c4b9ff">cp content.pod</text>
+    <!-- chip 2 -->
+    <rect x="164" y="0" width="148" height="34" rx="8" fill="#111128" stroke="#1a1a30" stroke-width="1"/>
+    <text x="182" y="22" font-family="ui-monospace,monospace" font-size="13" fill="#c4b9ff">Zero config</text>
+    <!-- chip 3 -->
+    <rect x="324" y="0" width="112" height="34" rx="8" fill="#111128" stroke="#1a1a30" stroke-width="1"/>
+    <text x="342" y="22" font-family="ui-monospace,monospace" font-size="13" fill="#4ade80">MIT free</text>
+  </g>
+
+  <!-- Install command block -->
+  <rect x="72" y="420" width="480" height="52" rx="8" fill="#09091a" stroke="#1a1a30" stroke-width="1"/>
+  <text x="100" y="451" font-family="ui-monospace,monospace" font-size="15" fill="#6060a0">$</text>
+  <text x="120" y="451" font-family="ui-monospace,monospace" font-size="15" fill="#e0e0f0">npm install @a83/orbiter-integration</text>
+
+  <!-- URL / domain -->
+  <text x="72" y="570" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="18" font-weight="500" fill="#8b7cf8" letter-spacing="0.5">orbiter.sh</text>
+</svg>
