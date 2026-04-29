@@ -42,6 +42,7 @@ body {
   margin: 0 auto;
   padding: 0 40px;
   position: relative;
+  overflow-x: hidden;
 }
 
 a { color: var(--accent); text-decoration: none; }
@@ -1450,7 +1451,8 @@ h2 {
 
 .cta h2 { font-size: clamp(1.9rem, 4vw, 2.6rem); margin-bottom: 16px; }
 .cta p  { color: var(--muted); margin-bottom: 44px; font-size: 1rem; }
-.cta pre { display: inline-block; text-align: left; border-color: var(--border-hi); }
+.cta pre { display: inline-block; text-align: left; border-color: var(--border-hi); max-width: 100%; overflow-x: auto; }
+.cta .code-block { max-width: 100%; overflow: hidden; }
 
 
 /* ===== SUPPORT BLOCK ===== */
