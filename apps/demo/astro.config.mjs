@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     // local dev default; overridden by PORT env var at runtime (Railway, etc.)
     port: parseInt(process.env.PORT ?? '8080'),
-    host: process.env.HOST ?? 'localhost',
+    host: process.env.HOST ?? '0.0.0.0',
   },
   integrations: [
     orbiter({ pod: './demo.pod' }),

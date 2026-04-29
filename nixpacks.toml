@@ -1,6 +1,12 @@
+[phases.setup]
+# needed to compile better-sqlite3 native addon
+nixPkgs = ["python3", "gcc", "gnumake"]
+
+[phases.install]
+cmds = ["npm install"]
+
 [phases.build]
 cmds = [
-  "npm install",
   "npm run seed",
   "npm run build"
 ]
