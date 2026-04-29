@@ -2001,6 +2001,16 @@ html.is-leaving body {
   margin-top: 2px;
 }
 
+.deploy-card-railway .deploy-card-cta img {
+  display: block;
+  height: 32px;
+  width: auto;
+  border-radius: 6px;
+  opacity: 0.9;
+  transition: opacity .2s ease;
+}
+.deploy-card-railway:hover .deploy-card-cta img { opacity: 1; }
+
 
 /* ===== RESPONSIVE ===== */
 
