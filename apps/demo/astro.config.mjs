@@ -5,7 +5,11 @@ import node from '@astrojs/node';
 export default defineConfig({
   output: 'server',
   adapter: node({ mode: 'standalone' }),
-  server: { port: 8080 },
+  server: {
+    // local dev default; overridden by PORT env var at runtime (Railway, etc.)
+    port: parseInt(process.env.PORT ?? '8080'),
+    host: process.env.HOST ?? 'localhost',
+  },
   integrations: [
     orbiter({ pod: './demo.pod' }),
   ],
