@@ -1,0 +1,5 @@
+[phases.build]
+cmds = ["npm run seed", "npm run build"]
+
+[start]
+cmd = "node apps/demo/dist/server/entry.mjs"
