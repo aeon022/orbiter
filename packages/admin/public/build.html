@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbiter Admin — Build</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .build-card { background:var(--bg2); border:1px solid var(--line); border-radius:var(--radius); padding:28px 32px; max-width:520px; }
+    .build-status { display:flex; align-items:center; gap:10px; margin-bottom:20px; }
+    .build-dot { width:8px; height:8px; border-radius:50%; background:var(--line); flex-shrink:0; }
+    .build-dot.configured { background:var(--jade); }
+    .build-dot.unconfigured { background:var(--muted); }
+    .build-label { font-size:12px; color:var(--text); }
+    .build-meta { font-size:10px; color:var(--muted); margin-bottom:24px; }
+    .build-last { font-size:10px; color:var(--muted); margin-top:12px; }
+    .banner { padding:8px 16px; font-size:10px; display:flex; align-items:center; gap:6px; border-radius:var(--radius); margin-bottom:14px; max-width:520px; }
+    .banner-ok  { background:var(--jade-bg); color:var(--jade); border:1px solid rgba(45,139,106,.2); }
+    .banner-ok::before { content:"✓"; }
+    .banner-err { background:rgba(139,38,53,.07); color:var(--red); border:1px solid rgba(139,38,53,.15); }
+    .banner-err::before { content:"✕"; }
+    .config-hint { font-size:11px; color:var(--muted); margin-top:12px; line-height:1.7; }
+    .config-hint a { color:var(--accent); text-decoration:none; }
+    .config-hint a:hover { text-decoration:underline; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="logo"><div class="logo-mark">OR</div>Orbiter</div>
+      <div class="topbar-right">
+        <span class="user" id="topbar-user"></span>
+        <span class="logout" id="logout-btn">Sign out</span>
+      </div>
+    </header>
+    <nav class="sidebar">
+      <div class="nav-section">Content</div>
+      <a class="nav-item" href="/dashboard.html"><span class="nav-icon">◈</span>Dashboard</a>
+      <a class="nav-item" href="/collections.html"><span class="nav-icon">⊞</span>Collections</a>
+      <div class="nav-section">Assets</div>
+      <a class="nav-item" href="/media.html"><span class="nav-icon">⊟</span>Media</a>
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="/schema.html"><span class="nav-icon">◈</span>Schema</a>
+      <a class="nav-item active" href="/build.html"><span class="nav-icon">▲</span>Build</a>
+      <a class="nav-item" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
+      <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
+      <div class="sidebar-footer">
+        <div class="pod-name" id="last-triggered">—</div>
+        <div><span class="pod-dot"></span>connected</div>
+      </div>
+    </nav>
+    <main class="main">
+      <div class="page-header">
+        <h1 class="page-title">Build</h1>
+      </div>
+      <div id="banner" class="banner" style="display:none"></div>
+      <div id="content"><div class="empty"><div class="spinner"></div></div></div>
+    </main>
+  </div>
+
+  <script type="module">
+    const me = await fetch('/api/auth/me',{credentials:'include'}).then(r=>r.json()).catch(()=>null);
+    if (!me?.user) { location.replace('/login.html'); }
+    document.getElementById('topbar-user').textContent = me.user.username;
+    if (me.user.role==='admin') document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
+    document.getElementById('logout-btn').addEventListener('click',async()=>{
+      await fetch('/api/auth/logout',{method:'POST',credentials:'include'});
+      location.replace('/login.html');
+    });
+
+    function showBanner(cls, text) {
+      const el = document.getElementById('banner');
+      el.className = 'banner ' + cls;
+      el.textContent = text;
+      el.style.display = '';
+      setTimeout(()=>el.style.display='none', 4000);
+    }
+
+    const status = await fetch('/api/build/status',{credentials:'include'}).then(r=>r.json()).catch(()=>({configured:false,lastTriggered:null}));
+    const lastEl = document.getElementById('last-triggered');
+    lastEl.textContent = status.lastTriggered ? `Last: ${new Date(status.lastTriggered).toLocaleString()}` : 'Never triggered';
+
+    const wrap = document.getElementById('content');
+    wrap.innerHTML = `
+      <div class="build-card">
+        <div class="build-status">
+          <div class="build-dot ${status.configured?'configured':'unconfigured'}"></div>
+          <div class="build-label">${status.configured ? 'Webhook configured' : 'No webhook configured'}</div>
+        </div>
+        ${status.configured
+          ? `<div class="build-meta">Triggering a build will POST to the configured webhook URL.</div>
+             <button class="btn btn-primary" id="trigger-btn" style="min-width:160px;">▲ Trigger build</button>
+             ${status.lastTriggered ? `<div class="build-last">Last triggered: ${new Date(status.lastTriggered).toLocaleString()}</div>` : ''}`
+          : `<div class="config-hint">
+               No webhook URL is configured. To enable build triggers, add a webhook URL in
+               <a href="/settings.html">Settings → Build</a>.
+             </div>`
+        }
+      </div>
+    `;
+
+    document.getElementById('trigger-btn')?.addEventListener('click', async btn=>{
+      btn = document.getElementById('trigger-btn');
+      btn.disabled = true;
+      btn.textContent = 'Triggering…';
+      const res = await fetch('/api/build/trigger',{method:'POST',credentials:'include'});
+      const json = await res.json();
+      btn.disabled = false;
+      btn.textContent = '▲ Trigger build';
+      if (res.ok) showBanner('banner-ok','Build triggered');
+      else showBanner('banner-err', json.error ?? 'Webhook error');
+    });
+  </script>
+</body>
+</html>

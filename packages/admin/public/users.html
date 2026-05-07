@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbiter Admin — Users</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .user-table { border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; margin-bottom:28px; }
+    .user-head { display:grid; grid-template-columns:1fr 90px 160px 80px; padding:7px 16px; background:var(--bg2); border-bottom:1px solid var(--line); }
+    .user-head-cell { font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); }
+    .user-row { display:grid; grid-template-columns:1fr 90px 160px 80px; align-items:center; padding:12px 16px; border-bottom:1px solid var(--line2); background:var(--bg1); }
+    .user-row:last-child { border-bottom:none; }
+    .user-row.is-self { background:var(--accent-bg); }
+    .user-name { font-size:12px; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .self-tag { font-size:9px; color:var(--accent); background:var(--accent-bg); border:1px solid rgba(90,122,240,.2); padding:1px 6px; border-radius:2px; }
+    .role-badge { font-size:9px; padding:2px 8px; letter-spacing:0.06em; border-radius:2px; }
+    .role-badge.admin  { color:var(--gold);  background:var(--gold-bg);  border:1px solid rgba(200,168,107,.2); }
+    .role-badge.editor { color:var(--muted); background:var(--bg3);      border:1px solid var(--line); }
+    .user-date { font-size:11px; color:var(--mid); }
+    .btn-del { padding:3px 10px; background:transparent; border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:9px; cursor:pointer; transition:all .12s; border-radius:2px; }
+    .btn-del:hover:not(:disabled) { border-color:var(--red); color:var(--red); background:rgba(139,38,53,.04); }
+    .btn-del:disabled { opacity:.3; cursor:default; }
+
+    .add-group { background:var(--bg2); border:1px solid var(--line); border-radius:var(--radius); }
+    .group-header { padding:10px 20px; border-bottom:1px solid var(--line); font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:8px; }
+    .group-header::before { content:"—"; color:var(--gold); }
+    .add-row { display:grid; grid-template-columns:1fr 1fr 120px; gap:12px; padding:16px 20px; align-items:end; }
+    .add-field { display:flex; flex-direction:column; gap:5px; }
+    .add-label { font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); }
+    .banner { padding:8px 16px; font-size:10px; display:flex; align-items:center; gap:6px; border-radius:var(--radius); margin-bottom:14px; }
+    .banner-ok  { background:var(--jade-bg); color:var(--jade); border:1px solid rgba(45,139,106,.2); }
+    .banner-ok::before { content:"✓"; }
+    .banner-err { background:rgba(139,38,53,.07); color:var(--red); border:1px solid rgba(139,38,53,.15); }
+    .banner-err::before { content:"✕"; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="logo"><div class="logo-mark">OR</div>Orbiter</div>
+      <div class="topbar-right">
+        <span class="user" id="topbar-user"></span>
+        <span class="logout" id="logout-btn">Sign out</span>
+      </div>
+    </header>
+    <nav class="sidebar">
+      <div class="nav-section">Content</div>
+      <a class="nav-item" href="/dashboard.html"><span class="nav-icon">◈</span>Dashboard</a>
+      <a class="nav-item" href="/collections.html"><span class="nav-icon">⊞</span>Collections</a>
+      <div class="nav-section">Assets</div>
+      <a class="nav-item" href="/media.html"><span class="nav-icon">⊟</span>Media</a>
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="/schema.html"><span class="nav-icon">◈</span>Schema</a>
+      <a class="nav-item" href="/build.html"><span class="nav-icon">▲</span>Build</a>
+      <a class="nav-item" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
+      <a class="nav-item active admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
+      <div class="sidebar-footer">
+        <div class="pod-name" id="user-count">—</div>
+        <div><span class="pod-dot"></span>connected</div>
+      </div>
+    </nav>
+    <main class="main">
+      <div class="page-header">
+        <h1 class="page-title">Users</h1>
+      </div>
+      <div id="banner" class="banner" style="display:none"></div>
+      <div id="content"><div class="empty"><div class="spinner"></div></div></div>
+    </main>
+  </div>
+
+  <script type="module">
+    const me = await fetch('/api/auth/me',{credentials:'include'}).then(r=>r.json()).catch(()=>null);
+    if (!me?.user) { location.replace('/login.html'); }
+    if (me.user.role !== 'admin') { location.replace('/dashboard.html'); }
+    document.getElementById('topbar-user').textContent = me.user.username;
+    document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
+    document.getElementById('logout-btn').addEventListener('click',async()=>{
+      await fetch('/api/auth/logout',{method:'POST',credentials:'include'});
+      location.replace('/login.html');
+    });
+
+    function showBanner(cls, text) {
+      const el = document.getElementById('banner');
+      el.className = 'banner ' + cls;
+      el.textContent = text;
+      el.style.display = '';
+      setTimeout(()=>el.style.display='none', 3000);
+    }
+
+    async function loadUsers() {
+      const users = await fetch('/api/users',{credentials:'include'}).then(r=>r.json()).catch(()=>[]);
+      document.getElementById('user-count').textContent = `${users.length} user${users.length!==1?'s':''}`;
+
+      const wrap = document.getElementById('content');
+      if (!users.length) {
+        wrap.innerHTML = '<div class="empty"><div class="empty-icon">◉</div>No users yet</div>';
+        return;
+      }
+      wrap.innerHTML = `
+        <div class="user-table">
+          <div class="user-head">
+            <div class="user-head-cell">Username</div>
+            <div class="user-head-cell">Role</div>
+            <div class="user-head-cell">Last login</div>
+            <div class="user-head-cell"></div>
+          </div>
+          ${users.map(u=>`
+            <div class="user-row ${u.id===me.user.id?'is-self':''}">
+              <div class="user-name">${u.username}${u.id===me.user.id?'<span class="self-tag">you</span>':''}</div>
+              <div><span class="role-badge ${u.role}">${u.role}</span></div>
+              <div class="user-date">${u.last_login ? new Date(u.last_login).toLocaleDateString() : '—'}</div>
+              <div>
+                <button class="btn-del" data-id="${u.id}" ${u.id===me.user.id?'disabled':''}>Delete</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        ${addForm()}
+      `;
+      attachAddForm();
+      wrap.querySelectorAll('.btn-del').forEach(btn=>btn.addEventListener('click', async ()=>{
+        if (!confirm('Delete this user?')) return;
+        const res = await fetch(`/api/users/${btn.dataset.id}`,{method:'DELETE',credentials:'include'});
+        if (res.ok) { showBanner('banner-ok ✓ User deleted'); loadUsers(); }
+        else showBanner('banner-err', '✕ Could not delete user');
+      }));
+    }
+
+    function addForm() {
+      return `
+        <div class="add-group">
+          <div class="group-header">Add user</div>
+          <form id="add-user-form">
+            <div class="add-row">
+              <div class="add-field">
+                <label class="add-label">Username</label>
+                <input class="input" type="text" name="username" autocomplete="off" required placeholder="username" />
+              </div>
+              <div class="add-field">
+                <label class="add-label">Password — min 8 chars</label>
+                <input class="input" type="password" name="password" autocomplete="new-password" required minlength="8" />
+              </div>
+              <div class="add-field">
+                <label class="add-label">Role</label>
+                <select class="input" name="role">
+                  <option value="editor">editor</option>
+                  <option value="admin">admin</option>
+                </select>
+              </div>
+            </div>
+            <div style="padding:0 20px 16px;display:flex;justify-content:flex-end;">
+              <button type="submit" class="btn btn-primary">+ Add user</button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
+    function attachAddForm() {
+      document.getElementById('add-user-form').addEventListener('submit', async e=>{
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const res = await fetch('/api/users',{
+          method:'POST', credentials:'include',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ username: fd.get('username'), password: fd.get('password'), role: fd.get('role') }),
+        });
+        const json = await res.json();
+        if (res.ok) { showBanner('banner-ok','✓ User created'); e.target.reset(); loadUsers(); }
+        else showBanner('banner-err','✕ ' + (json.error ?? 'Failed'));
+      });
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>

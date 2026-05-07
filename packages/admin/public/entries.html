@@ -24,10 +24,12 @@
       <div class="nav-section">Assets</div>
       <a class="nav-item" href="/media.html"><span class="nav-icon">⊟</span>Media</a>
       <div class="nav-section">System</div>
+      <a class="nav-item" href="/schema.html"><span class="nav-icon">◈</span>Schema</a>
+      <a class="nav-item" href="/build.html"><span class="nav-icon">▲</span>Build</a>
       <a class="nav-item" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
       <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
       <div class="sidebar-footer">
-        <div class="pod-name">content.pod</div>
+        <div class="pod-name" id="entry-count">—</div>
         <div><span class="pod-dot"></span>connected</div>
       </div>
     </nav>
@@ -108,6 +110,7 @@
 
     function renderEntries(entries) {
       document.getElementById('page-sub').textContent = `${entries.length} entr${entries.length !== 1 ? 'ies' : 'y'}`;
+      document.getElementById('entry-count').textContent = `${entries.length} entr${entries.length !== 1 ? 'ies' : 'y'}`;
       const wrap = document.getElementById('entries-wrap');
       if (entries.length === 0) {
         wrap.innerHTML = '<div class="empty"><div class="empty-icon">◈</div>No entries yet</div>';
@@ -128,7 +131,7 @@
                 <td><span class="badge badge-${e.status}">${e.status}</span></td>
                 <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${updated}</td>
                 <td style="text-align:right;display:flex;gap:6px;justify-content:flex-end">
-                  <a class="btn btn-ghost btn-sm" href="/editor.html?col=${colId}&slug=${e.slug}&label=${encodeURIComponent(colLabel)}">Edit</a>
+                  <a class="btn btn-ghost btn-sm" href="/editor.html?collection=${colId}&slug=${e.slug}">Edit</a>
                   <button class="btn btn-danger btn-sm delete-btn" data-slug="${e.slug}">Delete</button>
                 </td>
               </tr>`;
@@ -192,7 +195,7 @@
       });
       if (res.ok) {
         overlay.style.display = 'none';
-        location.href = `/editor.html?col=${colId}&slug=${slug}&label=${encodeURIComponent(colLabel)}`;
+        location.href = `/editor.html?collection=${colId}&slug=${slug}`;
       } else {
         const d = await res.json();
         errEl.textContent = d.error ?? 'Could not create entry';

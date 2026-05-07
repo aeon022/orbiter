@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbiter Admin — Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .settings-wrap { max-width:680px; }
+    .settings-group { background:var(--bg2); border:1px solid var(--line); margin-bottom:14px; border-radius:var(--radius); overflow:hidden; }
+    .group-header { padding:10px 20px; border-bottom:1px solid var(--line); font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:8px; }
+    .group-header::before { content:"—"; color:var(--gold); }
+    .setting-row { display:grid; grid-template-columns:1fr 260px; align-items:center; gap:20px; padding:14px 20px; border-bottom:1px solid var(--line2); }
+    .setting-row:last-child { border-bottom:none; }
+    .setting-label { font-size:12px; color:var(--text); margin-bottom:2px; }
+    .setting-desc { font-size:10px; color:var(--muted); }
+    .save-row { display:flex; justify-content:flex-end; padding:12px 20px; border-top:1px solid var(--line); }
+    .banner { padding:8px 20px; font-size:10px; display:flex; align-items:center; gap:6px; border-radius:var(--radius); margin-bottom:14px; }
+    .banner-ok  { background:var(--jade-bg); color:var(--jade); border:1px solid rgba(45,139,106,.2); }
+    .banner-ok::before { content:"✓"; }
+    .banner-err { background:rgba(139,38,53,.07); color:var(--red); border:1px solid rgba(139,38,53,.15); }
+    .banner-err::before { content:"✕"; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="logo"><div class="logo-mark">OR</div>Orbiter</div>
+      <div class="topbar-right">
+        <span class="user" id="topbar-user"></span>
+        <span class="logout" id="logout-btn">Sign out</span>
+      </div>
+    </header>
+    <nav class="sidebar">
+      <div class="nav-section">Content</div>
+      <a class="nav-item" href="/dashboard.html"><span class="nav-icon">◈</span>Dashboard</a>
+      <a class="nav-item" href="/collections.html"><span class="nav-icon">⊞</span>Collections</a>
+      <div class="nav-section">Assets</div>
+      <a class="nav-item" href="/media.html"><span class="nav-icon">⊟</span>Media</a>
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="/schema.html"><span class="nav-icon">◈</span>Schema</a>
+      <a class="nav-item" href="/build.html"><span class="nav-icon">▲</span>Build</a>
+      <a class="nav-item active" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
+      <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
+      <div class="sidebar-footer">
+        <div class="pod-name" id="sidebar-info">—</div>
+        <div><span class="pod-dot"></span>connected</div>
+      </div>
+    </nav>
+    <main class="main">
+      <div class="page-header">
+        <h1 class="page-title">Settings</h1>
+      </div>
+      <div class="settings-wrap" id="settings-content">
+        <div class="empty"><div class="spinner"></div></div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    const me = await fetch('/api/auth/me',{credentials:'include'}).then(r=>r.json()).catch(()=>null);
+    if (!me?.user) { location.replace('/login.html'); }
+    document.getElementById('topbar-user').textContent = me.user.username;
+    if (me.user.role==='admin') document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
+    document.getElementById('logout-btn').addEventListener('click',async()=>{
+      await fetch('/api/auth/logout',{method:'POST',credentials:'include'});
+      location.replace('/login.html');
+    });
+
+    // Load all meta
+    const metaArr = await fetch('/api/meta',{credentials:'include'}).then(r=>r.json()).catch(()=>[]);
+    const meta = {};
+    for (const {key,value} of metaArr) meta[key]=value;
+
+    const get = k => meta[k] ?? '';
+    document.getElementById('sidebar-info').textContent = `v${get('format_version')||'1'} format`;
+
+    function showBanner(id, cls, text) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.className = 'banner ' + cls;
+      el.textContent = (cls==='banner-ok'?'✓ ':'✕ ') + text;
+      el.style.display = '';
+      setTimeout(()=>el.style.display='none', 3000);
+    }
+
+    async function saveMeta(pairs) {
+      for (const [key, value] of pairs) {
+        await fetch('/api/meta/' + key, {
+          method:'PUT', credentials:'include',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({value}),
+        });
+      }
+    }
+
+    const wrap = document.getElementById('settings-content');
+    wrap.innerHTML = `
+      <div id="site-banner" class="banner" style="display:none"></div>
+
+      <!-- Site -->
+      <form id="site-form">
+        <div class="settings-group">
+          <div class="group-header">Site</div>
+          <div class="setting-row">
+            <div><div class="setting-label">Site name</div><div class="setting-desc">Displayed in the admin header</div></div>
+            <input class="input" name="site.name" value="${get('site.name')}" placeholder="My Site" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Site URL</div><div class="setting-desc">Production URL for preview links</div></div>
+            <input class="input" name="site.url" value="${get('site.url')}" placeholder="https://example.com" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Description</div><div class="setting-desc">Short site description</div></div>
+            <input class="input" name="site.description" value="${get('site.description')}" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Primary locale</div><div class="setting-desc">Default language code, e.g. en</div></div>
+            <input class="input" name="site.locale" value="${get('site.locale')}" placeholder="en" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Additional locales</div><div class="setting-desc">Comma-separated, e.g. en,de,fr</div></div>
+            <input class="input" name="site.locales" value="${get('site.locales')}" placeholder="en,de" />
+          </div>
+        </div>
+
+        <!-- Build -->
+        <div class="settings-group">
+          <div class="group-header">Build</div>
+          <div class="setting-row">
+            <div><div class="setting-label">Webhook URL</div><div class="setting-desc">POST to this URL to trigger a build</div></div>
+            <input class="input" name="build.webhook_url" value="${get('build.webhook_url')}" placeholder="https://api.netlify.com/build/hook/…" />
+          </div>
+        </div>
+
+        <!-- GitHub -->
+        <div class="settings-group">
+          <div class="group-header">GitHub</div>
+          <div class="setting-row">
+            <div><div class="setting-label">GitHub token</div><div class="setting-desc">Personal access token with repo scope</div></div>
+            <input class="input" type="password" name="github.token" value="${get('github.token')}" autocomplete="off" placeholder="ghp_…" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Repository</div><div class="setting-desc">owner/repo format</div></div>
+            <input class="input" name="github.repo" value="${get('github.repo')}" placeholder="owner/my-site" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Branch</div><div class="setting-desc">Target branch for commits</div></div>
+            <input class="input" name="github.branch" value="${get('github.branch')||'main'}" placeholder="main" />
+          </div>
+        </div>
+
+        <!-- API -->
+        <div class="settings-group">
+          <div class="group-header">Public API</div>
+          <div class="setting-row">
+            <div><div class="setting-label">Enable public API</div><div class="setting-desc">Expose read-only collection endpoints</div></div>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="checkbox" name="api.enabled" value="1" ${get('api.enabled')==='1'?'checked':''} style="accent-color:var(--accent);width:14px;height:14px;" />
+              <span style="font-size:11px;color:var(--text);font-family:var(--mono);">Enabled</span>
+            </label>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">API token</div><div class="setting-desc">Optional bearer token to restrict access</div></div>
+            <input class="input" type="password" name="api.token" value="${get('api.token')}" autocomplete="off" placeholder="Leave blank for open access" />
+          </div>
+        </div>
+
+        <div class="save-row">
+          <button type="submit" class="btn btn-primary">Save settings</button>
+        </div>
+      </form>
+
+      <!-- Account -->
+      <div id="account-banner" class="banner" style="display:none"></div>
+      <div class="settings-group" style="margin-top:28px;">
+        <div class="group-header">Account — ${me.user.username}</div>
+        <form id="pw-form">
+          <div class="setting-row">
+            <div><div class="setting-label">Current password</div></div>
+            <input class="input" type="password" name="current_password" autocomplete="current-password" required />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">New password</div><div class="setting-desc">Minimum 8 characters</div></div>
+            <input class="input" type="password" name="new_password" autocomplete="new-password" required minlength="8" />
+          </div>
+          <div class="save-row">
+            <button type="submit" class="btn btn-primary">Change password</button>
+          </div>
+        </form>
+        <form id="un-form" style="border-top:1px solid var(--line);">
+          <div class="setting-row">
+            <div><div class="setting-label">New username</div><div class="setting-desc">Current: <strong>${me.user.username}</strong></div></div>
+            <input class="input" type="text" name="new_username" autocomplete="username" required placeholder="${me.user.username}" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Confirm with password</div></div>
+            <input class="input" type="password" name="current_password" autocomplete="current-password" required />
+          </div>
+          <div class="save-row">
+            <button type="submit" class="btn btn-primary">Change username</button>
+          </div>
+        </form>
+      </div>
+    `;
+
+    // Site form
+    document.getElementById('site-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const pairs = [
+        ['site.name', fd.get('site.name')],
+        ['site.url', fd.get('site.url')],
+        ['site.description', fd.get('site.description')],
+        ['site.locale', fd.get('site.locale')],
+        ['site.locales', fd.get('site.locales')],
+        ['build.webhook_url', fd.get('build.webhook_url')],
+        ['github.token', fd.get('github.token')],
+        ['github.repo', fd.get('github.repo')],
+        ['github.branch', fd.get('github.branch')],
+        ['api.enabled', fd.get('api.enabled') ? '1' : '0'],
+        ['api.token', fd.get('api.token')],
+      ];
+      await saveMeta(pairs);
+      showBanner('site-banner','banner-ok','Settings saved');
+    });
+
+    // Password form
+    document.getElementById('pw-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const res = await fetch('/api/account/password', {
+        method:'PUT', credentials:'include',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ currentPassword: fd.get('current_password'), newPassword: fd.get('new_password') }),
+      });
+      const json = await res.json();
+      if (res.ok) { showBanner('account-banner','banner-ok','Password changed'); e.target.reset(); }
+      else showBanner('account-banner','banner-err', json.error ?? 'Failed');
+    });
+
+    // Username form
+    document.getElementById('un-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const res = await fetch('/api/account/username', {
+        method:'PUT', credentials:'include',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ currentPassword: fd.get('current_password'), newUsername: fd.get('new_username') }),
+      });
+      const json = await res.json();
+      if (res.ok) { showBanner('account-banner','banner-ok','Username changed — please sign in again'); setTimeout(()=>location.replace('/login.html'), 1500); }
+      else showBanner('account-banner','banner-err', json.error ?? 'Failed');
+    });
+  </script>
+</body>
+</html>

@@ -62,3 +62,42 @@ entryRoutes.delete('/:collectionId/entries/:slug', (c) => {
   if (!ok) return c.json({ error: 'Not found' }, 404);
   return c.json({ ok: true });
 });
+
+// GET /api/collections/:id/entries/:slug/versions
+entryRoutes.get('/:collectionId/entries/:slug/versions', (c) => {
+  const { collectionId, slug } = c.req.param();
+  const db    = openPod(c.get('podPath'));
+  const entry = db.getEntry(collectionId, slug);
+  if (!entry) { db.close(); return c.json({ error: 'Not found' }, 404); }
+  const versions = db.db
+    .prepare('SELECT id, created_at FROM _versions WHERE entry_id = ? ORDER BY created_at DESC LIMIT 20')
+    .all(entry.id);
+  db.close();
+  return c.json(versions);
+});
+
+// POST /api/collections/:id/entries/:slug/duplicate
+entryRoutes.post('/:collectionId/entries/:slug/duplicate', (c) => {
+  const { collectionId, slug } = c.req.param();
+  const db    = openPod(c.get('podPath'));
+  const entry = db.getEntry(collectionId, slug);
+  if (!entry) { db.close(); return c.json({ error: 'Not found' }, 404); }
+  const newSlug = slug + '-copy';
+  db.createEntry(collectionId, newSlug, entry.data, 'draft');
+  const created = db.getEntry(collectionId, newSlug);
+  db.close();
+  return c.json(created, 201);
+});
+
+// PATCH /api/collections/:id/entries/:slug/status
+entryRoutes.patch('/:collectionId/entries/:slug/status', async (c) => {
+  const { collectionId, slug } = c.req.param();
+  const { status } = await c.req.json();
+  if (!['draft', 'published'].includes(status)) return c.json({ error: 'Invalid status' }, 400);
+  const db    = openPod(c.get('podPath'));
+  const entry = db.getEntry(collectionId, slug);
+  if (!entry) { db.close(); return c.json({ error: 'Not found' }, 404); }
+  db.updateEntry(collectionId, slug, { slug, data: entry.data, status });
+  db.close();
+  return c.json({ ok: true });
+});

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbiter Admin — Media</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .upload-area { background:var(--bg2); border:2px dashed var(--line); padding:32px; text-align:center; cursor:pointer; transition:border-color .15s,background .15s; display:block; border-radius:var(--radius); margin-bottom:12px; }
+    .upload-area:hover,.upload-area.drag-over { border-color:var(--gold); background:var(--gold-bg); }
+    .upload-icon { font-size:22px; color:var(--muted); margin-bottom:8px; }
+    .upload-label { font-size:13px; color:var(--mid); }
+    .upload-sub { font-size:11px; color:var(--muted); margin-top:4px; }
+    .upload-form-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .filter-bar { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:20px; margin-top:24px; }
+    .filter-btn { background:transparent; border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:10px; padding:4px 12px; cursor:pointer; letter-spacing:0.06em; transition:all .12s; border-radius:2px; }
+    .filter-btn:hover { border-color:var(--mid); color:var(--text); }
+    .filter-btn.active { border-color:var(--gold); color:var(--gold); background:var(--gold-bg); }
+    .media-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; }
+    .media-card { background:var(--bg2); border:1px solid var(--line); overflow:hidden; position:relative; border-radius:var(--radius); transition:border-color .15s; }
+    .media-card:hover { border-color:var(--gold); }
+    .media-card:hover .media-overlay { opacity:1; }
+    .media-thumb { width:100%; height:140px; object-fit:cover; display:block; }
+    .media-thumb-ph { width:100%; height:140px; display:flex; flex-direction:column; align-items:center; justify-content:center; background:var(--bg3); gap:8px; }
+    .media-thumb-icon { font-size:28px; color:var(--muted); }
+    .media-thumb-type { font-family:var(--mono); font-size:9px; color:var(--muted); letter-spacing:.12em; text-transform:uppercase; }
+    .media-info { padding:10px 12px; border-top:1px solid var(--line); }
+    .media-name { font-size:10px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; }
+    .media-meta { font-size:9px; color:var(--muted); display:flex; justify-content:space-between; }
+    .media-overlay { position:absolute; inset:0; background:rgba(0,0,0,.5); opacity:0; transition:opacity .15s; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; }
+    .btn-copy-url { background:var(--bg2); border:1px solid var(--line); color:var(--text); font-family:var(--mono); font-size:9px; padding:5px 14px; cursor:pointer; letter-spacing:.06em; border-radius:2px; }
+    .btn-copy-url:hover { background:var(--bg3); }
+    .btn-copy-url.copied { color:var(--jade); border-color:var(--jade); }
+    .btn-del-media { background:transparent; border:1px solid rgba(255,255,255,.3); color:rgba(255,255,255,.8); font-family:var(--mono); font-size:9px; padding:4px 12px; cursor:pointer; border-radius:2px; }
+    .btn-del-media:hover { background:var(--red); border-color:var(--red); color:#fff; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="logo"><div class="logo-mark">OR</div>Orbiter</div>
+      <div class="topbar-right">
+        <span class="user" id="topbar-user"></span>
+        <span class="logout" id="logout-btn">Sign out</span>
+      </div>
+    </header>
+    <nav class="sidebar">
+      <div class="nav-section">Content</div>
+      <a class="nav-item" href="/dashboard.html"><span class="nav-icon">◈</span>Dashboard</a>
+      <a class="nav-item" href="/collections.html"><span class="nav-icon">⊞</span>Collections</a>
+      <div class="nav-section">Assets</div>
+      <a class="nav-item active" href="/media.html"><span class="nav-icon">⊟</span>Media</a>
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="/schema.html"><span class="nav-icon">◈</span>Schema</a>
+      <a class="nav-item" href="/build.html"><span class="nav-icon">▲</span>Build</a>
+      <a class="nav-item" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
+      <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
+      <div class="sidebar-footer">
+        <div class="pod-name" id="media-count">— assets</div>
+        <div><span class="pod-dot"></span>connected</div>
+      </div>
+    </nav>
+    <main class="main">
+      <div class="page-header">
+        <h1 class="page-title">Media</h1>
+      </div>
+
+      <!-- Upload -->
+      <label class="upload-area" id="drop-zone">
+        <input type="file" id="file-input" accept="image/*,video/*,application/pdf" style="display:none" multiple />
+        <div class="upload-icon">↑</div>
+        <div class="upload-label" id="upload-label">Drop files here or click to upload</div>
+        <div class="upload-sub">Images, video, PDF</div>
+      </label>
+      <div class="upload-form-row" style="margin-bottom:24px">
+        <input class="input" id="alt-input" placeholder="Alt text (optional)" style="width:200px" />
+        <input class="input" id="folder-input" list="folder-list" placeholder="Folder (optional)" style="width:160px" />
+        <datalist id="folder-list"></datalist>
+        <button class="btn btn-primary" id="upload-btn">Upload</button>
+        <span id="upload-status" style="font-size:12px;color:var(--muted)"></span>
+      </div>
+
+      <div class="filter-bar" id="filter-bar" style="display:none"></div>
+      <div id="media-grid-wrap"><div class="empty"><div class="spinner"></div></div></div>
+    </main>
+  </div>
+
+  <script type="module">
+    const me = await fetch('/api/auth/me', { credentials:'include' }).then(r=>r.json()).catch(()=>null);
+    if (!me?.user) { location.replace('/login.html'); }
+    document.getElementById('topbar-user').textContent = me.user.username;
+    if (me.user.role === 'admin') document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
+    document.getElementById('logout-btn').addEventListener('click', async ()=>{
+      await fetch('/api/auth/logout',{method:'POST',credentials:'include'});
+      location.replace('/login.html');
+    });
+
+    const fmtSize = b => b < 1048576 ? (b/1024).toFixed(1)+' KB' : (b/1048576).toFixed(1)+' MB';
+    let allMedia = [];
+
+    async function loadMedia() {
+      allMedia = await fetch('/api/media',{credentials:'include'}).then(r=>r.json());
+      document.getElementById('media-count').textContent = `${allMedia.length} asset${allMedia.length!==1?'s':''}`;
+      renderFilterBar();
+      renderGrid(allMedia);
+
+      // Populate folder datalist
+      const folders = [...new Set(allMedia.map(m=>m.folder).filter(Boolean))].sort();
+      const dl = document.getElementById('folder-list');
+      dl.innerHTML = folders.map(f=>`<option value="${f}">`).join('');
+    }
+
+    function renderFilterBar() {
+      const bar = document.getElementById('filter-bar');
+      if (allMedia.length === 0) { bar.style.display='none'; return; }
+      bar.style.display = 'flex';
+      const folders = [...new Set(allMedia.map(m=>m.folder).filter(Boolean))].sort();
+      const hasImage = allMedia.some(m=>m.mime_type.startsWith('image/'));
+      const hasVideo = allMedia.some(m=>m.mime_type.startsWith('video/'));
+      const hasPdf   = allMedia.some(m=>m.mime_type==='application/pdf');
+      bar.innerHTML = `
+        <button class="filter-btn active" data-f="all">All (${allMedia.length})</button>
+        ${hasImage ? `<button class="filter-btn" data-f="image">Images</button>` : ''}
+        ${hasVideo ? `<button class="filter-btn" data-f="video">Video</button>` : ''}
+        ${hasPdf   ? `<button class="filter-btn" data-f="pdf">PDF</button>` : ''}
+        ${folders.map(f=>`<button class="filter-btn" data-f="folder:${f}">${f}</button>`).join('')}
+      `;
+      bar.querySelectorAll('.filter-btn').forEach(btn=>btn.addEventListener('click', ()=>{
+        bar.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        const f = btn.dataset.f;
+        let filtered = allMedia;
+        if      (f==='image')          filtered = allMedia.filter(m=>m.mime_type.startsWith('image/'));
+        else if (f==='video')          filtered = allMedia.filter(m=>m.mime_type.startsWith('video/'));
+        else if (f==='pdf')            filtered = allMedia.filter(m=>m.mime_type==='application/pdf');
+        else if (f.startsWith('folder:')) filtered = allMedia.filter(m=>m.folder===f.slice(7));
+        renderGrid(filtered);
+      }));
+    }
+
+    function renderGrid(items) {
+      const wrap = document.getElementById('media-grid-wrap');
+      if (items.length===0) { wrap.innerHTML='<div class="empty"><div class="empty-icon">⊟</div>No media yet</div>'; return; }
+      wrap.innerHTML = `<div class="media-grid">${items.map(m=>{
+        const isImg  = m.mime_type.startsWith('image/');
+        const isVid  = m.mime_type.startsWith('video/');
+        const thumb  = isImg
+          ? `<img class="media-thumb" src="/api/media/${m.id}/raw" alt="${m.alt??''}" loading="lazy" />`
+          : isVid
+          ? `<video class="media-thumb" src="/api/media/${m.id}/raw" muted preload="metadata"></video>`
+          : `<div class="media-thumb-ph"><div class="media-thumb-icon">${m.mime_type==='application/pdf'?'⊠':'◫'}</div><div class="media-thumb-type">${m.mime_type.split('/')[1]?.toUpperCase()}</div></div>`;
+        return `<div class="media-card" data-id="${m.id}">
+          ${thumb}
+          <div class="media-info">
+            <div class="media-name" title="${m.filename}">${m.filename}</div>
+            <div class="media-meta"><span>${fmtSize(m.size)}</span><span>${m.folder||m.created_at?.split(' ')[0]||''}</span></div>
+          </div>
+          <div class="media-overlay">
+            <button class="btn-copy-url" data-id="${m.id}">Copy URL</button>
+            <button class="btn-del-media" data-id="${m.id}">Delete</button>
+          </div>
+        </div>`;
+      }).join('')}</div>`;
+
+      wrap.querySelectorAll('.btn-copy-url').forEach(btn=>btn.addEventListener('click', ()=>{
+        const url = `${location.origin}/api/media/${btn.dataset.id}/raw`;
+        navigator.clipboard.writeText(url).then(()=>{
+          const orig=btn.textContent; btn.textContent='Copied!'; btn.classList.add('copied');
+          setTimeout(()=>{btn.textContent=orig;btn.classList.remove('copied');},1800);
+        });
+      }));
+
+      wrap.querySelectorAll('.btn-del-media').forEach(btn=>btn.addEventListener('click', async ()=>{
+        if (!confirm('Delete this file?')) return;
+        await fetch(`/api/media/${btn.dataset.id}`,{method:'DELETE',credentials:'include'});
+        loadMedia();
+      }));
+    }
+
+    // Upload
+    const fileInput  = document.getElementById('file-input');
+    const dropZone   = document.getElementById('drop-zone');
+    const uploadLabel= document.getElementById('upload-label');
+
+    fileInput.addEventListener('change', ()=>{
+      if (fileInput.files.length) uploadLabel.textContent = fileInput.files.length > 1 ? `${fileInput.files.length} files selected` : fileInput.files[0].name;
+    });
+    dropZone.addEventListener('dragover', e=>{e.preventDefault();dropZone.classList.add('drag-over');});
+    dropZone.addEventListener('dragleave', ()=>dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e=>{
+      e.preventDefault(); dropZone.classList.remove('drag-over');
+      if (e.dataTransfer.files.length) { fileInput.files = e.dataTransfer.files; uploadLabel.textContent = e.dataTransfer.files[0].name; }
+    });
+
+    document.getElementById('upload-btn').addEventListener('click', async ()=>{
+      const files  = fileInput.files;
+      const status = document.getElementById('upload-status');
+      if (!files.length) { status.textContent='No file selected'; return; }
+      const alt    = document.getElementById('alt-input').value;
+      const folder = document.getElementById('folder-input').value;
+      status.textContent = `Uploading ${files.length} file(s)…`;
+      let ok=0;
+      for (const file of files) {
+        const fd = new FormData();
+        fd.append('file', file); fd.append('alt', alt); fd.append('folder', folder);
+        const res = await fetch('/api/media',{method:'POST',credentials:'include',body:fd});
+        if (res.ok) ok++;
+      }
+      status.style.color = ok===files.length ? 'var(--jade)' : 'var(--red)';
+      status.textContent = `✓ ${ok} of ${files.length} uploaded`;
+      uploadLabel.textContent = 'Drop files here or click to upload';
+      setTimeout(()=>{status.textContent='';status.style.color='';},3000);
+      loadMedia();
+    });
+
+    loadMedia();
+  </script>
+</body>
+</html>
