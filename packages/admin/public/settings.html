@@ -69,10 +69,8 @@
       location.replace('/login.html');
     });
 
-    // Load all meta
-    const metaArr = await fetch('/api/meta',{credentials:'include'}).then(r=>r.json()).catch(()=>[]);
-    const meta = {};
-    for (const {key,value} of metaArr) meta[key]=value;
+    // Load all meta — response is a flat object { key: value }
+    const meta = await fetch('/api/meta',{credentials:'include'}).then(r=>r.json()).catch(()=>({}));
 
     const get = k => meta[k] ?? '';
     document.getElementById('sidebar-info').textContent = `v${get('format_version')||'1'} format`;
@@ -87,13 +85,12 @@
     }
 
     async function saveMeta(pairs) {
-      for (const [key, value] of pairs) {
-        await fetch('/api/meta/' + key, {
-          method:'PUT', credentials:'include',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({value}),
-        });
-      }
+      const body = Object.fromEntries(pairs);
+      await fetch('/api/meta', {
+        method:'PUT', credentials:'include',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(body),
+      });
     }
 
     const wrap = document.getElementById('settings-content');

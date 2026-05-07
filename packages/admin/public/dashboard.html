@@ -112,6 +112,9 @@
       fetch('/api/meta',        { credentials: 'include' }).then(r => r.json()),
     ]);
 
+    // Sidebar pod info
+    document.getElementById('pod-name').textContent = `v${meta['format_version'] || '1'} format`;
+
     // Site URL in subtitle
     if (meta['site.url']) {
       document.getElementById('site-url').textContent = meta['site.url'];
