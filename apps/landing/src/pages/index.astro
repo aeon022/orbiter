@@ -186,6 +186,8 @@ const faqs = [
       <a href="#features"     data-section="features">Features</a>
       <a href="#pricing"      data-section="pricing">Pricing</a>
       <a href="#faq"          data-section="faq">FAQ</a>
+      <div class="nav-divider" aria-hidden="true"></div>
+      <a href="#try" class="nav-try" data-section="try">Try in 60s →</a>
       <a href="https://github.com/aeon022/orbiter" class="nav-cta" target="_blank" rel="noopener">
         ★ {ghStars > 0 ? ghStars : 'GitHub'}
       </a>
@@ -201,6 +203,7 @@ const faqs = [
     <a href="#features">Features</a>
     <a href="#pricing">Pricing</a>
     <a href="#faq">FAQ</a>
+    <a href="#try" class="mobile-menu-try">Try in 60 seconds →</a>
     <a href="https://github.com/aeon022/orbiter" class="mobile-menu-cta" target="_blank" rel="noopener">★ GitHub {ghStars > 0 ? `(${ghStars})` : ''}</a>
   </div>
 
@@ -755,7 +758,7 @@ const faqs = [
   </section>
 
   <!-- CTA -->
-  <section class="cta">
+  <section class="cta" id="try">
     <h2 class="reveal">Try it in 60 seconds.</h2>
     <p class="reveal reveal-delay-1">Clone the repo and run the demo — admin at <code>localhost:8080/orbiter</code>, login: <code>admin / admin</code>.</p>
     <div class="reveal reveal-delay-2" style="display:flex; flex-direction:column; gap:14px; align-items:center;">

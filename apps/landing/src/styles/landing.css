@@ -285,6 +285,21 @@ nav {
 }
 .nav-links a.nav-cta::after { display: none; }
 
+.nav-divider {
+  width: 1px;
+  height: 16px;
+  background: rgba(139,124,248,.2);
+  flex-shrink: 0;
+}
+.nav-links a.nav-try {
+  color: var(--accent);
+  font-weight: 500;
+  font-size: 0.8rem;
+  letter-spacing: 0.01em;
+}
+.nav-links a.nav-try::after { background: var(--accent); }
+.nav-links a.nav-try:hover { color: #b8afe8; }
+
 nav.scrolled {
   background: rgba(7,7,15,.88);
   border-color: rgba(139,124,248,.28);
@@ -369,6 +384,11 @@ nav.scrolled {
 
 .mobile-menu a:last-child { border-bottom: none; }
 .mobile-menu a:hover { color: var(--accent); }
+
+.mobile-menu .mobile-menu-try {
+  color: var(--accent);
+  font-weight: 500;
+}
 
 .mobile-menu .mobile-menu-cta {
   margin-top: 20px;
