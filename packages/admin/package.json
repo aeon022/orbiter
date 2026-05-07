@@ -1,7 +1,33 @@
 {
   "name": "@a83/orbiter-admin",
-  "version": "0.0.1",
-  "description": "Admin UI — Japanese Futurism dashboard (Phase 2)",
+  "version": "0.1.0",
+  "description": "Standalone admin server for Orbiter CMS",
   "type": "module",
-  "main": "./src/index.js"
+  "main": "./src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev":   "node --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "astro",
+    "cms",
+    "sqlite",
+    "headless-cms",
+    "orbiter"
+  ],
+  "author": "ABTEILUNG83",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aeon022/orbiter.git",
+    "directory": "packages/admin"
+  },
+  "dependencies": {
+    "@a83/orbiter-core": "^0.1.0",
+    "@hono/node-server": "^1.14.4",
+    "hono": "^4.7.11"
+  }
 }

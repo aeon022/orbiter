@@ -5,6 +5,9 @@
  */
 import Database from 'better-sqlite3';
 import { resolve } from 'node:path';
+import { randomUUID } from 'node:crypto';
+
+const sqliteNow = () => new Date().toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, '');
 
 export class OrbiterDB {
   /** @type {import('better-sqlite3').Database} */
@@ -180,6 +183,73 @@ export class OrbiterDB {
 
   setMeta(key, value) {
     this.db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)').run(key, String(value));
+  }
+
+  // ── Collections (write) ───────────────────────────
+  createCollection(id, label, schema = {}) {
+    this.db.prepare('INSERT INTO _collections (id, label, schema) VALUES (?, ?, ?)').run(id, label, JSON.stringify(schema));
+  }
+
+  updateCollection(id, label, schema) {
+    this.db.prepare('UPDATE _collections SET label = ?, schema = ? WHERE id = ?').run(label, JSON.stringify(schema), id);
+  }
+
+  deleteCollection(id) {
+    const entries = this.db.prepare('SELECT id FROM _entries WHERE collection_id = ?').all(id);
+    for (const e of entries) {
+      this.db.prepare('DELETE FROM _versions WHERE entry_id = ?').run(e.id);
+    }
+    this.db.prepare('DELETE FROM _entries WHERE collection_id = ?').run(id);
+    this.db.prepare('DELETE FROM _collections WHERE id = ?').run(id);
+  }
+
+  // ── Entries (write) ────────────────────────────────
+  createEntry(collectionId, slug, data, status = 'draft') {
+    const id  = randomUUID();
+    const now = sqliteNow();
+    this.db.prepare(`
+      INSERT INTO _entries (id, collection_id, slug, data, status, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(id, collectionId, slug, JSON.stringify(data), status, now, now);
+    return id;
+  }
+
+  updateEntry(collectionId, slug, { slug: newSlug, data, status } = {}) {
+    const entry = this.getEntry(collectionId, slug);
+    if (!entry) return false;
+    this.db.prepare('UPDATE _entries SET slug = ?, data = ?, status = ?, updated_at = ? WHERE id = ?')
+      .run(newSlug ?? slug, JSON.stringify(data ?? entry.data), status ?? entry.status, sqliteNow(), entry.id);
+    return true;
+  }
+
+  deleteEntry(collectionId, slug) {
+    const entry = this.getEntry(collectionId, slug);
+    if (!entry) return false;
+    this.db.prepare('DELETE FROM _versions WHERE entry_id = ?').run(entry.id);
+    this.db.prepare('DELETE FROM _entries WHERE id = ?').run(entry.id);
+    return true;
+  }
+
+  // ── Media ──────────────────────────────────────────
+  listMedia(folder = null) {
+    const sql = folder !== null
+      ? 'SELECT id, filename, mime_type, size, alt, folder, created_at FROM _media WHERE folder = ? ORDER BY created_at DESC'
+      : 'SELECT id, filename, mime_type, size, alt, folder, created_at FROM _media ORDER BY created_at DESC';
+    return folder !== null ? this.db.prepare(sql).all(folder) : this.db.prepare(sql).all();
+  }
+
+  getMediaItem(id) {
+    return this.db.prepare('SELECT * FROM _media WHERE id = ?').get(id) ?? null;
+  }
+
+  insertMedia(id, filename, mimeType, size, data, alt = null, folder = '') {
+    this.db.prepare(
+      'INSERT INTO _media (id, filename, mime_type, size, data, alt, folder) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).run(id, filename, mimeType, size, data, alt, folder);
+  }
+
+  deleteMedia(id) {
+    this.db.prepare('DELETE FROM _media WHERE id = ?').run(id);
   }
 
   close() {
