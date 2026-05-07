@@ -1,6 +1,6 @@
 ---
 export const prerender = false;
-import { ViewTransitions } from 'astro:transitions';
+import { ClientRouter } from 'astro:transitions';
 import { podPath } from 'orbiter:db';
 import { openPod } from '@a83/orbiter-core';
 import adminUtils from 'orbiter:admin-utils';
@@ -197,7 +197,7 @@ const fmtSize = (bytes) => bytes < 1024 * 1024
     .empty-label { font-size:12px; color:var(--muted); margin-bottom:4px; }
     .empty-sub { font-size:10px; color:var(--line); }
   </style>
-  <ViewTransitions />
+  <ClientRouter />
 </head>
 <body>
   <div class="layout">

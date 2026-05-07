@@ -10,7 +10,7 @@
  *   podInfo     — string shown in sidebar footer
  *   locale      — 'en' | 'de'  (default: 'en')
  */
-import { ViewTransitions } from 'astro:transitions';
+import { ClientRouter } from 'astro:transitions';
 import adminUtils from 'orbiter:admin-utils';
 import { useTranslations } from '../src/i18n.js';
 import { podPath } from 'orbiter:db';
@@ -135,7 +135,7 @@ for (const c of collectionsWithParent.filter((c: any) => c.parent)) {
     .saved-banner::before { content:"✓"; }
   </style>
   <slot name="head" />
-  <ViewTransitions />
+  <ClientRouter />
 </head>
 <body>
   <div class="layout">
