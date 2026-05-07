@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbiter Admin — Editor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .editor-layout { display: grid; grid-template-columns: 1fr 260px; gap: 24px; }
+    .editor-main   { min-width: 0; }
+    .editor-side   { display: flex; flex-direction: column; gap: 16px; }
+
+    .editor-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 12px; background: var(--bg3); border: 1px solid var(--line); border-bottom: none; border-radius: var(--radius) var(--radius) 0 0; }
+    .toolbar-btn { background: none; border: 1px solid transparent; border-radius: 2px; color: var(--mid); font-family: var(--mono); font-size: 11px; padding: 3px 8px; cursor: pointer; transition: all 0.1s; }
+    .toolbar-btn:hover { color: var(--heading); background: var(--bg2); border-color: var(--line); }
+    .toolbar-btn.active { color: var(--accent); background: var(--accent-bg); border-color: transparent; }
+    .toolbar-sep { width: 1px; background: var(--line); margin: 2px 4px; }
+
+    .editor-area { background: var(--bg0); border: 1px solid var(--line); border-radius: 0 0 var(--radius) var(--radius); min-height: 480px; position: relative; }
+    #md-textarea { width: 100%; min-height: 480px; background: none; border: none; outline: none; color: var(--heading); font-family: var(--mono); font-size: 13px; line-height: 1.8; padding: 20px 24px; resize: none; display: block; }
+    #preview-area { display: none; padding: 20px 24px; min-height: 480px; color: var(--text); line-height: 1.8; font-size: 14px; }
+    #preview-area h1,#preview-area h2,#preview-area h3 { font-family: var(--serif); font-weight: 200; color: var(--heading); margin: 1.4em 0 0.5em; letter-spacing: 0.04em; }
+    #preview-area h1 { font-size: 26px; }
+    #preview-area h2 { font-size: 20px; }
+    #preview-area h3 { font-size: 16px; }
+    #preview-area p  { margin: 0 0 1em; }
+    #preview-area code { font-family: var(--mono); font-size: 12px; background: var(--bg3); padding: 2px 6px; border-radius: 2px; color: var(--gold); }
+    #preview-area pre { background: var(--bg3); border: 1px solid var(--line); padding: 14px 16px; border-radius: var(--radius); overflow-x: auto; margin: 1em 0; }
+    #preview-area pre code { background: none; padding: 0; }
+    #preview-area blockquote { border-left: 2px solid var(--accent); padding-left: 16px; color: var(--mid); margin: 1em 0; }
+    #preview-area a { color: var(--accent); }
+    #preview-area ul,#preview-area ol { padding-left: 20px; margin: 0 0 1em; }
+    #preview-area li { margin-bottom: 4px; }
+    #preview-area hr { border: none; border-top: 1px solid var(--line); margin: 2em 0; }
+
+    .side-card { background: var(--bg2); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+    .side-label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+    .status-select { width: 100%; background: var(--bg0); border: 1px solid var(--line); border-radius: var(--radius); padding: 7px 10px; color: var(--heading); font-family: var(--mono); font-size: 12px; outline: none; appearance: none; cursor: pointer; }
+
+    .save-bar { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+    .save-status { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+    .save-status.saved  { color: var(--jade); }
+    .save-status.saving { color: var(--gold); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="logo"><div class="logo-mark">OR</div>Orbiter</div>
+      <div class="topbar-right">
+        <span class="user" id="topbar-user"></span>
+        <span class="logout" id="logout-btn">Sign out</span>
+      </div>
+    </header>
+    <nav class="sidebar">
+      <div class="nav-section">Content</div>
+      <a class="nav-item" href="/dashboard.html"><span class="nav-icon">◈</span>Dashboard</a>
+      <a class="nav-item active" href="/collections.html"><span class="nav-icon">⊞</span>Collections</a>
+      <div class="nav-section">Assets</div>
+      <a class="nav-item" href="/media.html"><span class="nav-icon">⊟</span>Media</a>
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
+      <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
+      <div class="sidebar-footer">
+        <div class="pod-name">content.pod</div>
+        <div><span class="pod-dot"></span>connected</div>
+      </div>
+    </nav>
+    <main class="main">
+      <!-- Breadcrumb -->
+      <div style="font-size:11px;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:6px">
+        <a href="/collections.html" style="color:var(--muted)">Collections</a>
+        <span style="color:var(--line)">/</span>
+        <a id="back-link" href="#" style="color:var(--mid)"></a>
+        <span style="color:var(--line)">/</span>
+        <span id="entry-slug" style="color:var(--text)"></span>
+      </div>
+
+      <div class="editor-layout">
+        <!-- Editor -->
+        <div class="editor-main">
+          <!-- Title -->
+          <input id="field-title" class="input" placeholder="Title" style="font-size:20px;padding:10px 14px;margin-bottom:16px;font-family:var(--serif);font-weight:200;color:var(--heading)" />
+
+          <!-- Toolbar -->
+          <div class="editor-toolbar">
+            <button class="toolbar-btn" data-cmd="bold"        title="Bold">B</button>
+            <button class="toolbar-btn" data-cmd="italic"      title="Italic"><em>I</em></button>
+            <button class="toolbar-btn" data-cmd="h1"          title="Heading 1">H1</button>
+            <button class="toolbar-btn" data-cmd="h2"          title="Heading 2">H2</button>
+            <button class="toolbar-btn" data-cmd="h3"          title="Heading 3">H3</button>
+            <div class="toolbar-sep"></div>
+            <button class="toolbar-btn" data-cmd="ul"          title="Bullet list">• List</button>
+            <button class="toolbar-btn" data-cmd="ol"          title="Numbered list">1. List</button>
+            <button class="toolbar-btn" data-cmd="blockquote"  title="Blockquote">" Quote</button>
+            <button class="toolbar-btn" data-cmd="code"        title="Inline code">`code`</button>
+            <button class="toolbar-btn" data-cmd="codeblock"   title="Code block">```</button>
+            <button class="toolbar-btn" data-cmd="link"        title="Link">Link</button>
+            <button class="toolbar-btn" data-cmd="hr"          title="Divider">—</button>
+            <div class="toolbar-sep"></div>
+            <button class="toolbar-btn" id="preview-toggle">Preview</button>
+          </div>
+
+          <!-- Editor / Preview area -->
+          <div class="editor-area">
+            <textarea id="md-textarea" placeholder="Write in Markdown…" spellcheck="true"></textarea>
+            <div id="preview-area"></div>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="editor-side">
+          <!-- Save -->
+          <div class="side-card">
+            <div class="side-label">Publish</div>
+            <select class="status-select" id="status-select">
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+            </select>
+            <div class="save-bar" style="margin-top:12px">
+              <button class="btn btn-primary" id="save-btn" style="flex:1;justify-content:center">Save</button>
+            </div>
+            <div class="save-status" id="save-status" style="margin-top:8px"></div>
+          </div>
+
+          <!-- Slug -->
+          <div class="side-card">
+            <div class="side-label">Slug</div>
+            <input class="input" id="field-slug" style="font-family:var(--mono);font-size:11px" />
+          </div>
+
+          <!-- Meta -->
+          <div class="side-card" id="meta-card" style="display:none">
+            <div class="side-label">Created</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--muted)" id="meta-created"></div>
+            <div class="side-label" style="margin-top:12px">Updated</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--muted)" id="meta-updated"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    const params   = new URLSearchParams(location.search);
+    const colId    = params.get('col')  ?? '';
+    const slug     = params.get('slug') ?? '';
+    const colLabel = decodeURIComponent(params.get('label') ?? colId);
+
+    // Auth
+    const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).catch(() => null);
+    if (!me?.user) { location.replace('/login.html'); }
+    document.getElementById('topbar-user').textContent = me.user.username;
+    if (me.user.role === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      location.replace('/login.html');
+    });
+
+    // Breadcrumb
+    document.getElementById('back-link').textContent = colLabel;
+    document.getElementById('back-link').href = `/entries.html?col=${colId}&label=${encodeURIComponent(colLabel)}`;
+    document.getElementById('entry-slug').textContent = slug;
+
+    // Load entry
+    const entry = await fetch(`/api/collections/${colId}/entries/${slug}`, { credentials: 'include' }).then(r => r.json());
+    document.getElementById('field-title').value  = entry.data?.title  ?? '';
+    document.getElementById('md-textarea').value  = entry.data?.body   ?? '';
+    document.getElementById('field-slug').value   = entry.slug;
+    document.getElementById('status-select').value = entry.status;
+
+    if (entry.created_at) {
+      document.getElementById('meta-card').style.display = 'block';
+      document.getElementById('meta-created').textContent = entry.created_at.split(' ')[0];
+      document.getElementById('meta-updated').textContent = entry.updated_at.split(' ')[0];
+    }
+
+    // Toolbar commands
+    const textarea = document.getElementById('md-textarea');
+    function wrap(before, after = before) {
+      const s = textarea.selectionStart, e = textarea.selectionEnd;
+      const sel = textarea.value.slice(s, e) || 'text';
+      textarea.value = textarea.value.slice(0, s) + before + sel + after + textarea.value.slice(e);
+      textarea.focus();
+      textarea.setSelectionRange(s + before.length, s + before.length + sel.length);
+    }
+    function prefix(p) {
+      const s = textarea.selectionStart;
+      const lineStart = textarea.value.lastIndexOf('\n', s - 1) + 1;
+      textarea.value = textarea.value.slice(0, lineStart) + p + textarea.value.slice(lineStart);
+      textarea.focus();
+    }
+    const CMDS = {
+      bold:       () => wrap('**'),
+      italic:     () => wrap('_'),
+      h1:         () => prefix('# '),
+      h2:         () => prefix('## '),
+      h3:         () => prefix('### '),
+      ul:         () => prefix('- '),
+      ol:         () => prefix('1. '),
+      blockquote: () => prefix('> '),
+      code:       () => wrap('`', '`'),
+      codeblock:  () => wrap('```\n', '\n```'),
+      link:       () => wrap('[', '](https://)'),
+      hr:         () => { textarea.value += '\n\n---\n\n'; textarea.focus(); },
+    };
+    document.querySelectorAll('[data-cmd]').forEach(btn => {
+      btn.addEventListener('click', () => { CMDS[btn.dataset.cmd]?.(); });
+    });
+
+    // Preview toggle
+    let previewing = false;
+    document.getElementById('preview-toggle').addEventListener('click', async () => {
+      previewing = !previewing;
+      document.getElementById('preview-toggle').classList.toggle('active', previewing);
+      textarea.style.display = previewing ? 'none' : 'block';
+      const preview = document.getElementById('preview-area');
+      preview.style.display = previewing ? 'block' : 'none';
+      if (previewing) {
+        // Simple Markdown → HTML (no external lib)
+        let md = textarea.value;
+        md = md.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+        md = md.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+        md = md.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+        md = md.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+        md = md.replace(/^---$/gm, '<hr>');
+        md = md.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        md = md.replace(/_(.+?)_/g, '<em>$1</em>');
+        md = md.replace(/`([^`]+)`/g, '<code>$1</code>');
+        md = md.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>');
+        md = md.replace(/^- (.+)$/gm, '<li>$1</li>').replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`);
+        md = md.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+        md = md.replace(/\n\n/g, '</p><p>');
+        preview.innerHTML = '<p>' + md + '</p>';
+      }
+    });
+
+    // Save
+    const saveBtn    = document.getElementById('save-btn');
+    const saveStatus = document.getElementById('save-status');
+
+    async function save() {
+      saveBtn.disabled = true;
+      saveStatus.className = 'save-status saving';
+      saveStatus.textContent = 'Saving…';
+
+      const newSlug = document.getElementById('field-slug').value.trim();
+      const res = await fetch(`/api/collections/${colId}/entries/${slug}`, {
+        method:      'PUT',
+        credentials: 'include',
+        headers:     { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug:   newSlug,
+          status: document.getElementById('status-select').value,
+          data: {
+            title: document.getElementById('field-title').value,
+            body:  textarea.value,
+          },
+        }),
+      });
+
+      if (res.ok) {
+        saveStatus.className = 'save-status saved';
+        saveStatus.textContent = '✓ Saved';
+        if (newSlug !== slug) {
+          history.replaceState(null, '', `/editor.html?col=${colId}&slug=${newSlug}&label=${encodeURIComponent(colLabel)}`);
+        }
+        setTimeout(() => { saveStatus.textContent = ''; saveStatus.className = 'save-status'; }, 3000);
+      } else {
+        saveStatus.className = 'save-status';
+        saveStatus.textContent = '✗ Save failed';
+      }
+      saveBtn.disabled = false;
+    }
+
+    document.getElementById('save-btn').addEventListener('click', save);
+
+    // Cmd/Ctrl + S
+    document.addEventListener('keydown', e => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); save(); }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbiter Admin — Entries</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="logo"><div class="logo-mark">OR</div>Orbiter</div>
+      <div class="topbar-right">
+        <span class="user" id="topbar-user"></span>
+        <span class="logout" id="logout-btn">Sign out</span>
+      </div>
+    </header>
+    <nav class="sidebar">
+      <div class="nav-section">Content</div>
+      <a class="nav-item" href="/dashboard.html"><span class="nav-icon">◈</span>Dashboard</a>
+      <a class="nav-item active" href="/collections.html"><span class="nav-icon">⊞</span>Collections</a>
+      <div class="nav-section">Assets</div>
+      <a class="nav-item" href="/media.html"><span class="nav-icon">⊟</span>Media</a>
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
+      <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
+      <div class="sidebar-footer">
+        <div class="pod-name">content.pod</div>
+        <div><span class="pod-dot"></span>connected</div>
+      </div>
+    </nav>
+    <main class="main">
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">
+            <a href="/collections.html" style="color:var(--muted)">Collections</a>
+            <span style="margin:0 6px;color:var(--line)">/</span>
+            <span id="col-label" style="color:var(--mid)"></span>
+          </div>
+          <h1 class="page-title" id="page-title">Entries</h1>
+          <p class="page-sub" id="page-sub"></p>
+        </div>
+        <button class="btn btn-primary" id="new-btn" style="flex-shrink:0;margin-top:4px">+ New entry</button>
+      </div>
+
+      <!-- Filter bar -->
+      <div style="display:flex;gap:8px;margin-bottom:20px">
+        <button class="btn btn-ghost btn-sm filter-btn active" data-status="">All</button>
+        <button class="btn btn-ghost btn-sm filter-btn" data-status="published">Published</button>
+        <button class="btn btn-ghost btn-sm filter-btn" data-status="draft">Drafts</button>
+      </div>
+
+      <div class="table-wrap" id="entries-wrap">
+        <div class="empty"><div class="spinner"></div></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- New entry modal -->
+  <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;display:none;align-items:center;justify-content:center">
+    <div style="background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:28px 32px;width:400px;max-width:90vw">
+      <h3 style="font-size:14px;color:var(--heading);margin-bottom:20px;font-weight:500">New Entry</h3>
+      <div class="field">
+        <label class="label" for="new-slug">Slug</label>
+        <input class="input" id="new-slug" placeholder="my-entry-title" />
+      </div>
+      <div class="field">
+        <label class="label" for="new-title">Title</label>
+        <input class="input" id="new-title" placeholder="Entry title" />
+      </div>
+      <div id="modal-error" style="color:var(--red);font-size:12px;margin-bottom:12px;display:none"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-ghost" id="modal-cancel">Cancel</button>
+        <button class="btn btn-primary" id="modal-create">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    const params   = new URLSearchParams(location.search);
+    const colId    = params.get('col') ?? '';
+    const colLabel = decodeURIComponent(params.get('label') ?? colId);
+
+    const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).catch(() => null);
+    if (!me?.user) { location.replace('/login.html'); }
+    document.getElementById('topbar-user').textContent = me.user.username;
+    if (me.user.role === 'admin') {
+      document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+    }
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      location.replace('/login.html');
+    });
+
+    document.getElementById('col-label').textContent  = colLabel;
+    document.getElementById('page-title').textContent = colLabel;
+
+    let allEntries = [];
+    let activeFilter = '';
+
+    async function loadEntries() {
+      const url = `/api/collections/${colId}/entries` + (activeFilter ? `?status=${activeFilter}` : '');
+      allEntries = await fetch(url, { credentials: 'include' }).then(r => r.json());
+      renderEntries(allEntries);
+    }
+
+    function renderEntries(entries) {
+      document.getElementById('page-sub').textContent = `${entries.length} entr${entries.length !== 1 ? 'ies' : 'y'}`;
+      const wrap = document.getElementById('entries-wrap');
+      if (entries.length === 0) {
+        wrap.innerHTML = '<div class="empty"><div class="empty-icon">◈</div>No entries yet</div>';
+        return;
+      }
+      wrap.innerHTML = `
+        <table>
+          <thead><tr><th>Title / Slug</th><th>Status</th><th>Updated</th><th></th></tr></thead>
+          <tbody>
+            ${entries.map(e => {
+              const title   = e.data?.title || e.slug;
+              const updated = e.updated_at ? e.updated_at.split(' ')[0] : '—';
+              return `<tr>
+                <td>
+                  <div style="color:var(--heading);font-weight:500">${title}</div>
+                  <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px">${e.slug}</div>
+                </td>
+                <td><span class="badge badge-${e.status}">${e.status}</span></td>
+                <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${updated}</td>
+                <td style="text-align:right;display:flex;gap:6px;justify-content:flex-end">
+                  <a class="btn btn-ghost btn-sm" href="/editor.html?col=${colId}&slug=${e.slug}&label=${encodeURIComponent(colLabel)}">Edit</a>
+                  <button class="btn btn-danger btn-sm delete-btn" data-slug="${e.slug}">Delete</button>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>`;
+
+      wrap.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm(`Delete "${btn.dataset.slug}"?`)) return;
+          await fetch(`/api/collections/${colId}/entries/${btn.dataset.slug}`, {
+            method: 'DELETE', credentials: 'include',
+          });
+          loadEntries();
+        });
+      });
+    }
+
+    // Filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = btn.dataset.status;
+        loadEntries();
+      });
+    });
+
+    // New entry modal
+    const overlay = document.getElementById('modal-overlay');
+    document.getElementById('new-btn').addEventListener('click', () => {
+      overlay.style.display = 'flex';
+      document.getElementById('new-slug').focus();
+    });
+    document.getElementById('modal-cancel').addEventListener('click', () => {
+      overlay.style.display = 'none';
+    });
+
+    // Auto-generate slug from title
+    document.getElementById('new-title').addEventListener('input', e => {
+      const slug = document.getElementById('new-slug');
+      if (!slug._touched) {
+        slug.value = e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 60);
+      }
+    });
+    document.getElementById('new-slug').addEventListener('input', e => {
+      e.target._touched = e.target.value.length > 0;
+    });
+
+    document.getElementById('modal-create').addEventListener('click', async () => {
+      const slug  = document.getElementById('new-slug').value.trim();
+      const title = document.getElementById('new-title').value.trim();
+      const errEl = document.getElementById('modal-error');
+      if (!slug) { errEl.textContent = 'Slug is required'; errEl.style.display = 'block'; return; }
+      errEl.style.display = 'none';
+
+      const res  = await fetch(`/api/collections/${colId}/entries`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, data: { title }, status: 'draft' }),
+      });
+      if (res.ok) {
+        overlay.style.display = 'none';
+        location.href = `/editor.html?col=${colId}&slug=${slug}&label=${encodeURIComponent(colLabel)}`;
+      } else {
+        const d = await res.json();
+        errEl.textContent = d.error ?? 'Could not create entry';
+        errEl.style.display = 'block';
+      }
+    });
+
+    loadEntries();
+  </script>
+</body>
+</html>
