@@ -1,6 +1,13 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { serveStatic } from '@hono/node-server/serve-static';
 import { serve } from '@hono/node-server';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+// Ensure CWD is the package root so serveStatic finds ./public
+const __dirname = dirname(fileURLToPath(import.meta.url));
+process.chdir(join(__dirname, '..'));
 import { authRoutes }       from './routes/auth.js';
 import { collectionRoutes } from './routes/collections.js';
 import { entryRoutes }      from './routes/entries.js';
@@ -50,6 +57,12 @@ export function createApp(podPath) {
   app.route('/api', api);
 
   app.get('/health', (c) => c.json({ ok: true, pod: podPath }));
+
+  // Redirect root to login
+  app.get('/', (c) => c.redirect('/login.html'));
+
+  // Serve static frontend files from public/
+  app.use('/*', serveStatic({ root: './public' }));
 
   return app;
 }

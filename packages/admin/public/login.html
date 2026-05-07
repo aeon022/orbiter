@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbiter — Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-box">
+      <div class="login-logo">
+        <div class="login-logo-mark">ORBITER</div>
+        <div class="login-logo-sub">Admin</div>
+      </div>
+      <div class="login-card">
+        <h2>Sign in</h2>
+        <div class="login-error" id="error"></div>
+        <form id="login-form">
+          <div class="field">
+            <label class="label" for="username">Username</label>
+            <input class="input" id="username" name="username" type="text" autocomplete="username" autofocus required />
+          </div>
+          <div class="field">
+            <label class="label" for="password">Password</label>
+            <input class="input" id="password" name="password" type="password" autocomplete="current-password" required />
+          </div>
+          <button class="btn btn-primary" style="width:100%;margin-top:8px;justify-content:center" type="submit" id="submit-btn">
+            Sign in
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Redirect if already logged in
+    const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).catch(() => null);
+    if (me?.user) location.replace('/dashboard.html');
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn   = document.getElementById('submit-btn');
+      const error = document.getElementById('error');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Signing in…';
+      error.classList.remove('visible');
+
+      const res  = await fetch('/api/auth/login', {
+        method:      'POST',
+        credentials: 'include',
+        headers:     { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: e.target.username.value,
+          password: e.target.password.value,
+        }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        location.replace('/dashboard.html');
+      } else {
+        error.textContent = data.error ?? 'Login failed';
+        error.classList.add('visible');
+        btn.disabled = false;
+        btn.textContent = 'Sign in';
+      }
+    });
+  </script>
+</body>
+</html>

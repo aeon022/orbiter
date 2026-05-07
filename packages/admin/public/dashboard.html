@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbiter Admin — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="app">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="logo">
+        <div class="logo-mark">OR</div>
+        Orbiter
+      </div>
+      <div class="topbar-right">
+        <span class="user" id="topbar-user"></span>
+        <span class="logout" id="logout-btn">Sign out</span>
+      </div>
+    </header>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="nav-section">Content</div>
+      <a class="nav-item active" href="/dashboard.html">
+        <span class="nav-icon">◈</span> Dashboard
+      </a>
+      <a class="nav-item" href="/collections.html">
+        <span class="nav-icon">⊞</span> Collections
+      </a>
+      <div class="nav-section">Assets</div>
+      <a class="nav-item" href="/media.html">
+        <span class="nav-icon">⊟</span> Media
+      </a>
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="/settings.html">
+        <span class="nav-icon">◎</span> Settings
+      </a>
+      <a class="nav-item admin-only" href="/users.html" style="display:none">
+        <span class="nav-icon">◉</span> Users
+      </a>
+      <div class="sidebar-footer">
+        <div class="pod-name" id="pod-name">content.pod</div>
+        <div><span class="pod-dot"></span>connected</div>
+      </div>
+    </nav>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="page-header">
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-sub" id="site-url"></p>
+      </div>
+
+      <!-- Stats -->
+      <div class="stat-grid" id="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">Collections</div>
+          <div class="stat-value" id="stat-collections">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Entries</div>
+          <div class="stat-value" id="stat-entries">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Published</div>
+          <div class="stat-value" id="stat-published">—</div>
+          <div class="stat-sub">entries live</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Drafts</div>
+          <div class="stat-value" id="stat-drafts">—</div>
+        </div>
+      </div>
+
+      <!-- Collections table -->
+      <div class="table-wrap">
+        <div class="table-header">
+          <span class="table-title">Collections</span>
+          <a class="btn btn-ghost btn-sm" href="/collections.html">View all</a>
+        </div>
+        <div id="collections-body">
+          <div class="empty"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <script type="module">
+    // Auth guard
+    const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).catch(() => null);
+    if (!me?.user) { location.replace('/login.html'); }
+    document.getElementById('topbar-user').textContent = me.user.username;
+    if (me.user.role === 'admin') {
+      document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+    }
+
+    // Logout
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      location.replace('/login.html');
+    });
+
+    // Load data
+    const [collections, meta] = await Promise.all([
+      fetch('/api/collections', { credentials: 'include' }).then(r => r.json()),
+      fetch('/api/meta',        { credentials: 'include' }).then(r => r.json()),
+    ]);
+
+    // Site URL in subtitle
+    if (meta['site.url']) {
+      document.getElementById('site-url').textContent = meta['site.url'];
+    }
+
+    // Stats
+    const totalEntries   = collections.reduce((n, c) => n + c.total, 0);
+    let   totalPublished = 0;
+    for (const col of collections) {
+      const entries = await fetch(`/api/collections/${col.id}/entries`, { credentials: 'include' }).then(r => r.json());
+      totalPublished += entries.filter(e => e.status === 'published').length;
+    }
+    document.getElementById('stat-collections').textContent = collections.length;
+    document.getElementById('stat-entries').textContent     = totalEntries;
+    document.getElementById('stat-published').textContent   = totalPublished;
+    document.getElementById('stat-drafts').textContent      = totalEntries - totalPublished;
+
+    // Collections table
+    const body = document.getElementById('collections-body');
+    if (collections.length === 0) {
+      body.innerHTML = '<div class="empty"><div class="empty-icon">⊞</div>No collections yet</div>';
+    } else {
+      body.innerHTML = `
+        <table>
+          <thead>
+            <tr><th>Collection</th><th>ID</th><th>Entries</th><th></th></tr>
+          </thead>
+          <tbody>
+            ${collections.map(c => `
+              <tr>
+                <td style="color:var(--heading);font-weight:500">${c.label}</td>
+                <td style="font-family:var(--mono);color:var(--muted)">${c.id}</td>
+                <td style="font-family:var(--mono)">${c.total}</td>
+                <td style="text-align:right">
+                  <a class="btn btn-ghost btn-sm" href="/entries.html?col=${c.id}">Open →</a>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    }
+  </script>
+</body>
+</html>
