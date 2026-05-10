@@ -10,17 +10,16 @@
   <script src="/theme.js"></script>
 </head>
 <body>
-  <div class="app">
+  <div class="layout">
     <header class="topbar">
-      <div class="logo"><div class="logo-mark">OR</div>Orbiter</div>
+      <a href="/dashboard.html" class="logo"><div class="logo-mark">OR</div>Orbiter
+      </a>
+      <div class="breadcrumb" id="topbar-breadcrumb"></div>
       <div class="topbar-right">
-        <button class="search-trigger" id="search-btn" title="Search (⌘K)">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          Search <kbd>⌘K</kbd>
-        </button>
-        <button class="scheme-toggle" id="scheme-toggle" title="Toggle scheme">◐</button>
-        <span class="user" id="topbar-user"></span>
-        <span class="logout" id="logout-btn">Sign out</span>
+        <button class="pal-trigger" onclick="__orbOpenPalette()">Command Palette <kbd>⌘K</kbd></button>
+        <span class="topbar-user" id="topbar-user"></span>
+        <button onclick="__orbSignOut()" class="topbar-signout">Sign out</button>
+        <button id="orb-dark-btn" onclick="__orbToggleDark()" class="dark-toggle">● dark</button>
       </div>
     </header>
     <nav class="sidebar">
@@ -32,9 +31,10 @@
       <div class="nav-section">System</div>
       <a class="nav-item" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
       <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
-      <div class="sidebar-footer">
-        <div class="pod-name">content.pod</div>
-        <div><span class="pod-dot"></span>connected</div>
+      <div class="sidebar-pod">
+        <div class="sidebar-pod-name" id="pod-name">content.pod</div>
+        <div id="pod-info" style="font-size:10px;color:var(--muted);margin-bottom:4px"></div>
+        <div class="pod-status"><div class="pod-dot"></div>pod synced</div>
       </div>
     </nav>
     <main class="main">
@@ -91,7 +91,7 @@
         </table>`;
     }
   </script>
-  <script src="/search.js"></script>
+  <script src="/admin-utils.js"></script>
   <script src="/sidebar.js"></script>
 </body>
 </html>

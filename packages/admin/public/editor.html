@@ -162,9 +162,9 @@
   </style>
 </head>
 <body>
-  <div class="app">
+  <div class="layout">
     <header class="topbar">
-      <div class="logo"><div class="logo-mark">OR</div>Orbiter</div>
+      <a href="/dashboard.html" class="logo"><div class="logo-mark">OR</div>Orbiter</div>
       <div id="editor-breadcrumb" style="font-size:11px;color:var(--muted);margin-left:16px;padding-left:16px;border-left:1px solid var(--line);display:flex;align-items:center;gap:6px;">
         <a href="/collections.html" style="color:var(--muted);text-decoration:none;">Collections</a>
         <span style="color:var(--line);">/</span>
@@ -173,11 +173,10 @@
         <span id="breadcrumb-slug" style="color:var(--text);"></span>
       </div>
       <div class="topbar-right">
-        <span id="autosave-indicator"></span>
-        <span id="wc" style="font-size:10px;color:var(--muted);padding:0 8px;"></span>
-        <button class="scheme-toggle" id="scheme-toggle" title="Toggle scheme">◐</button>
-        <span class="user" id="topbar-user"></span>
-        <span class="logout" id="logout-btn">Sign out</span>
+        <button class="pal-trigger" onclick="__orbOpenPalette()">Command Palette <kbd>⌘K</kbd></button>
+        <span class="topbar-user" id="topbar-user"></span>
+        <button onclick="__orbSignOut()" class="topbar-signout">Sign out</button>
+        <button id="orb-dark-btn" onclick="__orbToggleDark()" class="dark-toggle">● dark</button>
       </div>
     </header>
     <div class="editor-shell" id="editor-shell">
@@ -929,6 +928,7 @@
     updateWc();
     updatePreview();
   </script>
+  <script src="/admin-utils.js"></script>
   <script src="/sidebar.js"></script>
 </body>
 </html>
