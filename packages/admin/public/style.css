@@ -640,6 +640,10 @@ tr:hover td { background: var(--row-hover); }
 .btn-danger { background: none; color: var(--red); border-color: var(--red-bg); }
 .btn-danger:hover { background: var(--red-bg); border-color: var(--red); }
 .btn-sm { padding: 3px 10px; font-size: 11px; }
+/* Primary action button — used in settings and other forms */
+.btn-save { padding: 8px 24px; background: var(--gold); border: 1px solid var(--gold); color: var(--bg0); font-family: var(--mono); font-size: 10px; letter-spacing: 0.13em; text-transform: uppercase; cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s; border-radius: var(--radius); }
+.btn-save:hover { background: transparent; color: var(--gold); border-color: var(--gold); }
+.btn-save:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ── Form fields ─────────────────────────────────── */
 .field { margin-bottom: 16px; }

@@ -9,35 +9,117 @@
   <link rel="stylesheet" href="/style.css" />
   <script src="/theme.js"></script>
   <style>
-    .settings-wrap { max-width:680px; }
-    .settings-group { background:var(--bg2); border:1px solid var(--line); margin-bottom:14px; border-radius:var(--radius); overflow:hidden; }
-    .group-header { padding:10px 40px; border-bottom:1px solid var(--line); font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:8px; }
-    .group-header::before { content:"—"; color:var(--gold); }
-    .setting-row { display:grid; grid-template-columns:1fr 260px; align-items:center; gap:20px; padding:14px 40px; border-bottom:1px solid var(--line2); }
+    /* ── Layout ── */
+    .settings-wrap { max-width:700px; }
+
+    /* ── Groups — elevated card, more air ── */
+    .settings-group {
+      border:1px solid var(--line);
+      border-radius:6px;
+      margin-bottom:20px;
+      overflow:hidden;
+      background:var(--bg1);
+    }
+
+    /* ── Group header — gold left-strip, no pseudo dash ── */
+    .group-header {
+      padding:11px 28px;
+      border-bottom:1px solid var(--line);
+      border-left:3px solid var(--gold);
+      font-size:9px;
+      letter-spacing:0.3em;
+      text-transform:uppercase;
+      color:var(--mid);
+      display:flex;
+      align-items:center;
+      gap:8px;
+      background:var(--bg2);
+    }
+    .group-header::before { content:none; }
+
+    /* ── Setting rows ── */
+    .setting-row {
+      display:grid;
+      grid-template-columns:1fr 260px;
+      align-items:center;
+      gap:20px;
+      padding:16px 28px;
+      border-bottom:1px solid var(--line2);
+      background:var(--bg1);
+    }
     .setting-row:last-child { border-bottom:none; }
-    .setting-label { font-size:12px; color:var(--text); margin-bottom:2px; }
-    .setting-desc { font-size:10px; color:var(--muted); }
-    .save-row { display:flex; justify-content:flex-end; padding:12px 40px; border-top:1px solid var(--line); }
-    .btn-save { padding:9px 24px; background:var(--gold); border:1px solid var(--gold); color:var(--bg0); font-family:var(--mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase; cursor:pointer; transition:all 0.15s; border-radius:var(--radius); }
-    .btn-save:hover { background:var(--btn-hover); border-color:var(--btn-hover); }
-    .banner { padding:8px 20px; font-size:10px; display:flex; align-items:center; gap:6px; border-radius:var(--radius); margin-bottom:14px; }
-    .banner-ok  { background:var(--jade-bg); color:var(--jade); border:1px solid rgba(45,139,106,.2); }
+    .setting-label { font-size:12px; color:var(--heading); margin-bottom:2px; font-weight:500; }
+    .setting-desc { font-size:10px; color:var(--muted); line-height:1.5; }
+
+    /* ── Inputs — minimal bottom-border in settings ── */
+    .settings-wrap .input {
+      background:transparent;
+      border:none;
+      border-bottom:1px solid var(--line);
+      border-radius:0;
+      padding:5px 0;
+      color:var(--heading);
+      font-family:var(--mono);
+      font-size:12px;
+      outline:none;
+      transition:border-color 0.15s;
+      box-shadow:none;
+    }
+    .settings-wrap .input:focus { border-bottom-color:var(--gold); box-shadow:none; }
+    .settings-wrap .input[readonly] { color:var(--muted); cursor:default; }
+
+    /* ── Save row — gold accent top ── */
+    .save-row {
+      display:flex;
+      justify-content:flex-end;
+      padding:14px 28px;
+      border-top:1px solid var(--line);
+      background:var(--bg2);
+    }
+
+    /* ── Banners ── */
+    .banner { padding:9px 20px; font-size:10px; display:flex; align-items:center; gap:7px; border-radius:6px; margin-bottom:16px; }
+    .banner-ok  { background:var(--jade-bg); color:var(--jade); border:1px solid rgba(45,139,106,.18); }
     .banner-ok::before { content:"✓"; }
-    .banner-err { background:rgba(139,38,53,.07); color:var(--red); border:1px solid rgba(139,38,53,.15); }
+    .banner-err { background:var(--red-bg); color:var(--red); border:1px solid rgba(240,112,128,.18); }
     .banner-err::before { content:"✕"; }
+
+    /* ── Theme cards ── */
     .theme-cards { display:flex; gap:10px; flex-wrap:wrap; margin-top:4px; }
-    .theme-card { flex:1; min-width:120px; border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px; cursor:pointer; background:var(--bg1); transition:border-color .15s,background .15s; text-align:left; font-family:var(--mono); }
-    .theme-card:hover { border-color:var(--mid); }
-    .theme-card.active { border-color:var(--accent); background:var(--accent-bg); }
-    .theme-swatch { display:flex; gap:3px; margin-bottom:8px; height:6px; }
+    .theme-card {
+      flex:1; min-width:120px;
+      border:1px solid var(--line);
+      border-radius:6px;
+      padding:12px 14px;
+      cursor:pointer;
+      background:var(--bg0);
+      transition:border-color .15s, background .15s;
+      text-align:left;
+      font-family:var(--mono);
+    }
+    .theme-card:hover { border-color:var(--mid); background:var(--bg1); }
+    .theme-card.active { border-color:var(--gold); background:var(--gold-bg); }
+    .theme-swatch { display:flex; gap:3px; margin-bottom:8px; height:5px; }
     .theme-swatch span { flex:1; border-radius:1px; }
-    .theme-card-name { font-size:11px; color:var(--text); margin-bottom:1px; }
+    .theme-card-name { font-size:11px; color:var(--heading); margin-bottom:2px; font-weight:500; }
     .theme-card-sub  { font-size:9px; color:var(--muted); letter-spacing:0.04em; }
-    .support-widget { border:1px solid var(--line); padding:20px 24px; margin-top:32px; display:flex; align-items:center; justify-content:space-between; gap:24px; }
-    .support-copy-label { font-size:8px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; display:flex; align-items:center; gap:6px; }
+
+    /* ── Support widget ── */
+    .support-widget {
+      border:1px solid var(--line);
+      border-radius:6px;
+      padding:22px 28px;
+      margin-top:32px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:24px;
+      background:var(--bg1);
+    }
+    .support-copy-label { font-size:8px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; display:flex; align-items:center; gap:6px; }
     .support-copy-label::before { content:"◆"; color:var(--gold); font-size:6px; }
     .support-copy-text { font-size:11px; color:var(--text); line-height:1.6; }
-    .btn-support { padding:8px 20px; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:9px; letter-spacing:0.12em; text-transform:uppercase; text-decoration:none; white-space:nowrap; transition:all 0.15s; }
+    .btn-support { padding:8px 20px; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:9px; letter-spacing:0.12em; text-transform:uppercase; text-decoration:none; white-space:nowrap; transition:all 0.15s; border-radius:var(--radius); }
     .btn-support:hover { background:var(--gold); color:var(--bg0); }
   </style>
 </head>
@@ -265,7 +347,7 @@
       <!-- Appearance -->
       <div class="settings-group">
         <div class="group-header">Appearance</div>
-        <div style="padding:16px 40px;border-bottom:1px solid var(--line2)">
+        <div style="padding:16px 28px;border-bottom:1px solid var(--line2)">
           <div class="setting-label" style="margin-bottom:10px">Color scheme</div>
           <div style="display:flex;gap:8px">
             <button class="btn btn-ghost btn-sm scheme-btn ${currentScheme==='auto'?'active':''}" data-s="auto">Auto (system)</button>
@@ -273,7 +355,7 @@
             <button class="btn btn-ghost btn-sm scheme-btn ${currentScheme==='light'?'active':''}" data-s="light">○ Light</button>
           </div>
         </div>
-        <div style="padding:16px 40px">
+        <div style="padding:16px 28px">
           <div class="setting-label" style="margin-bottom:10px">Palette</div>
           <div class="theme-cards">
             <button class="theme-card ${currentTheme==='space'?'active':''}" data-theme="space">
@@ -327,13 +409,13 @@
         <div class="group-header">Pod</div>
         <div class="setting-row">
           <div><div class="setting-label">Pod path</div><div class="setting-desc">Location of the SQLite content database</div></div>
-          <input class="input" id="pod-path-field" value="…" readonly style="font-family:var(--mono);font-size:10px;color:var(--muted);" />
+          <input class="input" id="pod-path-field" value="…" readonly />
         </div>
         <div class="setting-row">
           <div><div class="setting-label">Format version</div></div>
-          <input class="input" id="pod-version-field" value="…" readonly style="font-family:var(--mono);font-size:10px;color:var(--muted);width:80px;" />
+          <input class="input" id="pod-version-field" value="…" readonly style="width:80px;" />
         </div>
-        <div id="pod-collections-list" style="padding:0 40px 14px;font-size:11px;color:var(--muted);">Loading…</div>
+        <div id="pod-collections-list" style="padding:0 28px 16px;font-size:11px;color:var(--muted);line-height:2;">Loading…</div>
       </div>
 
       <!-- Support widget -->
