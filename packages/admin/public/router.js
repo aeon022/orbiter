@@ -96,6 +96,17 @@
       // Re-execute module scripts inside new .main
       execModuleScripts(main);
 
+      // Page module scripts live in <body> outside <main> — inject and execute them.
+      // Remove any previously injected page scripts first to avoid accumulation.
+      document.querySelectorAll('script[data-page-script]').forEach(function (s) { s.remove(); });
+      doc.querySelectorAll('body script[type="module"]').forEach(function (old) {
+        var s = document.createElement('script');
+        s.type = 'module';
+        s.setAttribute('data-page-script', '1');
+        s.textContent = old.textContent;
+        document.body.appendChild(s);
+      });
+
       // Fade back in on next frame
       requestAnimationFrame(function () {
         main.classList.remove('fading');
