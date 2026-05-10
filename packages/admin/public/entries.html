@@ -7,12 +7,47 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css" />
+  <style>
+    .bulk-bar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: var(--accent-bg);
+      border: 1px solid rgba(139,124,248,.2);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: var(--text);
+    }
+    .bulk-bar.visible { display: flex; }
+    .bulk-bar-count { color: var(--accent); font-family: var(--mono); margin-right: 4px; }
+    .bulk-bar-spacer { flex: 1; }
+    .status-toggle {
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 3px;
+      border: 1px solid var(--line);
+      background: none;
+      cursor: pointer;
+      color: var(--mid);
+      transition: background 0.1s, color 0.1s;
+    }
+    .status-toggle:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+    .cb-col { width: 32px; padding-left: 16px !important; }
+    input[type=checkbox] { accent-color: var(--accent); width: 13px; height: 13px; cursor: pointer; }
+  </style>
 </head>
 <body>
   <div class="app">
     <header class="topbar">
       <div class="logo"><div class="logo-mark">OR</div>Orbiter</div>
       <div class="topbar-right">
+        <button class="search-trigger" id="search-btn" title="Search (⌘K)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Search <kbd>⌘K</kbd>
+        </button>
         <span class="user" id="topbar-user"></span>
         <span class="logout" id="logout-btn">Sign out</span>
       </div>
@@ -48,10 +83,19 @@
       </div>
 
       <!-- Filter bar -->
-      <div style="display:flex;gap:8px;margin-bottom:20px">
+      <div style="display:flex;gap:8px;margin-bottom:16px">
         <button class="btn btn-ghost btn-sm filter-btn active" data-status="">All</button>
         <button class="btn btn-ghost btn-sm filter-btn" data-status="published">Published</button>
         <button class="btn btn-ghost btn-sm filter-btn" data-status="draft">Drafts</button>
+      </div>
+
+      <!-- Bulk action bar -->
+      <div class="bulk-bar" id="bulk-bar">
+        <span><span class="bulk-bar-count" id="bulk-count">0</span> selected</span>
+        <button class="btn btn-ghost btn-sm" id="bulk-publish">Publish</button>
+        <button class="btn btn-ghost btn-sm" id="bulk-draft">Unpublish</button>
+        <span class="bulk-bar-spacer"></span>
+        <button class="btn btn-danger btn-sm" id="bulk-delete">Delete selected</button>
       </div>
 
       <div class="table-wrap" id="entries-wrap">
@@ -61,7 +105,7 @@
   </div>
 
   <!-- New entry modal -->
-  <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;display:none;align-items:center;justify-content:center">
+  <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center">
     <div style="background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:28px 32px;width:400px;max-width:90vw">
       <h3 style="font-size:14px;color:var(--heading);margin-bottom:20px;font-weight:500">New Entry</h3>
       <div class="field">
@@ -80,6 +124,7 @@
     </div>
   </div>
 
+  <script src="/search.js"></script>
   <script type="module">
     const params   = new URLSearchParams(location.search);
     const colId    = params.get('col') ?? '';
@@ -99,10 +144,23 @@
     document.getElementById('col-label').textContent  = colLabel;
     document.getElementById('page-title').textContent = colLabel;
 
-    let allEntries = [];
+    let allEntries  = [];
     let activeFilter = '';
+    let selected    = new Set();
+
+    function updateBulkBar() {
+      const bar = document.getElementById('bulk-bar');
+      if (selected.size > 0) {
+        bar.classList.add('visible');
+        document.getElementById('bulk-count').textContent = selected.size;
+      } else {
+        bar.classList.remove('visible');
+      }
+    }
 
     async function loadEntries() {
+      selected.clear();
+      updateBulkBar();
       const url = `/api/collections/${colId}/entries` + (activeFilter ? `?status=${activeFilter}` : '');
       allEntries = await fetch(url, { credentials: 'include' }).then(r => r.json());
       renderEntries(allEntries);
@@ -118,20 +176,30 @@
       }
       wrap.innerHTML = `
         <table>
-          <thead><tr><th>Title / Slug</th><th>Status</th><th>Updated</th><th></th></tr></thead>
+          <thead>
+            <tr>
+              <th class="cb-col"><input type="checkbox" id="check-all" title="Select all" /></th>
+              <th>Title / Slug</th><th>Status</th><th>Updated</th><th></th>
+            </tr>
+          </thead>
           <tbody>
             ${entries.map(e => {
               const title   = e.data?.title || e.slug;
               const updated = e.updated_at ? e.updated_at.split(' ')[0] : '—';
-              return `<tr>
+              const nextStatus = e.status === 'published' ? 'draft' : 'published';
+              const toggleLabel = e.status === 'published' ? 'Unpublish' : 'Publish';
+              return `<tr data-slug="${e.slug}">
+                <td class="cb-col"><input type="checkbox" class="row-cb" data-slug="${e.slug}" ${selected.has(e.slug) ? 'checked' : ''} /></td>
                 <td>
                   <div style="color:var(--heading);font-weight:500">${title}</div>
                   <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px">${e.slug}</div>
                 </td>
                 <td><span class="badge badge-${e.status}">${e.status}</span></td>
                 <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${updated}</td>
-                <td style="text-align:right;display:flex;gap:6px;justify-content:flex-end">
+                <td style="text-align:right;display:flex;gap:6px;justify-content:flex-end;align-items:center">
                   <a class="btn btn-ghost btn-sm" href="/editor.html?collection=${colId}&slug=${e.slug}">Edit</a>
+                  <button class="btn btn-ghost btn-sm status-toggle" data-slug="${e.slug}" data-next="${nextStatus}">${toggleLabel}</button>
+                  <button class="btn btn-ghost btn-sm dup-btn" data-slug="${e.slug}" title="Duplicate">⧉</button>
                   <button class="btn btn-danger btn-sm delete-btn" data-slug="${e.slug}">Delete</button>
                 </td>
               </tr>`;
@@ -139,6 +207,51 @@
           </tbody>
         </table>`;
 
+      // Select all
+      document.getElementById('check-all').addEventListener('change', e => {
+        wrap.querySelectorAll('.row-cb').forEach(cb => {
+          cb.checked = e.target.checked;
+          if (e.target.checked) selected.add(cb.dataset.slug);
+          else selected.delete(cb.dataset.slug);
+        });
+        updateBulkBar();
+      });
+
+      // Row checkboxes
+      wrap.querySelectorAll('.row-cb').forEach(cb => {
+        cb.addEventListener('change', () => {
+          if (cb.checked) selected.add(cb.dataset.slug);
+          else selected.delete(cb.dataset.slug);
+          updateBulkBar();
+        });
+      });
+
+      // Status toggle
+      wrap.querySelectorAll('.status-toggle').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          btn.disabled = true;
+          await fetch(`/api/collections/${colId}/entries/${btn.dataset.slug}/status`, {
+            method: 'PATCH', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: btn.dataset.next }),
+          });
+          loadEntries();
+        });
+      });
+
+      // Duplicate
+      wrap.querySelectorAll('.dup-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          btn.disabled = true;
+          const res = await fetch(`/api/collections/${colId}/entries/${btn.dataset.slug}/duplicate`, {
+            method: 'POST', credentials: 'include',
+          });
+          if (res.ok) loadEntries();
+          else btn.disabled = false;
+        });
+      });
+
+      // Delete
       wrap.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
           if (!confirm(`Delete "${btn.dataset.slug}"?`)) return;
@@ -158,6 +271,39 @@
         activeFilter = btn.dataset.status;
         loadEntries();
       });
+    });
+
+    // Bulk actions
+    document.getElementById('bulk-publish').addEventListener('click', async () => {
+      await Promise.all([...selected].map(slug =>
+        fetch(`/api/collections/${colId}/entries/${slug}/status`, {
+          method: 'PATCH', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'published' }),
+        })
+      ));
+      loadEntries();
+    });
+
+    document.getElementById('bulk-draft').addEventListener('click', async () => {
+      await Promise.all([...selected].map(slug =>
+        fetch(`/api/collections/${colId}/entries/${slug}/status`, {
+          method: 'PATCH', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'draft' }),
+        })
+      ));
+      loadEntries();
+    });
+
+    document.getElementById('bulk-delete').addEventListener('click', async () => {
+      if (!confirm(`Delete ${selected.size} entr${selected.size !== 1 ? 'ies' : 'y'}?`)) return;
+      await Promise.all([...selected].map(slug =>
+        fetch(`/api/collections/${colId}/entries/${slug}`, {
+          method: 'DELETE', credentials: 'include',
+        })
+      ));
+      loadEntries();
     });
 
     // New entry modal
@@ -188,7 +334,7 @@
       if (!slug) { errEl.textContent = 'Slug is required'; errEl.style.display = 'block'; return; }
       errEl.style.display = 'none';
 
-      const res  = await fetch(`/api/collections/${colId}/entries`, {
+      const res = await fetch(`/api/collections/${colId}/entries`, {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ slug, data: { title }, status: 'draft' }),

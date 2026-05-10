@@ -51,6 +51,9 @@ a:hover { color: var(--heading); }
 .topbar-right .user { color: var(--mid); }
 .topbar-right .logout { color: var(--muted); cursor: pointer; transition: color 0.12s; }
 .topbar-right .logout:hover { color: var(--red); }
+.search-trigger { display: flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,0.04); border: 1px solid var(--line); border-radius: var(--radius); font-size: 11px; color: var(--muted); cursor: pointer; transition: border-color 0.15s, color 0.15s; font-family: var(--mono); letter-spacing: 0.01em; }
+.search-trigger:hover { border-color: var(--accent); color: var(--text); }
+.search-trigger kbd { font-family: var(--mono); font-size: 9px; opacity: 0.6; }
 
 /* ── Sidebar ─────────────────────────────────────── */
 .nav-section { font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); padding: 0 16px; margin: 20px 0 4px; }

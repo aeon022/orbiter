@@ -29,6 +29,10 @@
     <header class="topbar">
       <div class="logo"><div class="logo-mark">OR</div>Orbiter</div>
       <div class="topbar-right">
+        <button class="search-trigger" id="search-btn" title="Search (⌘K)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Search <kbd>⌘K</kbd>
+        </button>
         <span class="user" id="topbar-user"></span>
         <span class="logout" id="logout-btn">Sign out</span>
       </div>
@@ -252,5 +256,6 @@
       else showBanner('account-banner','banner-err', json.error ?? 'Failed');
     });
   </script>
+  <script src="/search.js"></script>
 </body>
 </html>

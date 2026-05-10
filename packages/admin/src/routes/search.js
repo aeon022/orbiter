@@ -3,6 +3,32 @@ import { openPod } from '@a83/orbiter-core';
 
 export const searchRoutes = new Hono();
 
+// GET /api/search/recent — last N entries across all collections
+searchRoutes.get('/recent', (c) => {
+  const limit = Math.min(parseInt(c.req.query('limit') ?? '10', 10), 50);
+  const db    = openPod(c.get('podPath'));
+  const cols  = db.getCollections();
+  const colMap = Object.fromEntries(cols.map(c => [c.id, c.label]));
+
+  const rows = db.db
+    .prepare(`SELECT e.*, e.collection_id as collection FROM _entries e ORDER BY e.updated_at DESC LIMIT ?`)
+    .all(limit);
+
+  const results = rows.map(r => {
+    const data = JSON.parse(r.data);
+    return {
+      collection: r.collection_id,
+      label:      colMap[r.collection_id] ?? r.collection_id,
+      slug:       r.slug,
+      title:      data.title ?? r.slug,
+      status:     r.status,
+      updated_at: r.updated_at,
+    };
+  });
+  db.close();
+  return c.json(results);
+});
+
 // GET /api/search?q=
 searchRoutes.get('/', (c) => {
   const q = (c.req.query('q') ?? '').trim().toLowerCase();

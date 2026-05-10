@@ -7,6 +7,22 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css" />
+  <style>
+    .dash-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
+    .deploy-btn { display: flex; align-items: center; gap: 8px; }
+    .deploy-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--jade); }
+    .deploy-dot.none { background: var(--muted); }
+    .recent-item { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 12px; padding: 10px 20px; border-bottom: 1px solid var(--line2); text-decoration: none; transition: background 0.1s; }
+    .recent-item:last-child { border-bottom: none; }
+    .recent-item:hover { background: rgba(255,255,255,0.02); }
+    .recent-title { font-size: 12px; color: var(--heading); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .recent-col { font-size: 10px; color: var(--muted); font-family: var(--mono); }
+    .recent-date { font-size: 10px; color: var(--muted); font-family: var(--mono); flex-shrink: 0; }
+    .notes-wrap { background: var(--bg2); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .notes-header { padding: 10px 20px; border-bottom: 1px solid var(--line); font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); }
+    .notes-area { width: 100%; min-height: 140px; padding: 14px 20px; background: none; border: none; outline: none; resize: none; font-family: var(--mono); font-size: 11px; color: var(--text); line-height: 1.6; }
+    .notes-saved { font-size: 10px; color: var(--jade); padding: 6px 20px; border-top: 1px solid var(--line2); display: none; }
+  </style>
 </head>
 <body>
   <div class="app">
@@ -18,6 +34,10 @@
         Orbiter
       </div>
       <div class="topbar-right">
+        <button class="search-trigger" id="search-btn" title="Search (⌘K)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Search <kbd>⌘K</kbd>
+        </button>
         <span class="user" id="topbar-user"></span>
         <span class="logout" id="logout-btn">Sign out</span>
       </div>
@@ -37,6 +57,12 @@
         <span class="nav-icon">⊟</span> Media
       </a>
       <div class="nav-section">System</div>
+      <a class="nav-item" href="/schema.html">
+        <span class="nav-icon">◈</span> Schema
+      </a>
+      <a class="nav-item" href="/build.html">
+        <span class="nav-icon">▲</span> Build
+      </a>
       <a class="nav-item" href="/settings.html">
         <span class="nav-icon">◎</span> Settings
       </a>
@@ -51,9 +77,15 @@
 
     <!-- Main -->
     <main class="main">
-      <div class="page-header">
-        <h1 class="page-title">Dashboard</h1>
-        <p class="page-sub" id="site-url"></p>
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between">
+        <div>
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-sub" id="site-url"></p>
+        </div>
+        <div class="deploy-btn">
+          <span class="deploy-dot none" id="deploy-dot"></span>
+          <button class="btn btn-primary" id="deploy-btn" disabled>Deploy</button>
+        </div>
       </div>
 
       <!-- Stats -->
@@ -77,20 +109,45 @@
         </div>
       </div>
 
-      <!-- Collections table -->
-      <div class="table-wrap">
-        <div class="table-header">
-          <span class="table-title">Collections</span>
-          <a class="btn btn-ghost btn-sm" href="/collections.html">View all</a>
+      <div class="dash-grid">
+        <!-- Left column -->
+        <div>
+          <!-- Recent Entries -->
+          <div class="table-wrap" style="margin-bottom:20px">
+            <div class="table-header">
+              <span class="table-title">Recent Entries</span>
+            </div>
+            <div id="recent-body">
+              <div class="empty"><div class="spinner"></div></div>
+            </div>
+          </div>
+
+          <!-- Collections table -->
+          <div class="table-wrap">
+            <div class="table-header">
+              <span class="table-title">Collections</span>
+              <a class="btn btn-ghost btn-sm" href="/collections.html">View all</a>
+            </div>
+            <div id="collections-body">
+              <div class="empty"><div class="spinner"></div></div>
+            </div>
+          </div>
         </div>
-        <div id="collections-body">
-          <div class="empty"><div class="spinner"></div></div>
+
+        <!-- Right column: Notes -->
+        <div>
+          <div class="notes-wrap">
+            <div class="notes-header">Notes</div>
+            <textarea class="notes-area" id="notes-area" placeholder="Quick notes…"></textarea>
+            <div class="notes-saved" id="notes-saved">Saved</div>
+          </div>
         </div>
       </div>
     </main>
 
   </div>
 
+  <script src="/search.js"></script>
   <script type="module">
     // Auth guard
     const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).catch(() => null);
@@ -107,30 +164,70 @@
     });
 
     // Load data
-    const [collections, meta] = await Promise.all([
-      fetch('/api/collections', { credentials: 'include' }).then(r => r.json()),
-      fetch('/api/meta',        { credentials: 'include' }).then(r => r.json()),
+    const [collections, meta, recent] = await Promise.all([
+      fetch('/api/collections',    { credentials: 'include' }).then(r => r.json()),
+      fetch('/api/meta',           { credentials: 'include' }).then(r => r.json()),
+      fetch('/api/search/recent?limit=8', { credentials: 'include' }).then(r => r.json()).catch(() => []),
     ]);
 
-    // Sidebar pod info
+    // Pod info
     document.getElementById('pod-name').textContent = `v${meta['format_version'] || '1'} format`;
 
-    // Site URL in subtitle
+    // Site URL
     if (meta['site.url']) {
       document.getElementById('site-url').textContent = meta['site.url'];
     }
 
-    // Stats
-    const totalEntries   = collections.reduce((n, c) => n + c.total, 0);
-    let   totalPublished = 0;
+    // Deploy button
+    const deployBtn = document.getElementById('deploy-btn');
+    const deployDot = document.getElementById('deploy-dot');
+    const webhookUrl = meta['build.webhook_url'];
+    if (webhookUrl) {
+      deployDot.classList.remove('none');
+      deployBtn.disabled = false;
+      deployBtn.addEventListener('click', async () => {
+        deployBtn.disabled = true;
+        deployBtn.textContent = 'Deploying…';
+        const res = await fetch('/api/build/trigger', { method: 'POST', credentials: 'include' });
+        if (res.ok) {
+          deployBtn.textContent = 'Triggered ✓';
+          setTimeout(() => { deployBtn.textContent = 'Deploy'; deployBtn.disabled = false; }, 3000);
+        } else {
+          deployBtn.textContent = 'Failed ✕';
+          setTimeout(() => { deployBtn.textContent = 'Deploy'; deployBtn.disabled = false; }, 3000);
+        }
+      });
+    }
+
+    // Stats (sequential to count published)
+    const totalEntries = collections.reduce((n, c) => n + c.total, 0);
+    let totalPublished = 0;
     for (const col of collections) {
-      const entries = await fetch(`/api/collections/${col.id}/entries`, { credentials: 'include' }).then(r => r.json());
-      totalPublished += entries.filter(e => e.status === 'published').length;
+      const entries = await fetch(`/api/collections/${col.id}/entries?status=published`, { credentials: 'include' }).then(r => r.json()).catch(() => []);
+      totalPublished += entries.length;
     }
     document.getElementById('stat-collections').textContent = collections.length;
     document.getElementById('stat-entries').textContent     = totalEntries;
     document.getElementById('stat-published').textContent   = totalPublished;
     document.getElementById('stat-drafts').textContent      = totalEntries - totalPublished;
+
+    // Recent entries
+    const recentBody = document.getElementById('recent-body');
+    if (!recent.length) {
+      recentBody.innerHTML = '<div class="empty" style="padding:16px 20px;font-size:12px;color:var(--muted)">No entries yet</div>';
+    } else {
+      recentBody.innerHTML = recent.map(e => {
+        const date = e.updated_at ? e.updated_at.split(' ')[0] : '';
+        return `<a class="recent-item" href="/editor.html?collection=${e.collection}&slug=${e.slug}">
+          <div>
+            <div class="recent-title">${e.title || e.slug}</div>
+            <div class="recent-col">${e.label || e.collection}</div>
+          </div>
+          <span class="badge badge-${e.status}">${e.status}</span>
+          <span class="recent-date">${date}</span>
+        </a>`;
+      }).join('');
+    }
 
     // Collections table
     const body = document.getElementById('collections-body');
@@ -156,6 +253,24 @@
           </tbody>
         </table>`;
     }
+
+    // Notes (autosave)
+    const notesArea  = document.getElementById('notes-area');
+    const notesSaved = document.getElementById('notes-saved');
+    notesArea.value  = meta['dashboard.notes'] ?? '';
+    let noteTimer;
+    notesArea.addEventListener('input', () => {
+      clearTimeout(noteTimer);
+      noteTimer = setTimeout(async () => {
+        await fetch('/api/meta', {
+          method: 'PUT', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 'dashboard.notes': notesArea.value }),
+        });
+        notesSaved.style.display = 'block';
+        setTimeout(() => notesSaved.style.display = 'none', 2000);
+      }, 800);
+    });
   </script>
 </body>
 </html>
