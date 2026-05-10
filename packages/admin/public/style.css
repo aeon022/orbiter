@@ -25,6 +25,29 @@
   --radius:  3px;
 }
 
+/* ── Zen theme (warm dark, no purple) ── */
+[data-theme="zen"] {
+  --bg0:       #0d0c0b;
+  --bg1:       #131210;
+  --bg2:       #1a1815;
+  --bg3:       #22201c;
+  --line:      #2a2822;
+  --line2:     #1e1c18;
+  --muted:     #4a4640;
+  --mid:       #7a7060;
+  --text:      #b0a898;
+  --heading:   #e8e0d0;
+  --gold:      #c8a86b;
+  --gold-bg:   rgba(200,168,107,0.07);
+  --jade:      #5a8a6a;
+  --jade-bg:   rgba(90,138,106,0.1);
+  --accent:    #a08060;
+  --accent2:   #8a6a50;
+  --accent-bg: rgba(160,128,96,0.1);
+  --red:       #c06050;
+  --red-bg:    rgba(192,96,80,0.1);
+}
+
 html, body {
   background: var(--bg0);
   color: var(--text);

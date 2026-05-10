@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css" />
+  <script src="/theme.js"></script>
   <style>
     .settings-wrap { max-width:680px; }
     .settings-group { background:var(--bg2); border:1px solid var(--line); margin-bottom:14px; border-radius:var(--radius); overflow:hidden; }
@@ -22,6 +23,7 @@
     .banner-ok::before { content:"✓"; }
     .banner-err { background:rgba(139,38,53,.07); color:var(--red); border:1px solid rgba(139,38,53,.15); }
     .banner-err::before { content:"✕"; }
+    .theme-btn.active { background:var(--accent-bg); border-color:var(--accent); color:var(--accent); }
   </style>
 </head>
 <body>
@@ -63,6 +65,7 @@
     </main>
   </div>
 
+  <script src="/search.js"></script>
   <script type="module">
     const me = await fetch('/api/auth/me',{credentials:'include'}).then(r=>r.json()).catch(()=>null);
     if (!me?.user) { location.replace('/login.html'); }
@@ -73,11 +76,12 @@
       location.replace('/login.html');
     });
 
-    // Load all meta — response is a flat object { key: value }
     const meta = await fetch('/api/meta',{credentials:'include'}).then(r=>r.json()).catch(()=>({}));
 
     const get = k => meta[k] ?? '';
     document.getElementById('sidebar-info').textContent = `v${get('format_version')||'1'} format`;
+
+    const currentTheme = get('ui.theme') || 'space';
 
     function showBanner(id, cls, text) {
       const el = document.getElementById(id);
@@ -85,7 +89,7 @@
       el.className = 'banner ' + cls;
       el.textContent = (cls==='banner-ok'?'✓ ':'✕ ') + text;
       el.style.display = '';
-      setTimeout(()=>el.style.display='none', 3000);
+      setTimeout(()=>el.style.display='none', 3500);
     }
 
     async function saveMeta(pairs) {
@@ -97,11 +101,13 @@
       });
     }
 
+    const ghConfigured = !!(get('github.token') && get('github.repo'));
+
     const wrap = document.getElementById('settings-content');
     wrap.innerHTML = `
       <div id="site-banner" class="banner" style="display:none"></div>
 
-      <!-- Site -->
+      <!-- Site + Build + GitHub + API — one form -->
       <form id="site-form">
         <div class="settings-group">
           <div class="group-header">Site</div>
@@ -127,7 +133,6 @@
           </div>
         </div>
 
-        <!-- Build -->
         <div class="settings-group">
           <div class="group-header">Build</div>
           <div class="setting-row">
@@ -136,7 +141,6 @@
           </div>
         </div>
 
-        <!-- GitHub -->
         <div class="settings-group">
           <div class="group-header">GitHub</div>
           <div class="setting-row">
@@ -153,7 +157,6 @@
           </div>
         </div>
 
-        <!-- API -->
         <div class="settings-group">
           <div class="group-header">Public API</div>
           <div class="setting-row">
@@ -173,6 +176,33 @@
           <button type="submit" class="btn btn-primary">Save settings</button>
         </div>
       </form>
+
+      <!-- GitHub Sync -->
+      <div id="github-banner" class="banner" style="display:none"></div>
+      <div class="settings-group">
+        <div class="group-header">GitHub Sync</div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Push to GitHub</div>
+            <div class="setting-desc">Commits pod + media to your repo. Triggers a rebuild if you have a GitHub Actions workflow.</div>
+          </div>
+          <button class="btn btn-primary" id="github-push-btn" ${ghConfigured ? '' : 'disabled title="Configure GitHub token and repo first"'}>
+            Push now
+          </button>
+        </div>
+      </div>
+
+      <!-- Appearance -->
+      <div class="settings-group" style="margin-bottom:28px">
+        <div class="group-header">Appearance</div>
+        <div class="setting-row">
+          <div><div class="setting-label">Theme</div><div class="setting-desc">Admin UI color scheme</div></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm theme-btn ${currentTheme==='space'?'active':''}" data-theme="space">Space</button>
+            <button class="btn btn-ghost btn-sm theme-btn ${currentTheme==='zen'?'active':''}" data-theme="zen">Zen</button>
+          </div>
+        </div>
+      </div>
 
       <!-- Account -->
       <div id="account-banner" class="banner" style="display:none"></div>
@@ -211,27 +241,59 @@
     document.getElementById('site-form').addEventListener('submit', async e => {
       e.preventDefault();
       const fd = new FormData(e.target);
-      const pairs = [
-        ['site.name', fd.get('site.name')],
-        ['site.url', fd.get('site.url')],
+      await saveMeta([
+        ['site.name',        fd.get('site.name')],
+        ['site.url',         fd.get('site.url')],
         ['site.description', fd.get('site.description')],
-        ['site.locale', fd.get('site.locale')],
-        ['site.locales', fd.get('site.locales')],
-        ['build.webhook_url', fd.get('build.webhook_url')],
-        ['github.token', fd.get('github.token')],
-        ['github.repo', fd.get('github.repo')],
-        ['github.branch', fd.get('github.branch')],
-        ['api.enabled', fd.get('api.enabled') ? '1' : '0'],
-        ['api.token', fd.get('api.token')],
-      ];
-      await saveMeta(pairs);
+        ['site.locale',      fd.get('site.locale')],
+        ['site.locales',     fd.get('site.locales')],
+        ['build.webhook_url',fd.get('build.webhook_url')],
+        ['github.token',     fd.get('github.token')],
+        ['github.repo',      fd.get('github.repo')],
+        ['github.branch',    fd.get('github.branch')],
+        ['api.enabled',      fd.get('api.enabled') ? '1' : '0'],
+        ['api.token',        fd.get('api.token')],
+      ]);
       showBanner('site-banner','banner-ok','Settings saved');
+    });
+
+    // GitHub push
+    document.getElementById('github-push-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('github-push-btn');
+      btn.disabled = true;
+      btn.textContent = 'Pushing…';
+      const res  = await fetch('/api/github/push', { method:'POST', credentials:'include' });
+      const json = await res.json();
+      if (json.ok) {
+        showBanner('github-banner','banner-ok', json.message);
+        btn.textContent = 'Push now';
+        btn.disabled = false;
+      } else {
+        showBanner('github-banner','banner-err', json.message ?? 'Push failed');
+        btn.textContent = 'Push now';
+        btn.disabled = false;
+      }
+    });
+
+    // Theme toggle
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const theme = btn.dataset.theme;
+        document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === theme));
+        if (theme === 'space') {
+          document.documentElement.removeAttribute('data-theme');
+        } else {
+          document.documentElement.setAttribute('data-theme', theme);
+        }
+        localStorage.setItem('orb_theme', theme);
+        await saveMeta([['ui.theme', theme]]);
+      });
     });
 
     // Password form
     document.getElementById('pw-form').addEventListener('submit', async e => {
       e.preventDefault();
-      const fd = new FormData(e.target);
+      const fd  = new FormData(e.target);
       const res = await fetch('/api/account/password', {
         method:'PUT', credentials:'include',
         headers:{'Content-Type':'application/json'},
@@ -245,7 +307,7 @@
     // Username form
     document.getElementById('un-form').addEventListener('submit', async e => {
       e.preventDefault();
-      const fd = new FormData(e.target);
+      const fd  = new FormData(e.target);
       const res = await fetch('/api/account/username', {
         method:'PUT', credentials:'include',
         headers:{'Content-Type':'application/json'},
@@ -256,6 +318,5 @@
       else showBanner('account-banner','banner-err', json.error ?? 'Failed');
     });
   </script>
-  <script src="/search.js"></script>
 </body>
 </html>

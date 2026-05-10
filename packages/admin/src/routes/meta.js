@@ -9,6 +9,7 @@ const ALLOWED_KEYS = [
   'github.token', 'github.repo', 'github.branch',
   'api.enabled', 'api.token',
   'dashboard.notes', 'dashboard.todos',
+  'ui.theme',
   'format_version',
 ];
 
