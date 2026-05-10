@@ -11,7 +11,7 @@
   <style>
     html,body,.app { height:100%; overflow:hidden; }
     /* Override .main for schema — no padding, no scroll, split panels */
-    .schema-content { display:grid; grid-template-columns:200px 1fr; overflow:hidden; background:var(--bg0); }
+    .main { padding:0 !important; overflow:hidden !important; display:grid; grid-template-columns:200px 1fr; }
 
     .coll-panel { background:var(--bg1); border-right:1px solid var(--line); display:flex; flex-direction:column; overflow-y:auto; height:100%; }
     .coll-panel-head { padding:14px 16px 10px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
@@ -47,16 +47,17 @@
   </style>
 </head>
 <body>
-  <div class="layout">
+  <div class="app">
     <header class="topbar">
-      <a href="/dashboard.html" class="logo"><div class="logo-mark">OR</div>Orbiter
-      </a>
-      <div class="breadcrumb" id="topbar-breadcrumb"></div>
+      <a class="logo" href="/dashboard.html"><div class="logo-mark">OR</div>Orbiter</a>
       <div class="topbar-right">
-        <button class="pal-trigger" onclick="__orbOpenPalette()">Command Palette <kbd>⌘K</kbd></button>
-        <span class="topbar-user" id="topbar-user"></span>
-        <button onclick="__orbSignOut()" class="topbar-signout">Sign out</button>
-        <button id="orb-dark-btn" onclick="__orbToggleDark()" class="dark-toggle">● dark</button>
+        <button class="search-trigger" id="search-btn" title="Search (⌘K)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Search <kbd>⌘K</kbd>
+        </button>
+        <button class="scheme-toggle" id="scheme-toggle" title="Toggle scheme">◐</button>
+        <span class="user" id="topbar-user"></span>
+        <span class="logout" id="logout-btn">Sign out</span>
       </div>
     </header>
     <nav class="sidebar">
@@ -70,9 +71,13 @@
       <a class="nav-item" href="/build.html"><span class="nav-icon">▲</span>Build</a>
       <a class="nav-item" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
       <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
+      <div class="sidebar-footer">
+        <div class="pod-name" id="pod-name">content.pod</div>
+        <div class="pod-info" id="pod-info"></div>
+        <div class="pod-status"><span class="pod-dot"></span>pod synced</div>
+      </div>
     </nav>
-    <!-- schema replaces .main -->
-    <div class="schema-content">
+    <div class="main">
       <div class="coll-panel">
         <div class="coll-panel-head">
           <span class="coll-panel-title">Collections</span>
@@ -353,7 +358,8 @@
 
     loadColls();
   </script>
-  <script src="/admin-utils.js"></script>
+  <script src="/search.js"></script>
   <script src="/sidebar.js"></script>
+  <script src="/router.js"></script>
 </body>
 </html>

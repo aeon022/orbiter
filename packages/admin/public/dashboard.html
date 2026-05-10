@@ -9,267 +9,468 @@
   <link rel="stylesheet" href="/style.css" />
   <script src="/theme.js"></script>
   <style>
-    .dash-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
-    .deploy-btn { display: flex; align-items: center; gap: 8px; }
-    .deploy-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--jade); }
-    .deploy-dot.none { background: var(--muted); }
-    .recent-item { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 12px; padding: 10px 20px; border-bottom: 1px solid var(--line2); text-decoration: none; transition: background 0.1s; }
-    .recent-item:last-child { border-bottom: none; }
-    .recent-item:hover { background: rgba(255,255,255,0.02); }
-    .recent-title { font-size: 12px; color: var(--heading); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .recent-col { font-size: 10px; color: var(--muted); font-family: var(--mono); }
-    .recent-date { font-size: 10px; color: var(--muted); font-family: var(--mono); flex-shrink: 0; }
-    .notes-wrap { background: var(--bg2); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-    .notes-header { padding: 10px 20px; border-bottom: 1px solid var(--line); font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); }
-    .notes-area { width: 100%; min-height: 140px; padding: 14px 20px; background: none; border: none; outline: none; resize: none; font-family: var(--mono); font-size: 11px; color: var(--text); line-height: 1.6; }
-    .notes-saved { font-size: 10px; color: var(--jade); padding: 6px 20px; border-top: 1px solid var(--line2); display: none; }
+    /* Hero */
+    .hero { padding:28px 32px 20px; border-bottom:1px solid var(--line); background:var(--bg2); display:flex; align-items:flex-end; justify-content:space-between; gap:24px; }
+    .hero-site { font-family:var(--serif); font-weight:200; font-size:26px; color:var(--heading); letter-spacing:0.04em; line-height:1.1; margin-bottom:4px; }
+    .hero-date { font-size:10px; color:var(--muted); letter-spacing:0.04em; }
+    .hero-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+    .hero-url { font-size:10px; color:var(--accent); text-decoration:none; border:1px solid var(--line); padding:5px 12px; transition:border-color 0.15s; }
+    .hero-url:hover { border-color:var(--accent); }
+    .btn-deploy { display:flex; align-items:center; gap:6px; padding:7px 16px; background:transparent; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:10px; letter-spacing:0.13em; text-transform:uppercase; cursor:pointer; border-radius:var(--radius); transition:all 0.15s; }
+    .btn-deploy:hover { background:var(--gold); color:var(--bg0); }
+    .btn-deploy:disabled { opacity:0.5; cursor:not-allowed; }
+    .deploy-status { font-size:10px; color:var(--muted); }
+
+    /* Stats row */
+    .stats-row { display:grid; grid-template-columns:repeat(4,1fr); border-bottom:1px solid var(--line); }
+    .stat-cell { padding:20px 24px; border-right:1px solid var(--line); position:relative; }
+    .stat-cell:last-child { border-right:none; }
+    .stat-label { font-size:9px; letter-spacing:0.26em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+    .stat-num { font-family:var(--serif); font-weight:200; font-size:36px; color:var(--heading); line-height:1; margin-bottom:6px; }
+    .stat-sub { font-size:10px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+    .stat-bar { height:2px; background:var(--line); margin-top:12px; }
+    .stat-bar-fill { height:100%; transition:width 0.4s; }
+    .stat-bar-fill.jade { background:var(--jade); }
+    .stat-bar-fill.gold { background:var(--gold); }
+    .stat-bar-fill.accent { background:var(--accent); }
+    .stat-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+    .stat-dot.jade { background:var(--jade); }
+    .stat-dot.gold { background:var(--gold); }
+
+    /* Content layout */
+    .dash-content { display:grid; grid-template-columns:1fr 300px; }
+    .content-main { padding:28px 32px; border-right:1px solid var(--line); }
+    .content-side { padding:24px 0; }
+
+    /* Section headers */
+    .section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    .section-title { font-size:9px; letter-spacing:0.26em; text-transform:uppercase; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .section-title::before { content:"—"; color:var(--gold); font-size:8px; }
+
+    /* Recent entries */
+    .entry-list { border:1px solid var(--line); }
+    .entry-row { display:grid; grid-template-columns:1fr 90px 70px; align-items:center; gap:16px; padding:11px 14px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; }
+    .entry-row:hover { background:var(--line2); }
+    .entry-row:last-child { border-bottom:none; }
+    .entry-name { font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .entry-coll { font-size:9px; color:var(--muted); margin-top:1px; letter-spacing:0.04em; }
+    .entry-date { font-size:10px; color:var(--muted); text-align:right; }
+    .pill { font-size:9px; padding:2px 7px; letter-spacing:0.06em; text-align:center; border-radius:2px; }
+    .pill.published { color:var(--jade); background:var(--jade-bg); }
+    .pill.draft { color:var(--gold); background:var(--gold-bg); }
+
+    /* Collection cards */
+    .side-section { padding:0 20px 24px; }
+    .side-section + .side-section { border-top:1px solid var(--line); padding-top:20px; }
+    .coll-card { padding:12px 0; border-bottom:1px solid var(--line2); }
+    .coll-card:last-child { border-bottom:none; }
+    .coll-card-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    .coll-card-name { font-size:12px; color:var(--heading); display:flex; align-items:center; gap:7px; }
+    .coll-card-name::before { content:"▤"; font-size:9px; color:var(--muted); }
+    .coll-card-count { font-size:10px; color:var(--muted); }
+    .coll-progress { height:2px; background:var(--line); margin-bottom:6px; }
+    .coll-progress-fill { height:100%; background:var(--jade); transition:width 0.4s; }
+    .coll-card-meta { display:flex; justify-content:space-between; font-size:9px; color:var(--muted); }
+    .coll-card-meta .pub { color:var(--jade); }
+    .coll-actions { display:flex; gap:6px; margin-top:8px; }
+    .btn-sm { font-size:9px; padding:4px 10px; border:1px solid var(--line); color:var(--mid); background:transparent; font-family:var(--mono); cursor:pointer; text-decoration:none; letter-spacing:0.06em; display:inline-flex; align-items:center; gap:4px; border-radius:var(--radius); transition:all 0.12s; }
+    .btn-sm:hover { border-color:var(--gold); color:var(--gold); }
+    .btn-sm.primary { border-color:var(--gold); color:var(--gold); }
+    .btn-sm.primary:hover { background:var(--gold); color:var(--bg0); }
+
+    /* Workspace */
+    .workspace { display:grid; grid-template-columns:1fr 1fr; border-top:1px solid var(--line); }
+    .ws-panel { padding:24px 32px; }
+    .ws-panel + .ws-panel { border-left:1px solid var(--line); }
+    .ws-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    .ws-save-indicator { font-size:9px; color:var(--muted); transition:color 0.2s; }
+    .ws-export-btn { background:none; border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:9px; padding:2px 8px; cursor:pointer; letter-spacing:0.06em; transition:all 0.12s; }
+    .ws-export-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .notes-area { width:100%; min-height:160px; resize:vertical; background:var(--bg2); border:1px solid var(--line); padding:12px 14px; color:var(--text); font-family:var(--mono); font-size:12px; line-height:1.8; outline:none; border-radius:var(--radius); transition:border-color 0.15s; }
+    .notes-area:focus { border-color:var(--accent); }
+
+    /* Todos */
+    .todo-input-row { display:flex; align-items:center; gap:0; margin-bottom:12px; border:1px solid var(--line); background:var(--bg2); border-radius:var(--radius); }
+    .todo-prompt { font-family:var(--mono); font-size:11px; color:var(--muted); padding:7px 6px 7px 10px; flex-shrink:0; user-select:none; }
+    .todo-input { flex:1; background:transparent; border:none; padding:7px 4px; color:var(--text); font-family:var(--mono); font-size:11px; outline:none; }
+    .todo-add-btn { padding:7px 12px; background:transparent; border:none; border-left:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:10px; cursor:pointer; letter-spacing:0.06em; transition:color 0.12s; flex-shrink:0; }
+    .todo-add-btn:hover { color:var(--heading); }
+    .todo-footer { display:flex; align-items:center; justify-content:space-between; padding-top:8px; min-height:20px; }
+    .todo-count { font-size:9px; color:var(--muted); }
+    .todo-clear-btn { background:none; border:none; font-family:var(--mono); font-size:9px; color:var(--muted); cursor:pointer; padding:0; letter-spacing:0.04em; transition:color 0.12s; }
+    .todo-clear-btn:hover { color:var(--heading); }
+
+    .empty-state { padding:40px 20px; text-align:center; color:var(--muted); font-size:11px; border:1px solid var(--line); line-height:2; }
   </style>
 </head>
 <body>
-  <div class="layout">
+  <div class="app">
 
     <!-- Topbar -->
     <header class="topbar">
-      <a href="/dashboard.html" class="logo">
-        <div class="logo-mark">OR</div>
-        Orbiter
-      </a>
-      <div class="breadcrumb" id="topbar-breadcrumb"></div>
+      <a class="logo" href="/dashboard.html"><div class="logo-mark">OR</div>Orbiter</a>
       <div class="topbar-right">
-        <button class="pal-trigger" onclick="__orbOpenPalette()">Command Palette <kbd>⌘K</kbd></button>
-        <span class="topbar-user" id="topbar-user"></span>
-        <button onclick="__orbSignOut()" class="topbar-signout">Sign out</button>
-        <button id="orb-dark-btn" onclick="__orbToggleDark()" class="dark-toggle">● dark</button>
+        <button class="search-trigger" id="search-btn" title="Search (⌘K)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Search <kbd>⌘K</kbd>
+        </button>
+        <button class="scheme-toggle" id="scheme-toggle" title="Toggle scheme">◐</button>
+        <span class="user" id="topbar-user"></span>
+        <span class="logout" id="logout-btn">Sign out</span>
       </div>
     </header>
 
     <!-- Sidebar -->
     <nav class="sidebar">
       <div class="nav-section">Content</div>
-      <a class="nav-item active" href="/dashboard.html">
-        <span class="nav-icon">◈</span> Dashboard
-      </a>
-      <a class="nav-item" href="/collections.html">
-        <span class="nav-icon">⊞</span> Collections
-      </a>
+      <a class="nav-item active" href="/dashboard.html"><span class="nav-icon">◈</span>Dashboard</a>
+      <a class="nav-item" href="/collections.html"><span class="nav-icon">⊞</span>Collections</a>
       <div class="nav-section">Assets</div>
-      <a class="nav-item" href="/media.html">
-        <span class="nav-icon">⊟</span> Media
-      </a>
+      <a class="nav-item" href="/media.html"><span class="nav-icon">⊟</span>Media</a>
       <div class="nav-section">System</div>
-      <a class="nav-item" href="/schema.html">
-        <span class="nav-icon">◈</span> Schema
-      </a>
-      <a class="nav-item" href="/build.html">
-        <span class="nav-icon">▲</span> Build
-      </a>
-      <a class="nav-item" href="/settings.html">
-        <span class="nav-icon">◎</span> Settings
-      </a>
-      <a class="nav-item admin-only" href="/users.html" style="display:none">
-        <span class="nav-icon">◉</span> Users
-      </a>
-      <div class="sidebar-pod">
-        <div class="sidebar-pod-name" id="pod-name">content.pod</div>
-        <div id="pod-info" style="font-size:10px;color:var(--muted);margin-bottom:4px"></div>
-        <div class="pod-status"><div class="pod-dot"></div>pod synced</div>
+      <a class="nav-item" href="/schema.html"><span class="nav-icon">◈</span>Schema</a>
+      <a class="nav-item" href="/build.html"><span class="nav-icon">▲</span>Build</a>
+      <a class="nav-item" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
+      <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
+      <div class="sidebar-footer">
+        <div class="pod-name" id="pod-name">content.pod</div>
+        <div class="pod-info" id="pod-info"></div>
+        <div class="pod-status"><span class="pod-dot"></span>pod synced</div>
       </div>
     </nav>
 
     <!-- Main -->
     <main class="main">
-      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between">
+
+      <!-- Hero -->
+      <div class="hero">
         <div>
-          <h1 class="page-title">Dashboard</h1>
-          <p class="page-sub" id="site-url"></p>
+          <div class="hero-site" id="hero-site">Orbiter</div>
+          <div class="hero-date" id="hero-date"></div>
         </div>
-        <div class="deploy-btn">
-          <span class="deploy-dot none" id="deploy-dot"></span>
-          <button class="btn btn-primary" id="deploy-btn" disabled>Deploy</button>
+        <div class="hero-right">
+          <span class="deploy-status" id="deploy-status"></span>
+          <a href="#" target="_blank" class="hero-url" id="hero-url" style="display:none">↗ Open site</a>
+          <button class="btn-deploy" id="deploy-btn" style="display:none">↑ Deploy</button>
         </div>
       </div>
 
-      <!-- Stats -->
-      <div class="stat-grid" id="stat-grid">
-        <div class="stat-card">
-          <div class="stat-label">Collections</div>
-          <div class="stat-value" id="stat-collections">—</div>
+      <!-- Stats row -->
+      <div class="stats-row">
+        <div class="stat-cell">
+          <div class="stat-label">Total entries</div>
+          <div class="stat-num" id="stat-total">—</div>
+          <div class="stat-sub" id="stat-collections-sub"></div>
+          <div class="stat-bar"><div class="stat-bar-fill accent" style="width:100%"></div></div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Total Entries</div>
-          <div class="stat-value" id="stat-entries">—</div>
-        </div>
-        <div class="stat-card">
+        <div class="stat-cell">
           <div class="stat-label">Published</div>
-          <div class="stat-value" id="stat-published">—</div>
-          <div class="stat-sub">entries live</div>
+          <div class="stat-num" id="stat-published">—</div>
+          <div class="stat-sub"><span class="stat-dot jade"></span><span id="stat-published-pct">0%</span> of total</div>
+          <div class="stat-bar"><div class="stat-bar-fill jade" id="bar-published" style="width:0%"></div></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-cell">
           <div class="stat-label">Drafts</div>
-          <div class="stat-value" id="stat-drafts">—</div>
+          <div class="stat-num" id="stat-drafts">—</div>
+          <div class="stat-sub"><span class="stat-dot gold"></span>draft</div>
+          <div class="stat-bar"><div class="stat-bar-fill gold" id="bar-drafts" style="width:0%"></div></div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">Media</div>
+          <div class="stat-num" id="stat-media">—</div>
+          <div class="stat-sub">files</div>
+          <div class="stat-bar"><div class="stat-bar-fill accent" style="width:60%"></div></div>
         </div>
       </div>
 
-      <div class="dash-grid">
-        <!-- Left column -->
-        <div>
-          <!-- Recent Entries -->
-          <div class="table-wrap" style="margin-bottom:20px">
-            <div class="table-header">
-              <span class="table-title">Recent Entries</span>
-            </div>
-            <div id="recent-body">
-              <div class="empty"><div class="spinner"></div></div>
-            </div>
+      <!-- Content: recent entries + collection cards -->
+      <div class="dash-content">
+        <div class="content-main">
+          <div class="section-head">
+            <div class="section-title">Recently edited</div>
           </div>
-
-          <!-- Collections table -->
-          <div class="table-wrap">
-            <div class="table-header">
-              <span class="table-title">Collections</span>
-              <a class="btn btn-ghost btn-sm" href="/collections.html">View all</a>
-            </div>
-            <div id="collections-body">
-              <div class="empty"><div class="spinner"></div></div>
-            </div>
-          </div>
+          <div id="recent-body"><div class="empty"><div class="spinner"></div></div></div>
         </div>
-
-        <!-- Right column: Notes -->
-        <div>
-          <div class="notes-wrap">
-            <div class="notes-header">Notes</div>
-            <textarea class="notes-area" id="notes-area" placeholder="Quick notes…"></textarea>
-            <div class="notes-saved" id="notes-saved">Saved</div>
+        <div class="content-side">
+          <div class="side-section">
+            <div class="section-head">
+              <div class="section-title">Collections</div>
+            </div>
+            <div id="coll-cards"><div class="empty"><div class="spinner"></div></div></div>
           </div>
         </div>
       </div>
+
+      <!-- Workspace: Notes + To-do -->
+      <div class="workspace">
+        <div class="ws-panel">
+          <div class="ws-head">
+            <div class="section-title">Notes</div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="ws-save-indicator" id="notes-indicator"></span>
+              <button class="ws-export-btn" id="export-notes" title="Export as Markdown">↓ md</button>
+            </div>
+          </div>
+          <textarea class="notes-area" id="notes-area" placeholder="Jot something down…"></textarea>
+        </div>
+        <div class="ws-panel">
+          <div class="ws-head">
+            <div class="section-title">To-Do</div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="ws-save-indicator" id="todos-indicator"></span>
+              <button class="ws-export-btn" id="export-todos" title="Export as Markdown">↓ md</button>
+            </div>
+          </div>
+          <div class="todo-input-row">
+            <span class="todo-prompt">›</span>
+            <input class="todo-input" id="todo-input" placeholder="Add a task…" type="text" />
+            <button class="todo-add-btn" id="todo-add-btn">↵ add</button>
+          </div>
+          <div id="todo-list"></div>
+          <div class="todo-footer">
+            <span class="todo-count" id="todo-count"></span>
+            <button class="todo-clear-btn" id="todo-clear-btn" style="display:none">Clear done</button>
+          </div>
+        </div>
+      </div>
+
     </main>
-
   </div>
 
-  <script src="/admin-utils.js"></script>
+  <script src="/search.js"></script>
   <script src="/sidebar.js"></script>
+  <script src="/router.js"></script>
   <script type="module">
-    // Auth guard
+    // Auth
     const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).catch(() => null);
     if (!me?.user) { location.replace('/login.html'); }
     document.getElementById('topbar-user').textContent = me.user.username;
-    if (me.user.role === 'admin') {
-      document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
-    }
+    if (me.user.role === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
       location.replace('/login.html');
     });
 
-    // Load data
-    const [collections, meta, recent] = await Promise.all([
-      fetch('/api/collections',    { credentials: 'include' }).then(r => r.json()),
-      fetch('/api/meta',           { credentials: 'include' }).then(r => r.json()),
-      fetch('/api/search/recent?limit=8', { credentials: 'include' }).then(r => r.json()).catch(() => []),
+    // Hero date
+    document.getElementById('hero-date').textContent =
+      new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    // Load data in parallel
+    const [collections, meta, recent, mediaList] = await Promise.all([
+      fetch('/api/collections', { credentials: 'include' }).then(r => r.json()).catch(() => []),
+      fetch('/api/meta',        { credentials: 'include' }).then(r => r.json()).catch(() => ({})),
+      fetch('/api/search/recent?limit=10', { credentials: 'include' }).then(r => r.json()).catch(() => []),
+      fetch('/api/media',       { credentials: 'include' }).then(r => r.json()).catch(() => []),
     ]);
 
-    // Pod info
-    const podInfoEl = document.getElementById('pod-info');
-    if (podInfoEl) podInfoEl.textContent = `v${meta['format_version'] || '1'} format`;
-
-    // Site URL
-    if (meta['site.url']) {
-      document.getElementById('site-url').textContent = meta['site.url'];
+    // Hero site name + url
+    const siteName = meta['site.name'] || 'Orbiter';
+    document.getElementById('hero-site').textContent = siteName;
+    document.title = `${siteName} — Dashboard`;
+    const siteUrl = meta['site.url'];
+    if (siteUrl) {
+      const urlEl = document.getElementById('hero-url');
+      urlEl.href = siteUrl; urlEl.style.display = '';
     }
 
     // Deploy button
-    const deployBtn = document.getElementById('deploy-btn');
-    const deployDot = document.getElementById('deploy-dot');
-    const webhookUrl = meta['build.webhook_url'];
-    if (webhookUrl) {
-      deployDot.classList.remove('none');
-      deployBtn.disabled = false;
+    if (meta['build.webhook_url']) {
+      const deployBtn = document.getElementById('deploy-btn');
+      deployBtn.style.display = '';
       deployBtn.addEventListener('click', async () => {
         deployBtn.disabled = true;
-        deployBtn.textContent = 'Deploying…';
-        const res = await fetch('/api/build/trigger', { method: 'POST', credentials: 'include' });
-        if (res.ok) {
-          deployBtn.textContent = 'Triggered ✓';
-          setTimeout(() => { deployBtn.textContent = 'Deploy'; deployBtn.disabled = false; }, 3000);
-        } else {
-          deployBtn.textContent = 'Failed ✕';
-          setTimeout(() => { deployBtn.textContent = 'Deploy'; deployBtn.disabled = false; }, 3000);
-        }
+        deployBtn.textContent = '↑ Deploying…';
+        const statusEl = document.getElementById('deploy-status');
+        try {
+          const res = await fetch('/api/build/trigger', { method: 'POST', credentials: 'include' });
+          if (res.ok) { statusEl.textContent = '✓ triggered'; statusEl.style.color = 'var(--jade)'; }
+          else        { statusEl.textContent = '✕ failed';    statusEl.style.color = 'var(--red)'; }
+        } catch { statusEl.textContent = 'network error'; }
+        deployBtn.textContent = '↑ Deploy';
+        deployBtn.disabled = false;
+        setTimeout(() => { statusEl.textContent = ''; }, 3000);
       });
     }
 
-    // Stats (sequential to count published)
-    const totalEntries = collections.reduce((n, c) => n + c.total, 0);
-    let totalPublished = 0;
-    for (const col of collections) {
-      const entries = await fetch(`/api/collections/${col.id}/entries?status=published`, { credentials: 'include' }).then(r => r.json()).catch(() => []);
-      totalPublished += entries.length;
-    }
-    document.getElementById('stat-collections').textContent = collections.length;
-    document.getElementById('stat-entries').textContent     = totalEntries;
-    document.getElementById('stat-published').textContent   = totalPublished;
-    document.getElementById('stat-drafts').textContent      = totalEntries - totalPublished;
+    // Stats — fetch published counts per collection
+    const topLevel = collections.filter(c => !c.parent);
+    const collStats = await Promise.all(topLevel.map(async col => {
+      const all = await fetch(`/api/collections/${col.id}/entries`, { credentials: 'include' }).then(r => r.json()).catch(() => []);
+      const published = all.filter(e => e.status === 'published').length;
+      return { ...col, total: all.length, published, drafts: all.length - published };
+    }));
+
+    const totalEntries   = collStats.reduce((n, c) => n + c.total, 0);
+    const totalPublished = collStats.reduce((n, c) => n + c.published, 0);
+    const totalDrafts    = totalEntries - totalPublished;
+    const pubPct         = totalEntries > 0 ? Math.round(totalPublished / totalEntries * 100) : 0;
+    const draftPct       = totalEntries > 0 ? Math.round(totalDrafts    / totalEntries * 100) : 0;
+
+    document.getElementById('stat-total').textContent        = totalEntries;
+    document.getElementById('stat-collections-sub').textContent = topLevel.length + ' collections';
+    document.getElementById('stat-published').textContent    = totalPublished;
+    document.getElementById('stat-published-pct').textContent = pubPct + '%';
+    document.getElementById('bar-published').style.width     = pubPct + '%';
+    document.getElementById('stat-drafts').textContent       = totalDrafts;
+    document.getElementById('bar-drafts').style.width        = draftPct + '%';
+    document.getElementById('stat-media').textContent        = mediaList.length;
 
     // Recent entries
     const recentBody = document.getElementById('recent-body');
     if (!recent.length) {
-      recentBody.innerHTML = '<div class="empty" style="padding:16px 20px;font-size:12px;color:var(--muted)">No entries yet</div>';
+      recentBody.innerHTML = '<div class="empty-state">No entries yet</div>';
     } else {
-      recentBody.innerHTML = recent.map(e => {
+      recentBody.innerHTML = `<div class="entry-list">${recent.map(e => {
         const date = e.updated_at ? e.updated_at.split(' ')[0] : '';
-        return `<a class="recent-item" href="/editor.html?collection=${e.collection}&slug=${e.slug}">
+        return `<a class="entry-row" href="/editor.html?collection=${e.collection}&slug=${e.slug}">
           <div>
-            <div class="recent-title">${e.title || e.slug}</div>
-            <div class="recent-col">${e.label || e.collection}</div>
+            <div class="entry-name">${e.title || e.slug}</div>
+            <div class="entry-coll">${e.label || e.collection}</div>
           </div>
-          <span class="badge badge-${e.status}">${e.status}</span>
-          <span class="recent-date">${date}</span>
+          <div class="entry-date">${date}</div>
+          <div class="pill ${e.status}">${e.status}</div>
         </a>`;
+      }).join('')}</div>`;
+    }
+
+    // Collection cards
+    const collCards = document.getElementById('coll-cards');
+    if (!collStats.length) {
+      collCards.innerHTML = '<div class="empty-state">No collections yet</div>';
+    } else {
+      collCards.innerHTML = collStats.map(col => {
+        const pct = col.total > 0 ? Math.round(col.published / col.total * 100) : 0;
+        return `<div class="coll-card">
+          <div class="coll-card-head">
+            <div class="coll-card-name">${col.label}</div>
+            <div class="coll-card-count">${col.total}</div>
+          </div>
+          <div class="coll-progress"><div class="coll-progress-fill" style="width:${pct}%"></div></div>
+          <div class="coll-card-meta">
+            <span class="pub">${col.published} published</span>
+            <span>${col.drafts} drafts</span>
+          </div>
+          <div class="coll-actions">
+            <a href="/entries.html?col=${col.id}&label=${encodeURIComponent(col.label)}" class="btn-sm primary">Open →</a>
+          </div>
+        </div>`;
       }).join('');
     }
 
-    // Collections table
-    const body = document.getElementById('collections-body');
-    if (collections.length === 0) {
-      body.innerHTML = '<div class="empty"><div class="empty-icon">⊞</div>No collections yet</div>';
-    } else {
-      body.innerHTML = `
-        <table>
-          <thead>
-            <tr><th>Collection</th><th>ID</th><th>Entries</th><th></th></tr>
-          </thead>
-          <tbody>
-            ${collections.map(c => `
-              <tr>
-                <td style="color:var(--heading);font-weight:500">${c.label}</td>
-                <td style="font-family:var(--mono);color:var(--muted)">${c.id}</td>
-                <td style="font-family:var(--mono)">${c.total}</td>
-                <td style="text-align:right">
-                  <a class="btn btn-ghost btn-sm" href="/entries.html?col=${c.id}">Open →</a>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>`;
-    }
-
-    // Notes (autosave)
-    const notesArea  = document.getElementById('notes-area');
-    const notesSaved = document.getElementById('notes-saved');
-    notesArea.value  = meta['dashboard.notes'] ?? '';
+    // ── Notes ───────────────────────────────────────────────────────────
+    const notesArea      = document.getElementById('notes-area');
+    const notesIndicator = document.getElementById('notes-indicator');
+    notesArea.value = meta['dashboard.notes'] ?? '';
     let noteTimer;
     notesArea.addEventListener('input', () => {
+      notesIndicator.textContent = '● unsaved'; notesIndicator.style.color = 'var(--gold)';
       clearTimeout(noteTimer);
       noteTimer = setTimeout(async () => {
+        notesIndicator.textContent = '↑ saving…'; notesIndicator.style.color = 'var(--muted)';
         await fetch('/api/meta', {
           method: 'PUT', credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 'dashboard.notes': notesArea.value }),
         });
-        notesSaved.style.display = 'block';
-        setTimeout(() => notesSaved.style.display = 'none', 2000);
-      }, 800);
+        notesIndicator.textContent = '✓ saved'; notesIndicator.style.color = 'var(--jade)';
+        setTimeout(() => notesIndicator.textContent = '', 2000);
+      }, 1200);
     });
+    document.getElementById('export-notes').addEventListener('click', () => {
+      const text = notesArea.value.trim();
+      if (!text) return;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([text], { type: 'text/markdown' }));
+      a.download = 'notes.md'; a.click(); URL.revokeObjectURL(a.href);
+    });
+
+    // ── To-Do ───────────────────────────────────────────────────────────
+    let todos = [];
+    try { todos = JSON.parse(meta['dashboard.todos'] ?? '[]'); } catch {}
+    if (!Array.isArray(todos)) todos = [];
+
+    const todosIndicator = document.getElementById('todos-indicator');
+
+    function todoRender() {
+      const list     = document.getElementById('todo-list');
+      const countEl  = document.getElementById('todo-count');
+      const clearBtn = document.getElementById('todo-clear-btn');
+      const doneCount = todos.filter(t => t.done).length;
+      const openCount = todos.length - doneCount;
+      clearBtn.style.display = doneCount > 0 ? '' : 'none';
+      countEl.textContent = todos.length
+        ? openCount + ' open' + (doneCount ? ' · ' + doneCount + ' done' : '')
+        : '';
+      if (!todos.length) {
+        list.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:8px 0;font-family:var(--mono)">No tasks yet</div>';
+        return;
+      }
+      list.innerHTML = '';
+      todos.forEach((todo, idx) => {
+        const row = document.createElement('div');
+        row.style.cssText = `display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--line2);${todo.done ? 'opacity:0.45;' : ''}`;
+        if (idx === 0) row.style.borderTop = '1px solid var(--line2)';
+
+        const toggle = document.createElement('button');
+        toggle.style.cssText = 'background:none;border:none;font-family:var(--mono);font-size:11px;cursor:pointer;padding:0;flex-shrink:0;white-space:nowrap;color:' + (todo.done ? 'var(--jade)' : 'var(--muted)') + ';';
+        toggle.textContent = todo.done ? '[×]' : '[ ]';
+        toggle.addEventListener('click', () => { todos[idx].done = !todos[idx].done; todoRender(); todoSave(); });
+
+        const text = document.createElement('div');
+        text.style.cssText = `flex:1;min-width:0;font-size:11px;font-family:var(--mono);color:${todo.done ? 'var(--muted)' : 'var(--text)'};${todo.done ? 'text-decoration:line-through;' : ''}white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`;
+        text.textContent = todo.text; text.title = todo.text;
+
+        const del = document.createElement('button');
+        del.style.cssText = 'background:none;border:none;font-family:var(--mono);font-size:11px;cursor:pointer;padding:0;flex-shrink:0;color:var(--line);';
+        del.textContent = '[del]';
+        del.addEventListener('mouseenter', () => del.style.color = 'var(--muted)');
+        del.addEventListener('mouseleave', () => del.style.color = 'var(--line)');
+        del.addEventListener('click', () => { todos.splice(idx, 1); todoRender(); todoSave(); });
+
+        row.appendChild(toggle); row.appendChild(text); row.appendChild(del);
+        list.appendChild(row);
+      });
+    }
+
+    async function todoSave() {
+      todosIndicator.textContent = '✓ saved'; todosIndicator.style.color = 'var(--jade)';
+      setTimeout(() => todosIndicator.textContent = '', 1500);
+      await fetch('/api/meta', {
+        method: 'PUT', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 'dashboard.todos': JSON.stringify(todos) }),
+      }).catch(() => {});
+    }
+
+    function todoAdd() {
+      const input = document.getElementById('todo-input');
+      const text  = input.value.trim();
+      if (!text) return;
+      todos.push({ id: Date.now(), text, done: false });
+      input.value = '';
+      todoRender(); todoSave();
+    }
+
+    document.getElementById('todo-add-btn').addEventListener('click', todoAdd);
+    document.getElementById('todo-input').addEventListener('keydown', e => { if (e.key === 'Enter') todoAdd(); });
+    document.getElementById('todo-clear-btn').addEventListener('click', () => {
+      todos = todos.filter(t => !t.done); todoRender(); todoSave();
+    });
+    document.getElementById('export-todos').addEventListener('click', () => {
+      if (!todos.length) return;
+      const date  = new Date().toISOString().slice(0, 10);
+      const open  = todos.filter(t => !t.done);
+      const done  = todos.filter(t => t.done);
+      const lines = ['# To-Do — ' + date, ''];
+      open.forEach(t => lines.push('- [ ] ' + t.text));
+      if (open.length && done.length) lines.push('');
+      done.forEach(t => lines.push('- [x] ' + t.text));
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/markdown' }));
+      a.download = 'todos-' + date + '.md'; a.click(); URL.revokeObjectURL(a.href);
+    });
+
+    todoRender();
   </script>
 </body>
 </html>

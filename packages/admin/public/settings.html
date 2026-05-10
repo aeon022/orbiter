@@ -11,13 +11,15 @@
   <style>
     .settings-wrap { max-width:680px; }
     .settings-group { background:var(--bg2); border:1px solid var(--line); margin-bottom:14px; border-radius:var(--radius); overflow:hidden; }
-    .group-header { padding:10px 20px; border-bottom:1px solid var(--line); font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:8px; }
+    .group-header { padding:10px 40px; border-bottom:1px solid var(--line); font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:8px; }
     .group-header::before { content:"—"; color:var(--gold); }
-    .setting-row { display:grid; grid-template-columns:1fr 260px; align-items:center; gap:20px; padding:14px 20px; border-bottom:1px solid var(--line2); }
+    .setting-row { display:grid; grid-template-columns:1fr 260px; align-items:center; gap:20px; padding:14px 40px; border-bottom:1px solid var(--line2); }
     .setting-row:last-child { border-bottom:none; }
     .setting-label { font-size:12px; color:var(--text); margin-bottom:2px; }
     .setting-desc { font-size:10px; color:var(--muted); }
-    .save-row { display:flex; justify-content:flex-end; padding:12px 20px; border-top:1px solid var(--line); }
+    .save-row { display:flex; justify-content:flex-end; padding:12px 40px; border-top:1px solid var(--line); }
+    .btn-save { padding:9px 24px; background:var(--gold); border:1px solid var(--gold); color:var(--bg0); font-family:var(--mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase; cursor:pointer; transition:all 0.15s; border-radius:var(--radius); }
+    .btn-save:hover { background:var(--btn-hover); border-color:var(--btn-hover); }
     .banner { padding:8px 20px; font-size:10px; display:flex; align-items:center; gap:6px; border-radius:var(--radius); margin-bottom:14px; }
     .banner-ok  { background:var(--jade-bg); color:var(--jade); border:1px solid rgba(45,139,106,.2); }
     .banner-ok::before { content:"✓"; }
@@ -31,19 +33,26 @@
     .theme-swatch span { flex:1; border-radius:1px; }
     .theme-card-name { font-size:11px; color:var(--text); margin-bottom:1px; }
     .theme-card-sub  { font-size:9px; color:var(--muted); letter-spacing:0.04em; }
+    .support-widget { border:1px solid var(--line); padding:20px 24px; margin-top:32px; display:flex; align-items:center; justify-content:space-between; gap:24px; }
+    .support-copy-label { font-size:8px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; display:flex; align-items:center; gap:6px; }
+    .support-copy-label::before { content:"◆"; color:var(--gold); font-size:6px; }
+    .support-copy-text { font-size:11px; color:var(--text); line-height:1.6; }
+    .btn-support { padding:8px 20px; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:9px; letter-spacing:0.12em; text-transform:uppercase; text-decoration:none; white-space:nowrap; transition:all 0.15s; }
+    .btn-support:hover { background:var(--gold); color:var(--bg0); }
   </style>
 </head>
 <body>
-  <div class="layout">
+  <div class="app">
     <header class="topbar">
-      <a href="/dashboard.html" class="logo"><div class="logo-mark">OR</div>Orbiter
-      </a>
-      <div class="breadcrumb" id="topbar-breadcrumb"></div>
+      <a class="logo" href="/dashboard.html"><div class="logo-mark">OR</div>Orbiter</a>
       <div class="topbar-right">
-        <button class="pal-trigger" onclick="__orbOpenPalette()">Command Palette <kbd>⌘K</kbd></button>
-        <span class="topbar-user" id="topbar-user"></span>
-        <button onclick="__orbSignOut()" class="topbar-signout">Sign out</button>
-        <button id="orb-dark-btn" onclick="__orbToggleDark()" class="dark-toggle">● dark</button>
+        <button class="search-trigger" id="search-btn" title="Search (⌘K)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Search <kbd>⌘K</kbd>
+        </button>
+        <button class="scheme-toggle" id="scheme-toggle" title="Toggle scheme">◐</button>
+        <span class="user" id="topbar-user"></span>
+        <span class="logout" id="logout-btn">Sign out</span>
       </div>
     </header>
     <nav class="sidebar">
@@ -57,10 +66,10 @@
       <a class="nav-item" href="/build.html"><span class="nav-icon">▲</span>Build</a>
       <a class="nav-item active" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
       <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
-      <div class="sidebar-pod">
-        <div class="sidebar-pod-name" id="pod-name">content.pod</div>
-        <div id="pod-info" style="font-size:10px;color:var(--muted);margin-bottom:4px"></div>
-        <div class="pod-status"><div class="pod-dot"></div>pod synced</div>
+      <div class="sidebar-footer">
+        <div class="pod-name" id="pod-name">content.pod</div>
+        <div class="pod-info" id="pod-info"></div>
+        <div class="pod-status"><span class="pod-dot"></span>pod synced</div>
       </div>
     </nav>
     <main class="main">
@@ -73,8 +82,9 @@
     </main>
   </div>
 
-  <script src="/admin-utils.js"></script>
+  <script src="/search.js"></script>
   <script src="/sidebar.js"></script>
+  <script src="/router.js"></script>
   <script type="module">
     const me = await fetch('/api/auth/me',{credentials:'include'}).then(r=>r.json()).catch(()=>null);
     if (!me?.user) { location.replace('/login.html'); }
@@ -88,7 +98,7 @@
     const meta = await fetch('/api/meta',{credentials:'include'}).then(r=>r.json()).catch(()=>({}));
 
     const get = k => meta[k] ?? '';
-    document.getElementById('sidebar-info').textContent = `v${get('format_version')||'1'} format`;
+    // pod-info managed by sidebar.js
 
     function showBanner(id, cls, text) {
       const el = document.getElementById(id);
@@ -182,7 +192,7 @@
         </div>
 
         <div class="save-row">
-          <button type="submit" class="btn btn-primary">Save settings</button>
+          <button type="submit" class="btn-save">Save settings</button>
         </div>
       </form>
 
@@ -197,17 +207,65 @@
             <div class="setting-desc">Commits pod + media to your repo. Triggers a rebuild if you have a GitHub Actions workflow.</div>
           </div>
           <div style="display:flex;gap:8px;align-items:center">
-            <button class="btn btn-primary" id="github-push-btn">Push now</button>
+            <button class="btn-save" id="github-push-btn">Push now</button>
             <a class="btn btn-ghost btn-sm" href="/api/github/workflow" download title="Download GitHub Actions workflow file">⬇ Workflow</a>
           </div>
         </div>
       </div>
       ` : ''}
 
+      <!-- Account -->
+      <div id="account-banner" class="banner" style="display:none"></div>
+      <div class="settings-group">
+        <div class="group-header">Account — ${me.user.username}</div>
+        <form id="pw-form">
+          <div class="setting-row">
+            <div><div class="setting-label">Current password</div></div>
+            <input class="input" type="password" name="current_password" autocomplete="current-password" required />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">New password</div><div class="setting-desc">Minimum 8 characters</div></div>
+            <input class="input" type="password" name="new_password" autocomplete="new-password" required minlength="8" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Confirm new password</div></div>
+            <input class="input" type="password" name="confirm_password" autocomplete="new-password" required />
+          </div>
+          <div class="save-row">
+            <button type="submit" class="btn-save">Change password</button>
+          </div>
+        </form>
+        <form id="un-form" style="border-top:1px solid var(--line);">
+          <div class="setting-row">
+            <div><div class="setting-label">New username</div><div class="setting-desc">Current: <strong>${me.user.username}</strong></div></div>
+            <input class="input" type="text" name="new_username" autocomplete="username" required placeholder="${me.user.username}" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Confirm with password</div></div>
+            <input class="input" type="password" name="current_password" autocomplete="current-password" required />
+          </div>
+          <div class="save-row">
+            <button type="submit" class="btn-save">Change username</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Admin Language -->
+      <div class="settings-group">
+        <div class="group-header">Interface language</div>
+        <div class="setting-row">
+          <div><div class="setting-label">Admin language</div><div class="setting-desc">Language for the admin interface labels</div></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm lang-btn ${(localStorage.getItem('orb_lang')||'en')==='en'?'active':''}" data-lang="en">EN</button>
+            <button class="btn btn-ghost btn-sm lang-btn ${localStorage.getItem('orb_lang')==='de'?'active':''}" data-lang="de">DE</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Appearance -->
-      <div class="settings-group" style="margin-bottom:28px">
+      <div class="settings-group">
         <div class="group-header">Appearance</div>
-        <div style="padding:16px 20px;border-bottom:1px solid var(--line2)">
+        <div style="padding:16px 40px;border-bottom:1px solid var(--line2)">
           <div class="setting-label" style="margin-bottom:10px">Color scheme</div>
           <div style="display:flex;gap:8px">
             <button class="btn btn-ghost btn-sm scheme-btn ${currentScheme==='auto'?'active':''}" data-s="auto">Auto (system)</button>
@@ -215,7 +273,7 @@
             <button class="btn btn-ghost btn-sm scheme-btn ${currentScheme==='light'?'active':''}" data-s="light">○ Light</button>
           </div>
         </div>
-        <div style="padding:16px 20px">
+        <div style="padding:16px 40px">
           <div class="setting-label" style="margin-bottom:10px">Palette</div>
           <div class="theme-cards">
             <button class="theme-card ${currentTheme==='space'?'active':''}" data-theme="space">
@@ -252,18 +310,6 @@
         </div>
       </div>
 
-      <!-- Admin Language -->
-      <div class="settings-group">
-        <div class="group-header">Interface language</div>
-        <div class="setting-row">
-          <div><div class="setting-label">Admin language</div><div class="setting-desc">Language for the admin interface labels</div></div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-ghost btn-sm lang-btn ${(localStorage.getItem('orb_lang')||'en')==='en'?'active':''}" data-lang="en">EN</button>
-            <button class="btn btn-ghost btn-sm lang-btn ${localStorage.getItem('orb_lang')==='de'?'active':''}" data-lang="de">DE</button>
-          </div>
-        </div>
-      </div>
-
       <!-- Data + Import -->
       <div class="settings-group">
         <div class="group-header">Data</div>
@@ -287,49 +333,16 @@
           <div><div class="setting-label">Format version</div></div>
           <input class="input" id="pod-version-field" value="…" readonly style="font-family:var(--mono);font-size:10px;color:var(--muted);width:80px;" />
         </div>
-        <div id="pod-collections-list" style="padding:0 20px 14px;font-size:11px;color:var(--muted);">Loading…</div>
+        <div id="pod-collections-list" style="padding:0 40px 14px;font-size:11px;color:var(--muted);">Loading…</div>
       </div>
 
-      <!-- Account -->
-      <div id="account-banner" class="banner" style="display:none"></div>
-      <div class="settings-group" style="margin-top:28px;">
-        <div class="group-header">Account — ${me.user.username}</div>
-        <form id="pw-form">
-          <div class="setting-row">
-            <div><div class="setting-label">Current password</div></div>
-            <input class="input" type="password" name="current_password" autocomplete="current-password" required />
-          </div>
-          <div class="setting-row">
-            <div><div class="setting-label">New password</div><div class="setting-desc">Minimum 8 characters</div></div>
-            <input class="input" type="password" name="new_password" autocomplete="new-password" required minlength="8" />
-          </div>
-          <div class="setting-row">
-            <div><div class="setting-label">Confirm new password</div></div>
-            <input class="input" type="password" name="confirm_password" autocomplete="new-password" required />
-          </div>
-          <div class="save-row">
-            <button type="submit" class="btn btn-primary">Change password</button>
-          </div>
-        </form>
-        <form id="un-form" style="border-top:1px solid var(--line);">
-          <div class="setting-row">
-            <div><div class="setting-label">New username</div><div class="setting-desc">Current: <strong>${me.user.username}</strong></div></div>
-            <input class="input" type="text" name="new_username" autocomplete="username" required placeholder="${me.user.username}" />
-          </div>
-          <div class="setting-row">
-            <div><div class="setting-label">Confirm with password</div></div>
-            <input class="input" type="password" name="current_password" autocomplete="current-password" required />
-          </div>
-          <div class="save-row">
-            <button type="submit" class="btn btn-primary">Change username</button>
-          </div>
-        </form>
-      </div>
-
-      <!-- Support -->
-      <div style="text-align:center;padding:24px 0 8px;color:var(--muted);font-size:10px;letter-spacing:0.05em">
-        Orbiter is open source and free to use.<br>
-        <a href="https://polar.sh/a83" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-size:10px;">Support development on Polar.sh →</a>
+      <!-- Support widget -->
+      <div class="support-widget">
+        <div class="support-copy">
+          <div class="support-copy-label">Support</div>
+          <div class="support-copy-text">Orbiter is open source and free to use.<br>If it saves you time, consider supporting development.</div>
+        </div>
+        <a href="https://polar.sh/a83" class="btn-support" target="_blank" rel="noopener">Support on Polar →</a>
       </div>
     `;
 

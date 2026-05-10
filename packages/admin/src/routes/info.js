@@ -8,9 +8,10 @@ infoRoutes.get('/', (c) => {
   const podPath = c.get('podPath');
   const db      = openPod(podPath);
   const cols    = db.getCollections().map(col => ({
-    id:    col.id,
-    label: col.label,
-    total: db.getEntries(col.id).length,
+    id:     col.id,
+    label:  col.label,
+    total:  db.getEntries(col.id).length,
+    parent: db.getMeta(`collection.${col.id}.parent`) ?? null,
   }));
   const version = db.getMeta('format_version') ?? '1';
   db.close();
