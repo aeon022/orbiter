@@ -185,8 +185,9 @@
         </div>
       </form>
 
-      <!-- GitHub Sync -->
+      <!-- GitHub Sync (conditional) -->
       <div id="github-banner" class="banner" style="display:none"></div>
+      ${ghConfigured ? `
       <div class="settings-group">
         <div class="group-header">GitHub Sync</div>
         <div class="setting-row">
@@ -194,11 +195,13 @@
             <div class="setting-label">Push to GitHub</div>
             <div class="setting-desc">Commits pod + media to your repo. Triggers a rebuild if you have a GitHub Actions workflow.</div>
           </div>
-          <button class="btn btn-primary" id="github-push-btn" ${ghConfigured ? '' : 'disabled title="Configure GitHub token and repo first"'}>
-            Push now
-          </button>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn btn-primary" id="github-push-btn">Push now</button>
+            <a class="btn btn-ghost btn-sm" href="/api/github/workflow" download title="Download GitHub Actions workflow file">⬇ Workflow</a>
+          </div>
         </div>
       </div>
+      ` : ''}
 
       <!-- Appearance -->
       <div class="settings-group" style="margin-bottom:28px">
@@ -248,6 +251,44 @@
         </div>
       </div>
 
+      <!-- Admin Language -->
+      <div class="settings-group">
+        <div class="group-header">Interface language</div>
+        <div class="setting-row">
+          <div><div class="setting-label">Admin language</div><div class="setting-desc">Language for the admin interface labels</div></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm lang-btn ${(localStorage.getItem('orb_lang')||'en')==='en'?'active':''}" data-lang="en">EN</button>
+            <button class="btn btn-ghost btn-sm lang-btn ${localStorage.getItem('orb_lang')==='de'?'active':''}" data-lang="de">DE</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data + Import -->
+      <div class="settings-group">
+        <div class="group-header">Data</div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Import content</div>
+            <div class="setting-desc">Import entries from a JSON or CSV file</div>
+          </div>
+          <a class="btn btn-ghost" href="/import.html">Open importer</a>
+        </div>
+      </div>
+
+      <!-- Pod info -->
+      <div class="settings-group" id="pod-info-group">
+        <div class="group-header">Pod</div>
+        <div class="setting-row">
+          <div><div class="setting-label">Pod path</div><div class="setting-desc">Location of the SQLite content database</div></div>
+          <input class="input" id="pod-path-field" value="…" readonly style="font-family:var(--mono);font-size:10px;color:var(--muted);" />
+        </div>
+        <div class="setting-row">
+          <div><div class="setting-label">Format version</div></div>
+          <input class="input" id="pod-version-field" value="…" readonly style="font-family:var(--mono);font-size:10px;color:var(--muted);width:80px;" />
+        </div>
+        <div id="pod-collections-list" style="padding:0 20px 14px;font-size:11px;color:var(--muted);">Loading…</div>
+      </div>
+
       <!-- Account -->
       <div id="account-banner" class="banner" style="display:none"></div>
       <div class="settings-group" style="margin-top:28px;">
@@ -260,6 +301,10 @@
           <div class="setting-row">
             <div><div class="setting-label">New password</div><div class="setting-desc">Minimum 8 characters</div></div>
             <input class="input" type="password" name="new_password" autocomplete="new-password" required minlength="8" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Confirm new password</div></div>
+            <input class="input" type="password" name="confirm_password" autocomplete="new-password" required />
           </div>
           <div class="save-row">
             <button type="submit" class="btn btn-primary">Change password</button>
@@ -278,6 +323,12 @@
             <button type="submit" class="btn btn-primary">Change username</button>
           </div>
         </form>
+      </div>
+
+      <!-- Support -->
+      <div style="text-align:center;padding:24px 0 8px;color:var(--muted);font-size:10px;letter-spacing:0.05em">
+        Orbiter is open source and free to use.<br>
+        <a href="https://polar.sh/a83" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-size:10px;">Support development on Polar.sh →</a>
       </div>
     `;
 
@@ -301,22 +352,16 @@
       showBanner('site-banner','banner-ok','Settings saved');
     });
 
-    // GitHub push
-    document.getElementById('github-push-btn').addEventListener('click', async () => {
-      const btn = document.getElementById('github-push-btn');
-      btn.disabled = true;
-      btn.textContent = 'Pushing…';
+    // GitHub push (conditional: only wired if section rendered)
+    const ghPushBtn = document.getElementById('github-push-btn');
+    if (ghPushBtn) ghPushBtn.addEventListener('click', async () => {
+      ghPushBtn.disabled = true;
+      ghPushBtn.textContent = 'Pushing…';
       const res  = await fetch('/api/github/push', { method:'POST', credentials:'include' });
       const json = await res.json();
-      if (json.ok) {
-        showBanner('github-banner','banner-ok', json.message);
-        btn.textContent = 'Push now';
-        btn.disabled = false;
-      } else {
-        showBanner('github-banner','banner-err', json.message ?? 'Push failed');
-        btn.textContent = 'Push now';
-        btn.disabled = false;
-      }
+      showBanner('github-banner', json.ok ? 'banner-ok' : 'banner-err', json.message ?? (json.ok ? 'Pushed' : 'Push failed'));
+      ghPushBtn.textContent = 'Push now';
+      ghPushBtn.disabled = false;
     });
 
     // Palette cards
@@ -348,10 +393,13 @@
       });
     });
 
-    // Password form
+    // Password form (with confirm validation)
     document.getElementById('pw-form').addEventListener('submit', async e => {
       e.preventDefault();
       const fd  = new FormData(e.target);
+      if (fd.get('new_password') !== fd.get('confirm_password')) {
+        showBanner('account-banner','banner-err','Passwords do not match'); return;
+      }
       const res = await fetch('/api/account/password', {
         method:'PUT', credentials:'include',
         headers:{'Content-Type':'application/json'},
@@ -375,6 +423,33 @@
       if (res.ok) { showBanner('account-banner','banner-ok','Username changed — please sign in again'); setTimeout(()=>location.replace('/login.html'), 1500); }
       else showBanner('account-banner','banner-err', json.error ?? 'Failed');
     });
+
+    // Language buttons
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === btn.dataset.lang));
+        localStorage.setItem('orb_lang', btn.dataset.lang);
+      });
+    });
+
+    // Pod info
+    fetch('/api/info', { credentials:'include' }).then(r => r.json()).then(info => {
+      const pf = document.getElementById('pod-path-field');
+      const vf = document.getElementById('pod-version-field');
+      const cl = document.getElementById('pod-collections-list');
+      if (pf) pf.value = info.podPath ?? '—';
+      if (vf) vf.value = `v${info.formatVersion ?? 1}`;
+      if (cl && info.collections?.length) {
+        cl.innerHTML = info.collections.map(c =>
+          `<span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px;margin-bottom:4px">
+            <span style="color:var(--text)">${c.label}</span>
+            <span style="background:var(--bg3);border-radius:8px;padding:1px 7px;font-family:var(--mono);font-size:9px">${c.total}</span>
+          </span>`
+        ).join('');
+      } else if (cl) {
+        cl.textContent = 'No collections';
+      }
+    }).catch(() => {});
   </script>
 </body>
 </html>

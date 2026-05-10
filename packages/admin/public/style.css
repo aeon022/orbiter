@@ -389,8 +389,8 @@ html[data-scheme="light"][data-theme="space"] {
   --td-line:   rgba(30,30,100,.08);
 }
 
-/* Zen dark (no scheme = dark) */
-html[data-theme="zen"]:not([data-scheme]) {
+/* Zen dark base (lower specificity so @media auto-light overrides) */
+[data-theme="zen"] {
   --bg0:       #0e0c0a;
   --bg1:       #141210;
   --bg2:       #1c1916;
@@ -415,8 +415,8 @@ html[data-theme="zen"]:not([data-scheme]) {
   --td-line:   rgba(48,42,32,.8);
 }
 
-/* Catppuccin dark (no scheme = dark) */
-html[data-theme="catppuccin"]:not([data-scheme]) {
+/* Catppuccin dark base (lower specificity so @media auto-light overrides) */
+[data-theme="catppuccin"] {
   --bg0:       #11111b;
   --bg1:       #181825;
   --bg2:       #1e1e2e;
@@ -479,8 +479,8 @@ a:hover { color: var(--heading); }
 .logo-mark {
   width: 26px;
   height: 26px;
-  border: 1px solid var(--gold);
-  border-radius: var(--radius);
+  border: none;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -502,7 +502,7 @@ a:hover { color: var(--heading); }
   border: 1px solid var(--accent);
   border-right-color: transparent;
   border-bottom-color: transparent;
-  animation: logo-orbit 2.8s linear infinite;
+  animation: logo-orbit 8s linear infinite;
   opacity: 0.7;
   pointer-events: none;
 }
@@ -513,7 +513,7 @@ a:hover { color: var(--heading); }
   border-radius: 50%;
   border: 1px dashed var(--gold);
   opacity: 0.18;
-  animation: logo-orbit 8s linear infinite reverse;
+  animation: logo-orbit 20s linear infinite reverse;
   pointer-events: none;
 }
 @keyframes logo-orbit {
