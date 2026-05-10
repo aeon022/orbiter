@@ -9,118 +9,135 @@
   <link rel="stylesheet" href="/style.css" />
   <script src="/theme.js"></script>
   <style>
-    /* ── Layout ── */
-    .settings-wrap { max-width:700px; }
+    .settings-wrap { max-width:720px; }
 
-    /* ── Groups — elevated card, more air ── */
+    /* Card — einheitliches bg2, eine Farbe, kein Alternieren */
     .settings-group {
-      border:1px solid var(--line);
-      border-radius:6px;
-      margin-bottom:20px;
-      overflow:hidden;
-      background:var(--bg1);
+      background: var(--bg2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      margin-bottom: 16px;
+      overflow: hidden;
     }
 
-    /* ── Group header — gold left-strip, no pseudo dash ── */
+    /* Section label — klein, ruhig, ◆ statt Left-Strip */
     .group-header {
-      padding:11px 28px;
-      border-bottom:1px solid var(--line);
-      border-left:3px solid var(--gold);
-      font-size:9px;
-      letter-spacing:0.3em;
-      text-transform:uppercase;
-      color:var(--mid);
-      display:flex;
-      align-items:center;
-      gap:8px;
-      background:var(--bg2);
+      padding: 10px 24px;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 7px;
     }
-    .group-header::before { content:none; }
+    .group-header::before { content: "◆"; color: var(--gold); font-size: 5px; line-height: 1; }
 
-    /* ── Setting rows ── */
+    /* Setting row — hover, keine alternierenden Hintergründe */
     .setting-row {
-      display:grid;
-      grid-template-columns:1fr 260px;
-      align-items:center;
-      gap:20px;
-      padding:16px 28px;
-      border-bottom:1px solid var(--line2);
-      background:var(--bg1);
+      display: grid;
+      grid-template-columns: 1fr 252px;
+      align-items: center;
+      gap: 24px;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--line2);
+      transition: background 0.1s;
     }
-    .setting-row:last-child { border-bottom:none; }
-    .setting-label { font-size:12px; color:var(--heading); margin-bottom:2px; font-weight:500; }
-    .setting-desc { font-size:10px; color:var(--muted); line-height:1.5; }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-row:hover { background: var(--hover-bg); }
+    .setting-label { font-size: 13px; color: var(--text); margin-bottom: 3px; }
+    .setting-desc { font-size: 11px; color: var(--muted); line-height: 1.55; }
 
-    /* ── Inputs — minimal bottom-border in settings ── */
+    /* Inputs — vollständig gerundete Box, weicher Focus */
     .settings-wrap .input {
-      background:transparent;
-      border:none;
-      border-bottom:1px solid var(--line);
-      border-radius:0;
-      padding:5px 0;
-      color:var(--heading);
-      font-family:var(--mono);
-      font-size:12px;
-      outline:none;
-      transition:border-color 0.15s;
-      box-shadow:none;
+      width: 100%;
+      background: var(--bg0);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 7px 11px;
+      color: var(--heading);
+      font-family: var(--mono);
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
-    .settings-wrap .input:focus { border-bottom-color:var(--gold); box-shadow:none; }
-    .settings-wrap .input[readonly] { color:var(--muted); cursor:default; }
+    .settings-wrap .input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-bg);
+    }
+    .settings-wrap .input[readonly] {
+      color: var(--muted);
+      cursor: default;
+      background: var(--bg1);
+    }
 
-    /* ── Save row — gold accent top ── */
+    /* Save row */
     .save-row {
-      display:flex;
-      justify-content:flex-end;
-      padding:14px 28px;
-      border-top:1px solid var(--line);
-      background:var(--bg2);
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 14px 24px;
+      border-top: 1px solid var(--line);
+      gap: 10px;
     }
 
-    /* ── Banners ── */
-    .banner { padding:9px 20px; font-size:10px; display:flex; align-items:center; gap:7px; border-radius:6px; margin-bottom:16px; }
-    .banner-ok  { background:var(--jade-bg); color:var(--jade); border:1px solid rgba(45,139,106,.18); }
-    .banner-ok::before { content:"✓"; }
-    .banner-err { background:var(--red-bg); color:var(--red); border:1px solid rgba(240,112,128,.18); }
-    .banner-err::before { content:"✕"; }
+    /* Banners */
+    .banner { padding: 10px 20px; font-size: 11px; display: flex; align-items: center; gap: 8px; border-radius: 8px; margin-bottom: 16px; }
+    .banner-ok  { background: var(--jade-bg); color: var(--jade); border: 1px solid rgba(45,139,106,.2); }
+    .banner-ok::before { content: "✓"; font-size: 12px; }
+    .banner-err { background: var(--red-bg); color: var(--red); border: 1px solid rgba(240,112,128,.18); }
+    .banner-err::before { content: "✕"; font-size: 12px; }
 
-    /* ── Theme cards ── */
-    .theme-cards { display:flex; gap:10px; flex-wrap:wrap; margin-top:4px; }
+    /* Theme cards */
+    .theme-cards { display: flex; gap: 10px; flex-wrap: wrap; }
     .theme-card {
-      flex:1; min-width:120px;
-      border:1px solid var(--line);
-      border-radius:6px;
-      padding:12px 14px;
-      cursor:pointer;
-      background:var(--bg0);
-      transition:border-color .15s, background .15s;
-      text-align:left;
-      font-family:var(--mono);
+      flex: 1; min-width: 110px;
+      background: var(--bg0);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px 14px 12px;
+      cursor: pointer;
+      text-align: left;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
     }
-    .theme-card:hover { border-color:var(--mid); background:var(--bg1); }
-    .theme-card.active { border-color:var(--gold); background:var(--gold-bg); }
-    .theme-swatch { display:flex; gap:3px; margin-bottom:8px; height:5px; }
-    .theme-swatch span { flex:1; border-radius:1px; }
-    .theme-card-name { font-size:11px; color:var(--heading); margin-bottom:2px; font-weight:500; }
-    .theme-card-sub  { font-size:9px; color:var(--muted); letter-spacing:0.04em; }
+    .theme-card:hover { border-color: var(--mid); box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+    .theme-card.active { border-color: var(--accent); background: var(--accent-bg); box-shadow: 0 0 0 1px var(--accent); }
+    .theme-swatch { display: flex; gap: 4px; margin-bottom: 10px; height: 4px; }
+    .theme-swatch span { flex: 1; border-radius: 2px; }
+    .theme-card-name { font-size: 11px; color: var(--text); margin-bottom: 2px; font-weight: 500; }
+    .theme-card-sub  { font-size: 9px; color: var(--muted); letter-spacing: 0.03em; line-height: 1.4; }
 
-    /* ── Support widget ── */
+    /* Support */
     .support-widget {
-      border:1px solid var(--line);
-      border-radius:6px;
-      padding:22px 28px;
-      margin-top:32px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:24px;
-      background:var(--bg1);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-top: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      background: var(--bg2);
     }
-    .support-copy-label { font-size:8px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; display:flex; align-items:center; gap:6px; }
-    .support-copy-label::before { content:"◆"; color:var(--gold); font-size:6px; }
-    .support-copy-text { font-size:11px; color:var(--text); line-height:1.6; }
-    .btn-support { padding:8px 20px; border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:9px; letter-spacing:0.12em; text-transform:uppercase; text-decoration:none; white-space:nowrap; transition:all 0.15s; border-radius:var(--radius); }
-    .btn-support:hover { background:var(--gold); color:var(--bg0); }
+    .support-copy-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+    .support-copy-text { font-size: 12px; color: var(--text); line-height: 1.6; }
+    .btn-support {
+      flex-shrink: 0;
+      padding: 8px 18px;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s;
+      border-radius: 6px;
+    }
+    .btn-support:hover { background: var(--gold); color: var(--bg0); }
   </style>
 </head>
 <body>
