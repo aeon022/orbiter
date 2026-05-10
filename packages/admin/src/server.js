@@ -18,6 +18,7 @@ import { accountRoutes }    from './routes/account.js';
 import { buildRoutes }      from './routes/build.js';
 import { searchRoutes }     from './routes/search.js';
 import { githubRoutes }     from './routes/github.js';
+import { infoRoutes }       from './routes/info.js';
 import { requireAuth }      from './middleware/auth.js';
 
 const POD_PATH = process.env.ORBITER_POD;
@@ -61,6 +62,7 @@ export function createApp(podPath) {
   api.route('/build',        buildRoutes);
   api.route('/search',       searchRoutes);
   api.route('/github',       githubRoutes);
+  api.route('/info',         infoRoutes);
 
   app.route('/api', api);
 
