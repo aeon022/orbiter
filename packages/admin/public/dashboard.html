@@ -73,6 +73,7 @@
       </a>
       <div class="sidebar-footer">
         <div class="pod-name" id="pod-name">content.pod</div>
+        <div id="pod-info" style="font-size:10px;color:var(--muted);margin-bottom:6px"></div>
         <div><span class="pod-dot"></span>connected</div>
       </div>
     </nav>
@@ -150,6 +151,7 @@
   </div>
 
   <script src="/search.js"></script>
+  <script src="/sidebar.js"></script>
   <script type="module">
     // Auth guard
     const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).catch(() => null);
@@ -173,7 +175,8 @@
     ]);
 
     // Pod info
-    document.getElementById('pod-name').textContent = `v${meta['format_version'] || '1'} format`;
+    const podInfoEl = document.getElementById('pod-info');
+    if (podInfoEl) podInfoEl.textContent = `v${meta['format_version'] || '1'} format`;
 
     // Site URL
     if (meta['site.url']) {
