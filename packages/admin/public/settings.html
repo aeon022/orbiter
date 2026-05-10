@@ -23,7 +23,14 @@
     .banner-ok::before { content:"✓"; }
     .banner-err { background:rgba(139,38,53,.07); color:var(--red); border:1px solid rgba(139,38,53,.15); }
     .banner-err::before { content:"✕"; }
-    .theme-btn.active { background:var(--accent-bg); border-color:var(--accent); color:var(--accent); }
+    .theme-cards { display:flex; gap:10px; flex-wrap:wrap; margin-top:4px; }
+    .theme-card { flex:1; min-width:120px; border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px; cursor:pointer; background:var(--bg1); transition:border-color .15s,background .15s; text-align:left; font-family:var(--mono); }
+    .theme-card:hover { border-color:var(--mid); }
+    .theme-card.active { border-color:var(--accent); background:var(--accent-bg); }
+    .theme-swatch { display:flex; gap:3px; margin-bottom:8px; height:6px; }
+    .theme-swatch span { flex:1; border-radius:1px; }
+    .theme-card-name { font-size:11px; color:var(--text); margin-bottom:1px; }
+    .theme-card-sub  { font-size:9px; color:var(--muted); letter-spacing:0.04em; }
   </style>
 </head>
 <body>
@@ -35,6 +42,7 @@
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           Search <kbd>⌘K</kbd>
         </button>
+        <button class="scheme-toggle" id="scheme-toggle" title="Toggle scheme">◐</button>
         <span class="user" id="topbar-user"></span>
         <span class="logout" id="logout-btn">Sign out</span>
       </div>
@@ -81,8 +89,6 @@
     const get = k => meta[k] ?? '';
     document.getElementById('sidebar-info').textContent = `v${get('format_version')||'1'} format`;
 
-    const currentTheme = get('ui.theme') || 'space';
-
     function showBanner(id, cls, text) {
       const el = document.getElementById(id);
       if (!el) return;
@@ -101,7 +107,9 @@
       });
     }
 
-    const ghConfigured = !!(get('github.token') && get('github.repo'));
+    const ghConfigured   = !!(get('github.token') && get('github.repo'));
+    const currentTheme  = get('ui.theme') || 'space';
+    const currentScheme = localStorage.getItem('orb_scheme') || 'auto';
 
     const wrap = document.getElementById('settings-content');
     wrap.innerHTML = `
@@ -195,12 +203,47 @@
       <!-- Appearance -->
       <div class="settings-group" style="margin-bottom:28px">
         <div class="group-header">Appearance</div>
-        <div class="setting-row">
-          <div><div class="setting-label">Theme</div><div class="setting-desc">Admin UI color scheme</div></div>
+        <div style="padding:16px 20px;border-bottom:1px solid var(--line2)">
+          <div class="setting-label" style="margin-bottom:10px">Color scheme</div>
           <div style="display:flex;gap:8px">
-            <button class="btn btn-ghost btn-sm theme-btn ${currentTheme==='space'?'active':''}" data-theme="space">Space</button>
-            <button class="btn btn-ghost btn-sm theme-btn ${currentTheme==='zen'?'active':''}" data-theme="zen">Zen</button>
-            <button class="btn btn-ghost btn-sm theme-btn ${currentTheme==='light'?'active':''}" data-theme="light">Light</button>
+            <button class="btn btn-ghost btn-sm scheme-btn ${currentScheme==='auto'?'active':''}" data-s="auto">Auto (system)</button>
+            <button class="btn btn-ghost btn-sm scheme-btn ${currentScheme==='dark'?'active':''}" data-s="dark">● Dark</button>
+            <button class="btn btn-ghost btn-sm scheme-btn ${currentScheme==='light'?'active':''}" data-s="light">○ Light</button>
+          </div>
+        </div>
+        <div style="padding:16px 20px">
+          <div class="setting-label" style="margin-bottom:10px">Palette</div>
+          <div class="theme-cards">
+            <button class="theme-card ${currentTheme==='space'?'active':''}" data-theme="space">
+              <div class="theme-swatch">
+                <span style="background:#08080f"></span>
+                <span style="background:#607af8"></span>
+                <span style="background:#30b882"></span>
+                <span style="background:#d0a860"></span>
+              </div>
+              <div class="theme-card-name">Space</div>
+              <div class="theme-card-sub">Deep indigo · blue accent</div>
+            </button>
+            <button class="theme-card ${currentTheme==='zen'?'active':''}" data-theme="zen">
+              <div class="theme-swatch">
+                <span style="background:#0e0c0a"></span>
+                <span style="background:#c09060"></span>
+                <span style="background:#60a870"></span>
+                <span style="background:#d0a860"></span>
+              </div>
+              <div class="theme-card-name">Zen</div>
+              <div class="theme-card-sub">Warm dark · amber accent</div>
+            </button>
+            <button class="theme-card ${currentTheme==='catppuccin'?'active':''}" data-theme="catppuccin">
+              <div class="theme-swatch">
+                <span style="background:#11111b"></span>
+                <span style="background:#cba6f7"></span>
+                <span style="background:#a6e3a1"></span>
+                <span style="background:#f9e2af"></span>
+              </div>
+              <div class="theme-card-name">Catppuccin</div>
+              <div class="theme-card-sub">Mocha / Latte · pastel</div>
+            </button>
           </div>
         </div>
       </div>
@@ -276,18 +319,32 @@
       }
     });
 
-    // Theme toggle
-    document.querySelectorAll('.theme-btn').forEach(btn => {
+    // Palette cards
+    document.querySelectorAll('.theme-card').forEach(btn => {
       btn.addEventListener('click', async () => {
         const theme = btn.dataset.theme;
-        document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === theme));
-        if (theme === 'space') {
-          document.documentElement.removeAttribute('data-theme');
-        } else {
-          document.documentElement.setAttribute('data-theme', theme);
-        }
+        document.querySelectorAll('.theme-card').forEach(b => b.classList.toggle('active', b.dataset.theme === theme));
+        const root = document.documentElement;
+        if (theme === 'space') root.removeAttribute('data-theme');
+        else root.setAttribute('data-theme', theme);
         localStorage.setItem('orb_theme', theme);
         await saveMeta([['ui.theme', theme]]);
+      });
+    });
+
+    // Scheme buttons
+    document.querySelectorAll('.scheme-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const s = btn.dataset.s;
+        document.querySelectorAll('.scheme-btn').forEach(b => b.classList.toggle('active', b.dataset.s === s));
+        const root = document.documentElement;
+        root.removeAttribute('data-scheme');
+        if (s === 'dark')  root.setAttribute('data-scheme', 'dark');
+        if (s === 'light') root.setAttribute('data-scheme', 'light');
+        localStorage.setItem('orb_scheme', s);
+        // Update topbar toggle icon
+        const t = document.getElementById('scheme-toggle');
+        if (t) t.textContent = s === 'dark' ? '●' : s === 'light' ? '○' : '◐';
       });
     });
 
