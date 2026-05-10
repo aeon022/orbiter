@@ -104,32 +104,7 @@
       <div class="table-wrap" id="entries-wrap">
         <div class="empty"><div class="spinner"></div></div>
       </div>
-    </main>
-  </div>
-
-  <!-- New entry modal -->
-  <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center">
-    <div style="background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:28px 32px;width:400px;max-width:90vw">
-      <h3 style="font-size:14px;color:var(--heading);margin-bottom:20px;font-weight:500">New Entry</h3>
-      <div class="field">
-        <label class="label" for="new-slug">Slug</label>
-        <input class="input" id="new-slug" placeholder="my-entry-title" />
-      </div>
-      <div class="field">
-        <label class="label" for="new-title">Title</label>
-        <input class="input" id="new-title" placeholder="Entry title" />
-      </div>
-      <div id="modal-error" style="color:var(--red);font-size:12px;margin-bottom:12px;display:none"></div>
-      <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button class="btn btn-ghost" id="modal-cancel">Cancel</button>
-        <button class="btn btn-primary" id="modal-create">Create</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="/search.js"></script>
-  <script src="/sidebar.js"></script>
-  <script src="/router.js"></script>
+    
   <script type="module">
     const params   = new URLSearchParams(location.search);
     const colId    = params.get('col') ?? '';
@@ -356,5 +331,31 @@
 
     loadEntries();
   </script>
+</main>
+  </div>
+
+  <!-- New entry modal -->
+  <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center">
+    <div style="background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:28px 32px;width:400px;max-width:90vw">
+      <h3 style="font-size:14px;color:var(--heading);margin-bottom:20px;font-weight:500">New Entry</h3>
+      <div class="field">
+        <label class="label" for="new-slug">Slug</label>
+        <input class="input" id="new-slug" placeholder="my-entry-title" />
+      </div>
+      <div class="field">
+        <label class="label" for="new-title">Title</label>
+        <input class="input" id="new-title" placeholder="Entry title" />
+      </div>
+      <div id="modal-error" style="color:var(--red);font-size:12px;margin-bottom:12px;display:none"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-ghost" id="modal-cancel">Cancel</button>
+        <button class="btn btn-primary" id="modal-create">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/search.js"></script>
+  <script src="/sidebar.js"></script>
+  <script src="/router.js"></script>
 </body>
 </html>

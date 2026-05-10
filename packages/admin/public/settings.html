@@ -228,12 +228,7 @@
       <div class="settings-wrap" id="settings-content">
         <div class="empty"><div class="spinner"></div></div>
       </div>
-    </main>
-  </div>
-
-  <script src="/search.js"></script>
-  <script src="/sidebar.js"></script>
-  <script src="/router.js"></script>
+    
   <script type="module">
     const me = await fetch('/api/auth/me',{credentials:'include'}).then(r=>r.json()).catch(()=>null);
     if (!me?.user) { location.replace('/login.html'); }
@@ -613,5 +608,11 @@
       }
     }).catch(() => {});
   </script>
+</main>
+  </div>
+
+  <script src="/search.js"></script>
+  <script src="/sidebar.js"></script>
+  <script src="/router.js"></script>
 </body>
 </html>

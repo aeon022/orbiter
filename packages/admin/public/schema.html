@@ -92,9 +92,6 @@
           <button class="btn btn-primary" id="btn-new-empty">+ New collection</button>
         </div>
       </div>
-    </div>
-  </div>
-
   <script type="module">
     const me = await fetch('/api/auth/me',{credentials:'include'}).then(r=>r.json()).catch(()=>null);
     if (!me?.user) { location.replace('/login.html'); }
@@ -358,8 +355,11 @@
 
     loadColls();
   </script>
+    </div>
+  </div>
   <script src="/search.js"></script>
   <script src="/sidebar.js"></script>
   <script src="/router.js"></script>
 </body>
-</html>
+</html>  
+

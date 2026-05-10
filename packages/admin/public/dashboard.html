@@ -234,12 +234,7 @@
         </div>
       </div>
 
-    </main>
-  </div>
-
-  <script src="/search.js"></script>
-  <script src="/sidebar.js"></script>
-  <script src="/router.js"></script>
+    
   <script type="module">
     // Auth
     const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).catch(() => null);
@@ -472,5 +467,11 @@
 
     todoRender();
   </script>
+</main>
+  </div>
+
+  <script src="/search.js"></script>
+  <script src="/sidebar.js"></script>
+  <script src="/router.js"></script>
 </body>
 </html>

@@ -76,9 +76,7 @@
       </div>
       <div id="banner" class="banner" style="display:none"></div>
       <div id="content"><div class="empty"><div class="spinner"></div></div></div>
-    </main>
-  </div>
-
+    
   <script type="module">
     const me = await fetch('/api/auth/me',{credentials:'include'}).then(r=>r.json()).catch(()=>null);
     if (!me?.user) { location.replace('/login.html'); }
@@ -184,6 +182,8 @@
 
     loadUsers();
   </script>
+</main>
+  </div>
   <script src="/search.js"></script>
   <script src="/sidebar.js"></script>
   <script src="/router.js"></script>
