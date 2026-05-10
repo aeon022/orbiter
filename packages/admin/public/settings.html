@@ -9,14 +9,14 @@
   <link rel="stylesheet" href="/style.css" />
   <script src="/theme.js"></script>
   <style>
-    .settings-wrap { max-width:720px; }
+    .settings-wrap { max-width:720px; padding-bottom:40px; }
 
     /* Card — einheitliches bg2, eine Farbe, kein Alternieren */
     .settings-group {
       background: var(--bg2);
       border: 1px solid var(--line);
       border-radius: 10px;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       overflow: hidden;
     }
 
@@ -109,12 +109,62 @@
     .theme-card-name { font-size: 11px; color: var(--text); margin-bottom: 2px; font-weight: 500; }
     .theme-card-sub  { font-size: 9px; color: var(--muted); letter-spacing: 0.03em; line-height: 1.4; }
 
+    /* Pod section */
+    .pod-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 24px;
+      border-bottom: 1px solid var(--line2);
+    }
+    .pod-meta-path {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+    .pod-meta-ver {
+      flex-shrink: 0;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      background: var(--bg3);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 2px 8px;
+    }
+    .pod-col-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 24px;
+      border-bottom: 1px solid var(--line2);
+      transition: background 0.1s;
+    }
+    .pod-col-row:last-child { border-bottom: none; }
+    .pod-col-row:hover { background: var(--hover-bg); }
+    .pod-col-name { font-size: 13px; color: var(--text); }
+    .pod-col-count {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      background: var(--bg3);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 2px 8px;
+    }
+
     /* Support */
     .support-widget {
       border: 1px solid var(--line);
       border-radius: 10px;
       padding: 20px 24px;
-      margin-top: 24px;
+      margin-top: 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -424,15 +474,13 @@
       <!-- Pod info -->
       <div class="settings-group" id="pod-info-group">
         <div class="group-header">Pod</div>
-        <div class="setting-row">
-          <div><div class="setting-label">Pod path</div><div class="setting-desc">Location of the SQLite content database</div></div>
-          <input class="input" id="pod-path-field" value="…" readonly />
+        <div class="pod-meta">
+          <div class="pod-meta-path" id="pod-path-field">…</div>
+          <span class="pod-meta-ver" id="pod-version-field">v1</span>
         </div>
-        <div class="setting-row">
-          <div><div class="setting-label">Format version</div></div>
-          <input class="input" id="pod-version-field" value="…" readonly style="width:80px;" />
+        <div id="pod-collections-list">
+          <div class="pod-col-row"><span class="pod-col-name" style="color:var(--muted)">Loading…</span></div>
         </div>
-        <div id="pod-collections-list" style="padding:0 28px 16px;font-size:11px;color:var(--muted);line-height:2;">Loading…</div>
       </div>
 
       <!-- Support widget -->
@@ -550,17 +598,18 @@
       const pf = document.getElementById('pod-path-field');
       const vf = document.getElementById('pod-version-field');
       const cl = document.getElementById('pod-collections-list');
-      if (pf) pf.value = info.podPath ?? '—';
-      if (vf) vf.value = `v${info.formatVersion ?? 1}`;
-      if (cl && info.collections?.length) {
-        cl.innerHTML = info.collections.map(c =>
-          `<span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px;margin-bottom:4px">
-            <span style="color:var(--text)">${c.label}</span>
-            <span style="background:var(--bg3);border-radius:8px;padding:1px 7px;font-family:var(--mono);font-size:9px">${c.total}</span>
-          </span>`
-        ).join('');
-      } else if (cl) {
-        cl.textContent = 'No collections';
+      if (pf) pf.textContent = info.podPath ?? '—';
+      if (vf) vf.textContent = `v${info.formatVersion ?? 1}`;
+      if (cl) {
+        const cols = info.collections ?? [];
+        cl.innerHTML = cols.length
+          ? cols.map(c =>
+              `<div class="pod-col-row">
+                <span class="pod-col-name">${c.label}</span>
+                <span class="pod-col-count">${c.total}</span>
+              </div>`
+            ).join('')
+          : '<div class="pod-col-row"><span class="pod-col-name" style="color:var(--muted)">No collections</span></div>';
       }
     }).catch(() => {});
   </script>
