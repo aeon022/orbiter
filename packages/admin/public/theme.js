@@ -5,11 +5,13 @@
 (function () {
   var theme  = localStorage.getItem('orb_theme')  || 'space';
   var scheme = localStorage.getItem('orb_scheme') || 'auto';
+  var style  = localStorage.getItem('orb_style')  || 'classic';
 
   var root = document.documentElement;
   if (theme !== 'space') root.setAttribute('data-theme', theme);
   if (scheme === 'dark')  root.setAttribute('data-scheme', 'dark');
   if (scheme === 'light') root.setAttribute('data-scheme', 'light');
+  if (style === 'glass')  root.setAttribute('data-style', 'glass');
 
   // Wire up toggle button once DOM is ready
   document.addEventListener('DOMContentLoaded', function () {

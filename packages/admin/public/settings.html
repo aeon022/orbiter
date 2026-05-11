@@ -109,6 +109,32 @@
     .theme-card-name { font-size: 11px; color: var(--text); margin-bottom: 2px; font-weight: 500; }
     .theme-card-sub  { font-size: 9px; color: var(--muted); letter-spacing: 0.03em; line-height: 1.4; }
 
+    /* Style cards */
+    .style-cards { display: flex; gap: 10px; }
+    .style-card {
+      flex: 1; min-width: 120px; max-width: 180px;
+      background: var(--bg0); border: 1px solid var(--line); border-radius: 8px;
+      padding: 12px 12px 10px; cursor: pointer; text-align: left;
+      font-family: var(--mono); transition: border-color .15s, background .15s, box-shadow .15s;
+    }
+    .style-card:hover { border-color: var(--mid); box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+    .style-card.active { border-color: var(--accent); background: var(--accent-bg); box-shadow: 0 0 0 1px var(--accent); }
+    .style-preview {
+      display: flex; gap: 5px; height: 44px; margin-bottom: 10px;
+      background: var(--bg3); border-radius: 5px; overflow: hidden; position: relative;
+    }
+    .sp-sidebar { width: 14px; background: var(--bg2); flex-shrink: 0; }
+    .sp-body { flex: 1; padding: 5px 5px; display: flex; flex-direction: column; gap: 4px; }
+    .sp-row { height: 6px; background: var(--bg2); border-radius: 2px; }
+    .sp-row-short { width: 65%; }
+    /* Glass preview */
+    .sp-glass { background: var(--bg0); }
+    .sp-orb { position: absolute; border-radius: 50%; }
+    .sp-orb1 { width: 40px; height: 40px; top: -10px; left: 10px; background: var(--accent-bg); filter: blur(8px); }
+    .sp-orb2 { width: 30px; height: 30px; bottom: -5px; right: 10px; background: var(--gold-bg); filter: blur(6px); }
+    .sp-glass-panel { background: color-mix(in srgb, var(--bg2) 60%, transparent); backdrop-filter: blur(4px); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent); border-radius: 3px; }
+    .sp-glass .sp-sidebar { width: 14px; background: color-mix(in srgb, var(--bg1) 55%, transparent); backdrop-filter: blur(4px); }
+
     /* Pod section */
     .pod-meta {
       display: flex;
@@ -265,6 +291,7 @@
     const ghConfigured   = !!(get('github.token') && get('github.repo'));
     const currentTheme  = get('ui.theme') || 'space';
     const currentScheme = localStorage.getItem('orb_scheme') || 'auto';
+    const currentStyle  = localStorage.getItem('orb_style')  || 'classic';
 
     const wrap = document.getElementById('settings-content');
     wrap.innerHTML = `
@@ -452,6 +479,36 @@
             </button>
           </div>
         </div>
+        <div style="padding:16px 28px;border-top:1px solid var(--line2)">
+          <div class="setting-label" style="margin-bottom:10px">Style</div>
+          <div class="style-cards">
+            <button class="style-card \${currentStyle==='classic'?'active':''}" data-style="classic">
+              <div class="style-preview">
+                <div class="sp-sidebar"></div>
+                <div class="sp-body">
+                  <div class="sp-row"></div>
+                  <div class="sp-row sp-row-short"></div>
+                  <div class="sp-row"></div>
+                </div>
+              </div>
+              <div class="theme-card-name">Classic</div>
+              <div class="theme-card-sub">Clean · flat panels</div>
+            </button>
+            <button class="style-card \${currentStyle==='glass'?'active':''}" data-style="glass">
+              <div class="style-preview sp-glass">
+                <div class="sp-orb sp-orb1"></div>
+                <div class="sp-orb sp-orb2"></div>
+                <div class="sp-sidebar sp-glass-panel"></div>
+                <div class="sp-body">
+                  <div class="sp-row sp-glass-panel"></div>
+                  <div class="sp-row sp-row-short sp-glass-panel"></div>
+                </div>
+              </div>
+              <div class="theme-card-name">Glass</div>
+              <div class="theme-card-sub">Glassmorphism · blur</div>
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Data + Import -->
@@ -546,6 +603,18 @@
         // Update topbar toggle icon
         const t = document.getElementById('scheme-toggle');
         if (t) t.textContent = s === 'dark' ? '●' : s === 'light' ? '○' : '◐';
+      });
+    });
+
+    // Style cards (classic / glass)
+    document.querySelectorAll('.style-card').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const s = btn.dataset.style;
+        document.querySelectorAll('.style-card').forEach(b => b.classList.toggle('active', b.dataset.style === s));
+        const root = document.documentElement;
+        if (s === 'glass') root.setAttribute('data-style', 'glass');
+        else root.removeAttribute('data-style');
+        localStorage.setItem('orb_style', s);
       });
     });
 

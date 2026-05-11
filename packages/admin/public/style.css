@@ -41,28 +41,28 @@
 
 /* ── Space Light ─────────────────────────────────── */
 .space-light {
-  --bg0:       #eef0ff;
-  --bg1:       #e4e6f8;
-  --bg2:       #ffffff;
-  --bg3:       #d8dcf8;
-  --line:      #c8ccf0;
-  --line2:     #d8dcf8;
-  --muted:     #8888b8;
-  --mid:       #4848a0;
-  --text:      #282860;
-  --heading:   #080828;
-  --gold:      #6040a0;
-  --gold-bg:   rgba(96,64,160,.07);
-  --jade:      #1a7858;
-  --jade-bg:   rgba(26,120,88,.09);
-  --accent:    #3050e8;
-  --accent2:   #6030d8;
-  --accent-bg: rgba(48,80,232,.09);
-  --red:       #c02040;
-  --red-bg:    rgba(192,32,64,.08);
-  --hover-bg:  rgba(0,0,0,.03);
-  --row-hover: rgba(0,0,0,.015);
-  --td-line:   rgba(30,30,100,.08);
+  --bg0:       #edf3ff;
+  --bg1:       #e0eaff;
+  --bg2:       #f8fbff;
+  --bg3:       #d0dcff;
+  --line:      #b8c8f0;
+  --line2:     #d0dcff;
+  --muted:     #7888c0;
+  --mid:       #3040a8;
+  --text:      #181c50;
+  --heading:   #04081a;
+  --gold:      #5828b0;
+  --gold-bg:   rgba(88,40,176,.07);
+  --jade:      #0a8060;
+  --jade-bg:   rgba(10,128,96,.09);
+  --accent:    #1a4ff0;
+  --accent2:   #00a8cc;
+  --accent-bg: rgba(26,79,240,.10);
+  --red:       #c01838;
+  --red-bg:    rgba(192,24,56,.08);
+  --hover-bg:  rgba(26,79,240,.04);
+  --row-hover: rgba(26,79,240,.02);
+  --td-line:   rgba(20,30,120,.08);
 }
 
 /* ── Zen Dark (Japandi) ───────────────────────────── */
@@ -192,28 +192,28 @@ html[data-scheme="light"][data-theme="space"]
 @media (prefers-color-scheme: light) {
   html:not([data-scheme="dark"]):not([data-theme]),
   html:not([data-scheme="dark"])[data-theme="space"] {
-    --bg0:       #eef0ff;
-    --bg1:       #e4e6f8;
-    --bg2:       #ffffff;
-    --bg3:       #d8dcf8;
-    --line:      #c8ccf0;
-    --line2:     #d8dcf8;
-    --muted:     #8888b8;
-    --mid:       #4848a0;
-    --text:      #282860;
-    --heading:   #080828;
-    --gold:      #6040a0;
-    --gold-bg:   rgba(96,64,160,.07);
-    --jade:      #1a7858;
-    --jade-bg:   rgba(26,120,88,.09);
-    --accent:    #3050e8;
-    --accent2:   #6030d8;
-    --accent-bg: rgba(48,80,232,.09);
-    --red:       #c02040;
-    --red-bg:    rgba(192,32,64,.08);
-    --hover-bg:  rgba(0,0,0,.03);
-    --row-hover: rgba(0,0,0,.015);
-    --td-line:   rgba(30,30,100,.08);
+    --bg0:       #edf3ff;
+    --bg1:       #e0eaff;
+    --bg2:       #f8fbff;
+    --bg3:       #d0dcff;
+    --line:      #b8c8f0;
+    --line2:     #d0dcff;
+    --muted:     #7888c0;
+    --mid:       #3040a8;
+    --text:      #181c50;
+    --heading:   #04081a;
+    --gold:      #5828b0;
+    --gold-bg:   rgba(88,40,176,.07);
+    --jade:      #0a8060;
+    --jade-bg:   rgba(10,128,96,.09);
+    --accent:    #1a4ff0;
+    --accent2:   #00a8cc;
+    --accent-bg: rgba(26,79,240,.10);
+    --red:       #c01838;
+    --red-bg:    rgba(192,24,56,.08);
+    --hover-bg:  rgba(26,79,240,.04);
+    --row-hover: rgba(26,79,240,.02);
+    --td-line:   rgba(20,30,120,.08);
   }
   html:not([data-scheme="dark"])[data-theme="zen"] {
     --bg0:       #f4f5f7;
@@ -467,6 +467,62 @@ html[data-scheme="light"][data-theme="space"] {
   --hover-bg:  rgba(255,255,255,.04);
   --row-hover: rgba(255,255,255,.018);
   --td-line:   rgba(49,50,68,.7);
+}
+
+/* ════════════════════════════════════════════════════════════
+   GLASS MODE  (html[data-style="glass"])
+   Applies frosted-glass panels + gradient-mesh background.
+   Works with all themes — colors inherit from palette vars.
+   ════════════════════════════════════════════════════════════ */
+
+html[data-style="glass"] {
+  --radius: 10px;
+}
+
+html[data-style="glass"] body {
+  background:
+    radial-gradient(ellipse 70% 60% at 15% 55%,  var(--accent-bg)  0%, transparent 100%),
+    radial-gradient(ellipse 55% 50% at 85% 18%,  var(--gold-bg)    0%, transparent 100%),
+    radial-gradient(ellipse 50% 50% at 60% 90%,  var(--jade-bg)    0%, transparent 100%),
+    var(--bg0);
+  background-attachment: fixed;
+}
+
+html[data-style="glass"] .sidebar {
+  background: color-mix(in srgb, var(--bg1) 52%, transparent);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border-right: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+html[data-style="glass"] .topbar {
+  background: color-mix(in srgb, var(--bg0) 52%, transparent);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+html[data-style="glass"] .main {
+  background: transparent;
+}
+
+/* Content cards */
+html[data-style="glass"] .settings-group,
+html[data-style="glass"] .meta-panel {
+  background: color-mix(in srgb, var(--bg1) 60%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid color-mix(in srgb, var(--accent) 14%, transparent);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+html[data-style="glass"] table {
+  background: color-mix(in srgb, var(--bg2) 55%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: var(--radius);
+  overflow: hidden;
 }
 
 /* ════════════════════════════════════════════════════════════
