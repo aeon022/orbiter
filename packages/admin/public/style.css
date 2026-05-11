@@ -471,58 +471,98 @@ html[data-scheme="light"][data-theme="space"] {
 
 /* ════════════════════════════════════════════════════════════
    GLASS MODE  (html[data-style="glass"])
-   Applies frosted-glass panels + gradient-mesh background.
-   Works with all themes — colors inherit from palette vars.
+   Full glassmorphism: strong gradient orbs, frosted panels,
+   translucent sidebar/topbar/main. Works with all themes.
    ════════════════════════════════════════════════════════════ */
 
 html[data-style="glass"] {
-  --radius: 10px;
+  --radius: 12px;
+  --glass-blur: blur(24px) saturate(200%);
+  --glass-blur-sm: blur(14px) saturate(160%);
 }
 
+/* ── Gradient mesh background ─────────────────────────── */
+/* Uses raw accent/gold/jade at 20-25% — much stronger than --accent-bg */
 html[data-style="glass"] body {
   background:
-    radial-gradient(ellipse 70% 60% at 15% 55%,  var(--accent-bg)  0%, transparent 100%),
-    radial-gradient(ellipse 55% 50% at 85% 18%,  var(--gold-bg)    0%, transparent 100%),
-    radial-gradient(ellipse 50% 50% at 60% 90%,  var(--jade-bg)    0%, transparent 100%),
+    radial-gradient(ellipse 65% 55% at 12% 52%, color-mix(in srgb, var(--accent) 22%, transparent) 0%, transparent 100%),
+    radial-gradient(ellipse 50% 45% at 88% 14%, color-mix(in srgb, var(--gold)   16%, transparent) 0%, transparent 100%),
+    radial-gradient(ellipse 45% 50% at 58% 90%, color-mix(in srgb, var(--jade)   12%, transparent) 0%, transparent 100%),
     var(--bg0);
   background-attachment: fixed;
 }
 
-html[data-style="glass"] .sidebar {
-  background: color-mix(in srgb, var(--bg1) 52%, transparent);
-  backdrop-filter: blur(22px) saturate(180%);
-  -webkit-backdrop-filter: blur(22px) saturate(180%);
-  border-right: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
-}
-
+/* ── Topbar ───────────────────────────────────────────── */
 html[data-style="glass"] .topbar {
-  background: color-mix(in srgb, var(--bg0) 52%, transparent);
-  backdrop-filter: blur(22px) saturate(180%);
-  -webkit-backdrop-filter: blur(22px) saturate(180%);
-  border-bottom: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  background: color-mix(in srgb, var(--bg0) 42%, transparent);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--accent) 10%, transparent),
+              inset 0 -1px 0 color-mix(in srgb, var(--accent) 6%, transparent);
 }
 
+/* ── Sidebar ──────────────────────────────────────────── */
+html[data-style="glass"] .sidebar {
+  background: color-mix(in srgb, var(--bg1) 42%, transparent);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-right: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+/* Active nav item glow */
+html[data-style="glass"] .nav-item.active {
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+/* ── Main content area ────────────────────────────────── */
 html[data-style="glass"] .main {
-  background: transparent;
-}
-
-/* Content cards */
-html[data-style="glass"] .settings-group,
-html[data-style="glass"] .meta-panel {
-  background: color-mix(in srgb, var(--bg1) 60%, transparent);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: color-mix(in srgb, var(--bg2) 38%, transparent);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  margin: 6px 6px 6px 0;
+  border-radius: var(--radius);
   border: 1px solid color-mix(in srgb, var(--accent) 14%, transparent);
-  border-radius: var(--radius);
-  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,.18),
+              inset 0 1px 0 color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
-html[data-style="glass"] table {
-  background: color-mix(in srgb, var(--bg2) 55%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: var(--radius);
+/* ── Content cards (float on the glass main) ──────────── */
+html[data-style="glass"] .settings-group {
+  background: color-mix(in srgb, var(--bg1) 50%, transparent) !important;
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  border: 1px solid color-mix(in srgb, var(--accent) 14%, transparent) !important;
+  border-radius: 10px;
   overflow: hidden;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.12),
+              inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+html[data-style="glass"] .meta-panel {
+  background: color-mix(in srgb, var(--bg1) 48%, transparent);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  border-left: 1px solid color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+/* Table glass card */
+html[data-style="glass"] .table-wrap,
+html[data-style="glass"] .table-outer {
+  background: color-mix(in srgb, var(--bg2) 50%, transparent);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  border: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,.10);
+}
+
+/* Subtle inner glow on buttons in glass mode */
+html[data-style="glass"] .btn-publish,
+html[data-style="glass"] .btn-save {
+  box-shadow: 0 0 16px color-mix(in srgb, var(--gold) 35%, transparent);
 }
 
 /* ════════════════════════════════════════════════════════════
