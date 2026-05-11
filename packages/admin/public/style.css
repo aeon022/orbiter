@@ -216,16 +216,16 @@ html[data-scheme="light"][data-theme="space"]
     --td-line:   rgba(30,30,100,.08);
   }
   html:not([data-scheme="dark"])[data-theme="zen"] {
-    --bg0:       #f8f5f8;
-    --bg1:       #f0ecf2;
-    --bg2:       #fdf9fd;
-    --bg3:       #e6e0ea;
-    --line:      #d4ccd8;
-    --line2:     #e2dce8;
-    --muted:     #988898;
-    --mid:       #58586a;
-    --text:      #302838;
-    --heading:   #180818;
+    --bg0:       #f4f5f7;
+    --bg1:       #ecedf2;
+    --bg2:       #ffffff;
+    --bg3:       #e0e2e8;
+    --line:      #cccdd8;
+    --line2:     #d8d9e4;
+    --muted:     #8c8fa0;
+    --mid:       #4a5060;
+    --text:      #282c38;
+    --heading:   #10131e;
     --gold:      #8c5858;
     --gold-bg:   rgba(140,88,88,.08);
     --jade:      #3d6b40;
@@ -237,7 +237,7 @@ html[data-scheme="light"][data-theme="space"]
     --red-bg:    rgba(176,64,48,.08);
     --hover-bg:  rgba(0,0,0,.025);
     --row-hover: rgba(0,0,0,.012);
-    --td-line:   rgba(90,80,100,.12);
+    --td-line:   rgba(70,75,90,.12);
   }
   html:not([data-scheme="dark"])[data-theme="catppuccin"] {
     --bg0:       #eff1f5;
@@ -265,7 +265,33 @@ html[data-scheme="light"][data-theme="space"]
   }
 }
 
-/* ── Manual dark override per theme ─────────────── */
+/* ── Zen Light explicit override ─────────────────── */
+html[data-scheme="light"][data-theme="zen"] {
+  --bg0:       #f4f5f7;
+  --bg1:       #ecedf2;
+  --bg2:       #ffffff;
+  --bg3:       #e0e2e8;
+  --line:      #cccdd8;
+  --line2:     #d8d9e4;
+  --muted:     #8c8fa0;
+  --mid:       #4a5060;
+  --text:      #282c38;
+  --heading:   #10131e;
+  --gold:      #8c5858;
+  --gold-bg:   rgba(140,88,88,.08);
+  --jade:      #3d6b40;
+  --jade-bg:   rgba(61,107,64,.09);
+  --accent:    #3a4a58;
+  --accent2:   #8c5858;
+  --accent-bg: rgba(58,74,88,.10);
+  --red:       #b04030;
+  --red-bg:    rgba(176,64,48,.08);
+  --hover-bg:  rgba(0,0,0,.025);
+  --row-hover: rgba(0,0,0,.012);
+  --td-line:   rgba(70,75,90,.12);
+}
+
+/* ── Zen Dark ────────────────────────────────────── */
 html[data-theme="zen"],
 html[data-scheme="dark"][data-theme="zen"] {
   --bg0:       #0f0e10;
