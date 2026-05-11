@@ -175,6 +175,11 @@
       <div class="topbar-right">
         <span id="autosave-indicator"></span>
         <span id="wc" style="font-size:10px;color:var(--muted);padding:0 8px;"></span>
+        <div class="view-toggle" onmousedown="event.preventDefault()" style="margin-left:0;margin-right:12px;">
+          <button type="button" class="view-btn active" id="vbtn-edit"    onclick="setViewMode('edit')">Edit</button>
+          <button type="button" class="view-btn"        id="vbtn-split"   onclick="setViewMode('split')">Split</button>
+          <button type="button" class="view-btn"        id="vbtn-preview" onclick="setViewMode('preview')">Preview</button>
+        </div>
         <button class="scheme-toggle" id="scheme-toggle" title="Toggle scheme">◐</button>
         <span class="user" id="topbar-user"></span>
         <span class="logout" id="logout-btn">Sign out</span>
@@ -197,11 +202,6 @@
             <button type="button" class="tool-btn" onclick="changeBlockType('blockquote')" >❝</button>
             <button type="button" class="tool-btn" onclick="changeBlockType('ul')"         style="font-size:12px;">·</button>
             <button type="button" class="tool-btn" onclick="insertHr()"                   style="font-size:9px;">—</button>
-          </div>
-          <div class="view-toggle" onmousedown="event.preventDefault()">
-            <button type="button" class="view-btn active" id="vbtn-edit"    onclick="setViewMode('edit')">Edit</button>
-            <button type="button" class="view-btn"        id="vbtn-split"   onclick="setViewMode('split')">Split</button>
-            <button type="button" class="view-btn"        id="vbtn-preview" onclick="setViewMode('preview')">Preview</button>
           </div>
         </div>
         <div class="editor-scroll">
