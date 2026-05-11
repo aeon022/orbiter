@@ -216,16 +216,16 @@ html[data-scheme="light"][data-theme="space"]
     --td-line:   rgba(30,30,100,.08);
   }
   html:not([data-scheme="dark"])[data-theme="zen"] {
-    --bg0:       #fdf8f5;
-    --bg1:       #f5ede8;
-    --bg2:       #fffbf9;
-    --bg3:       #ede0d8;
-    --line:      #d8c8c0;
-    --line2:     #e8dcd6;
-    --muted:     #a09088;
-    --mid:       #6a5850;
-    --text:      #3a2820;
-    --heading:   #1e0e08;
+    --bg0:       #f8f5f8;
+    --bg1:       #f0ecf2;
+    --bg2:       #fdf9fd;
+    --bg3:       #e6e0ea;
+    --line:      #d4ccd8;
+    --line2:     #e2dce8;
+    --muted:     #988898;
+    --mid:       #58586a;
+    --text:      #302838;
+    --heading:   #180818;
     --gold:      #8c5858;
     --gold-bg:   rgba(140,88,88,.08);
     --jade:      #3d6b40;
@@ -237,7 +237,7 @@ html[data-scheme="light"][data-theme="space"]
     --red-bg:    rgba(176,64,48,.08);
     --hover-bg:  rgba(0,0,0,.025);
     --row-hover: rgba(0,0,0,.012);
-    --td-line:   rgba(100,80,70,.12);
+    --td-line:   rgba(90,80,100,.12);
   }
   html:not([data-scheme="dark"])[data-theme="catppuccin"] {
     --bg0:       #eff1f5;
@@ -268,16 +268,16 @@ html[data-scheme="light"][data-theme="space"]
 /* ── Manual dark override per theme ─────────────── */
 html[data-theme="zen"],
 html[data-scheme="dark"][data-theme="zen"] {
-  --bg0:       #100e0c;
-  --bg1:       #171410;
-  --bg2:       #1e1a16;
-  --bg3:       #272118;
-  --line:      #302820;
-  --line2:     #251f18;
+  --bg0:       #0f0e10;
+  --bg1:       #151416;
+  --bg2:       #1c1a20;
+  --bg3:       #242228;
+  --line:      #2c2830;
+  --line2:     #221f26;
   --muted:     #574838;
-  --mid:       #8c7860;
-  --text:      #b5a890;
-  --heading:   #e8cac8;
+  --mid:       #6e7a88;
+  --text:      #98a4b0;
+  --heading:   #e0ccd0;
   --gold:      #ad7575;
   --gold-bg:   rgba(173,117,117,.08);
   --jade:      #6b8c6e;
@@ -289,7 +289,7 @@ html[data-scheme="dark"][data-theme="zen"] {
   --red-bg:    rgba(192,112,96,.10);
   --hover-bg:  rgba(255,255,255,.028);
   --row-hover: rgba(255,255,255,.012);
-  --td-line:   rgba(48,40,32,.8);
+  --td-line:   rgba(46,40,48,.8);
 }
 html[data-scheme="dark"][data-theme="catppuccin"] {
   --bg0:       #11111b;
