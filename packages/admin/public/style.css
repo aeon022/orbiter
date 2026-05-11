@@ -646,6 +646,10 @@ html[data-style="glass"] .ws-panel {
   border: 1px solid var(--glass-border) !important;
   border-radius: 12px;
   box-shadow: var(--glass-shadow);
+  min-height: 320px;
+}
+html[data-style="glass"] .notes-area {
+  min-height: 240px;
 }
 html[data-style="glass"] .ws-panel + .ws-panel {
   border-left-color: var(--glass-border);
