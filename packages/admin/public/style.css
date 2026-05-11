@@ -65,56 +65,57 @@
   --td-line:   rgba(30,30,100,.08);
 }
 
-/* ── Zen Dark ─────────────────────────────────────── */
+/* ── Zen Dark (Japandi) ───────────────────────────── */
+/* Palette: Slate #566070 · Umber #574838 · Sand #b5a890 · Sakura #e8cac8 · Mauve #ad7575 */
 .zen-dark {
-  --bg0:       #0e0c0a;
-  --bg1:       #141210;
-  --bg2:       #1c1916;
-  --bg3:       #252018;
-  --line:      #302a20;
-  --line2:     #241e18;
-  --muted:     #504840;
-  --mid:       #807060;
-  --text:      #c0b0a0;
-  --heading:   #f0e4d0;
-  --gold:      #d0a860;
-  --gold-bg:   rgba(208,168,96,.08);
-  --jade:      #60a870;
-  --jade-bg:   rgba(96,168,112,.10);
-  --accent:    #c09060;
-  --accent2:   #a07040;
-  --accent-bg: rgba(192,144,96,.10);
-  --red:       #d06858;
-  --red-bg:    rgba(208,104,88,.10);
+  --bg0:       #100e0c;
+  --bg1:       #171410;
+  --bg2:       #1e1a16;
+  --bg3:       #272118;
+  --line:      #302820;
+  --line2:     #251f18;
+  --muted:     #574838;
+  --mid:       #8c7860;
+  --text:      #b5a890;
+  --heading:   #e8cac8;
+  --gold:      #ad7575;
+  --gold-bg:   rgba(173,117,117,.08);
+  --jade:      #6b8c6e;
+  --jade-bg:   rgba(107,140,110,.10);
+  --accent:    #566070;
+  --accent2:   #ad7575;
+  --accent-bg: rgba(86,96,112,.12);
+  --red:       #c07060;
+  --red-bg:    rgba(192,112,96,.10);
   --hover-bg:  rgba(255,255,255,.028);
   --row-hover: rgba(255,255,255,.012);
-  --td-line:   rgba(48,42,32,.8);
+  --td-line:   rgba(48,40,32,.8);
 }
 
-/* ── Zen Light ─────────────────────────────────────── */
+/* ── Zen Light (Japandi) ──────────────────────────── */
 .zen-light {
-  --bg0:       #f8f4ee;
-  --bg1:       #f0ebe2;
-  --bg2:       #fffef8;
-  --bg3:       #e8e0d0;
-  --line:      #dcd4c0;
-  --line2:     #e8e0d0;
-  --muted:     #a09080;
-  --mid:       #6a5a48;
-  --text:      #3a3020;
-  --heading:   #1a0e00;
-  --gold:      #7a5010;
-  --gold-bg:   rgba(122,80,16,.07);
-  --jade:      #1a6840;
-  --jade-bg:   rgba(26,104,64,.09);
-  --accent:    #8a5820;
-  --accent2:   #7a4018;
-  --accent-bg: rgba(138,88,32,.09);
-  --red:       #c03828;
-  --red-bg:    rgba(192,56,40,.08);
-  --hover-bg:  rgba(0,0,0,.028);
+  --bg0:       #fdf8f5;
+  --bg1:       #f5ede8;
+  --bg2:       #fffbf9;
+  --bg3:       #ede0d8;
+  --line:      #d8c8c0;
+  --line2:     #e8dcd6;
+  --muted:     #a09088;
+  --mid:       #6a5850;
+  --text:      #3a2820;
+  --heading:   #1e0e08;
+  --gold:      #8c5858;
+  --gold-bg:   rgba(140,88,88,.08);
+  --jade:      #3d6b40;
+  --jade-bg:   rgba(61,107,64,.09);
+  --accent:    #3a4a58;
+  --accent2:   #8c5858;
+  --accent-bg: rgba(58,74,88,.10);
+  --red:       #b04030;
+  --red-bg:    rgba(176,64,48,.08);
+  --hover-bg:  rgba(0,0,0,.025);
   --row-hover: rgba(0,0,0,.012);
-  --td-line:   rgba(120,100,80,.12);
+  --td-line:   rgba(100,80,70,.12);
 }
 
 /* ── Catppuccin Mocha (Dark) ─────────────────────── */
