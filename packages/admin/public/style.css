@@ -9,60 +9,60 @@
    4. [data-theme]   → palette swap (Zen / Catppuccin)
    ════════════════════════════════════════════════════════════ */
 
-/* ── Space Dark (default) ─────────────────────────── */
+/* ── Space Dark (default) — Space Station ─────────── */
 :root {
-  --bg0:       #08080f;
-  --bg1:       #0d0d18;
-  --bg2:       #12121e;
-  --bg3:       #1a1a2e;
-  --line:      #1e2040;
-  --line2:     #181830;
-  --muted:     #40406a;
-  --mid:       #6868a8;
-  --text:      #a0a8d0;
-  --heading:   #dde0ff;
-  --gold:      #d0a860;
-  --gold-bg:   rgba(208,168,96,.08);
-  --jade:      #30b882;
-  --jade-bg:   rgba(48,184,130,.09);
-  --accent:    #607af8;
-  --accent2:   #9060f8;
-  --accent-bg: rgba(96,122,248,.10);
-  --red:       #f07080;
-  --red-bg:    rgba(240,112,128,.10);
-  --hover-bg:  rgba(255,255,255,.028);
-  --row-hover: rgba(255,255,255,.012);
-  --td-line:   rgba(20,22,64,.8);
+  --bg0:       #080e18;
+  --bg1:       #0e1620;
+  --bg2:       #131d2c;
+  --bg3:       #1a2638;
+  --line:      #1c2e46;
+  --line2:     #132030;
+  --muted:     #284060;
+  --mid:       #4a7098;
+  --text:      #7898c0;
+  --heading:   #b8d4f0;
+  --gold:      #00c8a0;
+  --gold-bg:   rgba(0,200,160,.08);
+  --jade:      #00d8b8;
+  --jade-bg:   rgba(0,216,184,.09);
+  --accent:    #1898f8;
+  --accent2:   #8050e8;
+  --accent-bg: rgba(24,152,248,.10);
+  --red:       #e85870;
+  --red-bg:    rgba(232,88,112,.10);
+  --hover-bg:  rgba(24,152,248,.04);
+  --row-hover: rgba(24,152,248,.018);
+  --td-line:   rgba(8,16,40,.85);
   --sans:      "Inter", system-ui, -apple-system, sans-serif;
   --mono:      "DM Mono", "Fira Mono", monospace;
   --serif:     "Noto Serif JP", serif;
   --radius:    5px;
 }
 
-/* ── Space Light ─────────────────────────────────── */
+/* ── Space Light — Solar Command ─────────────────── */
 .space-light {
-  --bg0:       #edf3ff;
-  --bg1:       #e0eaff;
-  --bg2:       #f8fbff;
-  --bg3:       #d0dcff;
-  --line:      #b8c8f0;
-  --line2:     #d0dcff;
-  --muted:     #7888c0;
-  --mid:       #3040a8;
-  --text:      #181c50;
-  --heading:   #04081a;
-  --gold:      #5828b0;
-  --gold-bg:   rgba(88,40,176,.07);
-  --jade:      #0a8060;
-  --jade-bg:   rgba(10,128,96,.09);
-  --accent:    #1a4ff0;
-  --accent2:   #00a8cc;
-  --accent-bg: rgba(26,79,240,.10);
-  --red:       #c01838;
-  --red-bg:    rgba(192,24,56,.08);
-  --hover-bg:  rgba(26,79,240,.04);
-  --row-hover: rgba(26,79,240,.02);
-  --td-line:   rgba(20,30,120,.08);
+  --bg0:       #eef5ff;
+  --bg1:       #e4f0ff;
+  --bg2:       #f8fcff;
+  --bg3:       #d0e8ff;
+  --line:      #b0ccf0;
+  --line2:     #cce0ff;
+  --muted:     #6080a8;
+  --mid:       #204878;
+  --text:      #0a1e3a;
+  --heading:   #030d1e;
+  --gold:      #0088b8;
+  --gold-bg:   rgba(0,136,184,.07);
+  --jade:      #006880;
+  --jade-bg:   rgba(0,104,128,.08);
+  --accent:    #0048d8;
+  --accent2:   #5828c8;
+  --accent-bg: rgba(0,72,216,.09);
+  --red:       #c02040;
+  --red-bg:    rgba(192,32,64,.08);
+  --hover-bg:  rgba(0,72,216,.03);
+  --row-hover: rgba(0,72,216,.015);
+  --td-line:   rgba(10,25,70,.07);
 }
 
 /* ── Zen Dark (Japandi) ───────────────────────────── */
@@ -192,28 +192,28 @@ html[data-scheme="light"][data-theme="space"]
 @media (prefers-color-scheme: light) {
   html:not([data-scheme="dark"]):not([data-theme]),
   html:not([data-scheme="dark"])[data-theme="space"] {
-    --bg0:       #edf3ff;
-    --bg1:       #e0eaff;
-    --bg2:       #f8fbff;
-    --bg3:       #d0dcff;
-    --line:      #b8c8f0;
-    --line2:     #d0dcff;
-    --muted:     #7888c0;
-    --mid:       #3040a8;
-    --text:      #181c50;
-    --heading:   #04081a;
-    --gold:      #5828b0;
-    --gold-bg:   rgba(88,40,176,.07);
-    --jade:      #0a8060;
-    --jade-bg:   rgba(10,128,96,.09);
-    --accent:    #1a4ff0;
-    --accent2:   #00a8cc;
-    --accent-bg: rgba(26,79,240,.10);
-    --red:       #c01838;
-    --red-bg:    rgba(192,24,56,.08);
-    --hover-bg:  rgba(26,79,240,.04);
-    --row-hover: rgba(26,79,240,.02);
-    --td-line:   rgba(20,30,120,.08);
+    --bg0:       #eef5ff;
+    --bg1:       #e4f0ff;
+    --bg2:       #f8fcff;
+    --bg3:       #d0e8ff;
+    --line:      #b0ccf0;
+    --line2:     #cce0ff;
+    --muted:     #6080a8;
+    --mid:       #204878;
+    --text:      #0a1e3a;
+    --heading:   #030d1e;
+    --gold:      #0088b8;
+    --gold-bg:   rgba(0,136,184,.07);
+    --jade:      #006880;
+    --jade-bg:   rgba(0,104,128,.08);
+    --accent:    #0048d8;
+    --accent2:   #5828c8;
+    --accent-bg: rgba(0,72,216,.09);
+    --red:       #c02040;
+    --red-bg:    rgba(192,32,64,.08);
+    --hover-bg:  rgba(0,72,216,.03);
+    --row-hover: rgba(0,72,216,.015);
+    --td-line:   rgba(10,25,70,.07);
   }
   html:not([data-scheme="dark"])[data-theme="zen"] {
     --bg0:       #f4f5f7;
@@ -393,28 +393,28 @@ html[data-scheme="light"][data-theme="catppuccin"] {
 }
 html[data-scheme="light"]:not([data-theme]),
 html[data-scheme="light"][data-theme="space"] {
-  --bg0:       #eef0ff;
-  --bg1:       #e4e6f8;
-  --bg2:       #ffffff;
-  --bg3:       #d8dcf8;
-  --line:      #c8ccf0;
-  --line2:     #d8dcf8;
-  --muted:     #8888b8;
-  --mid:       #4848a0;
-  --text:      #282860;
-  --heading:   #080828;
-  --gold:      #6040a0;
-  --gold-bg:   rgba(96,64,160,.07);
-  --jade:      #1a7858;
-  --jade-bg:   rgba(26,120,88,.09);
-  --accent:    #3050e8;
-  --accent2:   #6030d8;
-  --accent-bg: rgba(48,80,232,.09);
+  --bg0:       #eef5ff;
+  --bg1:       #e4f0ff;
+  --bg2:       #f8fcff;
+  --bg3:       #d0e8ff;
+  --line:      #b0ccf0;
+  --line2:     #cce0ff;
+  --muted:     #6080a8;
+  --mid:       #204878;
+  --text:      #0a1e3a;
+  --heading:   #030d1e;
+  --gold:      #0088b8;
+  --gold-bg:   rgba(0,136,184,.07);
+  --jade:      #006880;
+  --jade-bg:   rgba(0,104,128,.08);
+  --accent:    #0048d8;
+  --accent2:   #5828c8;
+  --accent-bg: rgba(0,72,216,.09);
   --red:       #c02040;
   --red-bg:    rgba(192,32,64,.08);
-  --hover-bg:  rgba(0,0,0,.03);
-  --row-hover: rgba(0,0,0,.015);
-  --td-line:   rgba(30,30,100,.08);
+  --hover-bg:  rgba(0,72,216,.03);
+  --row-hover: rgba(0,72,216,.015);
+  --td-line:   rgba(10,25,70,.07);
 }
 
 /* Zen dark base (lower specificity so @media auto-light overrides) */
