@@ -72,7 +72,7 @@
       </div>
     </nav>
     <main class="main">
-      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+      <div class="page-header glass-card" style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
         <div>
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">
             <a href="/collections.html" style="color:var(--muted)">Collections</a>
@@ -85,24 +85,27 @@
         <button class="btn btn-primary" id="new-btn" style="flex-shrink:0;margin-top:4px">+ New entry</button>
       </div>
 
-      <!-- Filter bar -->
-      <div style="display:flex;gap:6px;margin-bottom:16px">
-        <button class="filter-tab active" data-status="">All</button>
-        <button class="filter-tab" data-status="published">Published</button>
-        <button class="filter-tab" data-status="draft">Drafts</button>
-      </div>
+      <!-- Filter + table glass card -->
+      <div class="glass-card entries-content-card">
+        <!-- Filter bar -->
+        <div class="entries-filter-bar" style="display:flex;gap:6px">
+          <button class="filter-tab active" data-status="">All</button>
+          <button class="filter-tab" data-status="published">Published</button>
+          <button class="filter-tab" data-status="draft">Drafts</button>
+        </div>
 
-      <!-- Bulk action bar -->
-      <div class="bulk-bar" id="bulk-bar">
-        <span><span class="bulk-bar-count" id="bulk-count">0</span> selected</span>
-        <button class="btn btn-ghost btn-sm" id="bulk-publish">Publish</button>
-        <button class="btn btn-ghost btn-sm" id="bulk-draft">Unpublish</button>
-        <span class="bulk-bar-spacer"></span>
-        <button class="btn btn-danger btn-sm" id="bulk-delete">Delete selected</button>
-      </div>
+        <!-- Bulk action bar -->
+        <div class="bulk-bar" id="bulk-bar">
+          <span><span class="bulk-bar-count" id="bulk-count">0</span> selected</span>
+          <button class="btn btn-ghost btn-sm" id="bulk-publish">Publish</button>
+          <button class="btn btn-ghost btn-sm" id="bulk-draft">Unpublish</button>
+          <span class="bulk-bar-spacer"></span>
+          <button class="btn btn-danger btn-sm" id="bulk-delete">Delete selected</button>
+        </div>
 
-      <div class="table-wrap" id="entries-wrap">
-        <div class="empty"><div class="spinner"></div></div>
+        <div class="table-wrap" id="entries-wrap">
+          <div class="empty"><div class="spinner"></div></div>
+        </div>
       </div>
     
   <script type="module">

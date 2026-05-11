@@ -471,98 +471,223 @@ html[data-scheme="light"][data-theme="space"] {
 
 /* ════════════════════════════════════════════════════════════
    GLASS MODE  (html[data-style="glass"])
-   Full glassmorphism: strong gradient orbs, frosted panels,
-   translucent sidebar/topbar/main. Works with all themes.
+   Each UI section is its own floating frosted-glass card.
    ════════════════════════════════════════════════════════════ */
 
 html[data-style="glass"] {
   --radius: 12px;
-  --glass-blur: blur(24px) saturate(200%);
-  --glass-blur-sm: blur(14px) saturate(160%);
+  --glass-blur:    blur(24px) saturate(200%);
+  --glass-blur-sm: blur(16px) saturate(180%);
+  --glass-border:  color-mix(in srgb, var(--accent) 18%, transparent);
+  --glass-bg:      color-mix(in srgb, var(--bg2) 44%, transparent);
+  --glass-bg-side: color-mix(in srgb, var(--bg1) 44%, transparent);
+  --glass-shadow:  0 4px 28px rgba(0,0,0,.16), inset 0 1px 0 rgba(255,255,255,.07);
 }
 
-/* ── Gradient mesh background ─────────────────────────── */
-/* Uses raw accent/gold/jade at 20-25% — much stronger than --accent-bg */
+/* ── Gradient mesh ──────────────────────────────────── */
 html[data-style="glass"] body {
   background:
-    radial-gradient(ellipse 65% 55% at 12% 52%, color-mix(in srgb, var(--accent) 22%, transparent) 0%, transparent 100%),
-    radial-gradient(ellipse 50% 45% at 88% 14%, color-mix(in srgb, var(--gold)   16%, transparent) 0%, transparent 100%),
-    radial-gradient(ellipse 45% 50% at 58% 90%, color-mix(in srgb, var(--jade)   12%, transparent) 0%, transparent 100%),
+    radial-gradient(ellipse 65% 55% at 12% 52%, color-mix(in srgb, var(--accent) 24%, transparent) 0%, transparent 100%),
+    radial-gradient(ellipse 50% 45% at 88% 14%, color-mix(in srgb, var(--gold)   18%, transparent) 0%, transparent 100%),
+    radial-gradient(ellipse 45% 50% at 58% 90%, color-mix(in srgb, var(--jade)   13%, transparent) 0%, transparent 100%),
     var(--bg0);
   background-attachment: fixed;
 }
 
-/* ── Topbar ───────────────────────────────────────────── */
+/* ── Topbar ─────────────────────────────────────────── */
 html[data-style="glass"] .topbar {
   background: color-mix(in srgb, var(--bg0) 42%, transparent);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  border-bottom: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
-  box-shadow: 0 1px 0 color-mix(in srgb, var(--accent) 10%, transparent),
-              inset 0 -1px 0 color-mix(in srgb, var(--accent) 6%, transparent);
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: 0 2px 24px rgba(0,0,0,.14);
 }
 
-/* ── Sidebar ──────────────────────────────────────────── */
+/* ── Sidebar: floating glass card ───────────────────── */
 html[data-style="glass"] .sidebar {
-  background: color-mix(in srgb, var(--bg1) 42%, transparent);
+  background: var(--glass-bg-side);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  border-right: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+  border-right: none;
+  border: 1px solid var(--glass-border);
+  border-radius: 0 12px 12px 0;
+  box-shadow: var(--glass-shadow);
 }
 
-/* Active nav item glow */
 html[data-style="glass"] .nav-item.active {
-  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 25%, transparent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
-/* ── Main content area ────────────────────────────────── */
+/* ── Main: transparent flex container ───────────────── */
 html[data-style="glass"] .main {
-  background: color-mix(in srgb, var(--bg2) 38%, transparent);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  margin: 6px 6px 6px 0;
-  border-radius: var(--radius);
-  border: 1px solid color-mix(in srgb, var(--accent) 14%, transparent);
-  box-shadow: 0 8px 32px rgba(0,0,0,.18),
-              inset 0 1px 0 color-mix(in srgb, var(--accent) 8%, transparent);
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  padding: 10px 12px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-/* ── Content cards (float on the glass main) ──────────── */
-html[data-style="glass"] .settings-group {
-  background: color-mix(in srgb, var(--bg1) 50%, transparent) !important;
+/* ── Universal glass card ───────────────────────────── */
+html[data-style="glass"] .glass-card {
+  background: var(--glass-bg);
   backdrop-filter: var(--glass-blur-sm);
   -webkit-backdrop-filter: var(--glass-blur-sm);
-  border: 1px solid color-mix(in srgb, var(--accent) 14%, transparent) !important;
-  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  box-shadow: var(--glass-shadow);
   overflow: hidden;
-  margin-bottom: 10px;
-  box-shadow: 0 4px 20px rgba(0,0,0,.12),
-              inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+/* ── Settings groups ────────────────────────────────── */
+html[data-style="glass"] .settings-group {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur-sm) !important;
+  -webkit-backdrop-filter: var(--glass-blur-sm) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--glass-shadow);
+}
+
+/* ── Editor shell ───────────────────────────────────── */
+html[data-style="glass"] .editor-shell {
+  gap: 8px;
+  padding: 8px;
+  background: transparent;
+}
+
+html[data-style="glass"] .editor-main {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+html[data-style="glass"] .preview-panel {
+  background: var(--glass-bg-side);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 html[data-style="glass"] .meta-panel {
-  background: color-mix(in srgb, var(--bg1) 48%, transparent);
+  background: var(--glass-bg-side);
   backdrop-filter: var(--glass-blur-sm);
   -webkit-backdrop-filter: var(--glass-blur-sm);
-  border-left: 1px solid color-mix(in srgb, var(--accent) 14%, transparent);
-}
-
-/* Table glass card */
-html[data-style="glass"] .table-wrap,
-html[data-style="glass"] .table-outer {
-  background: color-mix(in srgb, var(--bg2) 50%, transparent);
-  backdrop-filter: var(--glass-blur-sm);
-  -webkit-backdrop-filter: var(--glass-blur-sm);
-  border: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
-  border-radius: 10px;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,.10);
+  box-shadow: var(--glass-shadow);
 }
 
-/* Subtle inner glow on buttons in glass mode */
-html[data-style="glass"] .btn-publish,
-html[data-style="glass"] .btn-save {
-  box-shadow: 0 0 16px color-mix(in srgb, var(--gold) 35%, transparent);
+/* ── Dashboard glass overrides ──────────────────────── */
+html[data-style="glass"] .hero {
+  background: transparent;
+  border-bottom: none;
+}
+html[data-style="glass"] .stats-row {
+  border-bottom: none;
+}
+html[data-style="glass"] .stat-cell {
+  border-right-color: var(--glass-border);
+}
+html[data-style="glass"] .dash-content .content-main {
+  border-right-color: var(--glass-border);
+}
+html[data-style="glass"] .workspace {
+  border-top: none;
+}
+html[data-style="glass"] .ws-panel + .ws-panel {
+  border-left-color: var(--glass-border);
+}
+
+/* ── Entries glass overrides ────────────────────────── */
+html[data-style="glass"] .page-header {
+  margin-bottom: 0;
+  padding: 20px 24px;
+}
+html[data-style="glass"] .entries-content-card {
+  padding: 16px 20px;
+}
+html[data-style="glass"] .entries-filter-bar {
+  margin-bottom: 12px;
+}
+
+/* ── Auto-glass content sections (non-dashboard pages) ─ */
+html[data-style="glass"] .table-wrap {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  box-shadow: var(--glass-shadow);
+}
+html[data-style="glass"] .glass-card .table-wrap {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+html[data-style="glass"] .build-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  box-shadow: var(--glass-shadow);
+}
+html[data-style="glass"] .main:has(.coll-panel) {
+  padding: 8px !important;
+  gap: 8px;
+}
+html[data-style="glass"] .coll-panel,
+html[data-style="glass"] .editor-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  border: 1px solid var(--glass-border) !important;
+  border-right: 1px solid var(--glass-border) !important;
+  border-radius: 12px;
+  box-shadow: var(--glass-shadow);
+  overflow: hidden;
+  height: auto;
+}
+html[data-style="glass"] .upload-area {
+  background: color-mix(in srgb, var(--glass-bg) 80%, transparent);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  border: 1px dashed var(--glass-border);
+  border-radius: 12px;
+}
+html[data-style="glass"] #media-grid-wrap {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  box-shadow: var(--glass-shadow);
+  padding: 16px;
+}
+
+/* ── Glow accents ───────────────────────────────────── */
+html[data-style="glass"] .btn-publish {
+  box-shadow: 0 0 18px color-mix(in srgb, var(--gold) 40%, transparent);
+}
+
+html[data-style="glass"] .btn-primary {
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -728,7 +853,8 @@ a:hover { color: var(--heading); }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
 /* ── Page header ─────────────────────────────────── */
-.page-header { margin-bottom: 28px; }
+.page-header { margin-bottom: 28px; padding: 0; }
+.entries-filter-bar { margin-bottom: 16px; }
 .page-title { font-family: var(--serif); font-weight: 200; font-size: 22px; color: var(--heading); letter-spacing: 0.06em; }
 .page-sub { font-size: 11px; color: var(--muted); margin-top: 4px; font-family: var(--mono); }
 
