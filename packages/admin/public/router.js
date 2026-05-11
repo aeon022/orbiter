@@ -51,13 +51,17 @@
 
   function execModuleScripts(container) {
     container.querySelectorAll('script[type="module"]').forEach(function (old) {
-      var s = document.createElement('script');
-      s.type = 'module';
-      Array.from(old.attributes).forEach(function (attr) {
-        if (attr.name !== 'type') s.setAttribute(attr.name, attr.value);
+      var code = old.textContent;
+      old.remove();
+      // Blob URL import() is the only reliable way to re-execute module scripts
+      // (replaceChild/innerHTML does not re-trigger browser module execution)
+      var blob = new Blob([code], { type: 'text/javascript' });
+      var blobUrl = URL.createObjectURL(blob);
+      import(blobUrl).catch(function (e) {
+        console.error('[router] page script error:', e);
+      }).finally(function () {
+        URL.revokeObjectURL(blobUrl);
       });
-      s.textContent = old.textContent;
-      old.parentNode.replaceChild(s, old);
     });
   }
 

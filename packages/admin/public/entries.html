@@ -331,10 +331,8 @@
 
     loadEntries();
   </script>
-</main>
-  </div>
 
-  <!-- New entry modal -->
+  <!-- New entry modal (inside .main so SPA navigation keeps it) -->
   <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center">
     <div style="background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:28px 32px;width:400px;max-width:90vw">
       <h3 style="font-size:14px;color:var(--heading);margin-bottom:20px;font-weight:500">New Entry</h3>
@@ -352,6 +350,8 @@
         <button class="btn btn-primary" id="modal-create">Create</button>
       </div>
     </div>
+  </div>
+</main>
   </div>
 
   <script src="/search.js"></script>
