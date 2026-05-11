@@ -24,20 +24,17 @@
     .bulk-bar.visible { display: flex; }
     .bulk-bar-count { color: var(--accent); font-family: var(--mono); margin-right: 4px; }
     .bulk-bar-spacer { flex: 1; }
-    .status-toggle {
-      font-family: var(--mono);
-      font-size: 10px;
-      padding: 2px 8px;
-      border-radius: 3px;
-      border: 1px solid var(--line);
-      background: none;
-      cursor: pointer;
-      color: var(--mid);
-      transition: background 0.1s, color 0.1s;
-    }
-    .status-toggle:hover { background: rgba(255,255,255,0.05); color: var(--text); }
     .cb-col { width: 32px; padding-left: 16px !important; }
     input[type=checkbox] { accent-color: var(--accent); width: 13px; height: 13px; cursor: pointer; }
+    /* row action buttons — xs size, no text-transform */
+    .btn-row { display:inline-flex; align-items:center; padding:3px 9px; font-size:10px; font-family:var(--mono); border-radius:4px; border:1px solid var(--line); background:none; color:var(--mid); cursor:pointer; transition:all 0.12s; text-decoration:none; letter-spacing:0; white-space:nowrap; }
+    .btn-row:hover { color:var(--heading); border-color:var(--mid); background:var(--hover-bg); }
+    .btn-row-danger { color:var(--red); border-color:transparent; }
+    .btn-row-danger:hover { background:var(--red-bg); border-color:var(--red); color:var(--red); }
+    /* filter tabs */
+    .filter-tab { display:inline-flex; align-items:center; padding:3px 11px; font-size:10px; font-family:var(--mono); border-radius:20px; border:1px solid var(--line); background:none; color:var(--muted); cursor:pointer; transition:all 0.12s; }
+    .filter-tab:hover { color:var(--text); border-color:var(--mid); }
+    .filter-tab.active { background:var(--accent-bg); color:var(--accent); border-color:var(--accent); }
   </style>
 </head>
 <body>
@@ -86,10 +83,10 @@
       </div>
 
       <!-- Filter bar -->
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <button class="btn btn-ghost btn-sm filter-btn active" data-status="">All</button>
-        <button class="btn btn-ghost btn-sm filter-btn" data-status="published">Published</button>
-        <button class="btn btn-ghost btn-sm filter-btn" data-status="draft">Drafts</button>
+      <div style="display:flex;gap:6px;margin-bottom:16px">
+        <button class="filter-tab active" data-status="">All</button>
+        <button class="filter-tab" data-status="published">Published</button>
+        <button class="filter-tab" data-status="draft">Drafts</button>
       </div>
 
       <!-- Bulk action bar -->
@@ -176,11 +173,13 @@
                 </td>
                 <td><span class="badge badge-${e.status}">${e.status}</span></td>
                 <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${updated}</td>
-                <td style="text-align:right;display:flex;gap:6px;justify-content:flex-end;align-items:center">
-                  <a class="btn btn-ghost btn-sm" href="/editor.html?collection=${colId}&slug=${e.slug}">Edit</a>
-                  <button class="btn btn-ghost btn-sm status-toggle" data-slug="${e.slug}" data-next="${nextStatus}">${toggleLabel}</button>
-                  <button class="btn btn-ghost btn-sm dup-btn" data-slug="${e.slug}" title="Duplicate">⧉</button>
-                  <button class="btn btn-danger btn-sm delete-btn" data-slug="${e.slug}">Delete</button>
+                <td style="text-align:right">
+                  <div style="display:flex;gap:5px;justify-content:flex-end;align-items:center">
+                    <a class="btn-row" href="/editor.html?collection=${colId}&slug=${e.slug}">Edit</a>
+                    <button class="btn-row status-toggle" data-slug="${e.slug}" data-next="${nextStatus}">${toggleLabel}</button>
+                    <button class="btn-row dup-btn" data-slug="${e.slug}" title="Duplicate" style="padding:3px 7px">⧉</button>
+                    <button class="btn-row btn-row-danger delete-btn" data-slug="${e.slug}">Delete</button>
+                  </div>
                 </td>
               </tr>`;
             }).join('')}
@@ -244,9 +243,9 @@
     }
 
     // Filter buttons
-    document.querySelectorAll('.filter-btn').forEach(btn => {
+    document.querySelectorAll('.filter-tab').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         activeFilter = btn.dataset.status;
         loadEntries();

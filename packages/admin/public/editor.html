@@ -21,14 +21,15 @@
 
     /* Toolbar */
     .editor-toolbar { display:flex; align-items:center; gap:1px; padding:0 20px; height:40px; border-bottom:1px solid var(--line); background:var(--bg2); flex-shrink:0; }
-    .tool-group { display:flex; align-items:center; gap:1px; }
-    .tool-btn { height:28px; min-width:28px; padding:0 7px; display:flex; align-items:center; justify-content:center; background:transparent; border:none; color:var(--muted); font-family:var(--mono); font-size:10px; cursor:pointer; transition:color .1s,background .1s; border-radius:3px; }
-    .tool-btn:hover { color:var(--heading); background:var(--bg3); }
-    .tool-sep { width:1px; height:18px; background:var(--line); margin:0 8px; flex-shrink:0; }
-    .view-toggle { display:flex; gap:1px; margin-left:auto; }
-    .view-btn { height:24px; padding:0 10px; border:1px solid var(--line); border-right:none; background:transparent; color:var(--muted); font-family:var(--mono); font-size:9px; letter-spacing:.06em; cursor:pointer; transition:all .12s; }
-    .view-btn:last-child { border-right:1px solid var(--line); }
-    .view-btn.active { background:var(--heading); color:var(--bg0); border-color:var(--heading); }
+    .tool-group { display:flex; align-items:center; gap:3px; }
+    .tool-btn { height:26px; min-width:26px; padding:0 7px; display:flex; align-items:center; justify-content:center; background:transparent; border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:10px; cursor:pointer; transition:all .12s; border-radius:4px; }
+    .tool-btn:hover { color:var(--heading); background:var(--bg3); border-color:var(--mid); }
+    .tool-btn.active { background:var(--accent-bg); color:var(--accent); border-color:var(--accent); }
+    .tool-sep { width:1px; height:16px; background:var(--line); margin:0 6px; flex-shrink:0; }
+    .view-toggle { display:flex; gap:3px; margin-left:0; }
+    .view-btn { height:24px; padding:0 10px; border:1px solid var(--line); border-radius:4px; background:transparent; color:var(--muted); font-family:var(--mono); font-size:9px; letter-spacing:.06em; cursor:pointer; transition:all .12s; }
+    .view-btn:hover { color:var(--text); border-color:var(--mid); }
+    .view-btn.active { background:var(--gold); color:var(--bg0); border-color:var(--gold); }
 
     /* Writing page */
     .editor-scroll { flex:1; overflow-y:auto; }
@@ -65,9 +66,9 @@
     .preview-panel { display:none; border-left:1px solid var(--line); flex-direction:column; overflow:hidden; background:var(--bg2); }
     .editor-shell.mode-split .preview-panel,
     .editor-shell.mode-preview .preview-panel { display:flex; }
-    .preview-src-bar { display:flex; align-items:center; gap:4px; padding:7px 14px; border-bottom:1px solid var(--line); background:var(--bg1); flex-shrink:0; }
-    .src-btn { height:20px; padding:0 8px; border:1px solid var(--line); background:transparent; color:var(--muted); font-family:var(--mono); font-size:9px; cursor:pointer; transition:all .12s; }
-    .src-btn:first-child { border-right:none; }
+    .preview-src-bar { display:flex; align-items:center; gap:4px; padding:6px 12px; border-bottom:1px solid var(--line); background:var(--bg1); flex-shrink:0; }
+    .src-btn { height:22px; padding:0 10px; border:1px solid var(--line); border-radius:4px; background:transparent; color:var(--muted); font-family:var(--mono); font-size:9px; cursor:pointer; transition:all .12s; }
+    .src-btn:hover { color:var(--text); border-color:var(--mid); }
     .src-btn.active { background:var(--accent-bg); color:var(--accent); border-color:var(--accent); }
     .preview-scroll { flex:1; overflow-y:auto; padding:36px 40px 80px; }
     .md-preview h1 { font-family:var(--serif); font-weight:200; font-size:28px; color:var(--heading); margin:0 0 16px; }
