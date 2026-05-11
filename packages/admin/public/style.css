@@ -648,6 +648,8 @@ html[data-style="glass"] .ws-panel {
   box-shadow: var(--glass-shadow);
   min-height: 320px;
 }
+html[data-style="glass"] .ws-panel:first-child { flex: 2; }
+html[data-style="glass"] .ws-panel:last-child  { flex: 1; }
 html[data-style="glass"] .notes-area {
   min-height: 240px;
 }
