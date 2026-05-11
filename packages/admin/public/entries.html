@@ -26,11 +26,14 @@
     .bulk-bar-spacer { flex: 1; }
     .cb-col { width: 32px; padding-left: 16px !important; }
     input[type=checkbox] { accent-color: var(--accent); width: 13px; height: 13px; cursor: pointer; }
-    /* row action buttons — xs size, no text-transform */
-    .btn-row { display:inline-flex; align-items:center; padding:3px 9px; font-size:10px; font-family:var(--mono); border-radius:4px; border:1px solid var(--line); background:none; color:var(--mid); cursor:pointer; transition:all 0.12s; text-decoration:none; letter-spacing:0; white-space:nowrap; }
+    /* row action buttons */
+    .row-actions { display:flex; gap:4px; justify-content:flex-end; align-items:center; }
+    .btn-row { display:inline-flex; align-items:center; justify-content:center; height:24px; padding:0 10px; font-size:10px; font-family:var(--mono); border-radius:4px; border:1px solid var(--line); background:none; color:var(--mid); cursor:pointer; transition:all 0.12s; text-decoration:none; letter-spacing:0; white-space:nowrap; line-height:1; }
     .btn-row:hover { color:var(--heading); border-color:var(--mid); background:var(--hover-bg); }
-    .btn-row-danger { color:var(--red); border-color:transparent; }
-    .btn-row-danger:hover { background:var(--red-bg); border-color:var(--red); color:var(--red); }
+    .btn-row-toggle { min-width:80px; }
+    .btn-row-icon { padding:0; width:24px; font-size:12px; }
+    .btn-row-danger { color:var(--red); border-color:transparent; background:none; }
+    .btn-row-danger:hover { background:var(--red-bg); border-color:var(--red); }
     /* filter tabs */
     .filter-tab { display:inline-flex; align-items:center; padding:3px 11px; font-size:10px; font-family:var(--mono); border-radius:20px; border:1px solid var(--line); background:none; color:var(--muted); cursor:pointer; transition:all 0.12s; }
     .filter-tab:hover { color:var(--text); border-color:var(--mid); }
@@ -173,11 +176,11 @@
                 </td>
                 <td><span class="badge badge-${e.status}">${e.status}</span></td>
                 <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${updated}</td>
-                <td style="text-align:right">
-                  <div style="display:flex;gap:5px;justify-content:flex-end;align-items:center">
+                <td style="width:1%;white-space:nowrap">
+                  <div class="row-actions">
                     <a class="btn-row" href="/editor.html?collection=${colId}&slug=${e.slug}">Edit</a>
-                    <button class="btn-row status-toggle" data-slug="${e.slug}" data-next="${nextStatus}">${toggleLabel}</button>
-                    <button class="btn-row dup-btn" data-slug="${e.slug}" title="Duplicate" style="padding:3px 7px">⧉</button>
+                    <button class="btn-row btn-row-toggle status-toggle" data-slug="${e.slug}" data-next="${nextStatus}">${toggleLabel}</button>
+                    <button class="btn-row btn-row-icon dup-btn" data-slug="${e.slug}" title="Duplicate">⧉</button>
                     <button class="btn-row btn-row-danger delete-btn" data-slug="${e.slug}">Delete</button>
                   </div>
                 </td>
