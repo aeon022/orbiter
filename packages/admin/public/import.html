@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Import — Orbiter</title>
+  <script src="/theme.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .import-wrap { padding: 40px 48px; max-width: 720px; }
+
+    .import-head { margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+    .import-title { font-family: var(--serif); font-weight: 200; font-size: 24px; color: var(--heading); letter-spacing: 0.04em; margin-bottom: 6px; }
+    .import-sub { font-size: 10px; color: var(--muted); }
+
+    .import-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
+    .import-tab { font-size: 10px; padding: 8px 18px; border: none; border-bottom: 2px solid transparent; background: none; color: var(--muted); font-family: var(--mono); cursor: pointer; letter-spacing: 0.06em; transition: color 0.15s, border-color 0.15s; }
+    .import-tab.active { color: var(--heading); border-bottom-color: var(--gold); }
+
+    .drop-zone { border: 1px dashed var(--line); border-radius: var(--radius); padding: 40px; text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s; position: relative; }
+    .drop-zone:hover, .drop-zone.drag { border-color: var(--gold); background: var(--gold-bg); }
+    .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .drop-icon { font-size: 28px; color: var(--muted); opacity: 0.3; margin-bottom: 12px; }
+    .drop-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+    .drop-sub { font-size: 9px; color: var(--muted); opacity: 0.6; }
+    .drop-chosen { font-size: 11px; color: var(--gold); margin-top: 10px; display: none; }
+
+    .section { margin-bottom: 28px; }
+    .section-head { font-size: 9px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .section-head::before { content: "—"; color: var(--gold); }
+
+    .type-row { display: grid; grid-template-columns: 24px 1fr auto auto; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line2); background: var(--bg2); }
+    .type-row:first-of-type { border-top: 1px solid var(--line); border-radius: var(--radius) var(--radius) 0 0; }
+    .type-row:last-of-type  { border-radius: 0 0 var(--radius) var(--radius); }
+    .type-name   { font-size: 12px; color: var(--text); }
+    .type-col-id { font-size: 9px; color: var(--muted); font-family: var(--mono); }
+    .type-count  { font-size: 10px; color: var(--muted); text-align: right; white-space: nowrap; }
+    .type-badge  { font-size: 9px; color: var(--jade); background: var(--jade-bg); padding: 1px 6px; border-radius: 3px; white-space: nowrap; }
+
+    .opt-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line2); }
+    .opt-row:last-child { border-bottom: none; }
+    .opt-label { font-size: 11px; color: var(--text); flex: 1; }
+    .opt-desc  { font-size: 9px; color: var(--muted); display: block; margin-top: 2px; }
+
+    .ck-wrap { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+    .ck-box { width: 14px; height: 14px; border: 1px solid var(--line); background: var(--bg0); display: flex; align-items: center; justify-content: center; font-size: 8px; color: transparent; flex-shrink: 0; transition: all 0.12s; border-radius: 2px; }
+    .ck-wrap.checked .ck-box { background: var(--gold); border-color: var(--gold); color: var(--bg0); }
+    .ck-txt { font-size: 11px; color: var(--text); }
+
+    .radio-group { display: flex; gap: 0; }
+    .radio-pill { position: relative; }
+    .radio-pill input { display: none; }
+    .radio-pill label { display: block; padding: 5px 14px; font-size: 10px; color: var(--muted); border: 1px solid var(--line); border-right-width: 0; cursor: pointer; transition: all 0.12s; letter-spacing: 0.04em; }
+    .radio-pill:last-child label { border-right-width: 1px; border-radius: 0 var(--radius) var(--radius) 0; }
+    .radio-pill:first-child label { border-radius: var(--radius) 0 0 var(--radius); }
+    .radio-pill input:checked + label { color: var(--gold); border-color: var(--gold); background: var(--gold-bg); z-index: 1; position: relative; }
+
+    .site-banner { background: var(--bg2); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+    .site-banner-icon { font-size: 18px; opacity: 0.2; }
+    .site-banner-name { font-size: 13px; color: var(--heading); }
+    .site-banner-url  { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+    .result-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line2); font-size: 11px; }
+    .result-row:last-child { border-bottom: none; }
+    .result-num  { font-family: var(--serif); font-size: 20px; font-weight: 200; min-width: 36px; text-align: right; }
+    .result-ok   { color: var(--jade); }
+    .result-warn { color: var(--gold); }
+    .result-err  { font-size: 10px; padding: 4px 8px; background: var(--crimson-bg, rgba(139,38,53,0.07)); border: 1px solid rgba(139,38,53,0.15); margin-top: 4px; color: var(--crimson, #8b2635); border-radius: 3px; }
+
+    .import-actions { display: flex; align-items: center; gap: 10px; padding-top: 24px; border-top: 1px solid var(--line); margin-top: 24px; }
+
+    .err-banner { background: var(--crimson-bg, rgba(139,38,53,0.07)); border: 1px solid rgba(139,38,53,0.15); border-radius: var(--radius); padding: 10px 14px; font-size: 10px; color: var(--crimson, #8b2635); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+    .err-banner::before { content: "✕"; }
+
+    .spinner-wrap { text-align: center; padding: 40px; color: var(--muted); font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="logo" href="/dashboard.html"><div class="logo-mark">OR</div>Orbiter</a>
+      <div class="topbar-right">
+        <button class="search-trigger" id="search-btn" title="Search (⌘K)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Search <kbd>⌘K</kbd>
+        </button>
+        <button class="scheme-toggle" id="scheme-toggle" title="Toggle scheme">◐</button>
+        <span class="user" id="topbar-user"></span>
+        <span class="logout" id="logout-btn">Sign out</span>
+      </div>
+    </header>
+    <nav class="sidebar">
+      <div class="nav-section">Content</div>
+      <a class="nav-item" href="/dashboard.html"><span class="nav-icon">◈</span>Dashboard</a>
+      <a class="nav-item" href="/collections.html"><span class="nav-icon">⊞</span>Collections</a>
+      <div class="nav-section">Assets</div>
+      <a class="nav-item" href="/media.html"><span class="nav-icon">⊟</span>Media</a>
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="/schema.html"><span class="nav-icon">◈</span>Schema</a>
+      <a class="nav-item" href="/build.html"><span class="nav-icon">▲</span>Build</a>
+      <a class="nav-item" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
+      <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
+      <div class="sidebar-footer">
+        <div class="pod-name" id="pod-name">content.pod</div>
+        <div class="pod-info" id="pod-info"></div>
+        <div class="pod-status"><span class="pod-dot"></span>pod synced</div>
+      </div>
+    </nav>
+    <main class="main">
+      <div class="page-header">
+        <h1 class="page-title">Import</h1>
+      </div>
+      <div class="import-wrap" id="import-root">
+        <div class="spinner-wrap">Loading…</div>
+      </div>
+
+  <script type="module">
+    // ── Auth ──────────────────────────────────────────────────────────────────
+    const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).catch(() => null);
+    if (!me?.user) { location.replace('/login.html'); }
+    document.getElementById('topbar-user').textContent = me.user.username;
+    if (me.user.role === 'admin') {
+      document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+    }
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      location.replace('/login.html');
+    });
+
+    // ── Load sidebar info ─────────────────────────────────────────────────────
+    const info = await fetch('/api/info', { credentials: 'include' }).then(r => r.json()).catch(() => ({ pod: {}, collections: [] }));
+    document.getElementById('pod-name').textContent = info.pod?.name ?? 'content.pod';
+    document.getElementById('pod-info').textContent = info.pod?.version ? `v${info.pod.version} format` : '';
+
+    // Load sidebar collection nav via sidebar.js — it reads from /api/info automatically
+    const collections = info.collections ?? [];
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    let phase       = 'upload'; // 'upload' | 'preview' | 'done'
+    let activeTab   = 'wp';
+    let importToken = null;
+    let plan        = null;
+    let results     = null;
+    let errorMsg    = '';
+
+    const root = document.getElementById('import-root');
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    function renderError(msg) {
+      return msg ? `<div class="err-banner">${esc(msg)}</div>` : '';
+    }
+
+    // ── Phase: Upload ─────────────────────────────────────────────────────────
+    function renderUpload() {
+      root.innerHTML = `
+        <div class="import-head">
+          <div class="import-title">Import</div>
+          <div class="import-sub">Import content from WordPress (WXR) or Markdown files into your pod.</div>
+        </div>
+
+        ${renderError(errorMsg)}
+
+        <div class="import-tabs">
+          <button class="import-tab ${activeTab === 'wp' ? 'active' : ''}" id="tab-wp">Import WordPress</button>
+          <button class="import-tab ${activeTab === 'md' ? 'active' : ''}" id="tab-md">Import Markdown</button>
+        </div>
+
+        <div id="pane-wp" style="${activeTab !== 'wp' ? 'display:none' : ''}">
+          <div class="section">
+            <div class="section-head">WordPress export file</div>
+            <div class="drop-zone" id="drop-zone-wp">
+              <input type="file" id="wxr-file" accept=".xml,text/xml,application/xml" />
+              <div class="drop-icon">⊞</div>
+              <div class="drop-label">Drop .xml file here or click to browse</div>
+              <div class="drop-sub">Export your WordPress site via Tools → Export → All content.</div>
+              <div class="drop-chosen" id="drop-chosen-wp"></div>
+            </div>
+          </div>
+          <div class="import-actions">
+            <button class="btn-save" id="btn-analyze">Analyze file</button>
+          </div>
+        </div>
+
+        <div id="pane-md" style="${activeTab !== 'md' ? 'display:none' : ''}">
+          <div class="section">
+            <div class="section-head">Target collection</div>
+            <select id="md-collection" style="width:100%;background:var(--bg0);border:1px solid var(--line);border-radius:var(--radius);padding:8px 10px;color:var(--heading);font-family:var(--mono);font-size:12px;outline:none;appearance:none;margin-bottom:16px;">
+              <option value="">— select collection —</option>
+              ${collections.map(c => `<option value="${esc(c.id)}">${esc(c.label)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="section">
+            <div class="section-head">Markdown files</div>
+            <div class="drop-zone" id="drop-zone-md">
+              <input type="file" id="md-files" accept=".md,text/markdown" multiple />
+              <div class="drop-icon">◈</div>
+              <div class="drop-label">Drop .md files here or click to browse</div>
+              <div class="drop-sub">Frontmatter (--- YAML ---) is parsed automatically. Fields map to collection schema.</div>
+              <div class="drop-chosen" id="drop-chosen-md"></div>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-head">On duplicate slug</div>
+            <div class="radio-group" id="md-dup-group">
+              <div class="radio-pill">
+                <input type="radio" name="md_dup" id="md-dup-skip" value="skip" checked />
+                <label for="md-dup-skip">Skip</label>
+              </div>
+              <div class="radio-pill">
+                <input type="radio" name="md_dup" id="md-dup-overwrite" value="overwrite" />
+                <label for="md-dup-overwrite">Overwrite</label>
+              </div>
+            </div>
+          </div>
+          <div class="import-actions">
+            <button class="btn-save" id="btn-import-md">Import Markdown</button>
+          </div>
+        </div>
+      `;
+      wireUpload();
+    }
+
+    // ── Phase: Preview ────────────────────────────────────────────────────────
+    function renderPreview() {
+      const typeRows = plan.types.map(t => `
+        <div class="type-row" data-type="${esc(t.postType)}">
+          <div class="ck-wrap checked" data-type="${esc(t.postType)}">
+            <div class="ck-box">✓</div>
+          </div>
+          <div>
+            <div class="type-name">${t.postType === 'post' ? 'Posts' : t.postType === 'page' ? 'Pages' : esc(t.postType)}</div>
+            <div class="type-col-id">→ collection: ${esc(t.collectionId)}</div>
+          </div>
+          <div class="type-count">${t.count} entries<br/><span style="font-size:9px;color:var(--jade)">${t.published} published</span></div>
+          <div class="type-badge">${esc(t.collectionId)}</div>
+        </div>`).join('');
+
+      const mediaSection = plan.mediaCount > 0 ? `
+        <div class="section">
+          <div class="section-head">Media</div>
+          <div class="opt-row">
+            <div class="ck-wrap checked" id="ck-media">
+              <div class="ck-box">✓</div>
+              <span class="ck-txt">Download ${plan.mediaCount} media file${plan.mediaCount !== 1 ? 's' : ''} from WordPress
+                <span class="opt-desc">Fetches each attachment from the original URL and stores it in your pod.</span>
+              </span>
+            </div>
+          </div>
+        </div>` : '';
+
+      root.innerHTML = `
+        <div class="import-head">
+          <div class="import-title">Preview import</div>
+          <div class="import-sub">Review what will be imported, then confirm.</div>
+        </div>
+
+        <div class="site-banner">
+          <div class="site-banner-icon">◈</div>
+          <div>
+            <div class="site-banner-name">${esc(plan.site.title || 'WordPress Site')}</div>
+            ${plan.site.url ? `<div class="site-banner-url">${esc(plan.site.url)}</div>` : ''}
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">Content types</div>
+          ${typeRows}
+        </div>
+
+        ${mediaSection}
+
+        <div class="section">
+          <div class="section-head">On duplicate slug</div>
+          <div class="opt-row">
+            <span class="opt-label">If a slug already exists in the collection</span>
+            <div class="radio-group" id="dup-group">
+              <div class="radio-pill">
+                <input type="radio" name="on_dup" id="dup-skip" value="skip" checked />
+                <label for="dup-skip">Skip</label>
+              </div>
+              <div class="radio-pill">
+                <input type="radio" name="on_dup" id="dup-overwrite" value="overwrite" />
+                <label for="dup-overwrite">Overwrite</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="import-actions">
+          <button class="btn btn-ghost" id="btn-back">← Back</button>
+          <button class="btn-save" id="btn-execute">Start import</button>
+        </div>
+      `;
+      wirePreview();
+    }
+
+    // ── Phase: Done ───────────────────────────────────────────────────────────
+    function renderDone() {
+      let rows = '';
+      if (results.type === 'markdown') {
+        rows += `<div class="result-row"><span class="result-num result-ok">${results.imported}</span><span>entries imported</span></div>`;
+        if (results.skipped > 0)
+          rows += `<div class="result-row"><span class="result-num" style="color:var(--muted)">${results.skipped}</span><span style="color:var(--muted)">skipped (duplicate slug)</span></div>`;
+      } else {
+        if (results.collections?.length > 0)
+          rows += `<div class="result-row"><span class="result-ok">◈</span><span>Collections created: <strong>${results.collections.map(esc).join(', ')}</strong></span></div>`;
+        rows += `<div class="result-row"><span class="result-num result-ok">${results.imported}</span><span>entries imported</span></div>`;
+        if (results.overwritten > 0)
+          rows += `<div class="result-row"><span class="result-num result-warn">${results.overwritten}</span><span style="color:var(--gold)">entries overwritten</span></div>`;
+        if (results.skipped > 0)
+          rows += `<div class="result-row"><span class="result-num" style="color:var(--muted)">${results.skipped}</span><span style="color:var(--muted)">skipped (duplicate slug)</span></div>`;
+        if (results.mediaOk > 0)
+          rows += `<div class="result-row"><span class="result-num result-ok">${results.mediaOk}</span><span>media files downloaded</span></div>`;
+        if (results.mediaFailed > 0)
+          rows += `<div class="result-row"><span class="result-num result-warn">${results.mediaFailed}</span><span style="color:var(--gold)">media files failed</span></div>`;
+        const errs = results.errors ?? [];
+        if (errs.length > 0) {
+          rows += `<div style="margin-top:16px"><div class="section-head">Errors (${errs.length})</div>`;
+          errs.slice(0, 20).forEach(e => { rows += `<div class="result-err">${esc(e)}</div>`; });
+          if (errs.length > 20) rows += `<div class="result-err">… and ${errs.length - 20} more</div>`;
+          rows += '</div>';
+        }
+      }
+
+      root.innerHTML = `
+        <div class="import-head">
+          <div class="import-title">Import complete</div>
+          <div class="import-sub">Your content has been imported into the pod.</div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">Results</div>
+          ${rows}
+        </div>
+
+        <div class="import-actions">
+          <a class="btn-save" href="/collections.html">Go to Collections</a>
+          <button class="btn btn-ghost" id="btn-another">Import another</button>
+        </div>
+      `;
+
+      document.getElementById('btn-another').addEventListener('click', () => {
+        phase = 'upload'; errorMsg = ''; activeTab = 'wp'; render();
+      });
+    }
+
+    // ── Wire: upload phase ────────────────────────────────────────────────────
+    function wireUpload() {
+      // Tab switching
+      document.getElementById('tab-wp').addEventListener('click', () => { activeTab = 'wp'; render(); });
+      document.getElementById('tab-md').addEventListener('click', () => { activeTab = 'md'; render(); });
+
+      // WP drop zone
+      const dzWp  = document.getElementById('drop-zone-wp');
+      const inpWp = document.getElementById('wxr-file');
+      const lblWp = document.getElementById('drop-chosen-wp');
+      if (inpWp && lblWp) {
+        inpWp.addEventListener('change', () => {
+          const f = inpWp.files?.[0];
+          if (f) { lblWp.textContent = f.name; lblWp.style.display = 'block'; }
+        });
+        dzWp.addEventListener('dragover', e => { e.preventDefault(); dzWp.classList.add('drag'); });
+        dzWp.addEventListener('dragleave', () => dzWp.classList.remove('drag'));
+        dzWp.addEventListener('drop', e => {
+          e.preventDefault(); dzWp.classList.remove('drag');
+          const f = e.dataTransfer?.files[0];
+          if (f && inpWp) {
+            const dt = new DataTransfer(); dt.items.add(f); inpWp.files = dt.files;
+            lblWp.textContent = f.name; lblWp.style.display = 'block';
+          }
+        });
+      }
+
+      // Markdown drop zone
+      const dzMd  = document.getElementById('drop-zone-md');
+      const inpMd = document.getElementById('md-files');
+      const lblMd = document.getElementById('drop-chosen-md');
+      if (inpMd && lblMd) {
+        inpMd.addEventListener('change', () => {
+          const count = inpMd.files?.length ?? 0;
+          if (count > 0) {
+            lblMd.textContent = count === 1 ? inpMd.files[0].name : `${count} files selected`;
+            lblMd.style.display = 'block';
+          }
+        });
+        dzMd.addEventListener('dragover', e => { e.preventDefault(); dzMd.classList.add('drag'); });
+        dzMd.addEventListener('dragleave', () => dzMd.classList.remove('drag'));
+        dzMd.addEventListener('drop', e => {
+          e.preventDefault(); dzMd.classList.remove('drag');
+          const files = e.dataTransfer?.files;
+          if (files?.length && inpMd) {
+            const dt = new DataTransfer();
+            Array.from(files).forEach(f => dt.items.add(f));
+            inpMd.files = dt.files;
+            lblMd.textContent = files.length === 1 ? files[0].name : `${files.length} files selected`;
+            lblMd.style.display = 'block';
+          }
+        });
+      }
+
+      // Analyze WXR
+      document.getElementById('btn-analyze')?.addEventListener('click', async () => {
+        const f = document.getElementById('wxr-file')?.files?.[0];
+        if (!f) { errorMsg = 'Please select a WordPress export file (.xml).'; render(); return; }
+
+        const btn = document.getElementById('btn-analyze');
+        btn.disabled = true; btn.textContent = 'Analyzing…';
+
+        const fd = new FormData();
+        fd.append('wxr_file', f);
+
+        const res  = await fetch('/api/import/analyze', { method: 'POST', credentials: 'include', body: fd });
+        const data = await res.json();
+
+        if (!res.ok) { errorMsg = data.error ?? 'Analysis failed'; phase = 'upload'; render(); return; }
+
+        importToken = data.token;
+        plan        = data.plan;
+        errorMsg    = '';
+        phase       = 'preview';
+        render();
+      });
+
+      // Import Markdown
+      document.getElementById('btn-import-md')?.addEventListener('click', async () => {
+        const files = document.getElementById('md-files')?.files;
+        const col   = document.getElementById('md-collection')?.value;
+        const dup   = document.querySelector('input[name="md_dup"]:checked')?.value ?? 'skip';
+
+        if (!files?.length) { errorMsg = 'Please select at least one .md file.'; render(); return; }
+        if (!col) { errorMsg = 'Please select a target collection.'; render(); return; }
+
+        const btn = document.getElementById('btn-import-md');
+        btn.disabled = true; btn.textContent = 'Importing…';
+
+        const fd = new FormData();
+        fd.append('md_collection', col);
+        fd.append('on_duplicate', dup);
+        Array.from(files).forEach(f => fd.append('md_files', f));
+
+        const res  = await fetch('/api/import/markdown', { method: 'POST', credentials: 'include', body: fd });
+        const data = await res.json();
+
+        if (!res.ok) { errorMsg = data.error ?? 'Import failed'; render(); return; }
+
+        results  = data;
+        errorMsg = '';
+        phase    = 'done';
+        render();
+      });
+    }
+
+    // ── Wire: preview phase ───────────────────────────────────────────────────
+    function wirePreview() {
+      // Custom checkboxes
+      document.querySelectorAll('.ck-wrap').forEach(wrap => {
+        wrap.addEventListener('click', () => {
+          wrap.classList.toggle('checked');
+          wrap.querySelector('.ck-box').textContent = wrap.classList.contains('checked') ? '✓' : '';
+        });
+      });
+
+      document.getElementById('btn-back').addEventListener('click', () => {
+        phase = 'upload'; render();
+      });
+
+      document.getElementById('btn-execute').addEventListener('click', async () => {
+        const selectedTypes = Array.from(document.querySelectorAll('.ck-wrap.checked[data-type]'))
+          .map(el => el.dataset.type);
+        if (!selectedTypes.length) { alert('Please select at least one content type.'); return; }
+
+        const downloadMedia = document.getElementById('ck-media')?.classList.contains('checked') ?? false;
+        const onDuplicate   = document.querySelector('input[name="on_dup"]:checked')?.value ?? 'skip';
+
+        const btn = document.getElementById('btn-execute');
+        btn.disabled = true; btn.textContent = 'Importing…';
+
+        const res  = await fetch('/api/import/execute', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: importToken, selectedTypes, downloadMedia, onDuplicate }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) { errorMsg = data.error ?? 'Import failed'; phase = 'upload'; render(); return; }
+
+        results  = data;
+        errorMsg = '';
+        phase    = 'done';
+        render();
+      });
+    }
+
+    // ── Main render dispatcher ────────────────────────────────────────────────
+    function render() {
+      if (phase === 'upload')  renderUpload();
+      if (phase === 'preview') renderPreview();
+      if (phase === 'done')    renderDone();
+    }
+
+    render();
+  </script>
+</main>
+  </div>
+
+  <script src="/search.js"></script>
+  <script src="/sidebar.js"></script>
+  <script src="/router.js"></script>
+</body>
+</html>
