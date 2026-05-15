@@ -962,6 +962,15 @@ tr:hover td { background: var(--row-hover); }
 /* ── Login page ──────────────────────────────────── */
 .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg0); }
 .login-box { width: 340px; }
+
+/* Glass mode — let the body gradient show through, glass card */
+html[data-style="glass"] .login-wrap { background: transparent; }
+html[data-style="glass"] .login-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border-color: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
 .login-logo { text-align: center; margin-bottom: 36px; }
 .login-mark {
   width: 44px; height: 44px;
