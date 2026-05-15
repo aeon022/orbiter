@@ -1,11 +1,11 @@
 {
   "name": "@a83/orbiter-core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "SQLite persistence layer for Orbiter CMS — the .pod file engine",
   "type": "module",
   "main": "./src/index.js",
   "exports": {
-    ".":      "./src/index.js",
+    ".": "./src/index.js",
     "./auth": "./src/auth.js"
   },
   "files": [
