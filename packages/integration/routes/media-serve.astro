@@ -1,13 +1,11 @@
 ---
 export const prerender = false;
 /**
- * /orbiter/media/[id] — serves a media BLOB from the .pod file
+ * /orbiter/media/[id] — serves a media BLOB from the .pod file.
+ * Public — no auth required. Used in Astro pages: <img src="/orbiter/media/{uuid}">
  */
 import { podPath } from 'orbiter:db';
 import { openPod } from '@a83/orbiter-core';
-
-// ── Auth ─────────────────────────────────────────────────────────────
-{ const _db = openPod(podPath); const _u = _db.checkSession(Astro.cookies.get('orb_sess')?.value ?? ''); _db.close(); if (!_u) return new Response(null, { status: 401 }); }
 
 const { id } = Astro.params;
 
@@ -21,7 +19,7 @@ if (!row) {
 
 return new Response(row.data, {
   headers: {
-    'Content-Type': row.mime_type,
+    'Content-Type':  row.mime_type,
     'Cache-Control': 'public, max-age=31536000, immutable',
   },
 });

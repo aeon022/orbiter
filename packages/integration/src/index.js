@@ -3,15 +3,16 @@
  *
  * Astro integration that:
  * 1. Opens the .pod file at build/dev time
- * 2. Injects virtual module `orbiter:collections`
- * 3. Injects virtual module `orbiter:db`
- * 4. Injects virtual module `orbiter:admin-css`
- * 5. Injects admin routes under /orbiter
+ * 2. Injects virtual module `orbiter:collections` — read published content in Astro pages
+ * 3. Injects virtual module `orbiter:db` — pod path for custom server routes
+ * 4. Serves media BLOBs at /orbiter/media/[id]
+ * 5. Exposes a read-only JSON API at /orbiter/api/[collection]
+ *
+ * The admin UI runs separately via @a83/orbiter-admin.
  */
 import { openPod } from '@a83/orbiter-core';
 import { fileURLToPath } from 'node:url';
 import { resolve, dirname } from 'node:path';
-import { readFileSync } from 'node:fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -20,12 +21,6 @@ const RESOLVED_COLLECTIONS_ID = `\0${VIRTUAL_COLLECTIONS_ID}`;
 
 const VIRTUAL_DB_ID = 'orbiter:db';
 const RESOLVED_DB_ID = `\0${VIRTUAL_DB_ID}`;
-
-const VIRTUAL_CSS_ID = 'orbiter:admin-css';
-const RESOLVED_CSS_ID = `\0${VIRTUAL_CSS_ID}`;
-
-const VIRTUAL_UTILS_ID = 'orbiter:admin-utils';
-const RESOLVED_UTILS_ID = `\0${VIRTUAL_UTILS_ID}`;
 
 /**
  * @param {{ pod: string }} options
@@ -41,93 +36,15 @@ export default function orbiter(options = {}) {
       'astro:config:setup': ({ updateConfig, config, injectRoute, logger }) => {
         logger.info(`◆ Orbiter — loading pod: ${podPath}`);
 
-        // ── Inject admin routes ──────────────────
         const routesDir = resolve(__dirname, '../routes');
 
-        injectRoute({
-          pattern:    '/orbiter',
-          entrypoint: resolve(routesDir, 'dashboard.astro'),
-        });
-        injectRoute({
-          pattern:    '/orbiter/[collection]',
-          entrypoint: resolve(routesDir, 'collection.astro'),
-        });
-        injectRoute({
-          pattern:    '/orbiter/[collection]/[slug]',
-          entrypoint: resolve(routesDir, 'editor.astro'),
-        });
-        injectRoute({
-          pattern:    '/orbiter/media',
-          entrypoint: resolve(routesDir, 'media.astro'),
-        });
+        // Media BLOB serving — public, no auth required
         injectRoute({
           pattern:    '/orbiter/media/[id]',
           entrypoint: resolve(routesDir, 'media-serve.astro'),
         });
-        injectRoute({
-          pattern:    '/orbiter/settings',
-          entrypoint: resolve(routesDir, 'settings.astro'),
-        });
-        injectRoute({
-          pattern:    '/orbiter/build',
-          entrypoint: resolve(routesDir, 'build.astro'),
-        });
-        injectRoute({
-          pattern:    '/orbiter/search',
-          entrypoint: resolve(routesDir, 'search.astro'),
-        });
-        injectRoute({
-          pattern:    '/orbiter/setup',
-          entrypoint: resolve(routesDir, 'setup.astro'),
-        });
-        injectRoute({
-          pattern:    '/orbiter/schema',
-          entrypoint: resolve(routesDir, 'schema.astro'),
-        });
-        injectRoute({
-          pattern:    '/orbiter/login',
-          entrypoint: resolve(routesDir, 'login.astro'),
-        });
-        injectRoute({
-          pattern:    '/orbiter/logout',
-          entrypoint: resolve(routesDir, 'logout.astro'),
-        });
-        injectRoute({
-          pattern:    '/orbiter/import',
-          entrypoint: resolve(routesDir, 'import.astro'),
-        });
-        injectRoute({
-          pattern:    '/orbiter/users',
-          entrypoint: resolve(routesDir, 'users.astro'),
-        });
-        injectRoute({
-          pattern:    '/orbiter/manifest.webmanifest',
-          entrypoint: resolve(routesDir, 'manifest.astro'),
-        });
-        injectRoute({
-          pattern:    '/orbiter/icon-192',
-          entrypoint: resolve(routesDir, 'icon-192.js'),
-        });
-        injectRoute({
-          pattern:    '/orbiter/icon-512',
-          entrypoint: resolve(routesDir, 'icon-512.js'),
-        });
-        injectRoute({
-          pattern:    '/orbiter/sw.js',
-          entrypoint: resolve(routesDir, 'sw.astro'),
-        });
-        injectRoute({
-          pattern:    '/orbiter/offline',
-          entrypoint: resolve(routesDir, 'offline.astro'),
-        });
-        injectRoute({
-          pattern:    '/orbiter/github-push',
-          entrypoint: resolve(routesDir, 'github-push.astro'),
-        });
-        injectRoute({
-          pattern:    '/orbiter/github-workflow',
-          entrypoint: resolve(routesDir, 'github-workflow.js'),
-        });
+
+        // Read-only JSON API
         injectRoute({
           pattern:    '/orbiter/api/[collection]',
           entrypoint: resolve(routesDir, 'api-collection.js'),
@@ -142,8 +59,6 @@ export default function orbiter(options = {}) {
                 resolveId(id) {
                   if (id === VIRTUAL_COLLECTIONS_ID) return RESOLVED_COLLECTIONS_ID;
                   if (id === VIRTUAL_DB_ID)          return RESOLVED_DB_ID;
-                  if (id === VIRTUAL_CSS_ID)         return RESOLVED_CSS_ID;
-                  if (id === VIRTUAL_UTILS_ID)       return RESOLVED_UTILS_ID;
                 },
                 load(id) {
                   const resolvedPodPath = resolve(
@@ -151,7 +66,7 @@ export default function orbiter(options = {}) {
                     podPath
                   );
 
-                  // orbiter:collections — static snapshot for build
+                  // orbiter:collections — static snapshot of published content for build
                   if (id === RESOLVED_COLLECTIONS_ID) {
                     const db = openPod(resolvedPodPath);
                     const collections = db.getCollections();
@@ -203,10 +118,6 @@ export function getEntry(collection, slug) {
   return Promise.resolve(entries.find(e => e.slug === slug) ?? null);
 }
 
-/**
- * Returns all base entries (no locale variants) for a collection.
- * Base entries are those whose slug does not contain '--'.
- */
 export function getLocaleCollection(name, loc) {
   const sep = '--';
   const all = collections[name] ?? [];
@@ -214,9 +125,6 @@ export function getLocaleCollection(name, loc) {
   return Promise.resolve(all.filter(e => e.slug.endsWith(sep + loc)));
 }
 
-/**
- * Returns a locale variant for a base slug, or falls back to the base entry.
- */
 export function getLocaleEntry(collection, baseSlug, loc) {
   const sep = '--';
   const entries = collections[collection] ?? [];
@@ -227,23 +135,9 @@ export function getLocaleEntry(collection, baseSlug, loc) {
 `;
                   }
 
-                  // orbiter:db — live db access for admin routes
+                  // orbiter:db — pod path for custom server routes
                   if (id === RESOLVED_DB_ID) {
                     return `export const podPath = ${JSON.stringify(resolvedPodPath)};`;
-                  }
-
-                  // orbiter:admin-css — shared admin styles
-                  if (id === RESOLVED_CSS_ID) {
-                    const cssPath = resolve(__dirname, '../styles/admin.css');
-                    const css = readFileSync(cssPath, 'utf-8');
-                    return `export default ${JSON.stringify(css)};`;
-                  }
-
-                  // orbiter:admin-utils — dark mode + command palette
-                  if (id === RESOLVED_UTILS_ID) {
-                    const jsPath = resolve(__dirname, 'admin-utils.js');
-                    const js = readFileSync(jsPath, 'utf-8');
-                    return `export default ${JSON.stringify(js)};`;
                   }
                 },
               },
