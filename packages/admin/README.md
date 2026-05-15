@@ -63,7 +63,7 @@ Login: `admin` / `admin`
 
 **Collections** — browse and manage entries per collection.
 
-**Editor** — all schema fields rendered as inputs, autosave, version history, draft/published toggle, media picker, relation picker.
+**Editor** — all schema fields rendered as inputs, autosave, version history, draft/published toggle. Inline image blocks with float alignment (left/right/center/full). Video embedding — YouTube, Vimeo, Wistia, direct mp4/webm URL. Media picker with cloud URL import (Dropbox, Google Drive, OneDrive). Relation picker, conditional field visibility.
 
 **Media library** — upload, browse and manage files. Stored as BLOBs in the pod. Images, video, PDF, any file type.
 

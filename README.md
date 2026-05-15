@@ -59,81 +59,79 @@ npm run dev   # → http://localhost:8080
 
 ## Standalone Admin (`packages/admin`)
 
-Der Admin läuft als eigenständiger Hono-Server auf Port **4322** — unabhängig vom Astro Dev Server. Er braucht nur eine `.pod`-Datei.
+The admin runs as a self-contained Hono server on port **4322** — independent from the Astro dev server. It only needs a `.pod` file.
 
-### Voraussetzungen
+### Prerequisites
 
 ```bash
-npm install          # im Repo-Root (installiert alle workspaces)
-npm run seed         # erstellt apps/demo/demo.pod falls noch nicht vorhanden
+npm install          # run from the repo root (installs all workspaces)
+npm run seed         # creates apps/demo/demo.pod if it doesn't exist yet
 ```
 
-### Starten
+### Start
 
-**Development** (mit `--watch`, neu laden bei Änderungen an `src/`):
+**Development** (with `--watch`, reloads on changes to `src/`):
 
 ```bash
 ORBITER_POD=$(pwd)/apps/demo/demo.pod npm run dev --workspace=packages/admin
 ```
 
-**Production** (einmalig, kein Watch):
+**Production** (single run, no watch):
 
 ```bash
 ORBITER_POD=$(pwd)/apps/demo/demo.pod npm start --workspace=packages/admin
 ```
 
-> **Wichtig:** Absoluten Pfad verwenden (`$(pwd)/...`). Der Server wechselt intern sein
-> Working Directory auf `packages/admin/`, daher werden relative Pfade falsch aufgelöst.
+> **Note:** Use an absolute path (`$(pwd)/...`). The server changes its working directory internally to `packages/admin/`, so relative paths resolve incorrectly.
 
-Oder direkt aus dem Paket-Ordner:
+Or run directly from the package directory:
 
 ```bash
 cd packages/admin
 ORBITER_POD=../../apps/demo/demo.pod npm run dev
 ```
 
-### Aufrufen
+### Open
 
 ```
 http://localhost:4322
 ```
 
-Redirect geht automatisch zu `/login.html`. Login:
+Automatically redirects to `/login.html`. Login:
 
 ```
 Username: admin
 Password: admin
 ```
 
-### Beide Server parallel (Admin + Demo-Site)
+### Run both servers in parallel (Admin + Demo Site)
 
-Zwei Terminals:
+Two terminals:
 
 ```bash
-# Terminal 1 — Astro Demo (public site)
+# Terminal 1 — Astro demo site (public)
 npm run dev
 
-# Terminal 2 — Standalone Admin
+# Terminal 2 — Standalone admin
 ORBITER_POD=./apps/demo/demo.pod npm run dev --workspace=packages/admin
 ```
 
-- Demo-Site:  `http://localhost:8080`
-- Admin:      `http://localhost:4322`
+- Demo site: `http://localhost:8080`
+- Admin:     `http://localhost:4322`
 
-Beide greifen auf dieselbe `demo.pod` zu. Änderungen im Admin sind sofort in der Demo-Site sichtbar (nach Reload).
+Both access the same `demo.pod`. Changes made in the admin are immediately visible in the demo site after a browser reload.
 
-### Env-Variablen
+### Environment variables
 
-| Variable        | Pflicht | Default                                        | Beschreibung                              |
-|-----------------|---------|------------------------------------------------|-------------------------------------------|
-| `ORBITER_POD`   | ja      | —                                              | Pfad zur `.pod`-Datei                     |
-| `PORT`          | nein    | `4322`                                         | HTTP-Port                                 |
-| `ADMIN_ORIGIN`  | nein    | `http://localhost:4321,http://localhost:4322`   | Erlaubte CORS-Origins (komma-getrennt)    |
+| Variable        | Required | Default                                        | Description                              |
+|-----------------|----------|------------------------------------------------|------------------------------------------|
+| `ORBITER_POD`   | yes      | —                                              | Path to the `.pod` file                  |
+| `PORT`          | no       | `4322`                                         | HTTP port                                |
+| `ADMIN_ORIGIN`  | no       | `http://localhost:4321,http://localhost:4322`   | Allowed CORS origins (comma-separated)   |
 
-### Eigene Pod-Datei testen
+### Test with a custom pod
 
 ```bash
-# Neue Pod anlegen
 node -e "
 import('@a83/orbiter-core').then(({ createPod, hashPassword }) => {
   const db = createPod('./test.pod', { site: { name: 'Test' } });
@@ -144,7 +142,7 @@ import('@a83/orbiter-core').then(({ createPod, hashPassword }) => {
 ORBITER_POD=./test.pod npm run dev --workspace=packages/admin
 ```
 
-### Health Check
+### Health check
 
 ```bash
 curl http://localhost:4322/health
@@ -608,7 +606,7 @@ orbiter pack   --pod ./content.pod --dir ./media
 Entry counts per collection, recently edited entries, persistent scratchpad + todo list, build trigger status.
 
 ### Entry editor
-All schema fields rendered as inputs, richtext block editor with live Markdown preview, autosave, version history, status toggle (draft / published), media picker, relation picker, conditional field visibility.
+All schema fields rendered as inputs. Richtext block editor with live Markdown preview, autosave, version history, draft/published toggle. Inline image blocks with float alignment (left/right/center/full). Video embedding (YouTube, Vimeo, mp4). Media picker with cloud URL import (Dropbox, Google Drive, OneDrive). Relation picker, conditional field visibility.
 
 ### Media library
 Upload, browse, and manage files. Images, video, PDF, and any file type. Stored as BLOBs in the pod. Served at `/orbiter/media/[id]`. Folder categories, type filter, inline image and video preview, copy URL, alt text.
@@ -801,6 +799,38 @@ Release checklist:
 ## Adding an Admin Language
 
 The admin ships with **English** and **German**. To add a locale, add translations to `packages/integration/src/i18n.js` and add the language option to `routes/settings.astro` and `routes/setup.astro`.
+
+---
+
+## Changelog
+
+### May 2025 — Editor: Images, Video & Cloud Import
+
+The block editor gains full rich-media embedding:
+
+- **Inline image blocks** — insert images directly into the body. Alignment controls: float left, float right, center, full width. Text wraps naturally around floated images.
+- **Media picker** — browse the library and insert with one click, or upload from disk on the spot.
+- **Cloud URL import** — paste a share link from Dropbox, Google Drive, or OneDrive into the image picker. The server fetches the file server-side (bypassing CORS) and stores it in the pod. Any public image URL also works.
+- **Video embedding** — paste a YouTube, Vimeo, Wistia, or direct `.mp4`/`.webm` URL. Video blocks render as responsive 16:9 embeds. Pasting a video URL anywhere in the editor auto-creates the block. Serialized as `::video[url]` in Markdown.
+- **`/` block picker** — Image and Video entries added. Type `/img` or `/vid` to insert.
+
+### March 2025 — Themes & Glass Layout
+
+- **Three themes:** Space (dark: space station HUD / light: solar command ice blue), Zen (Japandi — slate, mauve, moss), Catppuccin (Mocha / Latte). Switchable live in Settings.
+- **Glass layout** — frosted panels, backdrop blur, animated gradient orbs. Ships as the default. Classic grid layout still available.
+- **Nav logo** — animated SVG planet replaces emoji in the standalone admin.
+
+### January 2025 · v0.1.0 — First npm Release
+
+- Published `@a83/orbiter-core`, `@a83/orbiter-integration`, `@a83/orbiter-admin`, `@a83/orbiter-cli` to npm.
+- Block-based richtext editor with live Markdown preview, autosave, version history.
+- Per-entry locale variants (`slug--locale` convention), `getLocaleCollection()` and locale fallback.
+- Relation fields resolved at build time into full Entry objects.
+- Multi-user auth — admin and editor roles, user management in the UI.
+- WordPress WXR importer — runs in the browser, no CLI needed.
+- Git sync mode — `orbiter pack` / `orbiter unpack` for static hosting (Netlify, Vercel, GitHub Pages).
+- JSON API — `GET /orbiter/api/[collection]`, optional Bearer token.
+- PWA — installable admin on mobile and desktop, service worker, offline page.
 
 ---
 

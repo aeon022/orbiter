@@ -3,6 +3,12 @@ import '../styles/landing.css';
 import FooterSignature from '../components/FooterSignature.astro';
 import CookieBanner from '../components/CookieBanner.astro';
 import PageTransition from '../components/PageTransition.astro';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+const _aiMdRaw = readFileSync(new URL('../../../../AI_SETUP.md', import.meta.url), 'utf-8');
+const _aiMatch = _aiMdRaw.match(/^```\n([\s\S]+)\n```\s*$/m);
+const aiPromptText = _aiMatch ? _aiMatch[1] : _aiMdRaw;
 
 const features = [
   { icon: '◈', title: 'One file. Everything.',        body: 'Content, media, schema, users, sessions — all in a single <code>.pod</code> file. Copy it anywhere. Back it up with <code>cp</code>.' },
@@ -213,6 +219,8 @@ const faqs = [
     <div class="nav-links">
       <a href="#how-it-works" data-section="how-it-works">How it works</a>
       <a href="#features"     data-section="features">Features</a>
+      <a href="#updates"      data-section="updates">Updates</a>
+      <a href="#ai-setup"     data-section="ai-setup" class="nav-ai">✦ AI Setup</a>
       <a href="#pricing"      data-section="pricing">Pricing</a>
       <a href="#faq"          data-section="faq">FAQ</a>
       <div class="nav-divider" aria-hidden="true"></div>
@@ -230,6 +238,8 @@ const faqs = [
   <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
     <a href="#how-it-works">How it works</a>
     <a href="#features">Features</a>
+    <a href="#updates">Updates</a>
+    <a href="#ai-setup">AI Setup</a>
     <a href="#pricing">Pricing</a>
     <a href="#faq">FAQ</a>
     <a href="#try" class="mobile-menu-try">Try in 60 seconds →</a>
@@ -414,6 +424,62 @@ const faqs = [
           </div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- UPDATES / CHANGELOG -->
+  <section id="updates" class="updates-section">
+    <h2 class="reveal">What's new</h2>
+    <p class="section-lead reveal reveal-delay-1">Recent updates and improvements to Orbiter.</p>
+
+    <div class="updates-feed">
+
+      <div class="update-card reveal">
+        <div class="update-date">May<br />2025</div>
+        <div class="update-dot"></div>
+        <div class="update-body">
+          <div class="update-tag">Editor</div>
+          <div class="update-title">Images, Video & Cloud Import</div>
+          <ul class="update-items">
+            <li><strong>Inline image blocks</strong> — float left, right, center, or full width. Text wraps naturally, travel-blog style.</li>
+            <li><strong>Video embedding</strong> — paste a YouTube, Vimeo, or direct <code>.mp4</code> URL. The editor auto-embeds in a responsive 16:9 player.</li>
+            <li><strong>Cloud URL import</strong> — paste a share link from Dropbox, Google Drive, or OneDrive. The server fetches it and stores it in your pod. No CORS, no manual download.</li>
+            <li><strong>Block picker</strong> — <code>/img</code> and <code>/vid</code> shortcuts to insert media blocks from the keyboard.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="update-card reveal reveal-delay-1">
+        <div class="update-date">Mar<br />2025</div>
+        <div class="update-dot"></div>
+        <div class="update-body">
+          <div class="update-tag amber">Themes</div>
+          <div class="update-title">Three Themes & Glass Layout</div>
+          <ul class="update-items">
+            <li><strong>Space</strong> — dark space station HUD, light solar command ice blue.</li>
+            <li><strong>Zen</strong> — Japandi aesthetic: slate, mauve, moss, warm neutrals.</li>
+            <li><strong>Catppuccin</strong> — Mocha (dark) and Latte (light) from the popular palette.</li>
+            <li><strong>Glass layout</strong> — frosted panels, backdrop blur, animated gradient orbs. Ships as the default; classic grid still available.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="update-card reveal reveal-delay-2">
+        <div class="update-date">Jan<br />2025</div>
+        <div class="update-dot dim"></div>
+        <div class="update-body">
+          <div class="update-tag green">v0.1.0</div>
+          <div class="update-title">First npm Release</div>
+          <ul class="update-items">
+            <li><strong>Published to npm</strong> — <code>orbiter-core</code>, <code>orbiter-integration</code>, <code>orbiter-admin</code>, <code>orbiter-cli</code>.</li>
+            <li><strong>Block editor</strong> with live preview, autosave, version history, and draft/published toggle.</li>
+            <li><strong>i18n</strong> — per-entry locale variants, <code>getLocaleCollection()</code>, locale fallback.</li>
+            <li><strong>Relations</strong> — resolved at build time into full Entry objects.</li>
+            <li><strong>WordPress importer</strong>, Git sync mode, JSON API, multi-user auth, PWA.</li>
+          </ul>
+        </div>
+      </div>
+
     </div>
   </section>
 
@@ -829,6 +895,73 @@ ORBITER_POD=$(pwd)/content.pod npm start</code></pre>
           </div>
         </div>
       ))}
+    </div>
+  </section>
+
+  <!-- AI SETUP -->
+  <section id="ai-setup" class="ai-setup-section">
+    <div class="ai-kicker reveal"><span class="ai-dot"></span>Claude Code · ChatGPT · Gemini</div>
+    <h2 class="reveal">Scaffold a full project with AI.</h2>
+    <p class="section-lead reveal reveal-delay-1">One prompt. A complete Astro blog with Orbiter CMS — collections, example content, all pages, and a working admin — built by your AI assistant from scratch.</p>
+
+    <div class="ai-what-grid">
+      <div class="ai-what-card reveal">
+        <div class="ai-what-icon">⬡</div>
+        <strong>Full project structure</strong>
+        <p>BaseLayout, Header, PostCard components. Blog listing, post detail, and About page — all wired to Orbiter content.</p>
+      </div>
+      <div class="ai-what-card reveal reveal-delay-1">
+        <div class="ai-what-icon">◈</div>
+        <strong>Collections with example data</strong>
+        <p>Posts, Authors, and Pages collections. Three seeded blog posts, an author, and an About page — ready to edit.</p>
+      </div>
+      <div class="ai-what-card reveal reveal-delay-2">
+        <div class="ai-what-icon">▦</div>
+        <strong>Working admin at localhost:4322</strong>
+        <p>Login with <code>admin / admin</code> and start creating content immediately. Change schema, upload media, switch themes.</p>
+      </div>
+    </div>
+
+    <div class="ai-prompt-box reveal reveal-delay-3">
+      <div class="ai-prompt-header">
+        <span>AI_SETUP.md — paste into any AI assistant</span>
+        <button class="ai-copy-btn" id="ai-copy-btn" onclick="copyAiPrompt()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy full prompt
+        </button>
+      </div>
+      <div class="ai-prompt-preview"><span class="hi">You are scaffolding a new Astro blog site using Orbiter CMS (https://orbiter.sh).</span>
+<span class="hi">Orbiter is a self-hosted CMS where all content, media, schema, and users live in a</span>
+<span class="hi">single SQLite file called a .pod file. No database server. No cloud dependency.</span>
+
+<span class="hi">Your task: set up a complete, working project from scratch — including a seed script</span>
+<span class="hi">that creates collections and example content, and Astro pages that consume the data.</span>
+
+<span class="hi">Follow every step below in order. Run commands as you go. Do not skip steps.</span>
+
+<span class="di">─────────────────────────────────────────────</span>
+<span class="hi">STEP 1 — Create the Astro project</span>
+<span class="di">─────────────────────────────────────────────</span>
+
+<span class="di">STEP 2 — Install Orbiter packages + add npm scripts</span>
+<span class="di">STEP 3 — Configure astro.config.mjs</span>
+<span class="di">STEP 4 — Write seed.js (collections, posts, authors, pages, admin user)</span>
+<span class="di">STEP 5 — Run the seed script</span>
+<span class="di">STEP 6 — Create BaseLayout, Header, PostCard, and all pages</span>
+<span class="di">STEP 7 — Start both dev servers</span>
+<span class="di">STEP 8 — Verify everything works</span>
+<span class="di">STEP 9 — Clean up</span>
+
+<span class="di">[ + full file contents, project structure, and troubleshooting guide ]</span></div>
+      <div class="ai-prompt-footer">
+        <span>9 steps · full file contents · troubleshooting guide · MIT</span>
+        <div class="ai-works-with">
+          Works with
+          <span class="ai-badge claude">Claude Code</span>
+          <span class="ai-badge gpt">ChatGPT</span>
+          <span class="ai-badge gemini">Gemini</span>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1255,4 +1388,21 @@ mobileMenu.querySelectorAll('a').forEach(a => {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeMenu();
 });
+
+
+</script>
+
+<script is:inline define:vars={{ aiPromptText }}>
+window.copyAiPrompt = function() {
+  navigator.clipboard.writeText(aiPromptText).then(function() {
+    var btn = document.getElementById('ai-copy-btn');
+    if (!btn) return;
+    btn.classList.add('copied');
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+    setTimeout(function() {
+      btn.classList.remove('copied');
+      btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy full prompt';
+    }, 2200);
+  });
+};
 </script>

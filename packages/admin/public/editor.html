@@ -249,6 +249,87 @@
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     }
     .img-pick-empty { padding:40px; text-align:center; font-size:12px; color:var(--muted); }
+    .img-pick-tabs { display:flex; gap:0; border-bottom:1px solid var(--line); flex-shrink:0; }
+    .img-pick-tab { flex:1; padding:8px; background:transparent; border:none; font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); cursor:pointer; transition:all .12s; border-bottom:2px solid transparent; margin-bottom:-1px; }
+    .img-pick-tab:hover { color:var(--text); }
+    .img-pick-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+    .img-pick-pane { display:none; flex:1; overflow-y:auto; }
+    .img-pick-pane.active { display:block; }
+    .img-url-pane { padding:16px; display:flex; flex-direction:column; gap:10px; }
+    .img-url-inp { width:100%; background:var(--bg2); border:1px solid var(--line); color:var(--text); font-family:var(--mono); font-size:11px; padding:8px 10px; border-radius:4px; box-sizing:border-box; }
+    .img-url-inp:focus { outline:none; border-color:var(--accent); }
+    .img-url-hint { font-size:10px; color:var(--muted); line-height:1.6; }
+    .img-url-hint strong { color:var(--text); font-weight:500; }
+    .img-url-btn { align-self:flex-end; padding:6px 16px; background:var(--accent-bg); border:1px solid var(--accent); color:var(--accent); font-family:var(--mono); font-size:10px; border-radius:4px; cursor:pointer; transition:all .12s; }
+    .img-url-btn:hover { background:rgba(90,122,240,.25); }
+    .img-url-btn:disabled { opacity:.5; cursor:default; }
+    .img-url-status { font-size:10px; color:var(--muted); min-height:14px; }
+
+    /* ── Video blocks ───────────────────────────────────────────── */
+    .be-block[data-type="video"] {
+      position:relative; min-height:auto; padding:4px 0;
+      line-height:1; cursor:default; user-select:none; outline:none; clear:both;
+    }
+    .be-video-wrap {
+      position:relative; width:100%; padding-bottom:56.25%; /* 16:9 */
+      border-radius:8px; overflow:hidden;
+      border:2px solid transparent; transition:border-color .15s; background:var(--bg1);
+    }
+    .be-block[data-type="video"].vid-sel .be-video-wrap { border-color:var(--accent); }
+    .be-video-wrap iframe, .be-video-wrap video {
+      position:absolute; inset:0; width:100%; height:100%; border:none; border-radius:6px;
+    }
+    .be-video-overlay {
+      position:absolute; inset:0; cursor:default; z-index:5; border-radius:6px;
+    }
+    .be-block[data-type="video"].vid-sel .be-video-overlay { pointer-events:none; }
+    .be-vid-ctrl {
+      position:absolute; top:8px; left:50%; transform:translateX(-50%);
+      display:flex; align-items:center; gap:2px;
+      background:var(--bg2); border:1px solid var(--mid); border-radius:6px;
+      padding:3px 4px; box-shadow:0 4px 14px rgba(0,0,0,.35);
+      z-index:20; opacity:0; pointer-events:none; transition:opacity .15s; white-space:nowrap;
+    }
+    .be-block[data-type="video"].vid-sel .be-vid-ctrl { opacity:1; pointer-events:auto; }
+    .be-vid-url {
+      display:block; width:100%; margin-top:5px;
+      background:transparent; border:none; border-bottom:1px dashed transparent;
+      color:var(--muted); font-family:var(--mono); font-size:10px;
+      padding:2px 0; outline:none; text-align:center; transition:border-color .12s; box-sizing:border-box;
+    }
+    .be-vid-url:focus { border-color:var(--line); color:var(--text); }
+    .be-block[data-type="video"].vid-sel .be-vid-url { border-color:var(--line2); }
+
+    /* Video URL input modal */
+    .vid-url-overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px);
+      z-index:8000; display:none; align-items:center; justify-content:center;
+    }
+    .vid-url-overlay.open { display:flex; }
+    .vid-url-box {
+      background:var(--bg2); border:1px solid var(--mid); border-radius:12px;
+      padding:24px 28px; width:460px; max-width:90vw;
+      box-shadow:0 8px 40px rgba(0,0,0,.5);
+    }
+    .vid-url-title { font-family:var(--mono); font-size:10px; letter-spacing:.1em; color:var(--muted); text-transform:uppercase; margin-bottom:12px; }
+    .vid-url-inp {
+      width:100%; background:var(--bg0); border:1px solid var(--line); border-radius:6px;
+      padding:9px 12px; color:var(--heading); font-family:var(--mono); font-size:12px;
+      outline:none; box-sizing:border-box; transition:border-color .15s;
+    }
+    .vid-url-inp:focus { border-color:var(--accent); }
+    .vid-url-hint { font-size:10px; color:var(--muted); margin-top:6px; }
+    .vid-url-actions { display:flex; gap:8px; margin-top:14px; justify-content:flex-end; }
+    .vid-url-ok {
+      height:30px; padding:0 16px; background:var(--accent-bg); border:1px solid var(--accent);
+      color:var(--accent); font-family:var(--mono); font-size:10px; border-radius:4px; cursor:pointer;
+    }
+    .vid-url-ok:hover { background:rgba(90,122,240,.2); }
+    .vid-url-cancel {
+      height:30px; padding:0 12px; background:transparent; border:1px solid var(--line);
+      color:var(--muted); font-family:var(--mono); font-size:10px; border-radius:4px; cursor:pointer;
+    }
+    .vid-url-cancel:hover { border-color:var(--mid); color:var(--text); }
 
     /* SERP preview */
     .serp-preview { background:var(--bg0); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px; margin-top:12px; }
@@ -303,6 +384,9 @@
           <div class="tool-group" onmousedown="event.preventDefault()">
             <button type="button" class="tool-btn" onclick="openImgPicker()" title="Insert image">
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="display:block"><rect x=".75" y="1.75" width="11.5" height="9.5" rx="1.5" stroke="currentColor" stroke-width="1.1"/><circle cx="4.25" cy="5" r=".9" fill="currentColor"/><path d="M.75 9l2.9-2.9L6 8.45l1.85-1.85L12.25 10.5" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button type="button" class="tool-btn" onclick="openVideoPicker()" title="Insert video (YouTube, Vimeo, mp4)">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="display:block"><rect x=".75" y="2.25" width="11.5" height="8.5" rx="1.5" stroke="currentColor" stroke-width="1.1"/><path d="M5.25 4.75l3.5 1.75-3.5 1.75V4.75z" fill="currentColor"/></svg>
             </button>
           </div>
         </div>
@@ -866,6 +950,10 @@
           lines.push(`![${alt}](${id})${suf}`);
           return;
         }
+        if (type==='video') {
+          lines.push(`::video[${b.dataset.videoUrl ?? ''}]`);
+          return;
+        }
         const text = htmlToMd(b.innerHTML);
         if      (type==='h1')         lines.push('# '+text);
         else if (type==='h2')         lines.push('## '+text);
@@ -897,6 +985,9 @@
       if (!md) { beEditor.appendChild(createBlock('p','')); return; }
       md.split(/\n{2,}/).forEach(chunk=>{
         chunk=chunk.trim(); if (!chunk) return;
+        // Video block: ::video[url]
+        const vidM = chunk.match(/^::video\[(.+)\]$/);
+        if (vidM) { beEditor.appendChild(createVideoBlock(vidM[1])); return; }
         // Image block: ![alt](mediaId) or ![alt](mediaId){.align}
         const imgM = chunk.match(/^!\[([^\]]*)\]\(([^)]+)\)(?:\{\.(\w+)\})?$/);
         if (imgM) { beEditor.appendChild(createImgBlock(imgM[2], imgM[1], imgM[3]||'center')); return; }
@@ -989,7 +1080,20 @@
 
     beEditor.addEventListener('paste',e=>{
       e.preventDefault();
-      const text=(e.clipboardData||window.clipboardData).getData('text/plain');
+      const text=(e.clipboardData||window.clipboardData).getData('text/plain').trim();
+      if (text && /^https?:\/\//i.test(text) && /youtube\.com|youtu\.be|vimeo\.com|wistia\.(com|net)|\.(?:mp4|webm|ogg|mov)(\?|$)/i.test(text)) {
+        const b=getFocusedBlock();
+        const block=createVideoBlock(text);
+        if (b) {
+          b.after(block);
+          if (b.innerText.trim()==='') b.remove();
+          if (!block.nextElementSibling||block.nextElementSibling.contentEditable==='false') block.after(createBlock('p',''));
+        } else {
+          beEditor.appendChild(block);
+          beEditor.appendChild(createBlock('p',''));
+        }
+        syncToHidden(); scheduleAutosave(); updatePreview(); return;
+      }
       if (text) document.execCommand('insertText',false,text);
       syncToHidden(); scheduleAutosave(); updatePreview();
     });
@@ -1056,7 +1160,12 @@
             return `<img src="/api/media/${id}/raw" alt="${alt}" style="border-radius:6px;max-width:100%;${st}">`;
           }
         );
-        document.getElementById('preview-body').innerHTML=marked.parse(prepped);
+        const prepped2 = prepped.replace(/::video\[([^\]]+)\]/g, (_,url)=>{
+          const embed = parseVideoUrl(url);
+          if (!embed) return `<video src="${url}" controls style="width:100%;border-radius:8px;margin:16px 0;"></video>`;
+          return `<div style="position:relative;padding-bottom:56.25%;height:0;margin:16px 0;overflow:hidden;border-radius:8px;"><iframe src="${embed}" frameborder="0" allowfullscreen allow="autoplay;encrypted-media" style="position:absolute;top:0;left:0;width:100%;height:100%;"></iframe></div>`;
+        });
+        document.getElementById('preview-body').innerHTML=marked.parse(prepped2);
       }
     }
 
@@ -1076,6 +1185,7 @@
       {label:'Numbered',   icon:'1.',  hint:'1.',  type:'ol'},
       {label:'Divider',    icon:'—',   hint:'---', type:'hr'},
       {label:'Image',      icon:'⊡',   hint:'img', type:'image'},
+      {label:'Video',      icon:'▶',   hint:'vid', type:'video'},
     ];
     let bpOpen=false, bpIdx=0, bpQuery='', bpTargetBlock=null;
     const bpEl=document.getElementById('block-picker');
@@ -1117,6 +1227,10 @@
       if (blk.type==='image') {
         pickerAnchor = bpTargetBlock;
         bpTargetBlock.innerHTML=''; bpClose(); openImgPicker(); return;
+      }
+      if (blk.type==='video') {
+        vidPickerAnchor = bpTargetBlock;
+        bpTargetBlock.innerHTML=''; bpClose(); openVideoPicker(); return;
       }
       bpTargetBlock.innerHTML='';
       if (blk.type==='hr') {
@@ -1259,9 +1373,141 @@
       finally { btn.textContent=orig; btn.disabled=false; }
     });
 
+    window.imgPickTab = function(tab, btn) {
+      document.querySelectorAll('.img-pick-tab').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.img-pick-pane').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('img-pick-pane-'+tab).classList.add('active');
+      if (tab==='url') setTimeout(()=>document.getElementById('img-url-inp').focus(), 40);
+    };
+
+    window.importFromUrl = async function() {
+      const inp = document.getElementById('img-url-inp');
+      const url = inp.value.trim();
+      if (!url) return;
+      const btn = document.getElementById('img-url-btn');
+      const status = document.getElementById('img-url-status');
+      btn.disabled=true; btn.textContent='Wird geladen…'; status.textContent='';
+      try {
+        const res = await fetch('/api/media/import-url', {
+          method:'POST', credentials:'include',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ url, alt:'', folder:'' })
+        });
+        if (!res.ok) { const e=await res.json().catch(()=>({})); status.textContent='Fehler: '+(e.error||res.status); return; }
+        const media = await res.json();
+        mediaData.unshift(media);
+        closeImgPicker();
+        doInsertImg(media.id, media.alt??'');
+        inp.value='';
+      } catch(e) {
+        status.textContent='Netzwerkfehler: '+e.message;
+      } finally {
+        btn.disabled=false; btn.textContent='Importieren';
+      }
+    };
+
+    document.getElementById('img-url-inp').addEventListener('keydown', e=>{
+      if (e.key==='Enter') { e.preventDefault(); importFromUrl(); }
+    });
+
     function escHtml(str) {
       return String(str??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
+
+    // ── Video blocks ──────────────────────────────────────────────────
+    let vidPickerAnchor = null;
+
+    function parseVideoUrl(url) {
+      url = (url||'').trim();
+      let m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+      if (m) return `https://www.youtube.com/embed/${m[1]}?rel=0`;
+      m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+      if (m) return `https://player.vimeo.com/video/${m[1]}`;
+      m = url.match(/wistia\.(?:com|net)\/(?:medias|embed\/iframe)\/(\w+)/);
+      if (m) return `https://fast.wistia.net/embed/iframe/${m[1]}`;
+      return null; // direct file URL — use <video> tag
+    }
+
+    function createVideoBlock(url) {
+      const embed = parseVideoUrl(url);
+      const isDirect = /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url);
+      const el = document.createElement('div');
+      el.className='be-block'; el.dataset.type='video';
+      el.dataset.videoUrl = url;
+      el.contentEditable='false';
+      let mediaHtml;
+      if (embed) {
+        mediaHtml = `<iframe src="${escHtml(embed)}" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe><div class="be-video-overlay"></div>`;
+      } else if (isDirect) {
+        mediaHtml = `<video src="${escHtml(url)}" controls></video>`;
+      } else {
+        mediaHtml = `<div style="padding:20px;color:var(--muted);font-size:11px;font-family:var(--mono);text-align:center;">Unsupported video URL</div>`;
+      }
+      el.innerHTML = `
+        <div class="be-video-wrap">${mediaHtml}</div>
+        <div class="be-vid-ctrl">
+          <input class="be-vid-url" type="text" value="${escHtml(url)}" readonly tabindex="-1">
+          <button class="img-ab del" onclick="vidDelete(this)" title="Remove video">✕ remove</button>
+        </div>`;
+      el.addEventListener('click', e=>{
+        if (e.target.closest('.img-ab')) return;
+        e.stopPropagation();
+        beEditor.querySelectorAll('.be-block[data-type="video"]').forEach(b=>b.classList.remove('vid-sel'));
+        el.classList.add('vid-sel');
+      });
+      return el;
+    }
+
+    window.vidDelete = function(btn) {
+      const block=btn.closest('.be-block[data-type="video"]'); if(!block) return;
+      const prev=block.previousElementSibling, next=block.nextElementSibling;
+      block.remove();
+      if (next&&next.contentEditable!=='false') focusStart(next);
+      else if (prev&&prev.contentEditable!=='false') focusEnd(prev);
+      else { const p=createBlock('p',''); beEditor.appendChild(p); focusStart(p); }
+      syncToHidden(); scheduleAutosave(); updatePreview();
+    };
+
+    document.addEventListener('click', e=>{
+      if (!e.target.closest('.be-block[data-type="video"]'))
+        beEditor.querySelectorAll('.be-block[data-type="video"]').forEach(b=>b.classList.remove('vid-sel'));
+    });
+
+    window.openVideoPicker = function() {
+      vidPickerAnchor = getFocusedBlock();
+      const inp = document.getElementById('vid-url-inp');
+      inp.value = '';
+      document.getElementById('vid-url-overlay').classList.add('open');
+      setTimeout(()=>inp.focus(), 60);
+    };
+
+    window.closeVideoPicker = function() {
+      document.getElementById('vid-url-overlay').classList.remove('open');
+    };
+
+    window.confirmVideoUrl = function() {
+      const url = document.getElementById('vid-url-inp').value.trim();
+      if (!url) return;
+      closeVideoPicker();
+      const block = createVideoBlock(url);
+      const anchor = vidPickerAnchor;
+      if (anchor) {
+        anchor.after(block);
+        if (!block.nextElementSibling||block.nextElementSibling.contentEditable==='false')
+          block.after(createBlock('p',''));
+        if (anchor.innerText.trim()==='') anchor.remove();
+      } else {
+        beEditor.appendChild(block);
+        beEditor.appendChild(createBlock('p',''));
+      }
+      syncToHidden(); scheduleAutosave(); updatePreview();
+    };
+
+    document.getElementById('vid-url-inp').addEventListener('keydown', e=>{
+      if (e.key==='Enter')  { e.preventDefault(); confirmVideoUrl(); }
+      if (e.key==='Escape') { e.preventDefault(); closeVideoPicker(); }
+    });
 
     // ── Init ──────────────────────────────────────────────────────────
     renderMetaPanel();
@@ -1270,16 +1516,48 @@
     updatePreview();
     if (!IS_NEW) setIndicator('saved');
   </script>
+  <!-- Video URL dialog -->
+  <div id="vid-url-overlay" class="vid-url-overlay" onclick="if(event.target===this)closeVideoPicker()">
+    <div class="vid-url-box">
+      <div class="vid-url-title">Insert Video</div>
+      <input id="vid-url-inp" class="vid-url-inp" type="url" placeholder="https://youtu.be/… or https://vimeo.com/… or .mp4 URL" />
+      <div class="vid-url-hint">YouTube · Vimeo · Wistia · direct MP4/WebM URL</div>
+      <div class="vid-url-actions">
+        <button class="vid-url-cancel" onclick="closeVideoPicker()">Cancel</button>
+        <button class="vid-url-ok" onclick="confirmVideoUrl()">Insert</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Image picker sheet -->
   <div id="img-pick-overlay" class="img-pick-overlay" onclick="if(event.target===this)closeImgPicker()">
     <div class="img-pick-sheet">
       <div class="img-pick-head">
         <span class="img-pick-title">Insert Image</span>
-        <button class="img-pick-upload" onclick="document.getElementById('img-file-inp').click()">↑ Upload from file</button>
+        <button class="img-pick-upload" onclick="document.getElementById('img-file-inp').click()">↑ Upload</button>
         <button class="img-pick-close" onclick="closeImgPicker()">×</button>
       </div>
-      <div class="img-pick-body">
-        <div id="img-pick-grid" class="img-pick-grid"></div>
+      <div class="img-pick-tabs">
+        <button class="img-pick-tab active" onclick="imgPickTab('library',this)">Library</button>
+        <button class="img-pick-tab" onclick="imgPickTab('url',this)">From URL</button>
+      </div>
+      <div id="img-pick-pane-library" class="img-pick-pane active">
+        <div class="img-pick-body">
+          <div id="img-pick-grid" class="img-pick-grid"></div>
+        </div>
+      </div>
+      <div id="img-pick-pane-url" class="img-pick-pane">
+        <div class="img-url-pane">
+          <input id="img-url-inp" class="img-url-inp" type="url" placeholder="https://…" />
+          <div class="img-url-hint">
+            <strong>Dropbox</strong> — Teilen → Link kopieren<br>
+            <strong>Google Drive</strong> — Freigeben → Link abrufen<br>
+            <strong>OneDrive</strong> — Teilen → Link kopieren<br>
+            <strong>Jede öffentliche Bild-URL</strong>
+          </div>
+          <div id="img-url-status" class="img-url-status"></div>
+          <button id="img-url-btn" class="img-url-btn" onclick="importFromUrl()">Importieren</button>
+        </div>
       </div>
     </div>
   </div>
