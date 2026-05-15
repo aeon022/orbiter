@@ -6,7 +6,7 @@ import PageTransition from '../components/PageTransition.astro';
 
 const features = [
   { icon: '◈', title: 'One file. Everything.',        body: 'Content, media, schema, users, sessions — all in a single <code>.pod</code> file. Copy it anywhere. Back it up with <code>cp</code>.' },
-  { icon: '⬡', title: 'Astro-native',                 body: 'One line in <code>astro.config.mjs</code> injects a full admin UI at <code>/orbiter</code> via <code>injectRoute</code>. Nothing added to <code>src/pages</code>.' },
+  { icon: '⬡', title: 'Astro-native',                 body: 'One line in <code>astro.config.mjs</code> gives you <code>orbiter:collections</code> — a Vite virtual module that snapshots your published content at build time. Zero runtime fetch.' },
   { icon: '⌗', title: 'Familiar content API',         body: 'Read content with <code>getCollection</code> and <code>getEntry</code> — same shape as Astro\'s built-in content collections.' },
   { icon: '▦', title: 'Schema editor',                body: 'Add or change fields in the admin without writing migrations. Changes apply immediately.' },
   { icon: '◫', title: 'Media library',                body: 'Images and files stored as BLOBs directly in the pod. No CDN to configure, no broken paths after deploy.' },
@@ -99,7 +99,7 @@ const faqs = [
   },
   {
     q: 'What Astro output mode do I need?',
-    a: '<code>output: \'server\'</code> or <code>output: \'hybrid\'</code>. The admin UI needs a running server. Static-only (<code>output: \'static\'</code>) is not supported because there\'s nothing to serve the admin routes at runtime.',
+    a: 'The Astro integration works with any output mode — it only provides <code>orbiter:collections</code> at build time. The admin runs as a separate server (<code>@a83/orbiter-admin</code>) independently of your Astro output mode.',
   },
   {
     q: 'Can I inspect the database directly?',
@@ -231,8 +231,8 @@ const faqs = [
       </div>
       <div class="install-block">
         <span class="prompt">$</span>
-        <span class="cmd">npm install @a83/orbiter-integration</span>
-        <button class="copy-btn" data-copy="npm install @a83/orbiter-integration" aria-label="Copy install command" title="Copy to clipboard">
+        <span class="cmd">npm install @a83/orbiter-admin</span>
+        <button class="copy-btn" data-copy="npm install @a83/orbiter-admin" aria-label="Copy install command" title="Copy to clipboard">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         </button>
       </div>
@@ -245,7 +245,7 @@ const faqs = [
             <div class="hero-preview-dot"></div>
             <div class="hero-preview-dot"></div>
             <div class="hero-preview-url">
-              <span>localhost:4321/orbiter</span>
+              <span>localhost:4322</span>
             </div>
           </div>
           <img src="/screenshots/dashboard.webp" alt="Orbiter admin dashboard" width="1390" height="839" />
@@ -314,7 +314,7 @@ const faqs = [
   <!-- SCREENSHOTS -->
   <section id="screenshots" class="screenshots-section">
     <h2 class="reveal">See it in action</h2>
-    <p class="section-lead reveal reveal-delay-1">A full CMS admin — injected into your Astro app. No separate service to run.</p>
+    <p class="section-lead reveal reveal-delay-1">A full CMS admin — standalone server on port 4322, glassmorphism UI, three themes.</p>
 
     <div class="screenshot-main reveal reveal-delay-2">
       <div class="screenshot-frame" id="ss-main-frame">
@@ -359,14 +359,15 @@ const faqs = [
 
     <div class="steps">
       <div class="reveal">
-        <div class="step-label">Step 1 — Install</div>
+        <div class="step-label">Step 1 — Start the admin</div>
         <div class="code-block">
-          <pre><code>npm install @a83/orbiter-integration</code></pre>
+          <pre><code>npm install @a83/orbiter-admin
+ORBITER_POD=$(pwd)/content.pod npm start</code></pre>
           <button class="copy-btn code-copy-btn" aria-label="Copy code" title="Copy to clipboard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
         </div>
       </div>
       <div class="reveal reveal-delay-1">
-        <div class="step-label">Step 2 — Add to astro.config.mjs</div>
+        <div class="step-label">Step 2 — Add the integration to astro.config.mjs</div>
         <div class="code-block">
           <pre><code><span class="dim">import</span> orbiter <span class="dim">from</span> <span class="grn">'@a83/orbiter-integration'</span><span class="dim">;</span>
 
@@ -392,7 +393,7 @@ const faqs = [
   <!-- FEATURES -->
   <section id="features">
     <h2 class="reveal">What's included</h2>
-    <p class="section-lead reveal reveal-delay-1">A full CMS admin at <code>/orbiter</code> — injected into your Astro app, nothing added to <code>src/pages</code>.</p>
+    <p class="section-lead reveal reveal-delay-1">A full CMS admin — standalone on port 4322. The Astro integration handles content at build time via <code>orbiter:collections</code>.</p>
 
     <div class="grid reveal">
       {features.map(f => (
@@ -760,11 +761,12 @@ const faqs = [
   <!-- CTA -->
   <section class="cta" id="try">
     <h2 class="reveal">Try it in 60 seconds.</h2>
-    <p class="reveal reveal-delay-1">Clone the repo and run the demo — admin at <code>localhost:8080/orbiter</code>, login: <code>admin / admin</code>.</p>
+    <p class="reveal reveal-delay-1">Clone the repo, seed the demo pod, start the admin — login at <code>localhost:4322</code> with <code>admin / admin</code>.</p>
     <div class="reveal reveal-delay-2" style="display:flex; flex-direction:column; gap:14px; align-items:center;">
-      <div class="code-block" style="width:100%; max-width:620px;">
+      <div class="code-block" style="width:100%; max-width:680px;">
         <pre><code><span class="dim">git clone</span> https://github.com/aeon022/orbiter.git
-<span class="dim">cd</span> orbiter <span class="dim">&&</span> npm install <span class="dim">&&</span> npm run seed <span class="dim">&&</span> npm run dev</code></pre>
+<span class="dim">cd</span> orbiter <span class="dim">&&</span> npm install <span class="dim">&&</span> npm run seed
+ORBITER_POD=$(pwd)/apps/demo/demo.pod npm run dev --workspace=packages/admin</code></pre>
         <button class="copy-btn code-copy-btn" aria-label="Copy code" title="Copy to clipboard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2 2v1"/></svg></button>
       </div>
       <span class="dim" style="font-size:.83rem;">or scaffold a new project: <code>npm install -g @a83/orbiter-cli</code> → <code>orbiter init my-site</code></span>
