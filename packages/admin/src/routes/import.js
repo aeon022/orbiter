@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
 import { randomUUID } from 'node:crypto';
-import { parseWXR, buildImportPlan, executeImport } from '../../../integration/src/wp-importer.js';
+import { parseWXR, buildImportPlan, executeImport } from '../wp-importer.js';
 
 export const importRoutes = new Hono();
 
