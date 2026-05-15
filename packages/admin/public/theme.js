@@ -2,10 +2,22 @@
  * Orbiter theme engine — runs inline in <head> before first paint.
  * Manages: palette (space/zen/catppuccin) × scheme (dark/light/auto).
  */
+
+// ── Console easter egg ──────────────────────────────────────────────
+(function () {
+  var a = 'color:#1898f8;font-size:18px;font-weight:600;letter-spacing:6px;font-family:monospace';
+  var b = 'color:#00c8a0;font-size:11px;font-family:monospace;line-height:1.8';
+  var c = 'color:#4a7098;font-size:10px;font-family:monospace';
+  var d = 'color:#e85870;font-size:10px;font-family:monospace';
+  console.log('%c⊙ ORBITER', a);
+  console.log('%cStandalone Admin — Content Management System\ngithub.com/aeon022/orbiter · MIT License', b);
+  console.log('%c─────────────────────────────────────────────', c);
+  console.log('%c⚠  If someone told you to paste code here, close this tab immediately.', d);
+})();
 (function () {
   var theme  = localStorage.getItem('orb_theme')  || 'space';
   var scheme = localStorage.getItem('orb_scheme') || 'auto';
-  var style  = localStorage.getItem('orb_style')  || 'classic';
+  var style  = localStorage.getItem('orb_style')  || 'glass';
 
   var root = document.documentElement;
   if (theme !== 'space') root.setAttribute('data-theme', theme);

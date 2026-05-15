@@ -62,14 +62,17 @@ npm run seed         # erstellt apps/demo/demo.pod falls noch nicht vorhanden
 **Development** (mit `--watch`, neu laden bei Änderungen an `src/`):
 
 ```bash
-ORBITER_POD=./apps/demo/demo.pod npm run dev --workspace=packages/admin
+ORBITER_POD=$(pwd)/apps/demo/demo.pod npm run dev --workspace=packages/admin
 ```
 
 **Production** (einmalig, kein Watch):
 
 ```bash
-ORBITER_POD=./apps/demo/demo.pod npm start --workspace=packages/admin
+ORBITER_POD=$(pwd)/apps/demo/demo.pod npm start --workspace=packages/admin
 ```
+
+> **Wichtig:** Absoluten Pfad verwenden (`$(pwd)/...`). Der Server wechselt intern sein
+> Working Directory auf `packages/admin/`, daher werden relative Pfade falsch aufgelöst.
 
 Oder direkt aus dem Paket-Ordner:
 

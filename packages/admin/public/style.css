@@ -963,6 +963,36 @@ tr:hover td { background: var(--row-hover); }
 .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg0); }
 .login-box { width: 340px; }
 .login-logo { text-align: center; margin-bottom: 36px; }
+.login-mark {
+  width: 44px; height: 44px;
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: visible;
+  margin: 0 auto 20px;
+}
+.login-mark::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  opacity: 0.65;
+  animation: logo-orbit-a 14s linear infinite;
+}
+.login-mark::after {
+  content: '';
+  position: absolute;
+  inset: -18px;
+  border-radius: 50%;
+  border: 1px solid var(--gold);
+  border-left-color: transparent;
+  border-right-color: transparent;
+  opacity: 0.25;
+  animation: logo-orbit-b 36s linear infinite reverse;
+}
 .login-logo-mark { font-family: var(--display); font-size: 24px; font-weight: 500; color: var(--heading); letter-spacing: 0.2em; }
 .login-logo-sub { font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); margin-top: 6px; font-family: var(--mono); }
 .login-card { background: var(--bg2); border: 1px solid var(--line); border-radius: var(--radius); padding: 28px 32px; }
