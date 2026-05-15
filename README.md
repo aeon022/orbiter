@@ -25,17 +25,22 @@ your-site/
 
 ## Quick Start
 
-The fastest way to try Orbiter is to clone this repository and run the demo app. You need **Node.js 20+** and **npm 10+**.
+You need **Node.js 20+** and **npm 10+**.
 
 ```bash
 git clone https://github.com/aeon022/orbiter.git
 cd orbiter
 npm install
 npm run seed   # creates apps/demo/demo.pod with sample content
-npm run dev    # starts at http://localhost:8080
 ```
 
-Open **http://localhost:8080/orbiter** and log in:
+Start the admin:
+
+```bash
+ORBITER_POD=$(pwd)/apps/demo/demo.pod npm run dev --workspace=packages/admin
+```
+
+Open **http://localhost:4322** and log in:
 
 ```
 Username: admin
@@ -43,6 +48,12 @@ Password: admin
 ```
 
 The demo includes Posts, Pages, Authors, Events, and Categories — all pre-filled with sample content and draft/published entries.
+
+To also run the public demo site:
+
+```bash
+npm run dev   # → http://localhost:8080
+```
 
 ---
 
@@ -144,21 +155,29 @@ curl http://localhost:4322/health
 
 ## Install
 
+### Admin (recommended)
+
+The standalone admin server — runs independently, no Astro required:
+
 ```bash
-npm install @a83/orbiter-integration
+npm install @a83/orbiter-admin
 ```
 
-Optional packages:
+### Astro integration
+
+Required to read content in your Astro pages via `orbiter:collections`:
+
+```bash
+npm install @a83/orbiter-integration @astrojs/node@^9
+```
+
+> `@astrojs/node@^9` targets Astro 5 — `@astrojs/node@^10` requires Astro 6.
+
+### Other packages
 
 ```bash
 npm install @a83/orbiter-core      # direct DB access / scripting
 npm install -g @a83/orbiter-cli    # orbiter init, add-user, export, pack, unpack
-```
-
-`@astrojs/node@^9` is required as the Astro adapter (targets Astro 5 — `@astrojs/node@^10` requires Astro 6):
-
-```bash
-npm install @astrojs/node@^9
 ```
 
 ---
@@ -602,14 +621,15 @@ Add, edit, delete, and reorder fields on any collection. Changes take effect imm
 
 ### Themes
 
-Two visual themes, switchable in Settings:
+Three themes × two schemes (dark/light) × two layouts, switchable in Settings:
 
-| Theme | Style |
-|-------|-------|
-| **Orbiter Zen** | Warm, editorial — Noto Serif JP + DM Mono, amber accents |
-| **Space Enso** | Terminal, futuristic — Space Mono throughout, cyan/blue accents |
+| Theme | Dark | Light |
+|-------|------|-------|
+| **Space** | Space station HUD — cyan + electric blue | Solar Command — ice blue |
+| **Zen** | Japandi — slate, mauve, moss | Japandi light |
+| **Catppuccin** | Mocha | Latte |
 
-Both support light and dark mode. Preference saved to localStorage.
+**Layouts:** Classic (grid) or Glass (frosted panels, backdrop blur, animated gradient orbs). Glass is the default. Preference saved to `localStorage`.
 
 ### PWA
 The admin is installable as a Progressive Web App on mobile and desktop. Service worker caches assets, offline page shown when disconnected.
