@@ -46,6 +46,99 @@ The demo includes Posts, Pages, Authors, Events, and Categories — all pre-fill
 
 ---
 
+## Standalone Admin (`packages/admin`)
+
+Der Admin läuft als eigenständiger Hono-Server auf Port **4322** — unabhängig vom Astro Dev Server. Er braucht nur eine `.pod`-Datei.
+
+### Voraussetzungen
+
+```bash
+npm install          # im Repo-Root (installiert alle workspaces)
+npm run seed         # erstellt apps/demo/demo.pod falls noch nicht vorhanden
+```
+
+### Starten
+
+**Development** (mit `--watch`, neu laden bei Änderungen an `src/`):
+
+```bash
+ORBITER_POD=./apps/demo/demo.pod npm run dev --workspace=packages/admin
+```
+
+**Production** (einmalig, kein Watch):
+
+```bash
+ORBITER_POD=./apps/demo/demo.pod npm start --workspace=packages/admin
+```
+
+Oder direkt aus dem Paket-Ordner:
+
+```bash
+cd packages/admin
+ORBITER_POD=../../apps/demo/demo.pod npm run dev
+```
+
+### Aufrufen
+
+```
+http://localhost:4322
+```
+
+Redirect geht automatisch zu `/login.html`. Login:
+
+```
+Username: admin
+Password: admin
+```
+
+### Beide Server parallel (Admin + Demo-Site)
+
+Zwei Terminals:
+
+```bash
+# Terminal 1 — Astro Demo (public site)
+npm run dev
+
+# Terminal 2 — Standalone Admin
+ORBITER_POD=./apps/demo/demo.pod npm run dev --workspace=packages/admin
+```
+
+- Demo-Site:  `http://localhost:8080`
+- Admin:      `http://localhost:4322`
+
+Beide greifen auf dieselbe `demo.pod` zu. Änderungen im Admin sind sofort in der Demo-Site sichtbar (nach Reload).
+
+### Env-Variablen
+
+| Variable        | Pflicht | Default                                        | Beschreibung                              |
+|-----------------|---------|------------------------------------------------|-------------------------------------------|
+| `ORBITER_POD`   | ja      | —                                              | Pfad zur `.pod`-Datei                     |
+| `PORT`          | nein    | `4322`                                         | HTTP-Port                                 |
+| `ADMIN_ORIGIN`  | nein    | `http://localhost:4321,http://localhost:4322`   | Erlaubte CORS-Origins (komma-getrennt)    |
+
+### Eigene Pod-Datei testen
+
+```bash
+# Neue Pod anlegen
+node -e "
+import('@a83/orbiter-core').then(({ createPod, hashPassword }) => {
+  const db = createPod('./test.pod', { site: { name: 'Test' } });
+  hashPassword('admin').then(h => { db.insertUser(crypto.randomUUID(), 'admin', h, 'admin'); db.close(); });
+});
+"
+
+ORBITER_POD=./test.pod npm run dev --workspace=packages/admin
+```
+
+### Health Check
+
+```bash
+curl http://localhost:4322/health
+# → { "ok": true, "pod": "/path/to/content.pod" }
+```
+
+---
+
 ## Install
 
 ```bash
