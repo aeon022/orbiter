@@ -131,6 +131,7 @@ const faqs = [
   <meta property="og:description" content="Content, media, schema, users — all in a single .pod file. Copy it anywhere. Built for Astro." />
   <meta property="og:url"         content="https://orbiter.sh/" />
   <meta property="og:image"        content="https://orbiter.sh/og-card.png" />
+  <meta property="og:image:alt"    content="Orbiter CMS — content, media, schema, users in one .pod file" />
   <meta property="og:image:width"  content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:site_name"   content="Orbiter" />
@@ -162,6 +163,19 @@ const faqs = [
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
     "license": "https://opensource.org/licenses/MIT",
     "author": { "@type": "Organization", "name": "Abteilung83", "url": "https://abteilung83.at" }
+  })} />
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map(f => ({
+      "@type": "Question",
+      "name": f.q,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": f.a.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&em;/g, 'em')
+      }
+    }))
   })} />
 </head>
 <body id="top">
@@ -333,7 +347,7 @@ const faqs = [
 
     <div class="screenshot-main reveal reveal-delay-2">
       <div class="screenshot-frame" id="ss-main-frame">
-        <img id="ss-main-img" src="/screenshots/dashboard.webp" alt="Orbiter Dashboard" width="1390" height="839" />
+        <img id="ss-main-img" src="/screenshots/dashboard.webp" alt="Orbiter admin dashboard — collection overview, entry counts, live/draft status, glassmorphism UI" width="1390" height="839" />
       </div>
       <div class="screenshot-caption" id="ss-main-caption">Dashboard — entry counts per collection, recently changed, live/draft status</div>
     </div>
