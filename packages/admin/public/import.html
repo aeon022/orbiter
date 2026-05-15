@@ -13,7 +13,7 @@
     .import-wrap { padding: 40px 48px; max-width: 720px; }
 
     .import-head { margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
-    .import-title { font-family: var(--serif); font-weight: 200; font-size: 24px; color: var(--heading); letter-spacing: 0.04em; margin-bottom: 6px; }
+    .import-title { font-family: var(--display); font-weight: 500; font-size: 18px; color: var(--heading); letter-spacing: 0.02em; margin-bottom: 6px; }
     .import-sub { font-size: 10px; color: var(--muted); }
 
     .import-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
@@ -159,7 +159,6 @@
     function renderUpload() {
       root.innerHTML = `
         <div class="import-head">
-          <div class="import-title">Import</div>
           <div class="import-sub">Import content from WordPress (WXR) or Markdown files into your pod.</div>
         </div>
 
