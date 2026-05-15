@@ -168,6 +168,88 @@
     .seo-counter.warn { color:var(--gold); }
     .seo-counter.over { color:var(--red); }
 
+    /* ── Image blocks ───────────────────────────────────────────── */
+    .be-block[data-type="image"] { position:relative; min-height:auto; padding:6px 0; line-height:1; cursor:default; user-select:none; outline:none; }
+    .be-block[data-type="image"] > .be-img { display:block; max-width:100%; border-radius:6px; border:2px solid transparent; transition:border-color .15s; }
+    .be-block[data-type="image"].img-sel > .be-img { border-color:var(--accent); }
+    .be-block[data-type="image"][data-align="left"]  { float:left;  max-width:48%; margin:4px 20px 12px 0; }
+    .be-block[data-type="image"][data-align="right"] { float:right; max-width:48%; margin:4px 0 12px 20px; }
+    .be-block[data-type="image"][data-align="center"] { clear:both; }
+    .be-block[data-type="image"][data-align="center"] > .be-img { margin:0 auto; }
+    .be-block[data-type="image"][data-align="full"]   { clear:both; }
+    .be-block[data-type="image"][data-align="full"]   > .be-img { width:100%; max-width:100%; }
+    .be-img-ctrl {
+      position:absolute; top:10px; left:50%; transform:translateX(-50%);
+      display:flex; align-items:center; gap:2px;
+      background:var(--bg2); border:1px solid var(--mid); border-radius:6px;
+      padding:3px 4px; box-shadow:0 4px 14px rgba(0,0,0,.35);
+      z-index:20; opacity:0; pointer-events:none; transition:opacity .15s; white-space:nowrap;
+    }
+    .be-block[data-type="image"].img-sel .be-img-ctrl { opacity:1; pointer-events:auto; }
+    .img-ab {
+      height:22px; min-width:28px; padding:0 6px;
+      background:transparent; border:1px solid transparent; border-radius:3px;
+      color:var(--muted); font-size:9px; font-family:var(--mono);
+      cursor:pointer; transition:all .1s;
+      display:flex; align-items:center; justify-content:center; gap:3px;
+    }
+    .img-ab:hover { background:var(--bg3); color:var(--text); border-color:var(--line); }
+    .img-ab.on  { background:var(--accent-bg); color:var(--accent); border-color:var(--accent); }
+    .img-ab.del:hover { background:var(--red); color:#fff; border-color:var(--red); }
+    .img-ctrl-sep { width:1px; height:14px; background:var(--line); margin:0 2px; }
+    .be-img-cap {
+      display:block; width:100%; margin-top:5px;
+      background:transparent; border:none; border-bottom:1px dashed transparent;
+      color:var(--muted); font-family:var(--mono); font-size:10px; letter-spacing:.02em;
+      padding:2px 0; outline:none; text-align:center; transition:border-color .12s; box-sizing:border-box;
+    }
+    .be-img-cap:focus { border-color:var(--line); color:var(--text); }
+    .be-block[data-type="image"].img-sel .be-img-cap { border-color:var(--line2); }
+
+    /* ── Image picker sheet ──────────────────────────────────────── */
+    .img-pick-overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px);
+      z-index:8000; display:none; align-items:flex-end;
+    }
+    .img-pick-overlay.open { display:flex; }
+    .img-pick-sheet {
+      width:100%; max-height:64vh;
+      background:var(--bg1); border-top:1px solid var(--mid);
+      border-radius:12px 12px 0 0; display:flex; flex-direction:column; overflow:hidden;
+    }
+    .img-pick-head {
+      display:flex; align-items:center; gap:8px; padding:10px 16px;
+      border-bottom:1px solid var(--line); background:var(--bg2); flex-shrink:0;
+    }
+    .img-pick-title { font-family:var(--mono); font-size:10px; letter-spacing:.1em; color:var(--muted); text-transform:uppercase; flex:1; }
+    .img-pick-upload {
+      height:26px; padding:0 12px; background:var(--accent-bg); border:1px solid var(--accent);
+      color:var(--accent); font-family:var(--mono); font-size:10px; border-radius:4px; cursor:pointer; transition:background .12s;
+    }
+    .img-pick-upload:hover { background:rgba(90,122,240,.2); }
+    .img-pick-close {
+      width:26px; height:26px; background:transparent; border:1px solid var(--line);
+      border-radius:4px; color:var(--muted); font-size:16px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; line-height:1;
+    }
+    .img-pick-close:hover { color:var(--text); border-color:var(--mid); }
+    .img-pick-body { flex:1; overflow-y:auto; padding:12px 16px 24px; }
+    .img-pick-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:8px; }
+    .img-pick-thumb {
+      aspect-ratio:4/3; border:1px solid var(--line); border-radius:6px;
+      overflow:hidden; cursor:pointer; position:relative; background:var(--bg0);
+      transition:border-color .12s, transform .1s;
+    }
+    .img-pick-thumb:hover { border-color:var(--accent); transform:scale(1.03); }
+    .img-pick-thumb img { width:100%; height:100%; object-fit:cover; }
+    .img-pick-name {
+      position:absolute; bottom:0; left:0; right:0;
+      padding:3px 6px; background:rgba(0,0,0,.6);
+      font-size:9px; color:rgba(255,255,255,.75);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .img-pick-empty { padding:40px; text-align:center; font-size:12px; color:var(--muted); }
+
     /* SERP preview */
     .serp-preview { background:var(--bg0); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px; margin-top:12px; }
     .serp-url { font-size:9px; color:var(--jade); margin-bottom:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -216,6 +298,12 @@
             <button type="button" class="tool-btn" onclick="changeBlockType('blockquote')" >❝</button>
             <button type="button" class="tool-btn" onclick="changeBlockType('ul')"         style="font-size:12px;">·</button>
             <button type="button" class="tool-btn" onclick="insertHr()"                   style="font-size:9px;">—</button>
+          </div>
+          <div class="tool-sep"></div>
+          <div class="tool-group" onmousedown="event.preventDefault()">
+            <button type="button" class="tool-btn" onclick="openImgPicker()" title="Insert image">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="display:block"><rect x=".75" y="1.75" width="11.5" height="9.5" rx="1.5" stroke="currentColor" stroke-width="1.1"/><circle cx="4.25" cy="5" r=".9" fill="currentColor"/><path d="M.75 9l2.9-2.9L6 8.45l1.85-1.85L12.25 10.5" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
           </div>
         </div>
         <div class="editor-scroll">
@@ -770,6 +858,14 @@
       const lines = [];
       beEditor.querySelectorAll('.be-block').forEach(b=>{
         const type = b.dataset.type||'p';
+        if (type==='image') {
+          const id    = b.dataset.mediaId ?? '';
+          const alt   = b.querySelector('.be-img-cap')?.value ?? b.dataset.alt ?? '';
+          const align = b.dataset.align ?? 'center';
+          const suf   = (align && align!=='center') ? `{.${align}}` : '';
+          lines.push(`![${alt}](${id})${suf}`);
+          return;
+        }
         const text = htmlToMd(b.innerHTML);
         if      (type==='h1')         lines.push('# '+text);
         else if (type==='h2')         lines.push('## '+text);
@@ -801,6 +897,9 @@
       if (!md) { beEditor.appendChild(createBlock('p','')); return; }
       md.split(/\n{2,}/).forEach(chunk=>{
         chunk=chunk.trim(); if (!chunk) return;
+        // Image block: ![alt](mediaId) or ![alt](mediaId){.align}
+        const imgM = chunk.match(/^!\[([^\]]*)\]\(([^)]+)\)(?:\{\.(\w+)\})?$/);
+        if (imgM) { beEditor.appendChild(createImgBlock(imgM[2], imgM[1], imgM[3]||'center')); return; }
         let type='p', content=chunk;
         if      (chunk.startsWith('# '))   { type='h1';         content=inlineMd(chunk.slice(2)); }
         else if (chunk.startsWith('## '))  { type='h2';         content=inlineMd(chunk.slice(3)); }
@@ -945,7 +1044,20 @@
       const slug=document.getElementById('slug-preview').textContent;
       document.getElementById('preview-title').textContent=title||'Untitled';
       document.getElementById('preview-slug-line').innerHTML='/'+COLLECTION+'/<span>'+slug+'</span>';
-      if (window.marked) document.getElementById('preview-body').innerHTML=marked.parse(bodyInput.value||'');
+      if (window.marked) {
+        // Expand image blocks: ![alt](id){.align} → <img> with alignment style
+        const prepped = (bodyInput.value||'').replace(
+          /!\[([^\]]*)\]\(([0-9a-f-]{32,36})\)(?:\{\.(\w+)\})?/g,
+          (_,alt,id,align)=>{
+            const st = align==='left'  ? 'float:left;max-width:48%;margin:4px 20px 12px 0;'
+                     : align==='right' ? 'float:right;max-width:48%;margin:4px 0 12px 20px;'
+                     : align==='full'  ? 'width:100%;display:block;'
+                     : 'display:block;margin:0 auto;';
+            return `<img src="/api/media/${id}/raw" alt="${alt}" style="border-radius:6px;max-width:100%;${st}">`;
+          }
+        );
+        document.getElementById('preview-body').innerHTML=marked.parse(prepped);
+      }
     }
 
     function renderIframe() {
@@ -963,6 +1075,7 @@
       {label:'List',       icon:'·',   hint:'-',   type:'ul'},
       {label:'Numbered',   icon:'1.',  hint:'1.',  type:'ol'},
       {label:'Divider',    icon:'—',   hint:'---', type:'hr'},
+      {label:'Image',      icon:'⊡',   hint:'img', type:'image'},
     ];
     let bpOpen=false, bpIdx=0, bpQuery='', bpTargetBlock=null;
     const bpEl=document.getElementById('block-picker');
@@ -1001,6 +1114,10 @@
     function bpInsert(relIdx) {
       const items=bpFiltered(); const blk=items[relIdx];
       if (!blk||!bpTargetBlock) { bpClose(); return; }
+      if (blk.type==='image') {
+        pickerAnchor = bpTargetBlock;
+        bpTargetBlock.innerHTML=''; bpClose(); openImgPicker(); return;
+      }
       bpTargetBlock.innerHTML='';
       if (blk.type==='hr') {
         const hr=createBlock('hr',''); const next=createBlock('p','');
@@ -1010,6 +1127,137 @@
     }
 
     document.addEventListener('mousedown',e=>{if(bpOpen&&!bpEl.contains(e.target))bpClose();});
+
+    // ── Image blocks ──────────────────────────────────────────────────
+    let pickerAnchor = null;
+
+    function refreshAlignBtns(block, align) {
+      block.querySelectorAll('.img-ab[data-align]').forEach(b=>b.classList.toggle('on', b.dataset.align===align));
+    }
+
+    function createImgBlock(mediaId, alt, align) {
+      alt   = alt   ?? '';
+      align = align ?? 'center';
+      const el = document.createElement('div');
+      el.className='be-block'; el.dataset.type='image';
+      el.dataset.mediaId=mediaId; el.dataset.alt=alt; el.dataset.align=align;
+      el.contentEditable='false';
+      el.innerHTML = `
+        <div class="be-img-ctrl">
+          <button class="img-ab" data-align="left"   title="Float left"   onclick="imgAlign(this)">◧ left</button>
+          <button class="img-ab" data-align="center" title="Center"       onclick="imgAlign(this)">▣ center</button>
+          <button class="img-ab" data-align="right"  title="Float right"  onclick="imgAlign(this)">◨ right</button>
+          <button class="img-ab" data-align="full"   title="Full width"   onclick="imgAlign(this)">▭ full</button>
+          <div class="img-ctrl-sep"></div>
+          <button class="img-ab del" title="Remove image" onclick="imgDelete(this)">✕</button>
+        </div>
+        <img class="be-img" src="/api/media/${mediaId}/raw" alt="">
+        <input class="be-img-cap" type="text" placeholder="Caption / alt text…" value="">
+      `;
+      el.querySelector('.be-img').alt = alt;
+      el.querySelector('.be-img-cap').value = alt;
+      refreshAlignBtns(el, align);
+
+      el.querySelector('.be-img-cap').addEventListener('input', function() {
+        el.dataset.alt = this.value;
+        el.querySelector('.be-img').alt = this.value;
+        syncToHidden(); scheduleAutosave();
+      });
+      el.querySelector('.be-img-cap').addEventListener('click', e=>e.stopPropagation());
+
+      el.addEventListener('click', e=>{
+        if (e.target.closest('.img-ab')) return;
+        e.stopPropagation();
+        beEditor.querySelectorAll('.be-block[data-type="image"]').forEach(b=>b.classList.remove('img-sel'));
+        el.classList.add('img-sel');
+      });
+      return el;
+    }
+
+    window.imgAlign = function(btn) {
+      const block=btn.closest('.be-block[data-type="image"]'); if(!block) return;
+      block.dataset.align=btn.dataset.align;
+      refreshAlignBtns(block, btn.dataset.align);
+      syncToHidden(); scheduleAutosave(); updatePreview();
+    };
+
+    window.imgDelete = function(btn) {
+      const block=btn.closest('.be-block[data-type="image"]'); if(!block) return;
+      const prev=block.previousElementSibling, next=block.nextElementSibling;
+      block.remove();
+      if (next&&next.contentEditable!=='false') focusStart(next);
+      else if (prev&&prev.contentEditable!=='false') focusEnd(prev);
+      else { const p=createBlock('p',''); beEditor.appendChild(p); focusStart(p); }
+      syncToHidden(); scheduleAutosave(); updatePreview();
+    };
+
+    // Deselect image blocks on outside click
+    document.addEventListener('click', e=>{
+      if (!e.target.closest('.be-block[data-type="image"]'))
+        beEditor.querySelectorAll('.be-block[data-type="image"]').forEach(b=>b.classList.remove('img-sel'));
+    });
+
+    // ── Image picker ──────────────────────────────────────────────────
+    window.openImgPicker = function() {
+      pickerAnchor = getFocusedBlock();
+      document.getElementById('img-pick-overlay').classList.add('open');
+      renderPickerGrid();
+    };
+
+    window.closeImgPicker = function() {
+      document.getElementById('img-pick-overlay').classList.remove('open');
+    };
+
+    function renderPickerGrid() {
+      const grid=document.getElementById('img-pick-grid');
+      const images=mediaData.filter(m=>m.mime_type?.startsWith('image/'));
+      if (!images.length) {
+        grid.innerHTML='<div class="img-pick-empty">No images yet.<br>Upload one to get started.</div>'; return;
+      }
+      grid.innerHTML=images.map(m=>`
+        <div class="img-pick-thumb" onclick="pickInsert('${m.id}','${escHtml(m.alt??m.filename)}')">
+          <img src="/api/media/${m.id}/raw" alt="${escHtml(m.alt??m.filename)}" loading="lazy">
+          <div class="img-pick-name">${escHtml(m.filename)}</div>
+        </div>`).join('');
+    }
+
+    window.pickInsert = function(mediaId, alt) {
+      closeImgPicker();
+      doInsertImg(mediaId, alt||'');
+    };
+
+    function doInsertImg(mediaId, alt) {
+      const block=createImgBlock(mediaId, alt, 'center');
+      const anchor=pickerAnchor;
+      if (anchor) {
+        anchor.after(block);
+        if (!block.nextElementSibling||block.nextElementSibling.dataset.type==='image')
+          block.after(createBlock('p',''));
+      } else {
+        beEditor.appendChild(block);
+        beEditor.appendChild(createBlock('p',''));
+      }
+      syncToHidden(); scheduleAutosave(); updatePreview();
+    }
+
+    // Upload from file (native picker — supports iCloud Drive, Dropbox, Google Drive via OS)
+    document.getElementById('img-file-inp').addEventListener('change', async function() {
+      const file=this.files[0]; if (!file) return;
+      this.value='';
+      const btn=document.querySelector('.img-pick-upload');
+      const orig=btn.textContent; btn.textContent='Uploading…'; btn.disabled=true;
+      const fd=new FormData(); fd.append('file',file); fd.append('alt',''); fd.append('folder','');
+      try {
+        const res=await fetch('/api/media',{method:'POST',credentials:'include',body:fd});
+        if (res.ok) {
+          const media=await res.json();
+          mediaData.unshift(media);
+          closeImgPicker();
+          doInsertImg(media.id, media.alt??'');
+        } else { alert('Upload failed'); }
+      } catch { alert('Upload error'); }
+      finally { btn.textContent=orig; btn.disabled=false; }
+    });
 
     function escHtml(str) {
       return String(str??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -1022,6 +1270,21 @@
     updatePreview();
     if (!IS_NEW) setIndicator('saved');
   </script>
+  <!-- Image picker sheet -->
+  <div id="img-pick-overlay" class="img-pick-overlay" onclick="if(event.target===this)closeImgPicker()">
+    <div class="img-pick-sheet">
+      <div class="img-pick-head">
+        <span class="img-pick-title">Insert Image</span>
+        <button class="img-pick-upload" onclick="document.getElementById('img-file-inp').click()">↑ Upload from file</button>
+        <button class="img-pick-close" onclick="closeImgPicker()">×</button>
+      </div>
+      <div class="img-pick-body">
+        <div id="img-pick-grid" class="img-pick-grid"></div>
+      </div>
+    </div>
+  </div>
+  <input type="file" id="img-file-inp" accept="image/*" style="display:none">
+
   <script src="/sidebar.js"></script>
   <script src="/router.js"></script>
 </body>

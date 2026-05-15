@@ -990,6 +990,54 @@ h2 {
 .ss-fade { opacity: 0; transition: opacity .18s ease; }
 
 
+/* ===== EDITOR SECTION ===== */
+
+.editor-section {
+  padding: 96px 0;
+  border-top: 1px solid var(--border);
+}
+
+.editor-intro { text-align: center; margin-bottom: 52px; }
+.editor-intro h2 { font-size: clamp(1.6rem, 3vw, 2.4rem); }
+
+.editor-main-shot { margin-bottom: 48px; }
+
+.editor-features { display: flex; flex-direction: column; gap: 36px; }
+
+.editor-feat {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 32px;
+  align-items: center;
+}
+.editor-feat-rev { grid-template-columns: 1fr 1.4fr; }
+.editor-feat-rev .editor-feat-shot { order: 2; }
+.editor-feat-rev .editor-feat-text { order: 1; }
+
+.editor-feat-shot .screenshot-frame {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.editor-feat-text strong {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.editor-feat-text p {
+  font-size: 0.9rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+@media (max-width: 700px) {
+  .editor-feat, .editor-feat-rev { grid-template-columns: 1fr; }
+  .editor-feat-rev .editor-feat-shot { order: 0; }
+  .editor-feat-rev .editor-feat-text { order: 1; }
+}
+
 /* ===== HOW IT WORKS ===== */
 
 .file-visual {
