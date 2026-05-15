@@ -180,7 +180,22 @@ const faqs = [
 
   <!-- NAV -->
   <nav>
-    <a href="#top" class="nav-logo"><span class="logo-icon" aria-hidden="true">🪐</span><span class="logo-text">Orbiter</span></a>
+    <a href="#top" class="nav-logo">
+      <svg class="logo-svg" viewBox="0 0 32 32" width="26" height="26" aria-hidden="true" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="16" cy="16" rx="12" ry="4.5" stroke="rgba(139,124,248,0.35)" stroke-width="1.5" transform="rotate(-22 16 16)" stroke-dasharray="18 20" stroke-dashoffset="0"/>
+        <circle cx="16" cy="16" r="6.5" fill="url(#np-grad)"/>
+        <circle cx="14" cy="13.5" r="2.2" fill="rgba(255,255,255,0.12)"/>
+        <ellipse cx="16" cy="16" rx="12" ry="4.5" stroke="#8b7cf8" stroke-width="1.5" transform="rotate(-22 16 16)" stroke-dasharray="20 18" stroke-dashoffset="-18"/>
+        <circle cx="27.2" cy="12.4" r="1.8" fill="#c4b9ff"/>
+        <defs>
+          <radialGradient id="np-grad" cx="40%" cy="35%" r="65%">
+            <stop offset="0%" stop-color="#a89eff"/>
+            <stop offset="100%" stop-color="#6c5ce7"/>
+          </radialGradient>
+        </defs>
+      </svg>
+      <span class="logo-text">Orbiter</span>
+    </a>
     <div class="nav-links">
       <a href="#how-it-works" data-section="how-it-works">How it works</a>
       <a href="#features"     data-section="features">Features</a>
