@@ -216,14 +216,53 @@ console.log('  ✓ Author seeded');
 
 const posts = [
   {
-    slug:   'wabi-sabi-interface-design',
+    slug:   'orbiter-v0-2-0',
     status: 'published',
     data: {
-      title:   'The Art of Wabi-Sabi in Modern Interface Design',
-      excerpt: 'On the beauty of imperfection and restraint in digital interfaces.',
-      body:    'Wabi-sabi is the Japanese worldview centered on the acceptance of transience and imperfection. In interface design, this means embracing whitespace, restraint, and the quiet dignity of purposeful elements.',
-      categories: [postCatIds['design']],
-      tags:    ['design', 'japanese', 'ui'],
+      title:   'Orbiter v0.2.0 — Images, Video & Cloud Import',
+      excerpt: 'The editor now supports inline image blocks with float alignment, YouTube/Vimeo video embedding, and direct import from Dropbox, Google Drive, and OneDrive.',
+      body: `## What's new in v0.2.0
+
+Orbiter's block editor gets a significant upgrade: full rich-media support directly inside the writing flow.
+
+### Inline Image Blocks
+
+Images are now first-class blocks in the editor. Insert one from the media library or upload on the spot — then control how text flows around it with alignment controls:
+
+- **Float left** — text wraps around the right side
+- **Float right** — text wraps around the left side
+- **Center** — image sits between paragraphs
+- **Full width** — edge-to-edge, no wrapping
+
+This is the layout model you'd expect in a travel blog or editorial piece. The alignment is serialized as \`{.left}\`, \`{.right}\`, or \`{.full}\` in the underlying Markdown so it roundtrips cleanly.
+
+### Video Embedding
+
+Paste a YouTube, Vimeo, Wistia, or direct \`.mp4\` URL anywhere in the editor — the block is created automatically. Videos render in a responsive 16:9 player and are stored as \`::video[url]\` in the body field.
+
+The block picker also has a new \`/vid\` shortcut if you prefer typing over pasting.
+
+### Cloud URL Import
+
+The media picker now has a **From URL** tab. Paste a share link from Dropbox, Google Drive, or OneDrive — the server fetches the file server-side (bypassing CORS) and stores it in the pod. Any public image URL works the same way.
+
+This means you can keep assets in your existing cloud storage and pull them into Orbiter on demand, without installing a desktop sync client or managing API keys.
+
+### Under the Hood
+
+- New \`POST /api/media/import-url\` endpoint handles server-side fetching with automatic URL conversion for Dropbox and Google Drive share links.
+- The image picker is now tabbed: **Library** and **From URL**.
+- \`serialize()\` and \`parseMd()\` updated for both image alignment and video block syntax.
+
+---
+
+v0.2.0 is on npm now. Update with:
+
+\`\`\`
+npm install @a83/orbiter-admin@latest @a83/orbiter-integration@latest
+\`\`\``,
+      categories: [postCatIds['tools'], postCatIds['development']],
+      tags:    ['orbiter', 'release', 'editor', 'v0.2.0'],
       author:  authorId,
     },
   },
@@ -232,21 +271,182 @@ const posts = [
     status: 'published',
     data: {
       title:   'Single-File Architecture: Why One File Changes Everything',
-      excerpt: 'How a single .pod file solves portability, deployments and infrastructure complexity.',
-      body:    'The premise is simple: everything your website needs — content, media, schema, config — lives in one SQLite file. Copy it anywhere and your entire site comes with it.',
+      excerpt: 'How a single .pod file solves portability, deployments, and infrastructure complexity for content sites.',
+      body: `## The Premise
+
+Everything your website needs — content, media, schema, config, users, sessions — lives in one SQLite file. Copy it anywhere and your entire site comes with it.
+
+No database server to provision. No connection string to manage. No cloud account to sign up for. The file *is* the database.
+
+\`\`\`
+your-site/
+├── astro.config.mjs
+├── content.pod   ← your entire CMS
+└── src/pages/
+\`\`\`
+
+## Why SQLite?
+
+SQLite is the most widely deployed database engine in the world. It runs in-process — no separate process, no network socket, no authentication overhead. For a content site that gets built to static HTML, it handles millions of reads per day without a second thought.
+
+The real advantages for a CMS:
+
+**Zero configuration.** There is no connection string. No port. No credentials file. You open a SQLite database the same way you open any file.
+
+**Transactional writes.** Full ACID compliance. Every save in the Orbiter admin is an atomic transaction — partial writes are impossible.
+
+**Portable.** Copy the \`.pod\` file to move your entire site. It works on Linux, macOS, Windows, ARM — anywhere Node.js runs.
+
+**Inspectable.** Open it with TablePlus, DBeaver, or the \`sqlite3\` CLI and query your content directly. No ORM required.
+
+## The .pod Extension
+
+A \`.pod\` file is a standard SQLite 3 database with a custom extension. The extension makes it easy to identify in your project and excludes it from glob patterns like \`**/*.json\`. Any SQLite tool can open it.
+
+\`\`\`
+sqlite3 content.pod "SELECT slug, status FROM _entries ORDER BY updated_at DESC LIMIT 5"
+\`\`\`
+
+## Portability in Practice
+
+Moving a traditional CMS to a new server means:
+- Export database dump
+- Transfer files
+- Configure new database connection
+- Import dump
+- Hope nothing breaks
+
+Moving Orbiter:
+\`\`\`
+scp content.pod user@newserver:/var/www/my-site/
+\`\`\`
+
+That's it. The schema, the content, the media, the users — all of it moves in one file.
+
+## When It's Not Enough
+
+SQLite BLOB storage is convenient for content sites but not for thousands of high-res images. If your media library is in the gigabytes, this isn't the right tool. For a team of 1–10 with a normal content site, it is.`,
       categories: [postCatIds['architecture'], postCatIds['tools']],
-      tags:    ['architecture', 'orbiter', 'cms'],
+      tags:    ['architecture', 'orbiter', 'cms', 'sqlite'],
+      author:  authorId,
+    },
+  },
+  {
+    slug:   'wabi-sabi-interface-design',
+    status: 'published',
+    data: {
+      title:   'The Art of Wabi-Sabi in Modern Interface Design',
+      excerpt: 'On the beauty of imperfection, restraint, and transience in digital interfaces — and why polish alone is not enough.',
+      body: `## What Is Wabi-Sabi?
+
+Wabi-sabi is the Japanese worldview centered on the acceptance of transience and imperfection. Where Western aesthetics tend toward symmetry and permanence, wabi-sabi finds beauty in things that are incomplete, irregular, and worn.
+
+In traditional Japanese art, this shows up as the deliberate crack in a tea bowl, the uneven glaze, the asymmetric composition. The imperfection is not a failure — it is the point.
+
+## Restraint Over Polish
+
+Modern interface design is obsessed with polish. Pixel-perfect spacing, smooth animations, every corner radius exactly 8px. The result is often interfaces that feel inert — technically correct but somehow lifeless.
+
+Wabi-sabi suggests a different approach:
+
+**Whitespace as breath.** Not empty space to fill, but space that lets the content breathe. The silence between words matters as much as the words.
+
+**Typography over decoration.** A well-chosen typeface at the right size carries more character than a gradient or a drop shadow.
+
+**Purposeful asymmetry.** Grids are tools, not laws. A layout that breaks slightly from perfect symmetry can feel more alive than one that doesn't.
+
+## The Quiet Dignity of Purposeful Elements
+
+Every element in an interface asks something of the user's attention. Wabi-sabi asks: does this element earn its place? If it doesn't carry meaning, it creates noise.
+
+This is different from minimalism, which can be its own form of perfectionism — white, clean, empty as a statement. Wabi-sabi is not empty. It is *considered*. There may be texture, imperfection, a subtle grain. But nothing without purpose.
+
+## Applying It
+
+A few principles worth carrying into your next project:
+
+1. **Let things be slightly unfinished.** The hand-drawn icon, the ink wash texture, the ragged edge — they signal that a human made this.
+2. **Age gracefully.** Design for the content at month twelve, not month one. Will the layout hold when the article count is 200 instead of 3?
+3. **Prefer subtlety.** Hover states that shift color by 10% instead of 40%. Transitions measured in milliseconds, not seconds.
+4. **Find beauty in function.** A well-labelled form field, clear error messages, a breadcrumb that actually helps — these are wabi-sabi too.
+
+The goal is not imperfection for its own sake. It is an interface that feels like it was made by someone who cared — not about appearance, but about the person using it.`,
+      categories: [postCatIds['design']],
+      tags:    ['design', 'japanese', 'ui', 'aesthetics'],
       author:  authorId,
     },
   },
   {
     slug:   'astro-content-collections',
-    status: 'draft',
+    status: 'published',
     data: {
-      title:   'Orbiter + Astro Content Collections',
-      excerpt: 'Using getCollection() and getEntry() backed by SQLite instead of the filesystem.',
-      body:    'Astro\'s content collections API is elegant. Orbiter keeps that API intact while replacing the filesystem backend with a portable SQLite database.',
-      tags:    ['astro', 'collections', 'dev'],
+      title:   'Orbiter + Astro: getCollection() Backed by SQLite',
+      excerpt: 'Using getCollection() and getEntry() with a portable SQLite database instead of the filesystem — and what that buys you.',
+      body: `## The Same API, Different Backend
+
+Astro's content collections API is elegant: \`getCollection()\`, \`getEntry()\`, typed schemas, frontmatter validation. It's a pleasure to use.
+
+The default backend is the filesystem — Markdown files in \`src/content/\`. That works well until you need non-technical editors, media management, draft/publish workflow, or version history. Then you're reaching for a CMS.
+
+Orbiter keeps the same API while replacing the filesystem backend with a portable SQLite database.
+
+\`\`\`js
+import { getCollection, getEntry } from 'orbiter:collections';
+
+const posts = await getCollection('posts');
+const post  = await getEntry('posts', 'hello-world');
+\`\`\`
+
+Same import shape. Same return shape. Different backend.
+
+## How It Works
+
+The Orbiter integration injects a Vite virtual module — \`orbiter:collections\` — at build time. When Astro resolves that import, it reads all published entries from the \`.pod\` file and inlines them as a JavaScript module.
+
+The result is zero runtime overhead. Your content is baked into the build, not fetched on each request. A static site stays static.
+
+\`\`\`js
+// astro.config.mjs
+import orbiter from '@a83/orbiter-integration';
+
+export default defineConfig({
+  output: 'server',
+  integrations: [orbiter({ pod: './content.pod' })],
+});
+\`\`\`
+
+One line. That's the entire integration.
+
+## What You Get That Markdown Files Don't
+
+**Media as BLOBs.** Images and files are stored directly in the pod — no \`public/\` folder management, no broken paths after deploy. They're served at \`/orbiter/media/[id]\`.
+
+**Relation fields.** A post can have an \`author\` field that references an entry in the \`authors\` collection. Orbiter resolves those relations at build time, so your template gets the full author object — no extra fetch, no null checks for missing data.
+
+\`\`\`astro
+{posts.map(post => (
+  <article>
+    <h2>{post.data.title}</h2>
+    <p>by {post.data.author?.data?.name}</p>
+  </article>
+))}
+\`\`\`
+
+**Version history.** Every save creates a snapshot. Roll back to any previous version of any entry directly in the admin. Markdown files give you git blame — Orbiter gives you a full history UI.
+
+**Draft/publish workflow.** Entries have a status toggle. \`getCollection()\` returns only published entries. Drafts are invisible to the build until you publish them.
+
+## The Trade-off
+
+You lose some things compared to Markdown files:
+
+- Content is not in git by default (though the \`orbiter pack/unpack\` commands can sync it)
+- No pull-request-based editorial workflow
+- Requires a Node.js runtime for the admin
+
+For a solo developer or a small team that wants an editorial UI without provisioning a database server, the trade-off is usually worth it.`,
+      categories: [postCatIds['development'], postCatIds['tools']],
+      tags:    ['astro', 'collections', 'sqlite', 'cms'],
       author:  authorId,
     },
   },
@@ -261,7 +461,7 @@ for (const post of posts) {
   insertEntry.run(randomUUID(), 'posts', post.slug, JSON.stringify(post.data), post.status);
 }
 
-console.log(`  ✓ Posts seeded (2 published, 1 draft)`);
+console.log(`  ✓ Posts seeded (4 published)`);
 
 // ── Pages ────────────────────────────────────────────────
 
