@@ -842,8 +842,22 @@ The block editor gains full rich-media embedding:
 | 02 | Bridge | ✅ Done — full admin UI, media library, auth |
 | 03 | Warp | ✅ Done — block editor, version history, themes, i18n, relations |
 | 04 | Orbit | ✅ Done — multi-user, per-entry i18n, CLI, PWA, npm publish |
+| 05 | Station | 🔄 In progress — media backends, demo instance, documentation site |
 
-Next up: Git sync improvements, demo instance, documentation site.
+### Pluggable media backends (v0.3.0)
+
+Media is currently stored as BLOBs inside the `.pod` file. This works well for text-heavy sites with moderate image counts but becomes unwieldy for large media libraries. v0.3.0 will introduce a pluggable media backend system:
+
+| Backend | Config | Best for |
+|---------|--------|----------|
+| `blob` | default, no config needed | small–medium sites, ≤ a few hundred images |
+| `local` | `ORBITER_MEDIA=local` + `ORBITER_MEDIA_PATH=./media` | persistent filesystem, self-hosted VPS |
+| `github` | `ORBITER_MEDIA=github` + repo + token | open-source projects, free CDN via jsDelivr |
+| `s3` | `ORBITER_MEDIA=s3` + standard S3 env vars | high-traffic, large media libraries, R2/B2/AWS |
+
+**GitHub backend** stores files via the GitHub Contents API and serves them through jsDelivr (`cdn.jsdelivr.net/gh/owner/repo@branch/path`). Media is versioned alongside code, backup = `git push`, and the CDN is free for public repos. Only metadata + the file path are stored in the pod — no BLOBs.
+
+See [issue #2](https://github.com/aeon022/orbiter/issues/2) for the full design and discussion.
 
 ---
 
