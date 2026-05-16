@@ -842,11 +842,15 @@ The block editor gains full rich-media embedding:
 | 02 | Bridge | ✅ Done — full admin UI, media library, auth |
 | 03 | Warp | ✅ Done — block editor, version history, themes, i18n, relations |
 | 04 | Orbit | ✅ Done — multi-user, per-entry i18n, CLI, PWA, npm publish |
-| 05 | Station | 🔄 In progress — media backends, demo instance, documentation site |
+| 05 | Station | 🔄 In progress — build webhook, demo instance, media backends, docs |
 
-### Pluggable media backends (v0.3.0)
+### v0.3.0 — planned
 
-Media is currently stored as BLOBs inside the `.pod` file. This works well for text-heavy sites with moderate image counts but becomes unwieldy for large media libraries. v0.3.0 will introduce a pluggable media backend system:
+**Build webhook** *(highest priority)*
+Publish an entry → Orbiter fires a configurable webhook URL. Works with Astro's `--experimental-incremental` or any CI/CD pipeline (Netlify, Vercel, GitHub Actions). Configured per-site in the pod settings.
+
+**Pluggable media backends**
+Media is currently stored as BLOBs inside the `.pod` file. v0.3.0 introduces a pluggable backend system:
 
 | Backend | Config | Best for |
 |---------|--------|----------|
@@ -855,9 +859,15 @@ Media is currently stored as BLOBs inside the `.pod` file. This works well for t
 | `github` | `ORBITER_MEDIA=github` + repo + token | open-source projects, free CDN via jsDelivr |
 | `s3` | `ORBITER_MEDIA=s3` + standard S3 env vars | high-traffic, large media libraries, R2/B2/AWS |
 
-**GitHub backend** stores files via the GitHub Contents API and serves them through jsDelivr (`cdn.jsdelivr.net/gh/owner/repo@branch/path`). Media is versioned alongside code, backup = `git push`, and the CDN is free for public repos. Only metadata + the file path are stored in the pod — no BLOBs.
+The GitHub backend stores files via the GitHub Contents API and serves them through jsDelivr (`cdn.jsdelivr.net/gh/owner/repo@branch/path`). Only metadata + path in the pod — no BLOBs. See [issue #2](https://github.com/aeon022/orbiter/issues/2).
 
-See [issue #2](https://github.com/aeon022/orbiter/issues/2) for the full design and discussion.
+### Later
+
+- **Demo instance** (`demo.orbiter.sh`) — pre-filled content, resets every 24h, no login required
+- **Documentation site** (`docs.orbiter.sh`) — full reference, guides, examples
+- **SSR / runtime mode** — `orbiter:collections` currently snapshots at build time; a runtime adapter for sites that need live content without rebuilding
+- **SvelteKit / Next.js integration** — the virtual module concept is framework-agnostic; Astro is first, others follow
+- **Orbiter Cloud** — hosted pod management for teams who don't want to self-host
 
 ---
 
