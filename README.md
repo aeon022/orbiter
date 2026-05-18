@@ -907,15 +907,18 @@ The block editor gains full rich-media embedding:
 | 02 | Bridge | ✅ Done — full admin UI, media library, auth |
 | 03 | Warp | ✅ Done — block editor, version history, themes, i18n, relations |
 | 04 | Orbit | ✅ Done — multi-user, per-entry i18n, CLI, PWA, npm publish |
-| 05 | Station | 🔄 In progress — demo instance, S3 backend, docs |
+| 05 | Station | ✅ Done — S3 backend, external media links, docs site, auto-publish webhook |
+| 06 | Horizon | 🔄 In progress — demo instance |
 
-### v0.3.0 — in progress
+### v0.3.1 — released
 
-**S3-compatible media backend** — R2 (Cloudflare), Backblaze B2, AWS S3. See [issue #2](https://github.com/aeon022/orbiter/issues/2).
+**S3-compatible media backend** — R2 (Cloudflare), Backblaze B2, AWS S3, MinIO. Config via Settings → Media.
 
-**Demo instance** (`demo.orbiter.sh`) — pre-filled content, resets every 24h, no login required.
+**External media links** — store a URL reference without fetching the file. Third tab in the image picker.
 
-**Documentation site** (`docs.orbiter.sh`) — full reference, guides, examples.
+**Auto-publish webhook** — fires automatically on `draft → published` transition, not just manual trigger.
+
+**Documentation site** — full reference at [orbiter.sh/docs](https://orbiter.sh/docs), integrated into the landing page.
 
 ### Later
 
