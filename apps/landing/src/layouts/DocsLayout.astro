@@ -1,5 +1,6 @@
 ---
 import '../styles/docs.css';
+import { ViewTransitions } from 'astro:transitions';
 
 export interface Props {
   title: string;
@@ -66,6 +67,7 @@ const nav = [
   <title>{title} — Orbiter Docs</title>
   {description && <meta name="description" content={description} />}
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <ViewTransitions />
 </head>
 <body>
 

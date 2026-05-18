@@ -333,6 +333,16 @@ body {
 .docs-page-nav .nav-title { font-size: 0.88rem; color: var(--text); font-weight: 500; }
 .docs-page-nav .next { margin-left: auto; text-align: right; }
 
+/* ── View Transitions ──────────────────────────────────────────────────────── */
+
+@keyframes docs-fade-in  { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes docs-fade-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-6px); } }
+
+::view-transition-old(docs-main) { animation: 150ms ease-in  docs-fade-out both; }
+::view-transition-new(docs-main) { animation: 200ms ease-out docs-fade-in  both; }
+
+.docs-main { view-transition-name: docs-main; }
+
 /* ── Mobile ────────────────────────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
