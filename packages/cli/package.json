@@ -1,6 +1,6 @@
 {
   "name": "@a83/orbiter-cli",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "CLI for Orbiter CMS — init, add-user, export",
   "type": "module",
   "bin": {

@@ -1,6 +1,6 @@
 {
   "name": "@a83/orbiter-integration",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Astro integration for Orbiter CMS — admin UI, virtual modules, injected routes",
   "type": "module",
   "main": "./src/index.js",
