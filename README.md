@@ -280,11 +280,11 @@ A `.pod` file is a standard SQLite 3 database with a custom extension. Any SQLit
 
 ```
 content.pod
-├── _meta          → site config, locale, build webhook URL
+├── _meta          → site config, locale, build webhook URL, media backend config
 ├── _collections   → schema definitions (JSON per collection)
 ├── _entries       → all content from all collections
 ├── _versions      → full version history per entry
-├── _media         → uploaded files stored as BLOBs
+├── _media         → media metadata + optional BLOB data (see Media Backends)
 ├── _users         → admin users (scrypt-hashed passwords)
 └── _sessions      → active login sessions (auto-pruned)
 ```
@@ -372,6 +372,8 @@ locales: string[] // all locales, e.g. ["en", "de", "fr"]
 ```astro
 <img src={`/orbiter/media/${post.data.image}`} alt={post.data.title} />
 ```
+
+For external media (GitHub backend or linked URLs), `/orbiter/media/[id]` issues a `302` redirect to the CDN or original URL — no change needed in templates.
 
 ### Relation fields
 
@@ -606,10 +608,10 @@ orbiter pack   --pod ./content.pod --dir ./media
 Entry counts per collection, recently edited entries, persistent scratchpad + todo list, build trigger status.
 
 ### Entry editor
-All schema fields rendered as inputs. Richtext block editor with live Markdown preview, autosave, version history, draft/published toggle. Inline image blocks with float alignment (left/right/center/full). Video embedding (YouTube, Vimeo, mp4). Media picker with cloud URL import (Dropbox, Google Drive, OneDrive). Relation picker, conditional field visibility.
+All schema fields rendered as inputs. Richtext block editor with live Markdown preview, autosave, version history, draft/published toggle. Inline image blocks with float alignment (left/right/center/full). Video embedding (YouTube, Vimeo, mp4). Media picker with three tabs: Library (browse pod), From URL (server-side import from Dropbox/Drive/OneDrive), External link (store URL reference without fetching). Relation picker, conditional field visibility.
 
 ### Media library
-Upload, browse, and manage files. Images, video, PDF, and any file type. Stored as BLOBs in the pod. Served at `/orbiter/media/[id]`. Folder categories, type filter, inline image and video preview, copy URL, alt text.
+Upload, browse, and manage files. Images, video, PDF, and any file type. Served at `/orbiter/media/[id]` — BLOB, disk file, or CDN redirect depending on configured backend. Folder categories, type filter, inline image and video preview, copy URL, alt text.
 
 ### Schema editor
 Add, edit, delete, and reorder fields on any collection. Changes take effect immediately — no migration or restart needed.
@@ -706,13 +708,44 @@ docker run -p 3000:3000 -v $(pwd)/content.pod:/app/content.pod my-orbiter-site
 
 ## Build Trigger
 
-In the admin dashboard, **Trigger build** sends a `POST` to the webhook URL configured in **Settings → Build & Deploy**.
+Orbiter fires the webhook **automatically** whenever an entry transitions from draft to published. The same URL is also triggered manually via **Trigger build** in the dashboard.
+
+Configure the webhook URL in **Settings → Build**.
 
 **Netlify:** Site configuration → Build & deploy → Build hooks → Add build hook
 
 **Vercel:** Project settings → Git → Deploy Hooks
 
 **GitHub Actions:** Use `repository_dispatch` — add a small serverless proxy to inject the `Authorization` header before forwarding to GitHub's API.
+
+---
+
+## Media Backends
+
+Orbiter supports four ways to store media, configured in **Settings → Media storage**:
+
+| Backend | How it works | Best for |
+|---------|-------------|----------|
+| `blob` | File data stored as BLOB in the `.pod` file (default) | Small–medium sites |
+| `local` | Files written to a directory on the server | Self-hosted VPS with persistent disk |
+| `github` | Files uploaded via GitHub Contents API, served from jsDelivr CDN | Open-source sites, free global CDN |
+| `link` | External URL stored — no data fetched or copied | Dropbox, Google Drive, Cloudinary, any public URL |
+
+### GitHub backend
+
+Files are served from `cdn.jsdelivr.net/gh/owner/repo@branch/path` — no egress costs, cached globally. Configure in Settings:
+
+```
+Media backend:  github
+Repository:     owner/media-repo
+Branch:         main
+Directory:      media
+GitHub token:   ghp_…  (can reuse the token from the GitHub section)
+```
+
+### External link (no backend required)
+
+Use the **External link** tab in the image picker to store a URL reference without downloading anything. Works with Dropbox share links, Google Drive, OneDrive, Cloudinary, and any publicly accessible URL. Orbiter makes a `HEAD` request to detect the mime type, then stores only the URL. `/orbiter/media/[id]` issues a `302` redirect — no change needed in your templates.
 
 ---
 
@@ -733,7 +766,20 @@ orbiter/
 │   │       ├── index.js         ← public API
 │   │       ├── db.js            ← OrbiterDB (SQLite wrapper)
 │   │       ├── pod.js           ← createPod / openPod
-│   │       └── auth.js          ← hashPassword / verifyPassword / generateToken
+│   │       ├── auth.js          ← hashPassword / verifyPassword / generateToken
+│   │       └── media-backend.js ← BlobBackend / LocalBackend / GitHubBackend
+│   │
+│   ├── admin/                   ← @a83/orbiter-admin
+│   │   ├── src/
+│   │   │   ├── server.js        ← Hono server entry point (port 4322)
+│   │   │   ├── middleware/      ← auth middleware
+│   │   │   └── routes/          ← entries, media, collections, meta, build, auth
+│   │   └── public/              ← vanilla JS + CSS admin UI (no build step)
+│   │       ├── dashboard.html
+│   │       ├── editor.html
+│   │       ├── media.html
+│   │       ├── settings.html
+│   │       └── style.css
 │   │
 │   ├── integration/             ← @a83/orbiter-integration
 │   │   ├── src/
@@ -804,6 +850,25 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 
 ## Changelog
 
+### May 2025 — Media Backends, Build Webhook & External Links
+
+**Build webhook**
+- Webhook fires **automatically** when an entry transitions from draft to published — no manual trigger needed
+- Same URL also available via the manual **Trigger build** button
+- `build.last_triggered` timestamp updated on each fire
+
+**Pluggable media backends**
+- `blob` — default, BLOB in SQLite (unchanged)
+- `local` — write files to a configurable directory on the server (`media.local_path`)
+- `github` — upload via GitHub Contents API, serve from jsDelivr CDN (`cdn.jsdelivr.net/gh/...`)
+- Configured in Settings → Media storage; stored in `_meta`, no restart needed
+- `_media` schema migrated automatically: `data` column nullable, `url` + `path` columns added
+
+**External link media**
+- New **External link** tab in the image picker — stores a URL reference without fetching any data
+- Works with Dropbox, Google Drive, OneDrive, Cloudinary, any public URL
+- `HEAD` request on save detects mime type; `/orbiter/media/[id]` issues a `302` redirect
+
 ### May 2025 — Editor: Images, Video & Cloud Import
 
 The block editor gains full rich-media embedding:
@@ -842,29 +907,18 @@ The block editor gains full rich-media embedding:
 | 02 | Bridge | ✅ Done — full admin UI, media library, auth |
 | 03 | Warp | ✅ Done — block editor, version history, themes, i18n, relations |
 | 04 | Orbit | ✅ Done — multi-user, per-entry i18n, CLI, PWA, npm publish |
-| 05 | Station | 🔄 In progress — build webhook, demo instance, media backends, docs |
+| 05 | Station | 🔄 In progress — demo instance, S3 backend, docs |
 
-### v0.3.0 — planned
+### v0.3.0 — in progress
 
-**Build webhook** *(highest priority)*
-Publish an entry → Orbiter fires a configurable webhook URL. Works with Astro's `--experimental-incremental` or any CI/CD pipeline (Netlify, Vercel, GitHub Actions). Configured per-site in the pod settings.
+**S3-compatible media backend** — R2 (Cloudflare), Backblaze B2, AWS S3. See [issue #2](https://github.com/aeon022/orbiter/issues/2).
 
-**Pluggable media backends**
-Media is currently stored as BLOBs inside the `.pod` file. v0.3.0 introduces a pluggable backend system:
+**Demo instance** (`demo.orbiter.sh`) — pre-filled content, resets every 24h, no login required.
 
-| Backend | Config | Best for |
-|---------|--------|----------|
-| `blob` | default, no config needed | small–medium sites, ≤ a few hundred images |
-| `local` | `ORBITER_MEDIA=local` + `ORBITER_MEDIA_PATH=./media` | persistent filesystem, self-hosted VPS |
-| `github` | `ORBITER_MEDIA=github` + repo + token | open-source projects, free CDN via jsDelivr |
-| `s3` | `ORBITER_MEDIA=s3` + standard S3 env vars | high-traffic, large media libraries, R2/B2/AWS |
-
-The GitHub backend stores files via the GitHub Contents API and serves them through jsDelivr (`cdn.jsdelivr.net/gh/owner/repo@branch/path`). Only metadata + path in the pod — no BLOBs. See [issue #2](https://github.com/aeon022/orbiter/issues/2).
+**Documentation site** (`docs.orbiter.sh`) — full reference, guides, examples.
 
 ### Later
 
-- **Demo instance** (`demo.orbiter.sh`) — pre-filled content, resets every 24h, no login required
-- **Documentation site** (`docs.orbiter.sh`) — full reference, guides, examples
 - **SSR / runtime mode** — `orbiter:collections` currently snapshots at build time; a runtime adapter for sites that need live content without rebuilding
 - **SvelteKit / Next.js integration** — the virtual module concept is framework-agnostic; Astro is first, others follow
 - **Orbiter Cloud** — hosted pod management for teams who don't want to self-host
@@ -875,8 +929,9 @@ The GitHub backend stores files via the GitHub Contents API and serves them thro
 
 | Package | npm | Description |
 |---------|-----|-------------|
-| `@a83/orbiter-core` | [![npm](https://img.shields.io/npm/v/@a83/orbiter-core?color=8b7cf8)](https://www.npmjs.com/package/@a83/orbiter-core) | SQLite engine, pod management, auth utilities |
-| `@a83/orbiter-integration` | [![npm](https://img.shields.io/npm/v/@a83/orbiter-integration?color=8b7cf8)](https://www.npmjs.com/package/@a83/orbiter-integration) | Astro integration, virtual modules, admin UI, PWA |
+| `@a83/orbiter-core` | [![npm](https://img.shields.io/npm/v/@a83/orbiter-core?color=8b7cf8)](https://www.npmjs.com/package/@a83/orbiter-core) | SQLite engine, pod management, auth utilities, media backends |
+| `@a83/orbiter-admin` | [![npm](https://img.shields.io/npm/v/@a83/orbiter-admin?color=8b7cf8)](https://www.npmjs.com/package/@a83/orbiter-admin) | Standalone Hono admin server (port 4322), vanilla JS + CSS UI |
+| `@a83/orbiter-integration` | [![npm](https://img.shields.io/npm/v/@a83/orbiter-integration?color=8b7cf8)](https://www.npmjs.com/package/@a83/orbiter-integration) | Astro integration, virtual modules, PWA |
 | `@a83/orbiter-cli` | [![npm](https://img.shields.io/npm/v/@a83/orbiter-cli?color=8b7cf8)](https://www.npmjs.com/package/@a83/orbiter-cli) | `orbiter init`, `add-user`, `export`, `pack`, `unpack` |
 
 ---
