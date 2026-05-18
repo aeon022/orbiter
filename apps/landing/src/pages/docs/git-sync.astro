@@ -1,0 +1,67 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Git sync mode" current="/docs/git-sync" prev={{ href: '/docs/deployment', title: 'Deployment' }} next={{ href: '/docs/build-webhook', title: 'Build webhook' }}>
+
+<h1>Git sync mode</h1>
+<p class="lead">Extract media BLOBs from the pod to files, commit everything to git, and restore on each build. Lets you use Orbiter with Netlify, Vercel, or GitHub Pages.</p>
+
+<h2>The problem</h2>
+<p>Netlify and Vercel run builds in ephemeral containers — the filesystem doesn't persist between builds. If your pod has media BLOBs, they won't survive a fresh clone.</p>
+
+<p>Git sync mode solves this by keeping media as regular files alongside the pod in your repository.</p>
+
+<h2>Commands</h2>
+<pre># Extract BLOBs from pod to files (run before git commit)
+orbiter unpack --pod ./content.pod --out ./media
+
+# Restore BLOBs from files into pod (run at build time)
+orbiter pack --pod ./content.pod --dir ./media</pre>
+
+<h2>Workflow</h2>
+<pre>1. Edit content in the Orbiter admin
+2. orbiter unpack  →  extracts media to ./media/
+3. git add content.pod media/ && git commit && git push
+4. CI: orbiter pack → restores BLOBs → astro build → deploy</pre>
+
+<h2>GitHub Actions</h2>
+<pre># .github/workflows/build.yml
+name: Build & Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:          # ← triggered by Orbiter's build webhook
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: &#123; node-version: '20' &#125;
+      - run: npm install
+      - run: npx orbiter pack --pod ./content.pod --dir ./media
+      - run: npx astro build
+      - uses: actions/deploy-pages@v4</pre>
+
+<p>Download a ready-made workflow file from <strong>Settings → GitHub → ⬇ Workflow</strong> in the admin.</p>
+
+<div class="callout"><strong>Tip:</strong> Use Orbiter's <a href="/docs/build-webhook">build webhook</a> to trigger <code>workflow_dispatch</code> automatically when you publish an entry. No manual git push needed for content-only changes.</div>
+
+<h2>What unpack does</h2>
+<ul>
+  <li>Reads each row in <code>_media</code> where <code>data IS NOT NULL</code></li>
+  <li>Writes the file to <code>./media/&#123;id&#125;&#123;ext&#125;</code></li>
+  <li>Sets <code>_media.data = NULL</code> in the pod (reduces pod file size)</li>
+  <li>Sets <code>storage.mode = git</code> in <code>_meta</code></li>
+</ul>
+
+<h2>What pack does</h2>
+<ul>
+  <li>Reads each file in <code>./media/</code></li>
+  <li>Inserts its bytes back as a BLOB in <code>_media.data</code></li>
+  <li>Removes the <code>storage.mode</code> flag from <code>_meta</code></li>
+</ul>
+
+</DocsLayout>

@@ -1,0 +1,46 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Build webhook" current="/docs/build-webhook" prev={{ href: '/docs/git-sync', title: 'Git sync mode' }} next={{ href: '/docs/cli', title: 'CLI reference' }}>
+
+<h1>Build webhook</h1>
+<p class="lead">Configure a URL and Orbiter fires a POST to it automatically when an entry is published — or manually from the dashboard.</p>
+
+<h2>Setup</h2>
+<p>Go to <strong>Settings → Build</strong> and paste your webhook URL.</p>
+
+<h2>When it fires</h2>
+<ul>
+  <li><strong>Automatically</strong> — when an entry transitions from <code>draft</code> to <code>published</code> (via the status toggle in the entry list, or clicking Publish in the editor)</li>
+  <li><strong>Manually</strong> — via the <strong>Trigger build</strong> button on the dashboard</li>
+</ul>
+
+<p>The webhook fires asynchronously — a failed request does not block the publish action. <code>build.last_triggered</code> is updated on each fire.</p>
+
+<h2>Netlify</h2>
+<pre>Site configuration → Build & deploy → Build hooks → Add build hook</pre>
+<p>Copy the hook URL and paste it into Orbiter's Settings → Build.</p>
+
+<h2>Vercel</h2>
+<pre>Project settings → Git → Deploy Hooks → Create hook</pre>
+
+<h2>GitHub Actions</h2>
+<p>GitHub requires an <code>Authorization</code> header for <code>workflow_dispatch</code>. Use a small proxy or a webhook relay service that adds the header:</p>
+
+<pre># Using a Cloudflare Worker or similar proxy:
+POST https://your-worker.workers.dev/gh-dispatch
+# Worker adds: Authorization: Bearer YOUR_GITHUB_TOKEN
+# and forwards to GitHub's API</pre>
+
+<p>Alternatively, use a service like <a href="https://smee.io" target="_blank" rel="noopener">smee.io</a> or Zapier as a relay.</p>
+
+<h2>Custom server</h2>
+<p>Any URL that accepts a <code>POST</code> request works. Orbiter sends no body and no special headers — just the POST.</p>
+
+<pre>// Example: Express endpoint that triggers a shell command
+app.post('/build', (req, res) => &#123;
+  res.sendStatus(200);
+  exec('npm run build && npm run deploy');
+&#125;);</pre>
+
+</DocsLayout>

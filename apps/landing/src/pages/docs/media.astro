@@ -1,0 +1,41 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Media library" current="/docs/media" prev={{ href: '/docs/i18n', title: 'Multilingual (i18n)' }} next={{ href: '/docs/media-backends', title: 'Media backends' }}>
+
+<h1>Media library</h1>
+<p class="lead">Upload, browse, and manage files. Images, video, PDF — any file type. Served at <code>/orbiter/media/[id]</code>.</p>
+
+<h2>Uploading</h2>
+<p>In the admin sidebar, click <strong>Media</strong>. Drag files onto the page or click <strong>Upload</strong>. Multiple files can be uploaded at once.</p>
+
+<p>Files can also be uploaded directly from the editor's media picker — the image is inserted immediately after upload.</p>
+
+<h2>Serving media in Astro</h2>
+<pre>&lt;img src=&#123;`/orbiter/media/$&#123;post.data.image&#125;`&#125; alt=&#123;post.data.title&#125; /&gt;</pre>
+
+<p>The <code>/orbiter/media/[id]</code> route is injected by <code>@a83/orbiter-integration</code>. It serves the file from whatever backend is configured — BLOB from SQLite, file from disk, or a <code>302</code> redirect to a CDN URL. No change needed in your templates when switching backends.</p>
+
+<h2>Adding external links</h2>
+<p>To reference a file hosted elsewhere (Dropbox, Google Drive, Cloudinary, any public URL) without downloading it, use the <strong>External link</strong> tab in the editor's image picker or <code>POST /api/media/add-link</code>.</p>
+
+<p>Orbiter makes a <code>HEAD</code> request to detect the mime type, then stores only the URL in <code>_media.url</code>. Serving issues a <code>302</code> redirect — no proxy, no egress cost.</p>
+
+<h2>Folders</h2>
+<p>Assign files to folders at upload time. The library can be filtered by folder. Folder names are free-form strings stored in <code>_media.folder</code>.</p>
+
+<h2>Alt text</h2>
+<p>Add alt text at upload time or edit it later in the media library. The <code>alt</code> field is returned alongside the media metadata in the API.</p>
+
+<h2>Deleting files</h2>
+<p>Select a file and click <strong>Delete</strong>. For the <code>local</code> backend, the file is also removed from disk. For the <code>github</code> backend, a deletion commit is made via the GitHub API. For <code>s3</code>, a <code>DeleteObject</code> request is sent. Blob and external-link items are removed from <code>_media</code> in the pod.</p>
+
+<h2>API access</h2>
+<pre>GET  /api/media              — list all files (no binary data)
+GET  /api/media/:id/raw      — serve the file
+POST /api/media              — upload (multipart/form-data)
+POST /api/media/import-url   — server-side fetch from a URL
+POST /api/media/add-link     — store an external URL reference
+DELETE /api/media/:id        — delete</pre>
+
+</DocsLayout>

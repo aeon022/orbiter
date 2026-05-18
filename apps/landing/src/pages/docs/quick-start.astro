@@ -1,0 +1,111 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Quick start" description="Install Orbiter and run the admin in under 5 minutes" current="/docs/quick-start" prev={{ href: '/docs/', title: 'Overview' }} next={{ href: '/docs/collections', title: 'Collections & fields' }}>
+
+<h1>Quick start</h1>
+<p class="lead">Install Orbiter and run the admin in under 5 minutes.</p>
+
+<h2>Requirements</h2>
+<ul>
+  <li>Node.js 20+</li>
+  <li>npm 10+</li>
+  <li>An existing Astro 5 project, or start fresh with <code>orbiter init</code></li>
+</ul>
+
+<h2>Option A — Scaffold a new project</h2>
+
+<pre>npm install -g @a83/orbiter-cli
+orbiter init my-site
+cd my-site
+npm install</pre>
+
+<p>This creates a complete Astro + Orbiter project with sample collections, pages, and a pre-configured <code>content.pod</code>.</p>
+
+<h2>Option B — Add to an existing Astro site</h2>
+
+<h3>1. Install the packages</h3>
+
+<pre>npm install @a83/orbiter-integration @a83/orbiter-admin @astrojs/node</pre>
+
+<div class="callout"><strong>Note:</strong> Use <code>@astrojs/node@^9</code> for Astro 5. <code>@astrojs/node@^10</code> requires Astro 6.</div>
+
+<h3>2. Configure Astro</h3>
+
+<pre>// astro.config.mjs
+import &#123; defineConfig &#125; from 'astro/config';
+import orbiter from '@a83/orbiter-integration';
+import node from '@astrojs/node';
+
+export default defineConfig(&#123;
+  output: 'server',
+  adapter: node(&#123; mode: 'standalone' &#125;),
+  integrations: [
+    orbiter(&#123; pod: './content.pod' &#125;),
+  ],
+&#125;);</pre>
+
+<h3>3. Create the pod and first user</h3>
+
+<pre>npx @a83/orbiter-cli init --pod-only ./content.pod</pre>
+
+<p>Or manually:</p>
+
+<pre>node --input-type=module &lt;&lt; 'EOF'
+import &#123; createPod, hashPassword &#125; from '@a83/orbiter-core';
+import &#123; randomUUID &#125; from 'node:crypto';
+const db = createPod('./content.pod', &#123; site: &#123; name: 'My Site' &#125; &#125;);
+const hash = await hashPassword('change-me');
+db.insertUser(randomUUID(), 'admin', hash, 'admin');
+db.close();
+console.log('Pod created.');
+EOF</pre>
+
+<h2>Start the admin</h2>
+
+<pre>ORBITER_POD=$(pwd)/content.pod npx @a83/orbiter-admin</pre>
+
+<p>Open <strong>http://localhost:4322</strong> and log in with your credentials.</p>
+
+<div class="callout"><strong>Always use an absolute path</strong> for <code>ORBITER_POD</code>. The server changes its working directory internally, so relative paths break.</div>
+
+<h2>Start the Astro dev server</h2>
+
+<p>In a second terminal:</p>
+
+<pre>npm run dev</pre>
+
+<p>Both processes share the same <code>content.pod</code>. Changes saved in the admin appear in the Astro site after a browser reload (Astro re-reads the pod on each dev-server request).</p>
+
+<h2>Read content in a page</h2>
+
+<pre>---
+// src/pages/blog/[slug].astro
+import &#123; getCollection, getEntry &#125; from 'orbiter:collections';
+
+export async function getStaticPaths() &#123;
+  const posts = await getCollection('posts');
+  return posts.map(post => (&#123; params: &#123; slug: post.slug &#125; &#125;));
+&#125;
+
+const post = await getEntry('posts', Astro.params.slug);
+---
+
+&lt;article&gt;
+  &lt;h1&gt;&#123;post.data.title&#125;&lt;/h1&gt;
+  &lt;div set:html=&#123;post.data.body&#125; /&gt;
+&lt;/article&gt;</pre>
+
+<h2>Demo (monorepo)</h2>
+
+<p>If you cloned the Orbiter repo:</p>
+
+<pre>git clone https://github.com/aeon022/orbiter.git
+cd orbiter
+npm install
+npm run seed
+ORBITER_POD=$(pwd)/apps/demo/demo.pod npm run dev --workspace=packages/admin</pre>
+
+<p>Admin at <strong>http://localhost:4322</strong> — login: <code>admin</code> / <code>admin</code></p>
+
+</DocsLayout>

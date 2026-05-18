@@ -1,0 +1,68 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Editor" current="/docs/editor" prev={{ href: '/docs/collections', title: 'Collections & fields' }} next={{ href: '/docs/i18n', title: 'Multilingual (i18n)' }}>
+
+<h1>Editor</h1>
+<p class="lead">The block editor handles text, images, and video in a single <code>contenteditable</code> surface. Content is serialized to and from Markdown.</p>
+
+<h2>Text blocks</h2>
+<p>Plain paragraphs, headings (<code>##</code>, <code>###</code>), bold, italic, inline code, and links. Standard keyboard shortcuts apply: <kbd>⌘B</kbd> bold, <kbd>⌘I</kbd> italic, <kbd>⌘K</kbd> link.</p>
+
+<h2>Image blocks</h2>
+<p>Images are first-class blocks. Insert via the <strong>/</strong> picker (<code>/img</code>) or drag-and-drop a file. Once inserted, an alignment toolbar appears:</p>
+
+<table>
+  <thead><tr><th>Option</th><th>CSS</th><th>Markdown</th></tr></thead>
+  <tbody>
+    <tr><td>Float left</td><td><code>float: left</code></td><td><code>![alt](id)&#123;.left&#125;</code></td></tr>
+    <tr><td>Center</td><td><code>margin: auto</code></td><td><code>![alt](id)&#123;.center&#125;</code></td></tr>
+    <tr><td>Float right</td><td><code>float: right</code></td><td><code>![alt](id)&#123;.right&#125;</code></td></tr>
+    <tr><td>Full width</td><td><code>width: 100%</code></td><td><code>![alt](id)&#123;.full&#125;</code></td></tr>
+  </tbody>
+</table>
+
+<p>Text in surrounding paragraphs wraps naturally around floated images.</p>
+
+<h2>Video blocks</h2>
+<p>Paste a YouTube, Vimeo, Wistia, or direct <code>.mp4</code>/<code>.webm</code> URL. The editor auto-detects video URLs on paste and creates a block. Or use <code>/vid</code> in the block picker.</p>
+
+<p>Video blocks render as responsive 16:9 embeds. Serialized as <code>::video[url]</code> in Markdown.</p>
+
+<h2>Media picker</h2>
+<p>Click the image icon or use <code>/img</code> to open the picker. Three tabs:</p>
+
+<table>
+  <thead><tr><th>Tab</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Library</strong></td><td>Browse all files in the media library</td></tr>
+    <tr><td><strong>From URL</strong></td><td>Paste a Dropbox, Google Drive, or OneDrive share link — Orbiter fetches and stores the file server-side</td></tr>
+    <tr><td><strong>External link</strong></td><td>Paste any public URL — stored as a reference, nothing is downloaded</td></tr>
+  </tbody>
+</table>
+
+<h2>Block picker</h2>
+<p>Type <code>/</code> at the start of a line to open the block picker:</p>
+<ul>
+  <li><code>/img</code> — insert an image block</li>
+  <li><code>/vid</code> — insert a video block</li>
+  <li><code>/h2</code>, <code>/h3</code> — insert a heading</li>
+</ul>
+
+<h2>Autosave</h2>
+<p>The editor autosaves every 30 seconds and on blur. A "Saved" indicator appears in the toolbar. The save does not change the entry status — a draft stays draft until you explicitly click <strong>Publish</strong>.</p>
+
+<h2>Keyboard shortcuts</h2>
+<table>
+  <thead><tr><th>Shortcut</th><th>Action</th></tr></thead>
+  <tbody>
+    <tr><td><kbd>⌘ S</kbd></td><td>Save</td></tr>
+    <tr><td><kbd>⌘ B</kbd></td><td>Bold</td></tr>
+    <tr><td><kbd>⌘ I</kbd></td><td>Italic</td></tr>
+    <tr><td><kbd>⌘ K</kbd></td><td>Insert link</td></tr>
+    <tr><td><kbd>⌘ Z</kbd></td><td>Undo</td></tr>
+    <tr><td><kbd>⌘ Shift Z</kbd></td><td>Redo</td></tr>
+  </tbody>
+</table>
+
+</DocsLayout>

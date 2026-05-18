@@ -1,0 +1,65 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Deployment" current="/docs/deployment" prev={{ href: '/docs/json-api', title: 'JSON API' }} next={{ href: '/docs/git-sync', title: 'Git sync mode' }}>
+
+<h1>Deployment</h1>
+<p class="lead">Orbiter uses <code>better-sqlite3</code> — a native Node.js module. It requires a real Node.js runtime with persistent filesystem access.</p>
+
+<h2>Supported environments</h2>
+
+<table>
+  <thead><tr><th>Environment</th><th>Status</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Node.js VPS</td><td>✅ Recommended</td><td>Hetzner, DigitalOcean, any VPS</td></tr>
+    <tr><td>Docker</td><td>✅</td><td>Mount pod as a volume</td></tr>
+    <tr><td>Railway / Render / Fly.io</td><td>✅</td><td>Use a persistent volume for the pod</td></tr>
+    <tr><td>Netlify / Vercel</td><td>⚠️ Read-only</td><td>Serverless FS is ephemeral — run admin separately, use Git sync</td></tr>
+    <tr><td>Cloudflare Workers</td><td>❌</td><td>No native Node.js support</td></tr>
+  </tbody>
+</table>
+
+<h2>Node.js (recommended)</h2>
+<pre>npm install @astrojs/node@^9
+npx astro build
+node dist/server/entry.mjs</pre>
+
+<h2>Docker</h2>
+<pre>FROM node:20-alpine
+WORKDIR /app
+COPY . .
+RUN npm install && npx astro build
+EXPOSE 4321
+CMD ["node", "dist/server/entry.mjs"]</pre>
+
+<pre>docker run -p 4321:4321 \
+  -v $(pwd)/content.pod:/app/content.pod \
+  my-orbiter-site</pre>
+
+<p>Mount the pod as a volume so it persists across container restarts and can be shared with the admin container.</p>
+
+<h2>Railway / Render / Fly.io</h2>
+<p>These platforms support persistent volumes. Attach a volume and point <code>ORBITER_POD</code> to a path on it. The pod survives deploys and restarts.</p>
+
+<h2>Netlify / Vercel (with separate admin)</h2>
+<p>Run the admin on a VPS or Railway. Deploy the Astro site statically to Netlify/Vercel. Use the build webhook to trigger a rebuild when content changes.</p>
+
+<pre>┌──────────────────────────┐  build webhook  ┌──────────────────┐
+│  Orbiter Admin (VPS)     │ ──────────────▶ │  Netlify/Vercel  │
+│  port 4322               │                 │  static deploy   │
+│  content.pod persists    │                 └──────────────────┘
+└──────────────────────────┘</pre>
+
+<p>See <a href="/docs/git-sync">Git sync mode</a> if you want the pod committed to your repository.</p>
+
+<h2>Astro config for static hosting</h2>
+<pre>// astro.config.mjs
+export default defineConfig(&#123;
+  output: 'static',      // fully static, no SSR
+  integrations: [orbiter(&#123; pod: './content.pod' &#125;)],
+  // No adapter needed for static output
+&#125;);</pre>
+
+<div class="callout callout-warn"><strong>Static output</strong> means no <code>/orbiter/media/[id]</code> route at runtime — media must use an external backend (github, s3) or be served from a CDN. Use <code>output: 'hybrid'</code> or <code>'server'</code> to keep the media route.</div>
+
+</DocsLayout>

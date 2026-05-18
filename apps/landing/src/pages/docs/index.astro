@@ -1,0 +1,53 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Overview" description="Orbiter CMS documentation" current="/docs/" next={{ href: '/docs/quick-start', title: 'Quick start' }}>
+
+<h1>Orbiter Documentation</h1>
+<p class="lead">A single-file CMS for Astro. Everything in one <code>.pod</code> file — content, media, schema, users, config.</p>
+
+<h2>What is Orbiter?</h2>
+<p>Orbiter is a headless CMS built around a single SQLite database. The database has a <code>.pod</code> extension and contains everything your CMS needs. Copy the file and your entire site moves with it. Back it up with <code>cp</code>. Move it between servers with <code>rsync</code>.</p>
+
+<p>Two packages share the pod file:</p>
+
+<ul>
+  <li><strong>@a83/orbiter-admin</strong> — a standalone Hono server that runs the admin UI on port 4322. Reads and writes the pod. Runs independently from your Astro site.</li>
+  <li><strong>@a83/orbiter-integration</strong> — an Astro integration that reads published content from the pod at build time and makes it available via <code>orbiter:collections</code>. Zero runtime database access.</li>
+</ul>
+
+<h2>Packages</h2>
+
+<table>
+  <thead><tr><th>Package</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td><code>@a83/orbiter-admin</code></td><td>Standalone admin server — Hono, port 4322, vanilla JS + CSS UI</td></tr>
+    <tr><td><code>@a83/orbiter-integration</code></td><td>Astro integration, <code>orbiter:collections</code> virtual module, media serving</td></tr>
+    <tr><td><code>@a83/orbiter-core</code></td><td>SQLite engine, pod management, auth, media backends</td></tr>
+    <tr><td><code>@a83/orbiter-cli</code></td><td><code>orbiter init</code>, <code>add-user</code>, <code>export</code>, <code>pack</code>, <code>unpack</code></td></tr>
+  </tbody>
+</table>
+
+<h2>How content flows</h2>
+
+<pre>Edit in admin (port 4322)
+       ↓
+  content.pod   ← shared SQLite file
+       ↓
+Astro build reads pod
+       ↓
+Static HTML deployed anywhere</pre>
+
+<p>The admin writes. Astro reads once at build time and inlines all published entries as a JavaScript module. No database calls at runtime — the public site is fully static.</p>
+
+<h2>Tradeoffs</h2>
+
+<p>Orbiter is the right fit for content sites with a small team and a moderate media library. It is <strong>not</strong> the right choice if you need:</p>
+
+<ul>
+  <li>Live content without rebuilding (use SSR mode when available, or a headless CMS with a CDN)</li>
+  <li>Thousands of high-res images (use the GitHub, S3, or R2 media backend instead of the default BLOB storage)</li>
+  <li>Large editorial teams editing the same entry simultaneously (last-write-wins, no merge)</li>
+</ul>
+
+</DocsLayout>

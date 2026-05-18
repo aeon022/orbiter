@@ -1,0 +1,68 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="CLI reference" current="/docs/cli" prev={{ href: '/docs/build-webhook', title: 'Build webhook' }}>
+
+<h1>CLI reference</h1>
+<p class="lead">The <code>orbiter</code> CLI scaffolds projects, manages users, exports content, and syncs media with git.</p>
+
+<h2>Install</h2>
+<pre>npm install -g @a83/orbiter-cli</pre>
+
+<h2>orbiter init [dir]</h2>
+<p>Scaffold a new Astro + Orbiter project.</p>
+<pre>orbiter init my-site
+cd my-site && npm install && npm run dev</pre>
+
+<p>Creates <code>astro.config.mjs</code>, a fresh <code>content.pod</code> with a default Posts collection, example Astro pages, and a GitHub Actions workflow template.</p>
+
+<h2>orbiter add-user</h2>
+<p>Add an admin or editor user to an existing pod.</p>
+<pre>orbiter add-user --pod ./content.pod</pre>
+
+<p>Interactive prompts: username, password, role (<code>admin</code> or <code>editor</code>).</p>
+
+<h2>orbiter export</h2>
+<p>Export all published entries to JSON or Markdown files.</p>
+<pre># JSON (default)
+orbiter export --pod ./content.pod --out ./export
+
+# Markdown with frontmatter
+orbiter export --pod ./content.pod --out ./export --format md
+
+# Single collection
+orbiter export --pod ./content.pod --out ./export --collection posts</pre>
+
+<p>Output: <code>./export/&#123;collection&#125;/&#123;slug&#125;.json</code> or <code>.md</code></p>
+
+<h2>orbiter unpack</h2>
+<p>Extract media BLOBs from the pod to regular files. Run before <code>git commit</code> for platforms with ephemeral filesystems.</p>
+<pre>orbiter unpack --pod ./content.pod --out ./media</pre>
+
+<p>After unpacking, BLOBs are removed from <code>_media.data</code> and a <code>storage.mode=git</code> flag is set in <code>_meta</code>. See <a href="/docs/git-sync">Git sync mode</a>.</p>
+
+<h2>orbiter pack</h2>
+<p>Restore media BLOBs from files back into the pod. Run at build time before <code>astro build</code>.</p>
+<pre>orbiter pack --pod ./content.pod --dir ./media</pre>
+
+<h2>All options</h2>
+
+<table>
+  <thead><tr><th>Command</th><th>Flag</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code>init</code></td><td><code>[dir]</code></td><td>Target directory (default: current)</td></tr>
+    <tr><td><code>add-user</code></td><td><code>--pod</code></td><td>Path to the pod file</td></tr>
+    <tr><td><code>add-user</code></td><td><code>--username</code></td><td>Skip interactive prompt</td></tr>
+    <tr><td><code>add-user</code></td><td><code>--role</code></td><td><code>admin</code> or <code>editor</code></td></tr>
+    <tr><td><code>export</code></td><td><code>--pod</code></td><td>Path to the pod file</td></tr>
+    <tr><td><code>export</code></td><td><code>--out</code></td><td>Output directory</td></tr>
+    <tr><td><code>export</code></td><td><code>--format</code></td><td><code>json</code> (default) or <code>md</code></td></tr>
+    <tr><td><code>export</code></td><td><code>--collection</code></td><td>Single collection to export</td></tr>
+    <tr><td><code>unpack</code></td><td><code>--pod</code></td><td>Path to the pod file</td></tr>
+    <tr><td><code>unpack</code></td><td><code>--out</code></td><td>Output directory for media files</td></tr>
+    <tr><td><code>pack</code></td><td><code>--pod</code></td><td>Path to the pod file</td></tr>
+    <tr><td><code>pack</code></td><td><code>--dir</code></td><td>Directory containing media files</td></tr>
+  </tbody>
+</table>
+
+</DocsLayout>

@@ -1,0 +1,68 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Multilingual (i18n)" current="/docs/i18n" prev={{ href: '/docs/editor', title: 'Editor' }} next={{ href: '/docs/media', title: 'Media library' }}>
+
+<h1>Multilingual (i18n)</h1>
+<p class="lead">Per-entry locale variants using a <code>slug--locale</code> convention. No separate tables, no routing configuration.</p>
+
+<h2>Setup</h2>
+<p>In the admin, go to <strong>Settings → Site</strong> and set:</p>
+<ul>
+  <li><strong>Primary locale</strong> — e.g. <code>en</code></li>
+  <li><strong>Additional locales</strong> — comma-separated, e.g. <code>en,de,fr</code></li>
+</ul>
+
+<p>The locale switcher appears automatically in the entry editor once additional locales are configured.</p>
+
+<h2>The slug--locale convention</h2>
+<pre>my-post          ← base / primary entry (e.g. English)
+my-post--de      ← German variant
+my-post--fr      ← French variant</pre>
+
+<p>Locale variants are regular entries with a special slug format. They appear in the editor as tabs. Creating a variant duplicates the base entry and appends the locale suffix.</p>
+
+<h2>Reading locale content</h2>
+
+<pre>import &#123; getLocaleCollection, getLocaleEntry, locale, locales &#125; from 'orbiter:collections';
+
+// All German posts
+const posts = await getLocaleCollection('posts', 'de');
+
+// A specific German post, with fallback to the base entry
+const post = await getLocaleEntry('posts', 'my-post', 'de');</pre>
+
+<h2>Locale-aware static paths</h2>
+<pre>---
+import &#123; getCollection, locales &#125; from 'orbiter:collections';
+
+export async function getStaticPaths() &#123;
+  const posts = await getCollection('posts');
+  const base  = posts.filter(p => !p.slug.includes('--'));
+
+  return base.flatMap(post =>
+    locales.map(loc => (&#123;
+      params: &#123; lang: loc, slug: post.slug &#125;,
+    &#125;))
+  );
+&#125;
+
+const &#123; lang, slug &#125; = Astro.params;
+const post = await getLocaleEntry('posts', slug, lang);
+---
+
+&lt;html lang=&#123;lang&#125;&gt;
+  &lt;h1&gt;&#123;post.data.title&#125;&lt;/h1&gt;
+&lt;/html&gt;</pre>
+
+<h2>Fallback behaviour</h2>
+<p><code>getLocaleEntry()</code> tries to find <code>slug--locale</code> first. If it doesn't exist, it returns the base entry (<code>slug</code>). This means you can translate incrementally — untranslated entries gracefully fall back to the primary language.</p>
+
+<h2>Accessing locale config</h2>
+<pre>import &#123; locale, locales &#125; from 'orbiter:collections';
+// locale  → 'en'            (the primary locale)
+// locales → ['en', 'de', 'fr']</pre>
+
+<p>Use <code>locales</code> to build language switchers or generate <code>&lt;link rel="alternate"&gt;</code> tags.</p>
+
+</DocsLayout>

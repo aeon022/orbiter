@@ -1,0 +1,51 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="JSON API" current="/docs/json-api" prev={{ href: '/docs/collections-api', title: 'orbiter:collections' }} next={{ href: '/docs/deployment', title: 'Deployment' }}>
+
+<h1>JSON API</h1>
+<p class="lead">A read-only public API at <code>/orbiter/api/[collection]</code>. Returns all published entries as JSON.</p>
+
+<h2>Endpoints</h2>
+<pre>GET /orbiter/api/[collection]</pre>
+
+<p>Returns all published entries in the collection. Same shape as <code>getCollection()</code>.</p>
+
+<h2>Example</h2>
+<pre>curl https://your-site.com/orbiter/api/posts</pre>
+
+<pre>[
+  &#123;
+    "id": "550e8400-...",
+    "slug": "my-first-post",
+    "status": "published",
+    "created_at": "2025-01-01 12:00:00",
+    "updated_at": "2025-06-01 09:15:00",
+    "data": &#123;
+      "title": "My first post",
+      "body": "&lt;p&gt;...&lt;/p&gt;"
+    &#125;
+  &#125;
+]</pre>
+
+<h2>Authentication</h2>
+<p>By default the API is open. To restrict access, set an API token in <strong>Settings → Public API</strong>. Then pass it as a Bearer token:</p>
+
+<pre>curl -H "Authorization: Bearer your-token" https://your-site.com/orbiter/api/posts</pre>
+
+<p>Requests without the token return <code>401 Unauthorized</code>.</p>
+
+<h2>Enabling / disabling</h2>
+<p>The API is enabled by default. Disable it in <strong>Settings → Public API → Enable public API</strong>.</p>
+
+<h2>Use cases</h2>
+<ul>
+  <li>Mobile apps that need to fetch content at runtime</li>
+  <li>Third-party integrations (Zapier, n8n, etc.)</li>
+  <li>Preview environments that can't run a full Astro build</li>
+  <li>Incremental builds — fetch only entries updated since a given timestamp (filter client-side on <code>updated_at</code>)</li>
+</ul>
+
+<div class="callout"><strong>Note:</strong> The JSON API is served by the Astro integration, not the standalone admin. It requires the integration to be running (i.e. your Astro site must be deployed in SSR or hybrid mode).</div>
+
+</DocsLayout>

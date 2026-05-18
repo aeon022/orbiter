@@ -1,0 +1,56 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Media backends" current="/docs/media-backends" prev={{ href: '/docs/media', title: 'Media library' }} next={{ href: '/docs/collections-api', title: 'orbiter:collections' }}>
+
+<h1>Media backends</h1>
+<p class="lead">Configure where uploaded files are stored. Switch backends in <strong>Settings → Media storage</strong> — no restart required.</p>
+
+<h2>blob (default)</h2>
+<p>Files are stored as BLOBs in <code>_media.data</code> in the pod. No external services, no config.</p>
+
+<p>Good for small-to-medium sites with up to a few hundred images. For large media libraries, use one of the external backends.</p>
+
+<h2>local — filesystem</h2>
+<p>Files are written to a directory on the server. Useful for self-hosted VPS deployments where the disk persists.</p>
+
+<pre>media.backend     = local
+media.local_path  = /var/data/media   (absolute or relative path)</pre>
+
+<div class="callout callout-warn"><strong>Warning:</strong> If your server restarts and the directory is not mounted as a persistent volume, files will be lost. Use an absolute path to a persistent location.</div>
+
+<h2>github — GitHub + jsDelivr CDN</h2>
+<p>Files are uploaded via the GitHub Contents API and served from jsDelivr CDN — <code>cdn.jsdelivr.net/gh/owner/repo@branch/path</code>. No egress cost, cached globally.</p>
+
+<pre>media.backend        = github
+media.github_repo    = owner/my-media-repo
+media.github_branch  = main
+media.github_dir     = media
+media.github_token   = ghp_…   (falls back to the GitHub token in Settings → GitHub)</pre>
+
+<p>The token needs <code>Contents: Read and write</code> permission on the target repository. The repository can be different from your content repo.</p>
+
+<p>On delete, Orbiter makes a <code>DELETE</code> request to the GitHub API to remove the file and create a deletion commit.</p>
+
+<h2>s3 — S3-compatible storage</h2>
+<p>Works with AWS S3, Cloudflare R2, Backblaze B2, MinIO, and any S3-compatible service.</p>
+
+<pre>media.backend       = s3
+media.s3_bucket     = my-media-bucket
+media.s3_region     = auto              (use "auto" for R2)
+media.s3_endpoint   = https://xxxx.r2.cloudflarestorage.com  (blank for AWS)
+media.s3_access_key = …
+media.s3_secret_key = …
+media.s3_public_url = https://media.example.com  (your public domain or CDN)</pre>
+
+<p>The bucket must be publicly readable. Set <code>media.s3_public_url</code> to your R2 public domain, a CloudFront distribution, or any CDN in front of the bucket. If left blank, Orbiter falls back to the default AWS S3 URL pattern.</p>
+
+<div class="callout"><strong>Cloudflare R2:</strong> Set <code>media.s3_region</code> to <code>auto</code> and <code>media.s3_endpoint</code> to your R2 endpoint URL. Use your R2 public bucket URL or a custom domain as <code>media.s3_public_url</code>.</div>
+
+<h2>External link (no backend)</h2>
+<p>Not a backend configuration — it's a per-file option. Use the <strong>External link</strong> tab in the image picker to store a URL reference without downloading the file. See <a href="/docs/media">Media library</a>.</p>
+
+<h2>Switching backends</h2>
+<p>Changing the backend in Settings affects only <em>new</em> uploads. Existing files remain where they are. If you want to migrate existing media, export and re-upload manually.</p>
+
+</DocsLayout>
