@@ -1378,7 +1378,8 @@
       document.querySelectorAll('.img-pick-pane').forEach(p=>p.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById('img-pick-pane-'+tab).classList.add('active');
-      if (tab==='url') setTimeout(()=>document.getElementById('img-url-inp').focus(), 40);
+      if (tab==='url')  setTimeout(()=>document.getElementById('img-url-inp').focus(),  40);
+      if (tab==='link') setTimeout(()=>document.getElementById('img-link-inp').focus(), 40);
     };
 
     window.importFromUrl = async function() {
@@ -1409,6 +1410,36 @@
 
     document.getElementById('img-url-inp').addEventListener('keydown', e=>{
       if (e.key==='Enter') { e.preventDefault(); importFromUrl(); }
+    });
+
+    window.addExternalLink = async function() {
+      const inp    = document.getElementById('img-link-inp');
+      const url    = inp.value.trim();
+      if (!url) return;
+      const btn    = document.getElementById('img-link-btn');
+      const status = document.getElementById('img-link-status');
+      btn.disabled=true; btn.textContent='Wird verknüpft…'; status.textContent='';
+      try {
+        const res = await fetch('/api/media/add-link', {
+          method:'POST', credentials:'include',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ url, alt:'', folder:'' })
+        });
+        if (!res.ok) { const e=await res.json().catch(()=>({})); status.textContent='Fehler: '+(e.error||res.status); return; }
+        const media = await res.json();
+        mediaData.unshift(media);
+        closeImgPicker();
+        doInsertImg(media.id, media.alt??'');
+        inp.value='';
+      } catch(e) {
+        status.textContent='Netzwerkfehler: '+e.message;
+      } finally {
+        btn.disabled=false; btn.textContent='Verknüpfen';
+      }
+    };
+
+    document.getElementById('img-link-inp').addEventListener('keydown', e=>{
+      if (e.key==='Enter') { e.preventDefault(); addExternalLink(); }
     });
 
     function escHtml(str) {
@@ -1540,6 +1571,7 @@
       <div class="img-pick-tabs">
         <button class="img-pick-tab active" onclick="imgPickTab('library',this)">Library</button>
         <button class="img-pick-tab" onclick="imgPickTab('url',this)">From URL</button>
+        <button class="img-pick-tab" onclick="imgPickTab('link',this)">External link</button>
       </div>
       <div id="img-pick-pane-library" class="img-pick-pane active">
         <div class="img-pick-body">
@@ -1557,6 +1589,18 @@
           </div>
           <div id="img-url-status" class="img-url-status"></div>
           <button id="img-url-btn" class="img-url-btn" onclick="importFromUrl()">Importieren</button>
+        </div>
+      </div>
+      <div id="img-pick-pane-link" class="img-pick-pane">
+        <div class="img-url-pane">
+          <input id="img-link-inp" class="img-url-inp" type="url" placeholder="https://…" />
+          <div class="img-url-hint">
+            Datei bleibt extern — Orbiter speichert nur den Link.<br>
+            <strong>Dropbox</strong>, <strong>Google Drive</strong>, <strong>OneDrive</strong>,
+            <strong>Cloudinary</strong>, jede öffentlich zugängliche URL.
+          </div>
+          <div id="img-link-status" class="img-url-status"></div>
+          <button id="img-link-btn" class="img-url-btn" onclick="addExternalLink()">Verknüpfen</button>
         </div>
       </div>
     </div>

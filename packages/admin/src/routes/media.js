@@ -118,6 +118,37 @@ mediaRoutes.post('/import-url', async (c) => {
   }
 });
 
+// POST /api/media/add-link  — store an external URL reference, no data fetched
+mediaRoutes.post('/add-link', async (c) => {
+  let body;
+  try { body = await c.req.json(); } catch { return c.json({ error: 'Invalid JSON' }, 400); }
+  const { url, alt, folder, filename: providedName } = body;
+  if (!url) return c.json({ error: 'No URL provided' }, 400);
+
+  // Detect mime via HEAD request, fall back to extension sniffing
+  let mime = 'application/octet-stream';
+  try {
+    const head = await fetch(url, { method: 'HEAD', redirect: 'follow', headers: { 'User-Agent': 'Orbiter-Admin/1.0' } });
+    const ct = head.headers.get('content-type');
+    if (ct) mime = ct.split(';')[0].trim();
+  } catch {
+    const ext = url.split('?')[0].split('.').pop()?.toLowerCase();
+    const extMap = { jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', gif:'image/gif',
+                     webp:'image/webp', avif:'image/avif', svg:'image/svg+xml',
+                     mp4:'video/mp4', webm:'video/webm', pdf:'application/pdf' };
+    if (extMap[ext]) mime = extMap[ext];
+  }
+
+  const filename = providedName || url.split('/').pop()?.split('?')[0] || 'link';
+  const id       = randomUUID();
+  const db       = openPod(c.get('podPath'));
+  db.insertMedia(id, filename, mime, 0, null, alt ?? null, folder ?? '', url, null);
+  const item = db.getMediaItem(id);
+  db.close();
+  const { data: _, ...meta } = item;
+  return c.json(meta, 201);
+});
+
 // DELETE /api/media/:id
 mediaRoutes.delete('/:id', async (c) => {
   const db   = openPod(c.get('podPath'));
