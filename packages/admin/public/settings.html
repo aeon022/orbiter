@@ -371,6 +371,7 @@
               <option value="blob"   ${(get('media.backend')||'blob')==='blob'   ? 'selected':''}>blob — SQLite BLOB (default)</option>
               <option value="local"  ${get('media.backend')==='local'  ? 'selected':''}>local — filesystem</option>
               <option value="github" ${get('media.backend')==='github' ? 'selected':''}>github — GitHub + jsDelivr CDN</option>
+              <option value="s3"     ${get('media.backend')==='s3'     ? 'selected':''}>s3 — S3-compatible (AWS, R2, B2, MinIO)</option>
             </select>
           </div>
 
@@ -378,6 +379,33 @@
             <div class="setting-row">
               <div><div class="setting-label">Local path</div><div class="setting-desc">Absolute or relative path on the server</div></div>
               <input class="input" name="media.local_path" value="${get('media.local_path')}" placeholder="./media" />
+            </div>
+          </div>
+
+          <div id="media-s3-fields" style="display:none">
+            <div class="setting-row">
+              <div><div class="setting-label">Bucket</div></div>
+              <input class="input" name="media.s3_bucket" value="${get('media.s3_bucket')}" placeholder="my-media-bucket" />
+            </div>
+            <div class="setting-row">
+              <div><div class="setting-label">Region</div><div class="setting-desc">AWS region or "auto" for R2</div></div>
+              <input class="input" name="media.s3_region" value="${get('media.s3_region')||'auto'}" placeholder="eu-central-1" />
+            </div>
+            <div class="setting-row">
+              <div><div class="setting-label">Endpoint</div><div class="setting-desc">Custom endpoint for R2, B2, MinIO — leave blank for AWS</div></div>
+              <input class="input" name="media.s3_endpoint" value="${get('media.s3_endpoint')}" placeholder="https://xxxx.r2.cloudflarestorage.com" />
+            </div>
+            <div class="setting-row">
+              <div><div class="setting-label">Access Key ID</div></div>
+              <input class="input" type="password" name="media.s3_access_key" value="${get('media.s3_access_key')}" autocomplete="off" placeholder="Access key ID" />
+            </div>
+            <div class="setting-row">
+              <div><div class="setting-label">Secret Access Key</div></div>
+              <input class="input" type="password" name="media.s3_secret_key" value="${get('media.s3_secret_key')}" autocomplete="off" placeholder="Secret access key" />
+            </div>
+            <div class="setting-row">
+              <div><div class="setting-label">Public URL</div><div class="setting-desc">Base URL for serving files, e.g. your R2 public domain or CDN</div></div>
+              <input class="input" name="media.s3_public_url" value="${get('media.s3_public_url')}" placeholder="https://media.example.com" />
             </div>
           </div>
 
@@ -588,6 +616,7 @@
     function updateMediaFields() {
       const v = document.getElementById('media-backend-select')?.value ?? 'blob';
       document.getElementById('media-local-fields').style.display  = v === 'local'  ? '' : 'none';
+      document.getElementById('media-s3-fields').style.display     = v === 's3'     ? '' : 'none';
       document.getElementById('media-github-fields').style.display = v === 'github' ? '' : 'none';
     }
     document.getElementById('media-backend-select')?.addEventListener('change', updateMediaFields);
@@ -613,6 +642,12 @@
         ['media.github_repo',   fd.get('media.github_repo')],
         ['media.github_branch', fd.get('media.github_branch')],
         ['media.github_dir',    fd.get('media.github_dir')],
+        ['media.s3_bucket',     fd.get('media.s3_bucket')],
+        ['media.s3_region',     fd.get('media.s3_region')],
+        ['media.s3_endpoint',   fd.get('media.s3_endpoint')],
+        ['media.s3_access_key', fd.get('media.s3_access_key')],
+        ['media.s3_secret_key', fd.get('media.s3_secret_key')],
+        ['media.s3_public_url', fd.get('media.s3_public_url')],
         ['api.enabled',         fd.get('api.enabled') ? '1' : '0'],
         ['api.token',           fd.get('api.token')],
       ]);

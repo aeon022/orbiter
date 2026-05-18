@@ -1,5 +1,6 @@
 import { readFile, writeFile, mkdir, unlink } from 'node:fs/promises';
 import { join, extname } from 'node:path';
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 /**
  * Returns the configured media backend for a given db connection.
@@ -10,6 +11,7 @@ export function getMediaBackend(db) {
   switch (backend) {
     case 'local':  return new LocalBackend(db);
     case 'github': return new GitHubBackend(db);
+    case 's3':     return new S3Backend(db);
     default:       return new BlobBackend(db);
   }
 }
@@ -134,6 +136,67 @@ class GitHubBackend {
           body: JSON.stringify({ message: `media: delete ${item.filename}`, sha, branch: this.branch }),
         });
       }
+    }
+    this.db.deleteMedia(id);
+  }
+}
+
+// ── S3 — store files in any S3-compatible bucket (AWS, R2, B2, MinIO) ───────
+
+class S3Backend {
+  constructor(db) {
+    this.db        = db;
+    this.bucket    = db.getMeta('media.s3_bucket')     ?? '';
+    this.publicUrl = (db.getMeta('media.s3_public_url') ?? '').replace(/\/$/, '');
+
+    this.client = new S3Client({
+      region:      db.getMeta('media.s3_region')      || 'auto',
+      endpoint:    db.getMeta('media.s3_endpoint')    || undefined,
+      credentials: {
+        accessKeyId:     db.getMeta('media.s3_access_key') ?? '',
+        secretAccessKey: db.getMeta('media.s3_secret_key') ?? '',
+      },
+      forcePathStyle: !!(db.getMeta('media.s3_endpoint')),
+    });
+  }
+
+  #key(id, filename, folder) {
+    const ext = extname(filename) || '';
+    return [folder, `${id}${ext}`].filter(Boolean).join('/');
+  }
+
+  async upload(id, filename, mimeType, size, buffer, alt, folder) {
+    if (!this.bucket) throw new Error('S3 bucket is required for s3 backend');
+
+    const key = this.#key(id, filename, folder);
+    await this.client.send(new PutObjectCommand({
+      Bucket:      this.bucket,
+      Key:         key,
+      Body:        buffer,
+      ContentType: mimeType,
+    }));
+
+    const url = this.publicUrl
+      ? `${this.publicUrl}/${key}`
+      : `https://${this.bucket}.s3.amazonaws.com/${key}`;
+
+    this.db.insertMedia(id, filename, mimeType, size, null, alt, folder, url, key);
+    return { url };
+  }
+
+  async get(id) {
+    const item = this.db.getMediaItem(id);
+    if (!item) return null;
+    return { url: item.url, mimeType: item.mime_type };
+  }
+
+  async delete(id) {
+    const item = this.db.getMediaItem(id);
+    if (item?.path && this.bucket) {
+      await this.client.send(new DeleteObjectCommand({
+        Bucket: this.bucket,
+        Key:    item.path,
+      })).catch(() => {});
     }
     this.db.deleteMedia(id);
   }
