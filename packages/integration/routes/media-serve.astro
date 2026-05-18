@@ -1,8 +1,8 @@
 ---
 export const prerender = false;
 /**
- * /orbiter/media/[id] — serves a media BLOB from the .pod file.
- * Public — no auth required. Used in Astro pages: <img src="/orbiter/media/{uuid}">
+ * /orbiter/media/[id] — serves a media file from the .pod file.
+ * Supports blob (SQLite), local (disk), and external (url redirect) backends.
  */
 import { podPath } from 'orbiter:db';
 import { openPod } from '@a83/orbiter-core';
@@ -10,13 +10,32 @@ import { openPod } from '@a83/orbiter-core';
 const { id } = Astro.params;
 
 const db  = openPod(podPath);
-const row = db.db.prepare('SELECT mime_type, data FROM _media WHERE id = ?').get(id);
+const row = db.db.prepare('SELECT mime_type, data, url, path FROM _media WHERE id = ?').get(id);
 db.close();
 
 if (!row) {
   return new Response('Not found', { status: 404 });
 }
 
+// External backend: redirect to CDN/storage URL
+if (row.url) {
+  return Response.redirect(row.url, 302);
+}
+
+// Local backend: read from disk
+if (row.path) {
+  const { readFile } = await import('node:fs/promises');
+  const data = await readFile(row.path).catch(() => null);
+  if (!data) return new Response('Not found on disk', { status: 404 });
+  return new Response(data, {
+    headers: {
+      'Content-Type':  row.mime_type,
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    },
+  });
+}
+
+// Default: serve BLOB from SQLite
 return new Response(row.data, {
   headers: {
     'Content-Type':  row.mime_type,

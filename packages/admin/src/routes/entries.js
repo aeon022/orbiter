@@ -3,6 +3,14 @@ import { openPod } from '@a83/orbiter-core';
 
 export const entryRoutes = new Hono();
 
+function fireWebhook(podPath) {
+  const db  = openPod(podPath);
+  const url = db.getMeta('build.webhook_url') ?? '';
+  db.setMeta('build.last_triggered', new Date().toISOString());
+  db.close();
+  if (url) fetch(url, { method: 'POST' }).catch(() => {});
+}
+
 // GET /api/collections/:id/entries?status=draft|published
 entryRoutes.get('/:collectionId/entries', (c) => {
   const { collectionId } = c.req.param();
@@ -45,11 +53,16 @@ entryRoutes.put('/:collectionId/entries/:slug', async (c) => {
   const { collectionId, slug } = c.req.param();
   const body = await c.req.json();
 
-  const db = openPod(c.get('podPath'));
-  const ok = db.updateEntry(collectionId, slug, body);
+  const db     = openPod(c.get('podPath'));
+  const before = db.getEntry(collectionId, slug);
+  const ok     = db.updateEntry(collectionId, slug, body);
   if (!ok) { db.close(); return c.json({ error: 'Not found' }, 404); }
   const updated = db.getEntry(collectionId, body.slug ?? slug);
   db.close();
+
+  if (body.status === 'published' && before?.status !== 'published') {
+    fireWebhook(c.get('podPath'));
+  }
   return c.json(updated);
 });
 
@@ -99,5 +112,6 @@ entryRoutes.patch('/:collectionId/entries/:slug/status', async (c) => {
   if (!entry) { db.close(); return c.json({ error: 'Not found' }, 404); }
   db.updateEntry(collectionId, slug, { slug, data: entry.data, status });
   db.close();
+  if (status === 'published') fireWebhook(c.get('podPath'));
   return c.json({ ok: true });
 });

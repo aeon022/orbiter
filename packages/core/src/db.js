@@ -86,6 +86,30 @@ export class OrbiterDB {
     // Migrations: add columns that didn't exist in older pods
     try { this.db.exec(`ALTER TABLE _media ADD COLUMN folder TEXT NOT NULL DEFAULT ''`); } catch {}
 
+    // Migration: make _media.data nullable, add url + path for external backends
+    const mediaCols = this.db.prepare('PRAGMA table_info(_media)').all().map(c => c.name);
+    if (!mediaCols.includes('url')) {
+      this.db.exec(`
+        BEGIN;
+        CREATE TABLE _media_new (
+          id         TEXT PRIMARY KEY,
+          filename   TEXT NOT NULL,
+          mime_type  TEXT NOT NULL,
+          size       INTEGER NOT NULL,
+          data       BLOB,
+          alt        TEXT,
+          folder     TEXT NOT NULL DEFAULT '',
+          url        TEXT,
+          path       TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        INSERT INTO _media_new SELECT id, filename, mime_type, size, data, alt, folder, NULL, NULL, created_at FROM _media;
+        DROP TABLE _media;
+        ALTER TABLE _media_new RENAME TO _media;
+        COMMIT;
+      `);
+    }
+
     // Set format version if not present
     const existing = this.db
       .prepare("SELECT value FROM _meta WHERE key = 'format_version'")
@@ -233,8 +257,8 @@ export class OrbiterDB {
   // ── Media ──────────────────────────────────────────
   listMedia(folder = null) {
     const sql = folder !== null
-      ? 'SELECT id, filename, mime_type, size, alt, folder, created_at FROM _media WHERE folder = ? ORDER BY created_at DESC'
-      : 'SELECT id, filename, mime_type, size, alt, folder, created_at FROM _media ORDER BY created_at DESC';
+      ? 'SELECT id, filename, mime_type, size, alt, folder, url, created_at FROM _media WHERE folder = ? ORDER BY created_at DESC'
+      : 'SELECT id, filename, mime_type, size, alt, folder, url, created_at FROM _media ORDER BY created_at DESC';
     return folder !== null ? this.db.prepare(sql).all(folder) : this.db.prepare(sql).all();
   }
 
@@ -242,10 +266,10 @@ export class OrbiterDB {
     return this.db.prepare('SELECT * FROM _media WHERE id = ?').get(id) ?? null;
   }
 
-  insertMedia(id, filename, mimeType, size, data, alt = null, folder = '') {
+  insertMedia(id, filename, mimeType, size, data, alt = null, folder = '', url = null, path = null) {
     this.db.prepare(
-      'INSERT INTO _media (id, filename, mime_type, size, data, alt, folder) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    ).run(id, filename, mimeType, size, data, alt, folder);
+      'INSERT INTO _media (id, filename, mime_type, size, data, alt, folder, url, path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(id, filename, mimeType, size, data ?? null, alt, folder, url, path);
   }
 
   deleteMedia(id) {

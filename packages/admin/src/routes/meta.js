@@ -7,6 +7,8 @@ const ALLOWED_KEYS = [
   'site.name', 'site.url', 'site.description', 'site.locale', 'site.locales',
   'build.webhook_url',
   'github.token', 'github.repo', 'github.branch',
+  'media.backend', 'media.local_path',
+  'media.github_token', 'media.github_repo', 'media.github_branch', 'media.github_dir',
   'api.enabled', 'api.token',
   'dashboard.notes', 'dashboard.todos',
   'ui.theme',

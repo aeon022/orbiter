@@ -363,6 +363,44 @@
           </div>
         </div>
 
+        <div class="settings-group">
+          <div class="group-header">Media storage</div>
+          <div class="setting-row">
+            <div><div class="setting-label">Backend</div><div class="setting-desc">Where uploaded files are stored</div></div>
+            <select class="input" name="media.backend" id="media-backend-select">
+              <option value="blob"   ${(get('media.backend')||'blob')==='blob'   ? 'selected':''}>blob — SQLite BLOB (default)</option>
+              <option value="local"  ${get('media.backend')==='local'  ? 'selected':''}>local — filesystem</option>
+              <option value="github" ${get('media.backend')==='github' ? 'selected':''}>github — GitHub + jsDelivr CDN</option>
+            </select>
+          </div>
+
+          <div id="media-local-fields" style="display:none">
+            <div class="setting-row">
+              <div><div class="setting-label">Local path</div><div class="setting-desc">Absolute or relative path on the server</div></div>
+              <input class="input" name="media.local_path" value="${get('media.local_path')}" placeholder="./media" />
+            </div>
+          </div>
+
+          <div id="media-github-fields" style="display:none">
+            <div class="setting-row">
+              <div><div class="setting-label">GitHub token</div><div class="setting-desc">Uses the token from the GitHub section above if left blank</div></div>
+              <input class="input" type="password" name="media.github_token" value="${get('media.github_token')}" autocomplete="off" placeholder="ghp_… (optional, falls back to GitHub token above)" />
+            </div>
+            <div class="setting-row">
+              <div><div class="setting-label">Repository</div><div class="setting-desc">owner/repo — can differ from your content repo</div></div>
+              <input class="input" name="media.github_repo" value="${get('media.github_repo')}" placeholder="owner/my-media" />
+            </div>
+            <div class="setting-row">
+              <div><div class="setting-label">Branch</div></div>
+              <input class="input" name="media.github_branch" value="${get('media.github_branch')||'main'}" placeholder="main" />
+            </div>
+            <div class="setting-row">
+              <div><div class="setting-label">Directory</div><div class="setting-desc">Subdirectory inside the repo</div></div>
+              <input class="input" name="media.github_dir" value="${get('media.github_dir')||'media'}" placeholder="media" />
+            </div>
+          </div>
+        </div>
+
         <div class="save-row">
           <button type="submit" class="btn-save">Save settings</button>
         </div>
@@ -546,22 +584,37 @@
       </div>
     `;
 
+    // Media backend: show/hide conditional fields
+    function updateMediaFields() {
+      const v = document.getElementById('media-backend-select')?.value ?? 'blob';
+      document.getElementById('media-local-fields').style.display  = v === 'local'  ? '' : 'none';
+      document.getElementById('media-github-fields').style.display = v === 'github' ? '' : 'none';
+    }
+    document.getElementById('media-backend-select')?.addEventListener('change', updateMediaFields);
+    updateMediaFields();
+
     // Site form
     document.getElementById('site-form').addEventListener('submit', async e => {
       e.preventDefault();
       const fd = new FormData(e.target);
       await saveMeta([
-        ['site.name',        fd.get('site.name')],
-        ['site.url',         fd.get('site.url')],
-        ['site.description', fd.get('site.description')],
-        ['site.locale',      fd.get('site.locale')],
-        ['site.locales',     fd.get('site.locales')],
-        ['build.webhook_url',fd.get('build.webhook_url')],
-        ['github.token',     fd.get('github.token')],
-        ['github.repo',      fd.get('github.repo')],
-        ['github.branch',    fd.get('github.branch')],
-        ['api.enabled',      fd.get('api.enabled') ? '1' : '0'],
-        ['api.token',        fd.get('api.token')],
+        ['site.name',           fd.get('site.name')],
+        ['site.url',            fd.get('site.url')],
+        ['site.description',    fd.get('site.description')],
+        ['site.locale',         fd.get('site.locale')],
+        ['site.locales',        fd.get('site.locales')],
+        ['build.webhook_url',   fd.get('build.webhook_url')],
+        ['github.token',        fd.get('github.token')],
+        ['github.repo',         fd.get('github.repo')],
+        ['github.branch',       fd.get('github.branch')],
+        ['media.backend',       fd.get('media.backend')],
+        ['media.local_path',    fd.get('media.local_path')],
+        ['media.github_token',  fd.get('media.github_token')],
+        ['media.github_repo',   fd.get('media.github_repo')],
+        ['media.github_branch', fd.get('media.github_branch')],
+        ['media.github_dir',    fd.get('media.github_dir')],
+        ['api.enabled',         fd.get('api.enabled') ? '1' : '0'],
+        ['api.token',           fd.get('api.token')],
       ]);
       showBanner('site-banner','banner-ok','Settings saved');
     });

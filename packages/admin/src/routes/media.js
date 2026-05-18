@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { openPod } from '@a83/orbiter-core';
+import { openPod, getMediaBackend } from '@a83/orbiter-core';
 import { randomUUID } from 'node:crypto';
 
 export const mediaRoutes = new Hono();
@@ -13,12 +13,34 @@ mediaRoutes.get('/', (c) => {
   return c.json(items);
 });
 
-// GET /api/media/:id/raw  — serve the binary
-mediaRoutes.get('/:id/raw', (c) => {
-  const db   = openPod(c.get('podPath'));
-  const item = db.getMediaItem(c.req.param('id'));
+// GET /api/media/:id/raw  — serve binary or redirect to CDN
+mediaRoutes.get('/:id/raw', async (c) => {
+  const db      = openPod(c.get('podPath'));
+  const item    = db.getMediaItem(c.req.param('id'));
+  if (!item) { db.close(); return c.json({ error: 'Not found' }, 404); }
+
+  // External backends: redirect to CDN/storage URL
+  if (item.url) {
+    db.close();
+    return c.redirect(item.url, 302);
+  }
+
+  // Local backend: read from disk
+  if (item.path) {
+    const backend = getMediaBackend(db);
+    const result  = await backend.get(item.id).catch(() => null);
+    db.close();
+    if (!result?.data) return c.json({ error: 'File not found on disk' }, 404);
+    return new Response(result.data, {
+      headers: {
+        'Content-Type':  item.mime_type,
+        'Cache-Control': 'public, max-age=31536000, immutable',
+      },
+    });
+  }
+
+  // Default: serve BLOB from SQLite
   db.close();
-  if (!item) return c.json({ error: 'Not found' }, 404);
   return new Response(item.data, {
     headers: {
       'Content-Type':  item.mime_type,
@@ -29,25 +51,31 @@ mediaRoutes.get('/:id/raw', (c) => {
 
 // POST /api/media  — multipart upload
 mediaRoutes.post('/', async (c) => {
-  const form     = await c.req.formData();
-  const file     = form.get('file');
-  const alt      = form.get('alt')?.toString()    ?? null;
-  const folder   = form.get('folder')?.toString() ?? '';
+  const form   = await c.req.formData();
+  const file   = form.get('file');
+  const alt    = form.get('alt')?.toString()    ?? null;
+  const folder = form.get('folder')?.toString() ?? '';
 
   if (!file || typeof file === 'string') return c.json({ error: 'No file provided' }, 400);
 
-  const buffer   = Buffer.from(await file.arrayBuffer());
-  const id       = randomUUID();
-  const db       = openPod(c.get('podPath'));
-  db.insertMedia(id, file.name, file.type, buffer.byteLength, buffer, alt, folder);
-  const item = db.getMediaItem(id);
-  db.close();
+  const buffer  = Buffer.from(await file.arrayBuffer());
+  const id      = randomUUID();
+  const db      = openPod(c.get('podPath'));
 
-  const { data: _, ...meta } = item;
-  return c.json(meta, 201);
+  try {
+    const backend = getMediaBackend(db);
+    await backend.upload(id, file.name, file.type, buffer.byteLength, buffer, alt, folder);
+    const item    = db.getMediaItem(id);
+    db.close();
+    const { data: _, ...meta } = item;
+    return c.json(meta, 201);
+  } catch (err) {
+    db.close();
+    return c.json({ error: err.message }, 500);
+  }
 });
 
-// POST /api/media/import-url  — server-side fetch from a public URL (Dropbox, GDrive, etc.)
+// POST /api/media/import-url  — server-side fetch from a public URL
 mediaRoutes.post('/import-url', async (c) => {
   let body;
   try { body = await c.req.json(); } catch { return c.json({ error: 'Invalid JSON' }, 400); }
@@ -76,20 +104,33 @@ mediaRoutes.post('/import-url', async (c) => {
   const filename = url.split('/').pop()?.split('?')[0] || 'imported';
   const id       = randomUUID();
   const db       = openPod(c.get('podPath'));
-  db.insertMedia(id, filename, mime, buffer.byteLength, buffer, alt ?? null, folder ?? '');
-  const item = db.getMediaItem(id);
-  db.close();
 
-  const { data: _, ...meta } = item;
-  return c.json(meta, 201);
+  try {
+    const backend = getMediaBackend(db);
+    await backend.upload(id, filename, mime, buffer.byteLength, buffer, alt ?? null, folder ?? '');
+    const item    = db.getMediaItem(id);
+    db.close();
+    const { data: _, ...meta } = item;
+    return c.json(meta, 201);
+  } catch (err) {
+    db.close();
+    return c.json({ error: err.message }, 500);
+  }
 });
 
 // DELETE /api/media/:id
-mediaRoutes.delete('/:id', (c) => {
+mediaRoutes.delete('/:id', async (c) => {
   const db   = openPod(c.get('podPath'));
   const item = db.getMediaItem(c.req.param('id'));
   if (!item) { db.close(); return c.json({ error: 'Not found' }, 404); }
-  db.deleteMedia(item.id);
-  db.close();
-  return c.json({ ok: true });
+
+  try {
+    const backend = getMediaBackend(db);
+    await backend.delete(item.id);
+    db.close();
+    return c.json({ ok: true });
+  } catch (err) {
+    db.close();
+    return c.json({ error: err.message }, 500);
+  }
 });
