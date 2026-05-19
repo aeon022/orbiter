@@ -114,6 +114,13 @@
     /* Schema fields in sidebar */
     .field-input,.field-select { width:100%; background:var(--bg0); border:1px solid var(--line); padding:6px 8px; color:var(--heading); font-family:var(--mono); font-size:11px; outline:none; appearance:none; transition:border-color .15s; border-radius:var(--radius); box-sizing:border-box; }
     .field-input:focus,.field-select:focus { border-color:var(--accent); }
+    .bool-toggle { display:flex; align-items:center; gap:8px; padding:4px 0; cursor:pointer; user-select:none; }
+    .bool-toggle input[type=checkbox] { display:none; }
+    .bool-track { width:32px; height:18px; border-radius:9px; background:var(--line); border:1px solid var(--line); transition:background .15s,border-color .15s; flex-shrink:0; position:relative; }
+    .bool-track::after { content:''; position:absolute; top:2px; left:2px; width:12px; height:12px; border-radius:50%; background:var(--muted); transition:transform .15s,background .15s; }
+    .bool-toggle input:checked + .bool-track { background:var(--accent); border-color:var(--accent); }
+    .bool-toggle input:checked + .bool-track::after { transform:translateX(14px); background:#fff; }
+    .bool-label { font-size:11px; color:var(--text); font-family:var(--mono); }
     .media-drop-zone { border:1px dashed var(--line); background:var(--bg0); height:72px; cursor:pointer; transition:border-color .12s,background .12s; overflow:hidden; display:flex; align-items:center; justify-content:center; position:relative; border-radius:var(--radius); margin-top:5px; }
     .media-drop-zone:hover { border-color:var(--gold); background:var(--gold-bg); }
     .media-drop-zone.has-image { border-style:solid; }
@@ -506,7 +513,10 @@
           fieldsHtml += `<div class="meta-field" data-field-key="${key}" ${field.showWhen?`data-show-when="${field.showWhen}"`:''}><div class="field-label">${escHtml(field.label??key)}</div>`;
         }
 
-        if (field.type==='datetime') {
+        if (field.type==='boolean') {
+          const checked = val===true||val==='true'||val===1;
+          fieldsHtml += `<label class="bool-toggle"><input type="checkbox" name="${key}"${checked?' checked':''} /><span class="bool-track"></span><span class="bool-label">${checked?'An':'Aus'}</span></label>`;
+        } else if (field.type==='datetime') {
           fieldsHtml += `<input type="datetime-local" class="field-input" name="${key}" value="${escHtml(val??'')}" />`;
         } else if (field.type==='date') {
           fieldsHtml += `<input type="date" class="field-input" name="${key}" value="${escHtml(val??'')}" />`;
@@ -518,7 +528,7 @@
             ${[['Mon','Mo'],['Tue','Di'],['Wed','Mi'],['Thu','Do'],['Fri','Fr'],['Sat','Sa'],['Sun','So']].map(([d,l])=>`<button type="button" class="wd-btn${active.includes(d)?' active':''}" data-day="${d}" data-key="${key}">${l}</button>`).join('')}
             <input type="hidden" name="${key}" id="wd-val-${key}" value="${active.join(',')}" />
           </div>`;
-        } else if (field.type==='media') {
+        } else if (field.type==='image'||field.type==='media') {
           const hasVal = !!(val);
           fieldsHtml += `<div>
             <select class="field-select" name="${key}" id="media-sel-${key}">
@@ -655,6 +665,15 @@
         zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over');});
         zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
         zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag-over');if(e.dataTransfer.files.length){const fi={files:e.dataTransfer.files};uploadMediaField(key,fi);}});
+      });
+
+      // Boolean toggle — live label + dirty
+      panel.querySelectorAll('.bool-toggle input[type=checkbox]').forEach(cb=>{
+        cb.addEventListener('change',()=>{
+          const lbl = cb.closest('.bool-toggle')?.querySelector('.bool-label');
+          if (lbl) lbl.textContent = cb.checked ? 'An' : 'Aus';
+          markDirty();
+        });
       });
 
       // Publish / draft buttons
@@ -816,7 +835,9 @@
       // Gather extra field values
       const data = { title, body };
       for (const [key, field] of extraFields) {
-        if (field.type==='array'||field.type==='weekdays') {
+        if (field.type==='boolean') {
+          data[key] = !!(document.querySelector(`[name="${key}"]`)?.checked);
+        } else if (field.type==='array'||field.type==='weekdays') {
           const raw = document.getElementById('wd-val-'+key)?.value || document.querySelector(`[name="${key}"]`)?.value || '';
           data[key] = raw ? raw.split(',').map(s=>s.trim()).filter(Boolean) : [];
         } else if (field.type==='relation') {
@@ -881,11 +902,21 @@
     const indicator = document.getElementById('autosave-indicator');
     let autosaveTimer = null;
 
+    let _dirty = false;
+    function markDirty() { _dirty = true; }
+    function markClean() { _dirty = false; }
+
+    window.addEventListener('beforeunload', e => {
+      if (_dirty) { e.preventDefault(); e.returnValue = ''; }
+    });
+
     function setIndicator(state) {
       const states = { pending:{text:'Unsaved',color:'var(--gold)'}, saving:{text:'Saving…',color:'var(--muted)'}, saved:{text:'✓ Saved',color:'var(--jade)'}, error:{text:'Error',color:'var(--red)'} };
       const s = states[state] ?? {};
       indicator.textContent = s.text ?? '';
       indicator.style.color = s.color ?? '';
+      if (state === 'saved') markClean();
+      if (state === 'pending') markDirty();
     }
 
     function scheduleAutosave() {

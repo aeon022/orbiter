@@ -95,7 +95,9 @@ entryRoutes.post('/:collectionId/entries/:slug/duplicate', (c) => {
   const db    = openPod(c.get('podPath'));
   const entry = db.getEntry(collectionId, slug);
   if (!entry) { db.close(); return c.json({ error: 'Not found' }, 404); }
-  const newSlug = slug + '-copy';
+  let newSlug = slug + '-copy';
+  let i = 2;
+  while (db.getEntry(collectionId, newSlug)) newSlug = `${slug}-copy-${i++}`;
   db.createEntry(collectionId, newSlug, entry.data, 'draft');
   const created = db.getEntry(collectionId, newSlug);
   db.close();
