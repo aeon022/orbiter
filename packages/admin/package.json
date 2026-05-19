@@ -1,6 +1,6 @@
 {
   "name": "@a83/orbiter-admin",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Standalone admin server for Orbiter CMS",
   "type": "module",
   "main": "./src/server.js",
@@ -26,7 +26,7 @@
     "directory": "packages/admin"
   },
   "dependencies": {
-    "@a83/orbiter-core": "^0.3.1",
+    "@a83/orbiter-core": "^0.3.2",
     "@hono/node-server": "^1.14.4",
     "hono": "^4.7.11"
   }
