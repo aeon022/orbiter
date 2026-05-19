@@ -39,6 +39,12 @@
     .filter-tab { display:inline-flex; align-items:center; padding:3px 11px; font-size:10px; font-family:var(--mono); border-radius:20px; border:1px solid var(--line); background:none; color:var(--muted); cursor:pointer; transition:all 0.12s; }
     .filter-tab:hover { color:var(--text); border-color:var(--mid); }
     .filter-tab.active { background:var(--accent-bg); color:var(--accent); border-color:var(--accent); }
+    .drag-col { width:24px; padding:0 4px !important; text-align:center; }
+    .drag-handle { color:var(--line); cursor:grab; font-size:13px; line-height:1; user-select:none; display:block; padding:4px 2px; }
+    .drag-handle:hover { color:var(--muted); }
+    tr.drag-over td { border-top:2px solid var(--accent); }
+    tr[draggable="true"] { transition:opacity .15s; }
+    tr.dragging { opacity:.4; }
   </style>
 </head>
 <body>
@@ -158,10 +164,12 @@
         wrap.innerHTML = '<div class="empty"><div class="empty-icon">◈</div>No entries yet</div>';
         return;
       }
+      const canSort = !activeFilter;
       wrap.innerHTML = `
         <table>
           <thead>
             <tr>
+              ${canSort ? '<th class="drag-col"></th>' : ''}
               <th class="cb-col"><input type="checkbox" id="check-all" title="Select all" /></th>
               <th>Title / Slug</th><th>Status</th><th>Updated</th><th></th>
             </tr>
@@ -172,7 +180,8 @@
               const updated = e.updated_at ? e.updated_at.split(' ')[0] : '—';
               const nextStatus = e.status === 'published' ? 'draft' : 'published';
               const toggleLabel = e.status === 'published' ? 'Unpublish' : 'Publish';
-              return `<tr data-slug="${e.slug}">
+              return `<tr data-slug="${e.slug}"${canSort ? ' draggable="true"' : ''}>
+                ${canSort ? `<td class="drag-col"><span class="drag-handle" title="Drag to reorder">⠿</span></td>` : ''}
                 <td class="cb-col"><input type="checkbox" class="row-cb" data-slug="${e.slug}" ${selected.has(e.slug) ? 'checked' : ''} /></td>
                 <td>
                   <div style="color:var(--heading);font-weight:500">${title}</div>
@@ -211,6 +220,47 @@
           updateBulkBar();
         });
       });
+
+      // Drag-to-reorder
+      if (canSort) {
+        let dragSrc = null;
+        wrap.querySelectorAll('tr[draggable]').forEach(row => {
+          row.addEventListener('dragstart', e => {
+            dragSrc = row;
+            row.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+          });
+          row.addEventListener('dragend', () => {
+            dragSrc = null;
+            wrap.querySelectorAll('tr').forEach(r => r.classList.remove('dragging','drag-over'));
+          });
+          row.addEventListener('dragover', e => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            wrap.querySelectorAll('tr').forEach(r => r.classList.remove('drag-over'));
+            if (row !== dragSrc) row.classList.add('drag-over');
+          });
+          row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+          row.addEventListener('drop', async e => {
+            e.preventDefault();
+            row.classList.remove('drag-over');
+            if (!dragSrc || dragSrc === row) return;
+            const tbody = row.closest('tbody');
+            const rows  = [...tbody.querySelectorAll('tr')];
+            const fromIdx = rows.indexOf(dragSrc);
+            const toIdx   = rows.indexOf(row);
+            tbody.removeChild(dragSrc);
+            if (fromIdx < toIdx) row.after(dragSrc);
+            else row.before(dragSrc);
+            const slugs = [...tbody.querySelectorAll('tr')].map(r => r.dataset.slug);
+            await fetch(`/api/collections/${colId}/entries/reorder`, {
+              method: 'PATCH', credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ slugs }),
+            });
+          });
+        });
+      }
 
       // Status toggle
       wrap.querySelectorAll('.status-toggle').forEach(btn => {

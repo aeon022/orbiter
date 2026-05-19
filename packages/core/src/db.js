@@ -87,6 +87,7 @@ export class OrbiterDB {
     // Migrations: add columns that didn't exist in older pods
     try { this.db.exec(`ALTER TABLE _media ADD COLUMN folder TEXT NOT NULL DEFAULT ''`); } catch {}
     try { this.db.exec(`ALTER TABLE _collections ADD COLUMN singleton INTEGER NOT NULL DEFAULT 0`); } catch {}
+    try { this.db.exec(`ALTER TABLE _entries ADD COLUMN sort_order INTEGER`); } catch {}
 
     // Migration: make _media.data nullable, add url + path for external backends
     const mediaCols = this.db.prepare('PRAGMA table_info(_media)').all().map(c => c.name);
@@ -136,8 +137,8 @@ export class OrbiterDB {
   // ── Entries ────────────────────────────────
   getEntries(collectionId, { status } = {}) {
     const q = status
-      ? this.db.prepare('SELECT * FROM _entries WHERE collection_id = ? AND status = ? ORDER BY updated_at DESC')
-      : this.db.prepare('SELECT * FROM _entries WHERE collection_id = ? ORDER BY updated_at DESC');
+      ? this.db.prepare('SELECT * FROM _entries WHERE collection_id = ? AND status = ? ORDER BY COALESCE(sort_order,999999) ASC, updated_at DESC')
+      : this.db.prepare('SELECT * FROM _entries WHERE collection_id = ? ORDER BY COALESCE(sort_order,999999) ASC, updated_at DESC');
 
     const rows = status
       ? q.all(collectionId, status)

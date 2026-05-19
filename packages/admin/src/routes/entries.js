@@ -11,6 +11,19 @@ function fireWebhook(podPath) {
   if (url) fetch(url, { method: 'POST' }).catch(() => {});
 }
 
+// PATCH /api/collections/:id/entries/reorder — set sort_order by slug array
+entryRoutes.patch('/:collectionId/entries/reorder', async (c) => {
+  const { collectionId } = c.req.param();
+  const { slugs } = await c.req.json();
+  if (!Array.isArray(slugs)) return c.json({ error: 'slugs must be an array' }, 400);
+  const db  = openPod(c.get('podPath'));
+  const set = db.db.prepare('UPDATE _entries SET sort_order = ? WHERE collection_id = ? AND slug = ?');
+  const tx  = db.db.transaction(() => { slugs.forEach((slug, i) => set.run(i, collectionId, slug)); });
+  tx();
+  db.close();
+  return c.json({ ok: true });
+});
+
 // GET /api/collections/:id/entries?status=draft|published
 entryRoutes.get('/:collectionId/entries', (c) => {
   const { collectionId } = c.req.param();
