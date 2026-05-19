@@ -13,10 +13,10 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 
 <h2>Commands</h2>
 <pre># Extract BLOBs from pod to files (run before git commit)
-orbiter unpack --pod ./content.pod --out ./media
+orbiter unpack --pod ./content.pod --media-dir ./media
 
 # Restore BLOBs from files into pod (run at build time)
-orbiter pack --pod ./content.pod --dir ./media</pre>
+orbiter pack --pod ./content.pod --media-dir ./media</pre>
 
 <h2>Workflow</h2>
 <pre>1. Edit content in the Orbiter admin
@@ -41,7 +41,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: &#123; node-version: '20' &#125;
       - run: npm install
-      - run: npx orbiter pack --pod ./content.pod --dir ./media
+      - run: npx orbiter pack --pod ./content.pod --media-dir ./media
       - run: npx astro build
       - uses: actions/deploy-pages@v4</pre>
 

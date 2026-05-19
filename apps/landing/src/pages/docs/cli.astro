@@ -37,13 +37,13 @@ orbiter export --pod ./content.pod --out ./export --collection posts</pre>
 
 <h2>orbiter unpack</h2>
 <p>Extract media BLOBs from the pod to regular files. Run before <code>git commit</code> for platforms with ephemeral filesystems.</p>
-<pre>orbiter unpack --pod ./content.pod --out ./media</pre>
+<pre>orbiter unpack --pod ./content.pod --media-dir ./media</pre>
 
 <p>After unpacking, BLOBs are removed from <code>_media.data</code> and a <code>storage.mode=git</code> flag is set in <code>_meta</code>. See <a href="/docs/git-sync">Git sync mode</a>.</p>
 
 <h2>orbiter pack</h2>
 <p>Restore media BLOBs from files back into the pod. Run at build time before <code>astro build</code>.</p>
-<pre>orbiter pack --pod ./content.pod --dir ./media</pre>
+<pre>orbiter pack --pod ./content.pod --media-dir ./media</pre>
 
 <h2>All options</h2>
 
@@ -59,9 +59,9 @@ orbiter export --pod ./content.pod --out ./export --collection posts</pre>
     <tr><td><code>export</code></td><td><code>--format</code></td><td><code>json</code> (default) or <code>md</code></td></tr>
     <tr><td><code>export</code></td><td><code>--collection</code></td><td>Single collection to export</td></tr>
     <tr><td><code>unpack</code></td><td><code>--pod</code></td><td>Path to the pod file</td></tr>
-    <tr><td><code>unpack</code></td><td><code>--out</code></td><td>Output directory for media files</td></tr>
+    <tr><td><code>unpack</code></td><td><code>--media-dir</code></td><td>Output directory for media files (default: <code>./media</code>)</td></tr>
     <tr><td><code>pack</code></td><td><code>--pod</code></td><td>Path to the pod file</td></tr>
-    <tr><td><code>pack</code></td><td><code>--dir</code></td><td>Directory containing media files</td></tr>
+    <tr><td><code>pack</code></td><td><code>--media-dir</code></td><td>Directory containing media files (default: <code>./media</code>)</td></tr>
   </tbody>
 </table>
 

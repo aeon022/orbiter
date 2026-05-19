@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@a83/orbiter-integration": "latest",
-    "@astrojs/node": "^10.0.0",
-    "astro": "^6.0.0"
+    "@astrojs/node": "^9.0.0",
+    "astro": "^5.0.0"
   }
 }

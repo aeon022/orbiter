@@ -88,7 +88,7 @@ export/
 Extract media BLOBs from the pod to regular files. Use before `git commit` when hosting on platforms with ephemeral filesystems (Netlify, Vercel, GitHub Pages).
 
 ```bash
-orbiter unpack --pod ./content.pod --out ./media
+orbiter unpack --pod ./content.pod --media-dir ./media
 ```
 
 After unpacking, BLOBs are removed from `_media.data` and a `storage.mode=git` flag is set in `_meta`. The pod stays small for git — media files live alongside it.
@@ -100,7 +100,7 @@ After unpacking, BLOBs are removed from `_media.data` and a `storage.mode=git` f
 Restore media BLOBs from files back into the pod. Run at build time before `astro build`.
 
 ```bash
-orbiter pack --pod ./content.pod --dir ./media
+orbiter pack --pod ./content.pod --media-dir ./media
 ```
 
 Reads each file in `./media`, inserts it as a BLOB, and clears the `storage.mode` flag.
@@ -137,7 +137,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
       - run: npm install
-      - run: npx orbiter pack --pod ./content.pod --dir ./media
+      - run: npx orbiter pack --pod ./content.pod --media-dir ./media
       - run: npx astro build
       - uses: actions/deploy-pages@v4
 ```
