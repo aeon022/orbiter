@@ -1,6 +1,6 @@
 {
   "name": "@a83/orbiter-admin",
-  "version": "0.3.7",
+  "version": "0.3.9",
   "description": "Standalone admin server for Orbiter CMS",
   "type": "module",
   "main": "./src/server.js",
