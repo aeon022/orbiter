@@ -38,6 +38,10 @@
     .section-label { font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
     .section-label::before { content:"—"; color:var(--gold); }
     .field-rows { background:var(--bg2); border:1px solid var(--line); margin-bottom:14px; border-radius:var(--radius); overflow:hidden; min-height:10px; }
+    .fld-drag { cursor:grab; color:var(--muted); opacity:0.4; font-size:13px; padding:0 4px; user-select:none; }
+    .fld-drag:hover { opacity:0.9; }
+    .fld-row-dragging { opacity:0.4; }
+    .fld-row-over { outline:2px solid var(--accent); outline-offset:-2px; }
     .editor-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:20px 0 0; border-top:1px solid var(--line); margin-top:20px; }
     .banner { padding:8px 16px; font-size:10px; display:flex; align-items:center; gap:6px; border-radius:var(--radius); margin-bottom:14px; }
     .banner-ok::before  { content:"✓ "; }
@@ -163,7 +167,7 @@
     }
 
     const S = {
-      row:   'display:grid;grid-template-columns:1fr 260px;align-items:start;gap:20px;padding:14px 18px;border-bottom:1px solid var(--line2);background:var(--bg2);',
+      row:   'display:grid;grid-template-columns:20px 1fr 260px;align-items:start;gap:16px;padding:14px 18px 14px 10px;border-bottom:1px solid var(--line2);background:var(--bg2);',
       input: 'width:100%;background:var(--bg0);border:1px solid var(--line);padding:7px 9px;color:var(--heading);font-family:var(--mono);font-size:11px;outline:none;appearance:none;box-sizing:border-box;',
       iKey:  'width:100%;background:var(--bg0);border:1px solid var(--line);padding:7px 9px;color:var(--heading);font-family:var(--mono);font-size:12px;outline:none;box-sizing:border-box;',
       iLbl:  'width:100%;background:var(--bg0);border:1px solid var(--line);padding:6px 9px;color:var(--muted);font-family:var(--mono);font-size:10px;outline:none;box-sizing:border-box;',
@@ -185,7 +189,9 @@
     function addFieldRow(container, key='', label='', type='string', required=false, options='', collection='', multiple=true) {
       const div = document.createElement('div');
       div.style.cssText = S.row;
+      div.setAttribute('draggable','true');
       div.innerHTML = `
+        <span class="fld-drag" title="Drag to reorder">⠿</span>
         <div style="display:flex;flex-direction:column;gap:6px;">
           <input class="f-key"   style="${S.iKey}" placeholder="field_key"  value="${escHtml(key)}"   />
           <input class="f-label" style="${S.iLbl}" placeholder="Field label" value="${escHtml(label)}" />
@@ -235,6 +241,40 @@
         div.querySelector('.fr-opts-relation').style.display = this.value==='relation' ?'flex':'none';
       });
       container.appendChild(div);
+    }
+
+    function enableFieldDrag(container) {
+      let dragSrc = null;
+      container.addEventListener('dragstart', e => {
+        const row = e.target.closest('[draggable]');
+        if (!row || !row.querySelector('.fld-drag')?.contains(e.target) && e.target.className !== 'fld-drag') { e.preventDefault(); return; }
+        dragSrc = row;
+        row.classList.add('fld-row-dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      container.addEventListener('dragend', () => {
+        dragSrc?.classList.remove('fld-row-dragging');
+        container.querySelectorAll('.fld-row-over').forEach(r => r.classList.remove('fld-row-over'));
+        dragSrc = null;
+      });
+      container.addEventListener('dragover', e => {
+        e.preventDefault();
+        const row = e.target.closest('[draggable]');
+        container.querySelectorAll('.fld-row-over').forEach(r => r.classList.remove('fld-row-over'));
+        if (row && row !== dragSrc) row.classList.add('fld-row-over');
+      });
+      container.addEventListener('drop', e => {
+        e.preventDefault();
+        const row = e.target.closest('[draggable]');
+        if (!dragSrc || !row || row === dragSrc) return;
+        row.classList.remove('fld-row-over');
+        const rows  = [...container.children];
+        const from  = rows.indexOf(dragSrc);
+        const to    = rows.indexOf(row);
+        container.removeChild(dragSrc);
+        if (from < to) row.after(dragSrc);
+        else row.before(dragSrc);
+      });
     }
 
     function serializeSchema(container) {
@@ -296,8 +336,10 @@
       document.getElementById('new-col-id').addEventListener('input',e=>{
         e.target.value=e.target.value.toLowerCase().replace(/[^a-z0-9_]/g,'_').replace(/^_+/,'');
       });
-      document.getElementById('btn-add-new').addEventListener('click',()=>addFieldRow(document.getElementById('new-field-rows')));
-      addFieldRow(document.getElementById('new-field-rows'),'title','Title','string',true);
+      const newRowsEl = document.getElementById('new-field-rows');
+      enableFieldDrag(newRowsEl);
+      document.getElementById('btn-add-new').addEventListener('click',()=>addFieldRow(newRowsEl));
+      addFieldRow(newRowsEl,'title','Title','string',true);
       document.getElementById('btn-save-new').addEventListener('click',async()=>{
         const id=document.getElementById('new-col-id').value.trim();
         const label=document.getElementById('new-col-label').value.trim();
@@ -356,6 +398,7 @@
         </div>
       `;
       const rowsEl=document.getElementById('edit-field-rows');
+      enableFieldDrag(rowsEl);
       Object.entries(schema).forEach(([k,f])=>addFieldRow(rowsEl,k,f.label??k,f.type??'string',!!f.required,(f.options??[]).join(', '),f.collection??'',f.multiple!==false));
       document.getElementById('btn-add-edit').addEventListener('click',()=>addFieldRow(rowsEl));
       // Load existing preview URL for this collection

@@ -1,7 +1,7 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
 ---
-<DocsLayout title="orbiter:collections" current="/docs/collections-api" prev={{ href: '/docs/media-backends', title: 'Media backends' }} next={{ href: '/docs/json-api', title: 'JSON API' }}>
+<DocsLayout title="orbiter:collections" current="/docs/collections-api" prev={{ href: '/docs/media-backends', title: 'Media backends' }} next={{ href: '/docs/typescript', title: 'TypeScript' }}>
 
 <h1>orbiter:collections</h1>
 <p class="lead">A Vite virtual module that gives you typed access to your published content in Astro pages. Snapshots at build time — zero runtime database access.</p>
@@ -83,6 +83,22 @@ export async function getStaticPaths() &#123;
 <h2>Media URLs</h2>
 <pre>&lt;img src=&#123;`/orbiter/media/$&#123;post.data.image&#125;`&#125; alt="" /&gt;</pre>
 <p>Works regardless of which media backend is configured. For external backends, <code>/orbiter/media/[id]</code> issues a <code>302</code> redirect to the CDN or original URL.</p>
+
+<h2>orbiter:db</h2>
+<p>A second virtual module that exposes the resolved pod path for use in your own Astro server routes or API endpoints.</p>
+<pre>import &#123; podPath &#125; from 'orbiter:db';
+import &#123; openPod &#125; from '@a83/orbiter-core';
+
+// src/pages/api/my-endpoint.js
+export async function GET() &#123;
+  const db      = openPod(podPath);
+  const entries = db.getEntries('posts');
+  db.close();
+  return new Response(JSON.stringify(entries), &#123;
+    headers: &#123; 'Content-Type': 'application/json' &#125;
+  &#125;);
+&#125;</pre>
+<div class="callout"><code>orbiter:db</code> only works in server-rendered routes (<code>output: 'server'</code> or <code>'hybrid'</code>). In static output there is no runtime to open the pod.</div>
 
 <h2>Relation fields</h2>
 <p>Relation fields are resolved at build time. The raw UUID reference is replaced with the full <code>Entry</code> object of the related entry.</p>

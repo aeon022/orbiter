@@ -4,8 +4,40 @@ import { openPod, verifyPassword, generateToken } from '@a83/orbiter-core';
 
 export const authRoutes = new Hono();
 
+const LOGIN_MAX     = 5;
+const LOGIN_WINDOW  = 15 * 60 * 1000; // 15 min
+const loginAttempts = new Map(); // ip → { count, resetAt }
+
+function getRealIp(c) {
+  return c.req.header('x-forwarded-for')?.split(',')[0].trim()
+    ?? c.req.header('x-real-ip')
+    ?? 'unknown';
+}
+
+function checkRateLimit(ip) {
+  const now  = Date.now();
+  const rec  = loginAttempts.get(ip);
+  if (rec && rec.resetAt > now && rec.count >= LOGIN_MAX) return false;
+  if (!rec || rec.resetAt <= now) loginAttempts.set(ip, { count: 0, resetAt: now + LOGIN_WINDOW });
+  return true;
+}
+
+function recordFailure(ip) {
+  const rec = loginAttempts.get(ip);
+  if (rec) rec.count++;
+}
+
+function clearAttempts(ip) {
+  loginAttempts.delete(ip);
+}
+
 // POST /api/auth/login
 authRoutes.post('/login', async (c) => {
+  const ip = getRealIp(c);
+  if (!checkRateLimit(ip)) {
+    return c.json({ error: 'Too many login attempts. Try again in 15 minutes.' }, 429);
+  }
+
   const { username, password } = await c.req.json();
   if (!username || !password) return c.json({ error: 'Missing credentials' }, 400);
 
@@ -13,8 +45,10 @@ authRoutes.post('/login', async (c) => {
   const user = db.getUserByUsername(username);
   if (!user || !(await verifyPassword(password, user.password))) {
     db.close();
+    recordFailure(ip);
     return c.json({ error: 'Invalid username or password' }, 401);
   }
+  clearAttempts(ip);
 
   const token     = generateToken();
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
