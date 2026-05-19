@@ -1,5 +1,13 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const { version: adminVersion } = JSON.parse(
+  readFileSync(join(__dirname, '../../package.json'), 'utf8')
+);
 
 export const infoRoutes = new Hono();
 
@@ -12,8 +20,9 @@ infoRoutes.get('/', (c) => {
     label:  col.label,
     total:  db.getEntries(col.id).length,
     parent: db.getMeta(`collection.${col.id}.parent`) ?? null,
+    singleton: !!col.singleton,
   }));
   const version = db.getMeta('format_version') ?? '1';
   db.close();
-  return c.json({ podPath, formatVersion: version, collections: cols });
+  return c.json({ podPath, formatVersion: version, adminVersion, collections: cols });
 });

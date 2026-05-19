@@ -89,6 +89,15 @@
           var total = collections.reduce(function (s, c) { return s + c.total; }, 0);
           podInfoEl.textContent = collections.length + ' collections · ' + total + ' entries';
         }
+
+        // version line
+        var podVersionEl = sidebar.querySelector('#pod-version');
+        if (podVersionEl) {
+          var parts = [];
+          if (info.adminVersion) parts.push('Orbiter v' + info.adminVersion);
+          if (info.formatVersion) parts.push('pod v' + info.formatVersion);
+          podVersionEl.textContent = parts.join(' · ');
+        }
       })
       .catch(function () {});
   });
