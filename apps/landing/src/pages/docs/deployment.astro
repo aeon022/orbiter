@@ -20,9 +20,12 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 </table>
 
 <h2>Node.js (recommended)</h2>
-<pre>npm install @astrojs/node@^9
+<pre>npm install @astrojs/node@^10
 npx astro build
 node dist/server/entry.mjs</pre>
+
+<p>The admin runs separately on port 4322:</p>
+<pre>ORBITER_POD=/path/to/content.pod node node_modules/@a83/orbiter-admin/src/server.js</pre>
 
 <h2>Docker</h2>
 <pre>FROM node:20-alpine
@@ -38,8 +41,64 @@ CMD ["node", "dist/server/entry.mjs"]</pre>
 
 <p>Mount the pod as a volume so it persists across container restarts and can be shared with the admin container.</p>
 
-<h2>Railway / Render / Fly.io</h2>
-<p>These platforms support persistent volumes. Attach a volume and point <code>ORBITER_POD</code> to a path on it. The pod survives deploys and restarts.</p>
+<h2>Railway</h2>
+<p>Railway supports persistent volumes and is the easiest cloud option for Orbiter.</p>
+
+<ol>
+  <li>Push your project to GitHub and connect the repo in Railway.</li>
+  <li>In Railway → your service → <strong>Volumes</strong>, add a volume mounted at <code>/data</code>.</li>
+  <li>Set environment variables:
+    <pre>ORBITER_POD=/data/content.pod
+PORT=4321</pre>
+  </li>
+  <li>Set the start command:
+    <pre>node dist/server/entry.mjs</pre>
+  </li>
+  <li>Add a <strong>second service</strong> for the admin, same repo, different start command:
+    <pre>ORBITER_POD=/data/content.pod PORT=4322 node node_modules/@a83/orbiter-admin/src/server.js</pre>
+    Mount the same volume at <code>/data</code> so both services share the pod.
+  </li>
+</ol>
+
+<div class="callout"><strong>Tip:</strong> Set <code>ADMIN_ORIGIN=https://your-site.up.railway.app</code> on the admin service so CORS allows requests from your frontend domain.</div>
+
+<h2>Fly.io</h2>
+<p>Fly.io uses persistent volumes via <code>fly volumes</code>.</p>
+
+<ol>
+  <li>Install the Fly CLI and run <code>fly launch</code> in your project root. Accept the generated <code>fly.toml</code>.</li>
+  <li>Create a volume:
+    <pre>fly volumes create orbiter_data --size 1 --region fra</pre>
+  </li>
+  <li>Mount it in <code>fly.toml</code>:
+    <pre>[mounts]
+  source      = "orbiter_data"
+  destination = "/data"</pre>
+  </li>
+  <li>Set the pod path:
+    <pre>fly secrets set ORBITER_POD=/data/content.pod</pre>
+  </li>
+  <li>Deploy:
+    <pre>fly deploy</pre>
+  </li>
+</ol>
+
+<p>Run the admin as a second Fly app pointing at the same volume, or deploy both processes in one app using a <code>Procfile</code>:</p>
+<pre>web:   node dist/server/entry.mjs
+admin: node node_modules/@a83/orbiter-admin/src/server.js</pre>
+
+<h2>Render</h2>
+<ol>
+  <li>Create a new <strong>Web Service</strong> from your GitHub repo.</li>
+  <li>Build command: <code>npm install &amp;&amp; npx astro build</code></li>
+  <li>Start command: <code>node dist/server/entry.mjs</code></li>
+  <li>Add a <strong>Disk</strong> (Render's persistent storage) mounted at <code>/data</code>.</li>
+  <li>Set <code>ORBITER_POD=/data/content.pod</code> as an environment variable.</li>
+  <li>For the admin, create a second Web Service with start command:
+    <pre>node node_modules/@a83/orbiter-admin/src/server.js</pre>
+    Same disk, same mount path.
+  </li>
+</ol>
 
 <h2>Netlify / Vercel (with separate admin)</h2>
 <p>Run the admin on a VPS or Railway. Deploy the Astro site statically to Netlify/Vercel. Use the build webhook to trigger a rebuild when content changes.</p>
@@ -55,11 +114,10 @@ CMD ["node", "dist/server/entry.mjs"]</pre>
 <h2>Astro config for static hosting</h2>
 <pre>// astro.config.mjs
 export default defineConfig(&#123;
-  output: 'static',      // fully static, no SSR
+  output: 'static',
   integrations: [orbiter(&#123; pod: './content.pod' &#125;)],
-  // No adapter needed for static output
 &#125;);</pre>
 
-<div class="callout callout-warn"><strong>Static output</strong> means no <code>/orbiter/media/[id]</code> route at runtime — media must use an external backend (github, s3) or be served from a CDN. Use <code>output: 'hybrid'</code> or <code>'server'</code> to keep the media route.</div>
+<div class="callout"><strong>Static output</strong> means no <code>/orbiter/media/[id]</code> route at runtime — media must use an external backend (S3, GitHub) or a CDN. Use <code>output: 'hybrid'</code> or <code>'server'</code> to keep the media route alive.</div>
 
 </DocsLayout>

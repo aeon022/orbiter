@@ -24,7 +24,7 @@ authRoutes.post('/login', async (c) => {
 
   setCookie(c, 'orb_sess', token, {
     httpOnly: true,
-    sameSite: 'Lax',
+    sameSite: 'Strict',
     path: '/',
     maxAge: 30 * 24 * 60 * 60,
   });

@@ -8,6 +8,8 @@ import { dirname, join } from 'node:path';
 // Ensure CWD is the package root so serveStatic finds ./public
 const __dirname = dirname(fileURLToPath(import.meta.url));
 process.chdir(join(__dirname, '..'));
+import { readFileSync } from 'node:fs';
+import { openPod }          from '@a83/orbiter-core';
 import { authRoutes }       from './routes/auth.js';
 import { collectionRoutes } from './routes/collections.js';
 import { entryRoutes }      from './routes/entries.js';
@@ -21,6 +23,10 @@ import { githubRoutes }     from './routes/github.js';
 import { infoRoutes }       from './routes/info.js';
 import { importRoutes }     from './routes/import.js';
 import { requireAuth }      from './middleware/auth.js';
+
+const { version: adminVersion } = JSON.parse(
+  readFileSync(join(__dirname, '../package.json'), 'utf8')
+);
 
 const POD_PATH = process.env.ORBITER_POD;
 if (!POD_PATH) {
@@ -68,7 +74,11 @@ export function createApp(podPath) {
 
   app.route('/api', api);
 
-  app.get('/health', (c) => c.json({ ok: true, pod: podPath }));
+  app.get('/health', (c) => {
+    let podOk = false;
+    try { const db = openPod(podPath); db.close(); podOk = true; } catch {}
+    return c.json({ ok: podOk, version: adminVersion, pod: podPath, uptime: Math.floor(process.uptime()) });
+  });
 
   // Redirect root to login
   app.get('/', (c) => c.redirect('/login.html'));

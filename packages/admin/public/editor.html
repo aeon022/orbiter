@@ -1201,9 +1201,13 @@
       const b=getFocusedBlock(); if (!b) return;
       // Skip block-level Enter/Backspace handling when focus is inside a table cell
       if (b.dataset.type==='table') return;
-      if (e.key==='Enter'&&!e.shiftKey) {
+      if (e.key==='Enter') {
         e.preventDefault();
-        const type=b.dataset.type; const newType=(type==='ul'||type==='ol')?type:'p';
+        const type=b.dataset.type;
+        if (type==='pre' && !e.shiftKey) { document.execCommand('insertText',false,'\n'); syncToHidden(); scheduleAutosave(); return; }
+        if (type==='pre' &&  e.shiftKey) { const next=createBlock('p',''); b.after(next); focusStart(next); syncToHidden(); scheduleAutosave(); updatePreview(); return; }
+        if (e.shiftKey) return;
+        const newType=(type==='ul'||type==='ol')?type:'p';
         const next=createBlock(newType,''); b.after(next); focusStart(next);
         syncToHidden(); scheduleAutosave(); updatePreview(); return;
       }
@@ -1333,12 +1337,12 @@
       {label:'Heading 2',  icon:'H2',  hint:'##',  type:'h2'},
       {label:'Heading 3',  icon:'H3',  hint:'###', type:'h3'},
       {label:'Quote',      icon:'❝',   hint:'>',   type:'blockquote'},
-      {label:'Code block', icon:'{}',  hint:'```', type:'pre'},
+      {label:'Code block', icon:'{}',  hint:'code', type:'pre'},
       {label:'Callout',    icon:'ℹ',   hint:'note', type:'callout'},
       {label:'Table',      icon:'▦',   hint:'tbl',  type:'table'},
       {label:'List',       icon:'·',   hint:'-',   type:'ul'},
       {label:'Numbered',   icon:'1.',  hint:'1.',  type:'ol'},
-      {label:'Divider',    icon:'—',   hint:'---', type:'hr'},
+      {label:'Divider',    icon:'—',   hint:'hr',  type:'hr'},
       {label:'Image',      icon:'⊡',   hint:'img', type:'image'},
       {label:'Video',      icon:'▶',   hint:'vid', type:'video'},
     ];

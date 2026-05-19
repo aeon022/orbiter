@@ -311,37 +311,20 @@
     });
 
     // Bulk actions
-    document.getElementById('bulk-publish').addEventListener('click', async () => {
-      await Promise.all([...selected].map(slug =>
-        fetch(`/api/collections/${colId}/entries/${slug}/status`, {
-          method: 'PATCH', credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'published' }),
-        })
-      ));
+    async function bulkAction(action) {
+      const slugs = [...selected];
+      if (!slugs.length) return;
+      if (action === 'delete' && !confirm(`Delete ${slugs.length} entr${slugs.length !== 1 ? 'ies' : 'y'}?`)) return;
+      await fetch(`/api/collections/${colId}/entries/bulk`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, slugs }),
+      });
       loadEntries();
-    });
-
-    document.getElementById('bulk-draft').addEventListener('click', async () => {
-      await Promise.all([...selected].map(slug =>
-        fetch(`/api/collections/${colId}/entries/${slug}/status`, {
-          method: 'PATCH', credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'draft' }),
-        })
-      ));
-      loadEntries();
-    });
-
-    document.getElementById('bulk-delete').addEventListener('click', async () => {
-      if (!confirm(`Delete ${selected.size} entr${selected.size !== 1 ? 'ies' : 'y'}?`)) return;
-      await Promise.all([...selected].map(slug =>
-        fetch(`/api/collections/${colId}/entries/${slug}`, {
-          method: 'DELETE', credentials: 'include',
-        })
-      ));
-      loadEntries();
-    });
+    }
+    document.getElementById('bulk-publish').addEventListener('click', () => bulkAction('publish'));
+    document.getElementById('bulk-draft').addEventListener('click',   () => bulkAction('draft'));
+    document.getElementById('bulk-delete').addEventListener('click',  () => bulkAction('delete'));
 
     // New entry modal
     const overlay = document.getElementById('modal-overlay');

@@ -11,6 +11,27 @@ function fireWebhook(podPath) {
   if (url) fetch(url, { method: 'POST' }).catch(() => {});
 }
 
+// POST /api/collections/:id/entries/bulk — bulk publish or delete
+entryRoutes.post('/:collectionId/entries/bulk', async (c) => {
+  const { collectionId } = c.req.param();
+  const { action, slugs } = await c.req.json();
+  if (!Array.isArray(slugs) || !slugs.length) return c.json({ error: 'slugs required' }, 400);
+  if (!['publish', 'draft', 'delete'].includes(action))  return c.json({ error: 'Invalid action' }, 400);
+  const db = openPod(c.get('podPath'));
+  if (action === 'delete') {
+    slugs.forEach(slug => db.deleteEntry(collectionId, slug));
+  } else {
+    const status = action === 'publish' ? 'published' : 'draft';
+    slugs.forEach(slug => {
+      const entry = db.getEntry(collectionId, slug);
+      if (entry) db.updateEntry(collectionId, slug, { slug, data: entry.data, status });
+    });
+  }
+  db.close();
+  if (action === 'publish') fireWebhook(c.get('podPath'));
+  return c.json({ ok: true, count: slugs.length });
+});
+
 // PATCH /api/collections/:id/entries/reorder — set sort_order by slug array
 entryRoutes.patch('/:collectionId/entries/reorder', async (c) => {
   const { collectionId } = c.req.param();
