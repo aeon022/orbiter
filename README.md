@@ -6,7 +6,7 @@
 
 [![npm](https://img.shields.io/npm/v/@a83/orbiter-integration?color=8b7cf8&label=npm)](https://www.npmjs.com/package/@a83/orbiter-integration)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Astro](https://img.shields.io/badge/built%20for-Astro%205-FF5D01?logo=astro&logoColor=white)](https://astro.build)
+[![Astro](https://img.shields.io/badge/built%20for-Astro%206-FF5D01?logo=astro&logoColor=white)](https://astro.build)
 
 > Portable single-file CMS for Astro — everything in one `.pod` file.
 
@@ -166,10 +166,10 @@ npm install @a83/orbiter-admin
 Required to read content in your Astro pages via `orbiter:collections`:
 
 ```bash
-npm install @a83/orbiter-integration @astrojs/node@^9
+npm install @a83/orbiter-integration @astrojs/node@^10
 ```
 
-> `@astrojs/node@^9` targets Astro 5 — `@astrojs/node@^10` requires Astro 6.
+> `@astrojs/node@^10` targets Astro 6 — use `@astrojs/node@^9` for Astro 5.
 
 ### Other packages
 

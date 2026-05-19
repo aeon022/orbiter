@@ -4,7 +4,7 @@ Astro integration for [Orbiter CMS](https://orbiter.sh) — reads content from a
 
 [![npm](https://img.shields.io/npm/v/@a83/orbiter-integration?color=8b7cf8)](https://www.npmjs.com/package/@a83/orbiter-integration)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/aeon022/orbiter/blob/main/LICENSE)
-[![Astro](https://img.shields.io/badge/built%20for-Astro%205-FF5D01?logo=astro&logoColor=white)](https://astro.build)
+[![Astro](https://img.shields.io/badge/built%20for-Astro%206-FF5D01?logo=astro&logoColor=white)](https://astro.build)
 
 ---
 
@@ -20,9 +20,9 @@ The admin UI runs separately as [`@a83/orbiter-admin`](https://www.npmjs.com/pac
 npm install @a83/orbiter-integration @astrojs/node
 ```
 
-> Use `@astrojs/node@^9` for Astro 5. `@astrojs/node@^10` requires Astro 6.
+> `@astrojs/node@^10` targets Astro 6 — use `@astrojs/node@^9` for Astro 5.
 
-Requires **Node.js 20+** and **Astro 5+**.
+Requires **Node.js 20+** and **Astro 6+**.
 
 ---
 
