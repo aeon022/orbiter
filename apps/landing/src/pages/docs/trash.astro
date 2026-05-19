@@ -1,0 +1,49 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Trash" current="/docs/trash" prev={{ href: '/docs/editor', title: 'Editor' }} next={{ href: '/docs/activity-log', title: 'Activity log' }}>
+
+<h1>Trash</h1>
+<p class="lead">Deleting an entry moves it to Trash. It stays recoverable for as long as you want — nothing is permanently removed until you say so.</p>
+
+<h2>How it works</h2>
+<p>Every entry has a hidden <code>deleted_at</code> timestamp. A normal delete sets that timestamp; the entry disappears from all lists and API responses but the row stays in the database. Permanent deletion removes the row and all its version snapshots.</p>
+
+<h2>Accessing Trash</h2>
+<p>Open any collection in the admin. A <strong>Trash</strong> tab appears at the right end of the status filter bar. It shows only deleted entries, sorted by deletion date (newest first).</p>
+
+<h2>Per-entry actions</h2>
+<table>
+  <thead><tr><th>Action</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Restore</strong></td><td>Moves the entry back to drafts. Status is always set to <code>draft</code> after restore regardless of what it was before.</td></tr>
+    <tr><td><strong>Delete forever</strong></td><td>Hard-deletes the entry and all its version history. Not reversible.</td></tr>
+  </tbody>
+</table>
+
+<h2>Bulk actions</h2>
+<p>Select multiple entries in the Trash view using the checkboxes. The bulk bar shows two options:</p>
+<ul>
+  <li><strong>Restore selected</strong> — restores all checked entries to draft</li>
+  <li><strong>Delete forever</strong> — permanently removes all checked entries (confirmation required)</li>
+</ul>
+
+<h2>API</h2>
+<p>The soft-delete behaviour is fully exposed via the REST API:</p>
+
+<table>
+  <thead><tr><th>Endpoint</th><th>Action</th></tr></thead>
+  <tbody>
+    <tr><td><code>DELETE /api/collections/:id/entries/:slug</code></td><td>Soft-delete (move to trash)</td></tr>
+    <tr><td><code>POST /api/collections/:id/entries/:slug/restore</code></td><td>Restore to draft</td></tr>
+    <tr><td><code>DELETE /api/collections/:id/entries/:slug/permanent</code></td><td>Hard-delete</td></tr>
+    <tr><td><code>GET /api/collections/:id/entries?status=trash</code></td><td>List trashed entries</td></tr>
+  </tbody>
+</table>
+
+<p>The bulk endpoint also supports <code>restore</code> and <code>permanent</code> actions:</p>
+<pre>POST /api/collections/posts/entries/bulk
+&#123; "action": "restore",    "slugs": ["old-post", "another"] &#125;
+&#123; "action": "permanent",  "slugs": ["old-post"] &#125;</pre>
+
+</DocsLayout>

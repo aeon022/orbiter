@@ -127,7 +127,7 @@ const faqs = [
   },
   {
     q: 'Is it production-ready?',
-    a: 'Orbiter is at v0.3.3 — published to npm, actively maintained, and used in real projects. The API may evolve before v1.0. It\'s suitable for personal sites, client projects, and small teams. Check the GitHub issues for anything relevant to your use case.',
+    a: 'Orbiter is at v0.3.9 — published to npm, actively maintained, and used in real projects. The API may evolve before v1.0. It\'s suitable for personal sites, client projects, and small teams. Check the GitHub issues for anything relevant to your use case.',
   },
   {
     q: 'What\'s the license?',
@@ -272,7 +272,7 @@ const faqs = [
     </div>
 
     <div class="hero-inner">
-      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">v0.3.3 — singletons, drag-sort & new blocks · Changelog →</a>
+      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">v0.3.9 — trash, activity log & draft preview · Changelog →</a>
       <h1>Your entire CMS<br />in <span>one file.</span></h1>
       <p class="hero-sub">
         Content, media, schema, users — all in a single <code>.pod</code> file.
@@ -449,6 +449,23 @@ const faqs = [
     <p class="section-lead reveal reveal-delay-1">Recent updates and improvements to Orbiter.</p>
 
     <div class="updates-feed">
+
+      <div class="update-card reveal">
+        <div class="update-date">May<br />2026</div>
+        <div class="update-dot"></div>
+        <div class="update-body">
+          <div class="update-tag">v0.3.9</div>
+          <div class="update-title">Trash, activity log & draft preview</div>
+          <ul class="update-items">
+            <li><strong>Trash / soft delete</strong> — deleted entries move to a recoverable Trash tab. Restore to draft or permanently delete. Bulk restore and bulk purge supported.</li>
+            <li><strong>Activity log</strong> — every create, update, publish, unpublish, delete, and restore is recorded with the acting user and timestamp. Visible in the editor's meta panel.</li>
+            <li><strong>Draft preview</strong> — generate a preview token in Settings → API and attach it to your preview URL. <code>getPreviewEntry()</code> in <code>orbiter:collections</code> reads any draft directly from the pod, bypassing the published-only snapshot.</li>
+            <li><strong>Schema field drag-sort</strong> — reorder fields in the schema editor with a drag handle. Order is preserved in the stored schema.</li>
+            <li><strong>Rate limiting</strong> — login endpoint is limited to 5 attempts per 15 minutes per IP. Returns 429 with a human-readable message.</li>
+            <li><strong>TypeScript types</strong> — <code>orbiter-env.d.ts</code> is auto-generated at build time with per-collection interfaces and typed overloads for all query functions.</li>
+          </ul>
+        </div>
+      </div>
 
       <div class="update-card reveal">
         <div class="update-date">May<br />2026</div>

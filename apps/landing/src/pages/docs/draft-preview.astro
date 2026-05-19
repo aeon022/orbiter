@@ -1,0 +1,52 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Draft preview" current="/docs/draft-preview" prev={{ href: '/docs/activity-log', title: 'Activity log' }} next={{ href: '/docs/i18n', title: 'Multilingual (i18n)' }}>
+
+<h1>Draft preview</h1>
+<p class="lead">Open any draft entry in your live Astro site — without making it publicly visible — using a shared preview token.</p>
+
+<h2>How it works</h2>
+<ol>
+  <li>Generate a <strong>Preview token</strong> in <strong>Settings → API</strong>.</li>
+  <li>Set a <strong>Preview URL</strong> for a collection in <strong>Schema → (collection)</strong>. Use <code>&#123;slug&#125;</code> as a placeholder.</li>
+  <li>The editor's <strong>↗ Preview</strong> button opens <code>https://yoursite.com/posts/&#123;slug&#125;?preview_token=…</code>.</li>
+  <li>Your Astro page calls <code>getPreviewEntry()</code> with the token — which reads directly from the pod, bypassing the published-only snapshot.</li>
+</ol>
+
+<h2>Astro page setup</h2>
+<p>In a server-rendered Astro page (<code>output: 'server'</code> or <code>'hybrid'</code>):</p>
+<pre>---
+import &#123; getEntry, getPreviewEntry &#125; from 'orbiter:collections';
+
+const slug  = Astro.params.slug!;
+const token = Astro.url.searchParams.get('preview_token') ?? '';
+
+const entry = token
+  ? await getPreviewEntry('posts', slug, token)
+  : await getEntry('posts', slug);
+
+if (!entry) return Astro.redirect('/404');
+---
+&lt;article&gt;
+  &lt;h1&gt;&#123;entry.data.title&#125;&lt;/h1&gt;
+  &lt;div set:html=&#123;entry.data.body&#125; /&gt;
+&lt;/article&gt;</pre>
+
+<p><code>getPreviewEntry</code> validates the token against the one stored in your pod. If the token is wrong or missing it returns <code>null</code> — so unauthenticated visitors never see draft content.</p>
+
+<h2>Security</h2>
+<ul>
+  <li>The token is a 48-character hex string generated with <code>crypto.getRandomValues</code>. Regenerating it in Settings immediately invalidates any existing preview links.</li>
+  <li>Only one token exists at a time — it is shared across all editors who have access to the admin.</li>
+  <li>Preview URLs should only be shared with trusted reviewers.</li>
+</ul>
+
+<h2>TypeScript</h2>
+<p>The generated <code>orbiter-env.d.ts</code> includes typed overloads per collection:</p>
+<pre>import &#123; getPreviewEntry &#125; from 'orbiter:collections';
+
+// Returns PostEntry | null
+const entry = await getPreviewEntry('posts', slug, token);</pre>
+
+</DocsLayout>

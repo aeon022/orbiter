@@ -1,0 +1,36 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Activity log" current="/docs/activity-log" prev={{ href: '/docs/trash', title: 'Trash' }} next={{ href: '/docs/draft-preview', title: 'Draft preview' }}>
+
+<h1>Activity log</h1>
+<p class="lead">Every significant action on an entry — create, update, publish, unpublish, delete, restore — is recorded with the acting user and a timestamp.</p>
+
+<h2>Where to find it</h2>
+<p>Open any entry in the editor. The <strong>Meta</strong> panel on the right shows an <strong>Activity</strong> section at the bottom, listing the last 10 events in reverse chronological order.</p>
+
+<h2>Recorded events</h2>
+<table>
+  <thead><tr><th>Event</th><th>When it fires</th></tr></thead>
+  <tbody>
+    <tr><td><code>create</code></td><td>Entry is created for the first time</td></tr>
+    <tr><td><code>update</code></td><td>Entry is saved without a status change</td></tr>
+    <tr><td><code>publish</code></td><td>Status changes from <code>draft</code> → <code>published</code></td></tr>
+    <tr><td><code>unpublish</code></td><td>Status changes from <code>published</code> → <code>draft</code></td></tr>
+    <tr><td><code>delete</code></td><td>Entry is moved to trash</td></tr>
+    <tr><td><code>restore</code></td><td>Entry is restored from trash</td></tr>
+  </tbody>
+</table>
+
+<h2>User attribution</h2>
+<p>The username is stored directly in the audit record at write time. If a user is later deleted, their past activity remains visible — the log is never retroactively altered.</p>
+
+<h2>API</h2>
+<pre>GET /api/collections/:collectionId/entries/:slug/activity</pre>
+<p>Returns up to 20 recent events:</p>
+<pre>[
+  &#123; "id": "…", "username": "alice", "action": "publish", "created_at": "2026-05-01 14:32:00" &#125;,
+  &#123; "id": "…", "username": "bob",   "action": "update",  "created_at": "2026-05-01 13:11:00" &#125;
+]</pre>
+
+</DocsLayout>
