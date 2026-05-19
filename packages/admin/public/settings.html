@@ -362,6 +362,13 @@
             <div><div class="setting-label">API token</div><div class="setting-desc">Optional bearer token to restrict access</div></div>
             <input class="input" type="password" name="api.token" value="${get('api.token')}" autocomplete="off" placeholder="Leave blank for open access" />
           </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Preview token</div><div class="setting-desc">Appended to Preview URLs — allows viewing draft entries on your site</div></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input class="input" type="text" id="preview-token-display" value="${get('preview.token')??''}" readonly style="flex:1;font-family:var(--mono);font-size:11px;" placeholder="No token generated" />
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-gen-preview-token">Generate</button>
+            </div>
+          </div>
         </div>
 
         <div class="settings-group">
@@ -651,8 +658,20 @@
         ['media.s3_public_url', fd.get('media.s3_public_url')],
         ['api.enabled',         fd.get('api.enabled') ? '1' : '0'],
         ['api.token',           fd.get('api.token')],
+        ['preview.token',       document.getElementById('preview-token-display').value || null],
       ]);
       showBanner('site-banner','banner-ok','Settings saved');
+    });
+
+    // Preview token generator
+    document.getElementById('btn-gen-preview-token')?.addEventListener('click', async () => {
+      const token = Array.from(crypto.getRandomValues(new Uint8Array(24))).map(b=>b.toString(16).padStart(2,'0')).join('');
+      document.getElementById('preview-token-display').value = token;
+      await fetch('/api/meta/preview.token', {
+        method: 'PUT', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value: token }),
+      });
     });
 
     // GitHub push (conditional: only wired if section rendered)

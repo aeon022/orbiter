@@ -10,7 +10,7 @@ const ALLOWED_KEYS = [
   'media.backend', 'media.local_path',
   'media.github_token', 'media.github_repo', 'media.github_branch', 'media.github_dir',
   'media.s3_bucket', 'media.s3_region', 'media.s3_endpoint', 'media.s3_access_key', 'media.s3_secret_key', 'media.s3_public_url',
-  'api.enabled', 'api.token',
+  'api.enabled', 'api.token', 'preview.token',
   'dashboard.notes', 'dashboard.todos',
   'ui.theme',
   'format_version',

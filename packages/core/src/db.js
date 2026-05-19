@@ -82,12 +82,21 @@ export class OrbiterDB {
         expires_at TEXT NOT NULL,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
+
+      CREATE TABLE IF NOT EXISTS _audit (
+        id         TEXT PRIMARY KEY,
+        entry_id   TEXT NOT NULL,
+        username   TEXT NOT NULL,
+        action     TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
     `);
 
     // Migrations: add columns that didn't exist in older pods
     try { this.db.exec(`ALTER TABLE _media ADD COLUMN folder TEXT NOT NULL DEFAULT ''`); } catch {}
     try { this.db.exec(`ALTER TABLE _collections ADD COLUMN singleton INTEGER NOT NULL DEFAULT 0`); } catch {}
     try { this.db.exec(`ALTER TABLE _entries ADD COLUMN sort_order INTEGER`); } catch {}
+    try { this.db.exec(`ALTER TABLE _entries ADD COLUMN deleted_at TEXT`); } catch {}
 
     // Migration: make _media.data nullable, add url + path for external backends
     const mediaCols = this.db.prepare('PRAGMA table_info(_media)').all().map(c => c.name);
@@ -136,20 +145,22 @@ export class OrbiterDB {
 
   // ── Entries ────────────────────────────────
   getEntries(collectionId, { status } = {}) {
+    if (status === 'trash') {
+      const rows = this.db.prepare(
+        'SELECT * FROM _entries WHERE collection_id = ? AND deleted_at IS NOT NULL ORDER BY deleted_at DESC'
+      ).all(collectionId);
+      return rows.map(r => ({ ...r, data: JSON.parse(r.data) }));
+    }
     const q = status
-      ? this.db.prepare('SELECT * FROM _entries WHERE collection_id = ? AND status = ? ORDER BY COALESCE(sort_order,999999) ASC, updated_at DESC')
-      : this.db.prepare('SELECT * FROM _entries WHERE collection_id = ? ORDER BY COALESCE(sort_order,999999) ASC, updated_at DESC');
-
-    const rows = status
-      ? q.all(collectionId, status)
-      : q.all(collectionId);
-
+      ? this.db.prepare('SELECT * FROM _entries WHERE collection_id = ? AND status = ? AND deleted_at IS NULL ORDER BY COALESCE(sort_order,999999) ASC, updated_at DESC')
+      : this.db.prepare('SELECT * FROM _entries WHERE collection_id = ? AND deleted_at IS NULL ORDER BY COALESCE(sort_order,999999) ASC, updated_at DESC');
+    const rows = status ? q.all(collectionId, status) : q.all(collectionId);
     return rows.map(r => ({ ...r, data: JSON.parse(r.data) }));
   }
 
   getEntry(collectionId, slug) {
     const row = this.db
-      .prepare('SELECT * FROM _entries WHERE collection_id = ? AND slug = ?')
+      .prepare('SELECT * FROM _entries WHERE collection_id = ? AND slug = ? AND deleted_at IS NULL')
       .get(collectionId, slug);
     if (!row) return null;
     return { ...row, data: JSON.parse(row.data) };
@@ -256,8 +267,26 @@ export class OrbiterDB {
   deleteEntry(collectionId, slug) {
     const entry = this.getEntry(collectionId, slug);
     if (!entry) return false;
-    this.db.prepare('DELETE FROM _versions WHERE entry_id = ?').run(entry.id);
-    this.db.prepare('DELETE FROM _entries WHERE id = ?').run(entry.id);
+    this.db.prepare('UPDATE _entries SET deleted_at = ? WHERE id = ?').run(sqliteNow(), entry.id);
+    return true;
+  }
+
+  restoreEntry(collectionId, slug) {
+    const row = this.db
+      .prepare('SELECT * FROM _entries WHERE collection_id = ? AND slug = ? AND deleted_at IS NOT NULL')
+      .get(collectionId, slug);
+    if (!row) return false;
+    this.db.prepare('UPDATE _entries SET deleted_at = NULL, status = ? WHERE id = ?').run('draft', row.id);
+    return true;
+  }
+
+  permanentDeleteEntry(collectionId, slug) {
+    const row = this.db
+      .prepare('SELECT * FROM _entries WHERE collection_id = ? AND slug = ?')
+      .get(collectionId, slug);
+    if (!row) return false;
+    this.db.prepare('DELETE FROM _versions WHERE entry_id = ?').run(row.id);
+    this.db.prepare('DELETE FROM _entries WHERE id = ?').run(row.id);
     return true;
   }
 
@@ -281,6 +310,19 @@ export class OrbiterDB {
 
   deleteMedia(id) {
     this.db.prepare('DELETE FROM _media WHERE id = ?').run(id);
+  }
+
+  // ── Audit log ──────────────────────────────────────
+  logAudit(entryId, username, action) {
+    this.db.prepare(
+      'INSERT INTO _audit (id, entry_id, username, action) VALUES (?, ?, ?, ?)'
+    ).run(randomUUID(), entryId, username, action);
+  }
+
+  getAuditLog(entryId, limit = 20) {
+    return this.db.prepare(
+      'SELECT id, username, action, created_at FROM _audit WHERE entry_id = ? ORDER BY created_at DESC LIMIT ?'
+    ).all(entryId, limit);
   }
 
   close() {

@@ -100,15 +100,18 @@
           <button class="filter-tab active" data-status="">All</button>
           <button class="filter-tab" data-status="published">Published</button>
           <button class="filter-tab" data-status="draft">Drafts</button>
+          <button class="filter-tab" data-status="trash" style="margin-left:auto">🗑 Trash</button>
         </div>
 
         <!-- Bulk action bar -->
         <div class="bulk-bar" id="bulk-bar">
           <span><span class="bulk-bar-count" id="bulk-count">0</span> selected</span>
-          <button class="btn btn-ghost btn-sm" id="bulk-publish">Publish</button>
-          <button class="btn btn-ghost btn-sm" id="bulk-draft">Unpublish</button>
+          <button class="btn btn-ghost btn-sm bulk-normal" id="bulk-publish">Publish</button>
+          <button class="btn btn-ghost btn-sm bulk-normal" id="bulk-draft">Unpublish</button>
+          <button class="btn btn-ghost btn-sm bulk-trash" id="bulk-restore" style="display:none">Restore</button>
           <span class="bulk-bar-spacer"></span>
-          <button class="btn btn-danger btn-sm" id="bulk-delete">Delete selected</button>
+          <button class="btn btn-danger btn-sm bulk-normal" id="bulk-delete">Move to Trash</button>
+          <button class="btn btn-danger btn-sm bulk-trash" id="bulk-permanent" style="display:none">Delete forever</button>
         </div>
 
         <div class="table-wrap" id="entries-wrap">
@@ -140,7 +143,10 @@
     let selected    = new Set();
 
     function updateBulkBar() {
-      const bar = document.getElementById('bulk-bar');
+      const bar   = document.getElementById('bulk-bar');
+      const trash = activeFilter === 'trash';
+      document.querySelectorAll('.bulk-normal').forEach(el => el.style.display = trash ? 'none' : '');
+      document.querySelectorAll('.bulk-trash').forEach(el  => el.style.display = trash ? ''     : 'none');
       if (selected.size > 0) {
         bar.classList.add('visible');
         document.getElementById('bulk-count').textContent = selected.size;
@@ -165,6 +171,7 @@
         wrap.innerHTML = '<div class="empty"><div class="empty-icon">◈</div>No entries yet</div>';
         return;
       }
+      const isTrash = activeFilter === 'trash';
       const canSort = !activeFilter;
       wrap.innerHTML = `
         <table>
@@ -172,13 +179,14 @@
             <tr>
               ${canSort ? '<th class="drag-col"></th>' : ''}
               <th class="cb-col"><input type="checkbox" id="check-all" title="Select all" /></th>
-              <th>Title / Slug</th><th>Status</th><th>Updated</th><th></th>
+              <th>Title / Slug</th><th>${isTrash ? 'Deleted' : 'Status'}</th><th>${isTrash ? '' : 'Updated'}</th><th></th>
             </tr>
           </thead>
           <tbody>
             ${entries.map(e => {
               const title   = e.data?.title || e.slug;
               const updated = e.updated_at ? e.updated_at.split(' ')[0] : '—';
+              const deleted = e.deleted_at ? e.deleted_at.split(' ')[0] : '—';
               const nextStatus = e.status === 'published' ? 'draft' : 'published';
               const toggleLabel = e.status === 'published' ? 'Unpublish' : 'Publish';
               return `<tr data-slug="${e.slug}"${canSort ? ' draggable="true"' : ''}>
@@ -188,14 +196,18 @@
                   <div style="color:var(--heading);font-weight:500">${title}</div>
                   <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px">${e.slug}</div>
                 </td>
-                <td><span class="badge badge-${e.status}">${e.status}</span></td>
-                <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${updated}</td>
+                <td>${isTrash ? `<span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${deleted}</span>` : `<span class="badge badge-${e.status}">${e.status}</span>`}</td>
+                <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${isTrash ? '' : updated}</td>
                 <td style="width:1%;white-space:nowrap">
                   <div class="row-actions">
-                    <a class="btn-row" href="/editor.html?collection=${colId}&slug=${e.slug}">Edit</a>
-                    <button class="btn-row btn-row-toggle status-toggle" data-slug="${e.slug}" data-next="${nextStatus}">${toggleLabel}</button>
-                    <button class="btn-row btn-row-icon dup-btn" data-slug="${e.slug}" title="Duplicate">⧉</button>
-                    <button class="btn-row btn-row-danger delete-btn" data-slug="${e.slug}">Delete</button>
+                    ${isTrash
+                      ? `<button class="btn-row restore-btn" data-slug="${e.slug}">Restore</button>
+                         <button class="btn-row btn-row-danger perm-del-btn" data-slug="${e.slug}">Delete forever</button>`
+                      : `<a class="btn-row" href="/editor.html?collection=${colId}&slug=${e.slug}">Edit</a>
+                         <button class="btn-row btn-row-toggle status-toggle" data-slug="${e.slug}" data-next="${nextStatus}">${toggleLabel}</button>
+                         <button class="btn-row btn-row-icon dup-btn" data-slug="${e.slug}" title="Duplicate">⧉</button>
+                         <button class="btn-row btn-row-danger delete-btn" data-slug="${e.slug}">Trash</button>`
+                    }
                   </div>
                 </td>
               </tr>`;
@@ -288,11 +300,31 @@
         });
       });
 
-      // Delete
+      // Delete → Trash
       wrap.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
-          if (!confirm(`Delete "${btn.dataset.slug}"?`)) return;
           await fetch(`/api/collections/${colId}/entries/${btn.dataset.slug}`, {
+            method: 'DELETE', credentials: 'include',
+          });
+          loadEntries();
+        });
+      });
+
+      // Restore from Trash
+      wrap.querySelectorAll('.restore-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          await fetch(`/api/collections/${colId}/entries/${btn.dataset.slug}/restore`, {
+            method: 'POST', credentials: 'include',
+          });
+          loadEntries();
+        });
+      });
+
+      // Permanent delete
+      wrap.querySelectorAll('.perm-del-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm(`Permanently delete "${btn.dataset.slug}"? This cannot be undone.`)) return;
+          await fetch(`/api/collections/${colId}/entries/${btn.dataset.slug}/permanent`, {
             method: 'DELETE', credentials: 'include',
           });
           loadEntries();
@@ -322,9 +354,15 @@
       });
       loadEntries();
     }
-    document.getElementById('bulk-publish').addEventListener('click', () => bulkAction('publish'));
-    document.getElementById('bulk-draft').addEventListener('click',   () => bulkAction('draft'));
-    document.getElementById('bulk-delete').addEventListener('click',  () => bulkAction('delete'));
+    document.getElementById('bulk-publish').addEventListener('click',   () => bulkAction('publish'));
+    document.getElementById('bulk-draft').addEventListener('click',     () => bulkAction('draft'));
+    document.getElementById('bulk-delete').addEventListener('click',    () => bulkAction('delete'));
+    document.getElementById('bulk-restore').addEventListener('click',   () => bulkAction('restore'));
+    document.getElementById('bulk-permanent').addEventListener('click', async () => {
+      const n = selected.size;
+      if (!confirm(`Permanently delete ${n} entr${n !== 1 ? 'ies' : 'y'}? This cannot be undone.`)) return;
+      await bulkAction('permanent');
+    });
 
     // New entry modal
     const overlay = document.getElementById('modal-overlay');
