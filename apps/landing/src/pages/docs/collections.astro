@@ -27,10 +27,9 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
     <tr><td><code>select</code></td><td>Dropdown</td><td>TEXT (option key)</td></tr>
     <tr><td><code>array</code></td><td>Tag input</td><td>TEXT (JSON array)</td></tr>
     <tr><td><code>weekdays</code></td><td>Weekday multi-select</td><td>TEXT (JSON array)</td></tr>
-    <tr><td><code>media</code></td><td>Media library picker</td><td>TEXT (UUID)</td></tr>
+    <tr><td><code>image</code></td><td>Media picker — drop-zone with inline preview</td><td>TEXT (media UUID → <code>_media</code>)</td></tr>
+    <tr><td><code>boolean</code></td><td>On/off toggle</td><td>TEXT (<code>true</code> / <code>false</code>)</td></tr>
     <tr><td><code>relation</code></td><td>Entry picker (cross-collection)</td><td>TEXT (JSON array of UUIDs)</td></tr>
-    <tr><td><code>boolean</code></td><td>On/off toggle</td><td>TEXT (<code>true</code>/<code>false</code>)</td></tr>
-    <tr><td><code>image</code></td><td>Media picker — drop-zone with preview</td><td>TEXT (media ID → <code>_media</code>)</td></tr>
   </tbody>
 </table>
 
@@ -44,7 +43,13 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 
 <h2>Field options</h2>
 
-<pre>// Select field
+<pre>// Boolean field
+&#123;
+  type:    'boolean',
+  label:   'Featured',
+&#125;
+
+// Select field
 &#123;
   type:         'select',
   label:        'Category',

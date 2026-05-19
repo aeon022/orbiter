@@ -906,7 +906,9 @@ a:hover { color: var(--heading); }
 .pod-name { color: var(--text); font-size: 12px; font-weight: 500; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
 .pod-name::before { content: "◆"; font-size: 6px; color: var(--gold); }
 .pod-info { font-size: 10px; color: var(--muted); margin-bottom: 2px; }
-.pod-version { font-size: 10px; color: var(--muted); opacity: 0.6; margin-bottom: 4px; }
+.pod-version { font-size: 10px; color: var(--muted); opacity: 0.75; margin-bottom: 4px; }
+.pod-version a { color: inherit; text-decoration: none; }
+.pod-version a:hover { color: var(--text); }
 .pod-status { display: flex; align-items: center; margin-top: 8px; }
 .pod-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--jade); margin-right: 5px; flex-shrink: 0; animation: pulse 2.5s ease-in-out infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }

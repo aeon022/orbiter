@@ -96,7 +96,8 @@
           var parts = [];
           if (info.adminVersion) parts.push('Orbiter v' + info.adminVersion);
           if (info.formatVersion) parts.push('pod v' + info.formatVersion);
-          podVersionEl.textContent = parts.join(' · ');
+          var label = parts.join(' · ');
+          podVersionEl.innerHTML = '<a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer">' + label + '</a>';
         }
       })
       .catch(function () {});
