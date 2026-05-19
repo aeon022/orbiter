@@ -16,11 +16,14 @@ const ALLOWED_KEYS = [
   'format_version',
 ];
 
+const PREVIEW_URL_RE = /^preview_url\.[a-z0-9_-]+$/;
+
 // GET /api/meta — returns all allowed keys as a flat object
 metaRoutes.get('/', (c) => {
   const db  = openPod(c.get('podPath'));
   const out = {};
   for (const key of ALLOWED_KEYS) out[key] = db.getMeta(key) ?? null;
+  // preview_url keys are per-collection and not enumerated here
   db.close();
   return c.json(out);
 });
@@ -39,7 +42,7 @@ metaRoutes.put('/', async (c) => {
   const body = await c.req.json();
   const db   = openPod(c.get('podPath'));
   for (const [key, value] of Object.entries(body)) {
-    if (ALLOWED_KEYS.includes(key)) db.setMeta(key, value == null ? '' : String(value));
+    if (ALLOWED_KEYS.includes(key) || PREVIEW_URL_RE.test(key)) db.setMeta(key, value == null ? '' : String(value));
   }
   db.close();
   return c.json({ ok: true });
@@ -48,7 +51,7 @@ metaRoutes.put('/', async (c) => {
 // PUT /api/meta/:key — single key update
 metaRoutes.put('/:key', async (c) => {
   const key = c.req.param('key').replace(/~/g, '.');
-  if (!ALLOWED_KEYS.includes(key)) return c.json({ error: 'Key not allowed' }, 403);
+  if (!ALLOWED_KEYS.includes(key) && !PREVIEW_URL_RE.test(key)) return c.json({ error: 'Key not allowed' }, 403);
   const { value } = await c.req.json();
   const db = openPod(c.get('podPath'));
   db.setMeta(key, value == null ? '' : String(value));

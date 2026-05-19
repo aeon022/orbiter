@@ -273,6 +273,11 @@
             <label>Label</label>
             <input class="input" id="new-col-label" placeholder="e.g. Posts, Products" />
           </div>
+          <div class="field-group" style="grid-column:1/-1">
+            <label>Preview URL</label>
+            <input class="input" id="new-preview-url" placeholder="https://mysite.com/posts/{slug}" />
+            <div class="field-id-hint">{slug} is replaced with the entry slug when opening preview</div>
+          </div>
         </div>
         <div class="section-label">Fields</div>
         <div id="new-field-rows" class="field-rows"></div>
@@ -293,10 +298,13 @@
         const label=document.getElementById('new-col-label').value.trim();
         if (!id||!label) { showBannerIn('banner','banner-err','ID and label are required'); return; }
         const schema=serializeSchema(document.getElementById('new-field-rows'));
+        const previewUrl=(document.getElementById('new-preview-url')?.value??'').trim();
         const res=await fetch('/api/collections',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,label,schema})});
         const json=await res.json();
-        if (res.ok) { selectedId=id; await loadColls(); const col=allColls.find(c=>c.id===id); if(col)renderEditor(col); }
-        else showBannerIn('banner','banner-err',json.error??'Failed');
+        if (res.ok) {
+          if (previewUrl) await fetch(`/api/meta/preview_url~${id}`,{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({value:previewUrl})}).catch(()=>{});
+          selectedId=id; await loadColls(); const col=allColls.find(c=>c.id===id); if(col)renderEditor(col);
+        } else showBannerIn('banner','banner-err',json.error??'Failed');
       });
     }
 
@@ -320,6 +328,11 @@
             <label>Label</label>
             <input class="input" id="edit-label" value="${escHtml(col.label)}" />
           </div>
+          <div class="field-group" style="grid-column:1/-1">
+            <label>Preview URL</label>
+            <input class="input" id="edit-preview-url" placeholder="https://mysite.com/posts/{slug}" />
+            <div class="field-id-hint">{slug} is replaced with the entry slug when opening preview</div>
+          </div>
         </div>
         <div class="section-label">Fields</div>
         ${total>0?'<div class="delete-warn">Adding fields is non-destructive. Removing fields hides existing data but does not delete it.</div>':''}
@@ -335,10 +348,18 @@
       const rowsEl=document.getElementById('edit-field-rows');
       Object.entries(schema).forEach(([k,f])=>addFieldRow(rowsEl,k,f.label??k,f.type??'string',!!f.required,(f.options??[]).join(', '),f.collection??'',f.multiple!==false));
       document.getElementById('btn-add-edit').addEventListener('click',()=>addFieldRow(rowsEl));
+      // Load existing preview URL for this collection
+      fetch(`/api/meta/preview_url~${col.id}`,{credentials:'include'}).then(r=>r.json()).then(d=>{
+        const inp=document.getElementById('edit-preview-url'); if(inp)inp.value=d.value??'';
+      }).catch(()=>{});
       document.getElementById('btn-save-edit').addEventListener('click',async()=>{
         const label=document.getElementById('edit-label').value.trim();
         const schema=serializeSchema(rowsEl);
-        const res=await fetch(`/api/collections/${col.id}`,{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({label,schema})});
+        const previewUrl=(document.getElementById('edit-preview-url')?.value??'').trim();
+        const [res] = await Promise.all([
+          fetch(`/api/collections/${col.id}`,{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({label,schema})}),
+          fetch(`/api/meta/preview_url~${col.id}`,{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({value:previewUrl})}),
+        ]);
         if (res.ok) { await loadColls(); showBannerIn('banner','banner-ok','Saved'); }
         else { const j=await res.json(); showBannerIn('banner','banner-err',j.error??'Failed'); }
       });

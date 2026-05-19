@@ -338,6 +338,19 @@
     }
     .vid-url-cancel:hover { border-color:var(--mid); color:var(--text); }
 
+    /* ── Callout blocks ─────────────────────────────────────────── */
+    .be-block[data-type="callout"] { background:color-mix(in srgb,var(--accent) 8%,transparent); border-left:3px solid var(--accent); border-radius:0 var(--radius) var(--radius) 0; padding:10px 14px; margin:4px 0; color:var(--text); font-size:13px; }
+
+    /* ── Table blocks ───────────────────────────────────────────── */
+    .be-block[data-type="table"] { padding:0; overflow:auto; margin:4px 0; }
+    .be-table { border-collapse:collapse; width:100%; font-size:12px; }
+    .be-table th,.be-table td { border:1px solid var(--line); padding:6px 10px; min-width:80px; outline:none; }
+    .be-table th { background:var(--bg2); font-weight:600; }
+    .be-table td:focus,.be-table th:focus { border-color:var(--accent); background:color-mix(in srgb,var(--accent) 5%,transparent); }
+    .table-toolbar { display:flex; gap:6px; padding:6px 8px; background:var(--bg2); border-bottom:1px solid var(--line); font-size:10px; }
+    .table-toolbar button { background:none; border:1px solid var(--line); color:var(--text); padding:2px 8px; border-radius:var(--radius); cursor:pointer; font-size:10px; font-family:var(--mono); }
+    .table-toolbar button:hover { border-color:var(--accent); color:var(--accent); }
+
     /* SERP preview */
     .serp-preview { background:var(--bg0); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px; margin-top:12px; }
     .serp-url { font-size:9px; color:var(--jade); margin-bottom:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -364,6 +377,7 @@
           <button type="button" class="view-btn"        id="vbtn-split"   onclick="setViewMode('split')">Split</button>
           <button type="button" class="view-btn"        id="vbtn-preview" onclick="setViewMode('preview')">Preview</button>
         </div>
+        <a id="btn-preview-link" href="#" target="_blank" rel="noopener" title="Open preview" style="display:none;font-size:11px;color:var(--muted);text-decoration:none;padding:4px 8px;border:1px solid var(--line);border-radius:var(--radius);">↗ Preview</a>
         <button class="scheme-toggle" id="scheme-toggle" title="Toggle scheme">◐</button>
         <span class="user" id="topbar-user"></span>
         <span class="logout" id="logout-btn">Sign out</span>
@@ -479,6 +493,17 @@
       if (f.type==='relation' && f.collection && !relationEntries[f.collection]) {
         relationEntries[f.collection] = await fetch(`/api/collections/${f.collection}/entries`,{credentials:'include'}).then(r=>r.ok?r.json():[]).catch(()=>[]);
       }
+    }
+
+    // Fetch preview URL for this collection
+    const previewMeta = await fetch(`/api/meta/preview_url~${COLLECTION}`,{credentials:'include'}).then(r=>r.json()).catch(()=>null);
+    const previewUrlTemplate = previewMeta?.value || '';
+    function updatePreviewLink() {
+      const btn = document.getElementById('btn-preview-link');
+      if (!btn || !previewUrlTemplate) return;
+      const slug = document.getElementById('slug-input')?.value || currentSlug || SLUG;
+      btn.href = previewUrlTemplate.replace('{slug}', slug);
+      btn.style.display = '';
     }
 
     // Set title + slug
@@ -684,6 +709,7 @@
       document.getElementById('slug-input').addEventListener('input', e=>{
         e.target.dataset.manual='1';
         document.getElementById('slug-preview').textContent = e.target.value || '…';
+        updatePreviewLink();
       });
 
       // Status select sync
@@ -985,6 +1011,20 @@
           lines.push(`::video[${b.dataset.videoUrl ?? ''}]`);
           return;
         }
+        if (type==='callout') {
+          lines.push(`::callout[${b.innerHTML.replace(/\n+/g,' ')}]`);
+          return;
+        }
+        if (type==='table') {
+          const tbl = b.querySelector('table');
+          if (tbl) {
+            const clean = tbl.cloneNode(true);
+            clean.querySelectorAll('[contenteditable]').forEach(c=>c.removeAttribute('contenteditable'));
+            // Collapse newlines so the chunk-based parser never splits table HTML
+            lines.push(`::table[${clean.outerHTML.replace(/\n+/g,' ')}]`);
+          }
+          return;
+        }
         const text = htmlToMd(b.innerHTML);
         if      (type==='h1')         lines.push('# '+text);
         else if (type==='h2')         lines.push('## '+text);
@@ -1001,13 +1041,40 @@
 
     function syncToHidden() { bodyInput.value = serialize(); updateWc(); }
 
-    const BLK_PH = { h1:'Heading 1',h2:'Heading 2',h3:'Heading 3',blockquote:'Quote…',pre:'Code…',ul:'List item',ol:'List item',p:'Write something…' };
+    const BLK_PH = { h1:'Heading 1',h2:'Heading 2',h3:'Heading 3',blockquote:'Quote…',pre:'Code…',ul:'List item',ol:'List item',callout:'Callout…',p:'Write something…' };
 
     function createBlock(type, content) {
       const el = document.createElement('div');
       el.className='be-block'; el.dataset.type=type||'p'; el.dataset.ph=BLK_PH[type]||'Write something…';
       if (type==='hr') { el.contentEditable='false'; }
+      else if (type==='table') {
+        el.contentEditable='false';
+        el.innerHTML = `<div class="table-toolbar">
+          <button onclick="tableAddRow(this)">+ Row</button>
+          <button onclick="tableAddCol(this)">+ Col</button>
+          <button onclick="tableDelRow(this)">− Row</button>
+          <button onclick="tableDelCol(this)">− Col</button>
+        </div>
+        <table class="be-table">
+          <thead><tr><th contenteditable="true"></th><th contenteditable="true"></th></tr></thead>
+          <tbody><tr><td contenteditable="true"></td><td contenteditable="true"></td></tr><tr><td contenteditable="true"></td><td contenteditable="true"></td></tr></tbody>
+        </table>`;
+      }
       else { el.contentEditable='true'; el.innerHTML=content||''; }
+      return el;
+    }
+
+    function createTableBlock(tableEl) {
+      const el = document.createElement('div');
+      el.className='be-block'; el.dataset.type='table'; el.dataset.ph='';
+      el.contentEditable='false';
+      el.innerHTML = `<div class="table-toolbar">
+        <button onclick="tableAddRow(this)">+ Row</button>
+        <button onclick="tableAddCol(this)">+ Col</button>
+        <button onclick="tableDelRow(this)">− Row</button>
+        <button onclick="tableDelCol(this)">− Col</button>
+      </div>`;
+      el.appendChild(tableEl);
       return el;
     }
 
@@ -1019,6 +1086,27 @@
         // Video block: ::video[url]
         const vidM = chunk.match(/^::video\[(.+)\]$/);
         if (vidM) { beEditor.appendChild(createVideoBlock(vidM[1])); return; }
+        // Callout block: ::callout[html]
+        const calloutM = chunk.match(/^::callout\[([\s\S]*)\]$/);
+        if (calloutM) {
+          const b = createBlock('callout', '');
+          b.innerHTML = calloutM[1];
+          beEditor.appendChild(b);
+          return;
+        }
+        // Table block: ::table[<table>...</table>]
+        const tableM = chunk.match(/^::table\[([\s\S]*)\]$/);
+        if (tableM) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = tableM[1];
+          const tbl = tmp.querySelector('table');
+          if (tbl) {
+            tbl.className = 'be-table';
+            tbl.querySelectorAll('th,td').forEach(c=>c.setAttribute('contenteditable','true'));
+            beEditor.appendChild(createTableBlock(tbl));
+          }
+          return;
+        }
         // Image block: ![alt](mediaId) or ![alt](mediaId){.align}
         const imgM = chunk.match(/^!\[([^\]]*)\]\(([^)]+)\)(?:\{\.(\w+)\})?$/);
         if (imgM) { beEditor.appendChild(createImgBlock(imgM[2], imgM[1], imgM[3]||'center')); return; }
@@ -1078,7 +1166,30 @@
         if (e.key==='Enter')     { e.preventDefault(); bpInsert(bpIdx); return; }
         if (e.key==='Escape')    { e.preventDefault(); bpClose(); return; }
       }
+      // Tab inside a table cell: move to next/prev cell
+      if (e.key==='Tab') {
+        const cell=e.target.closest('.be-table th,.be-table td');
+        if (cell) {
+          e.preventDefault();
+          const table=cell.closest('table');
+          const cells=Array.from(table.querySelectorAll('th[contenteditable],td[contenteditable]'));
+          const idx=cells.indexOf(cell);
+          const nextCell=e.shiftKey ? cells[idx-1] : cells[idx+1];
+          if (nextCell) { nextCell.focus(); } else if (!e.shiftKey) {
+            // Tab past last cell: add a new row
+            const cols=table.rows[0].cells.length;
+            const tr=document.createElement('tr');
+            for (let i=0;i<cols;i++){const td=document.createElement('td');td.contentEditable='true';tr.appendChild(td);}
+            table.tBodies[0].appendChild(tr);
+            tr.cells[0].focus();
+            syncToHidden(); scheduleAutosave();
+          }
+          return;
+        }
+      }
       const b=getFocusedBlock(); if (!b) return;
+      // Skip block-level Enter/Backspace handling when focus is inside a table cell
+      if (b.dataset.type==='table') return;
       if (e.key==='Enter'&&!e.shiftKey) {
         e.preventDefault();
         const type=b.dataset.type; const newType=(type==='ul'||type==='ol')?type:'p';
@@ -1093,7 +1204,7 @@
     });
 
     beEditor.addEventListener('input',()=>{
-      const b=getFocusedBlock(); if (!b||b.dataset.type==='hr') { syncToHidden(); scheduleAutosave(); updatePreview(); return; }
+      const b=getFocusedBlock(); if (!b||b.dataset.type==='hr'||b.dataset.type==='table') { syncToHidden(); scheduleAutosave(); updatePreview(); return; }
       if (bpOpen&&bpTargetBlock) {
         const text=bpTargetBlock.innerText; const typed=text.substring(1);
         if (typed.includes('\n')) bpClose(); else { bpQuery=typed; bpIdx=0; bpRender(); } return;
@@ -1212,6 +1323,8 @@
       {label:'Heading 3',  icon:'H3',  hint:'###', type:'h3'},
       {label:'Quote',      icon:'❝',   hint:'>',   type:'blockquote'},
       {label:'Code block', icon:'{}',  hint:'```', type:'pre'},
+      {label:'Callout',    icon:'ℹ',   hint:'note', type:'callout'},
+      {label:'Table',      icon:'▦',   hint:'tbl',  type:'table'},
       {label:'List',       icon:'·',   hint:'-',   type:'ul'},
       {label:'Numbered',   icon:'1.',  hint:'1.',  type:'ol'},
       {label:'Divider',    icon:'—',   hint:'---', type:'hr'},
@@ -1267,6 +1380,10 @@
       if (blk.type==='hr') {
         const hr=createBlock('hr',''); const next=createBlock('p','');
         bpTargetBlock.replaceWith(hr); hr.after(next); focusStart(next);
+      } else if (blk.type==='table') {
+        const tbl=createBlock('table',''); const next=createBlock('p','');
+        bpTargetBlock.replaceWith(tbl); tbl.after(next);
+        const firstCell=tbl.querySelector('th,td'); if (firstCell) firstCell.focus();
       } else { changeBlockType(blk.type,bpTargetBlock); }
       syncToHidden(); scheduleAutosave(); updatePreview(); bpClose();
     }
@@ -1571,8 +1688,34 @@
       if (e.key==='Escape') { e.preventDefault(); closeVideoPicker(); }
     });
 
+    // ── Table toolbar helpers ─────────────────────────────────────────
+    window.tableAddRow = function(btn) {
+      const table = btn.closest('.be-block').querySelector('table');
+      const cols = table.rows[0].cells.length;
+      const tr = document.createElement('tr');
+      for (let i=0;i<cols;i++) { const td=document.createElement('td'); td.contentEditable='true'; tr.appendChild(td); }
+      table.tBodies[0].appendChild(tr);
+      syncToHidden(); scheduleAutosave();
+    };
+    window.tableAddCol = function(btn) {
+      const table = btn.closest('.be-block').querySelector('table');
+      Array.from(table.rows).forEach(row => { const cell = row.cells[0].tagName==='TH' ? document.createElement('th') : document.createElement('td'); cell.contentEditable='true'; row.appendChild(cell); });
+      syncToHidden(); scheduleAutosave();
+    };
+    window.tableDelRow = function(btn) {
+      const table = btn.closest('.be-block').querySelector('table');
+      if (table.tBodies[0].rows.length > 1) table.tBodies[0].deleteRow(-1);
+      syncToHidden(); scheduleAutosave();
+    };
+    window.tableDelCol = function(btn) {
+      const table = btn.closest('.be-block').querySelector('table');
+      if (table.rows[0].cells.length > 1) Array.from(table.rows).forEach(row => row.deleteCell(-1));
+      syncToHidden(); scheduleAutosave();
+    };
+
     // ── Init ──────────────────────────────────────────────────────────
     renderMetaPanel();
+    updatePreviewLink();
     parseMd(IS_NEW ? '' : (entryData?.data?.body ?? ''));
     syncToHidden(); // serializes blocks → bodyInput, then calls updateWc()
     updatePreview();
