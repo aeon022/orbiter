@@ -47,6 +47,21 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
   <li><code>/img</code> — insert an image block</li>
   <li><code>/vid</code> — insert a video block</li>
   <li><code>/h2</code>, <code>/h3</code> — insert a heading</li>
+  <li><code>/note</code> — insert a callout block</li>
+  <li><code>/tbl</code> — insert a table block</li>
+</ul>
+
+<h2>Callout blocks</h2>
+<p>Type <code>/note</code> in the block picker to insert a callout — a tinted info box with a left accent border. Good for tips, warnings, and notes inline with prose.</p>
+<pre>/note   →  Callout block</pre>
+
+<h2>Table blocks</h2>
+<p>Type <code>/tbl</code> to insert an editable table. A 2×2 grid with a header row is created. Use the toolbar to add or remove rows and columns.</p>
+<pre>/tbl    →  Table block (2×2, expandable)</pre>
+<ul>
+  <li><strong>Tab</strong> — move to the next cell; Tab past the last cell adds a new row</li>
+  <li><strong>+ Row / + Col</strong> — toolbar buttons to expand the table</li>
+  <li><strong>− Row / − Col</strong> — remove the last row or column</li>
 </ul>
 
 <h2>Autosave</h2>
@@ -64,5 +79,10 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
     <tr><td><kbd>⌘ Shift Z</kbd></td><td>Redo</td></tr>
   </tbody>
 </table>
+
+<h2>Preview URL</h2>
+<p>Set a preview URL template per collection in <strong>Schema → (collection) → Preview URL</strong>. Use <code>&#123;slug&#125;</code> as a placeholder:</p>
+<pre>https://mysite.com/posts/&#123;slug&#125;</pre>
+<p>An <strong>↗ Preview</strong> button appears in the editor topbar and opens the rendered page in a new tab. The URL updates live as the slug changes.</p>
 
 </DocsLayout>
