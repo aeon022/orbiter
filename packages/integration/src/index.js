@@ -89,6 +89,10 @@ function generateTypes(db) {
 
   out.push('  export function getLocaleCollection(name: string, locale?: string): Promise<OrbiterEntry[]>;');
   out.push('  export function getLocaleEntry(collection: string, baseSlug: string, locale: string): Promise<OrbiterEntry | null>;');
+  for (const col of cols) {
+    out.push(`  export function getPreviewEntry(collection: '${col.id}', slug: string, previewToken: string): Promise<${toPascal(col.id)}Entry | null>;`);
+  }
+  out.push('  export function getPreviewEntry(collection: string, slug: string, previewToken: string): Promise<OrbiterEntry | null>;');
   out.push('');
   out.push('  export const locale: string;');
   out.push('  export const locales: string[];');
@@ -196,6 +200,8 @@ export default function orbiter(options = {}) {
                     return `
 export const collections = ${JSON.stringify(snapshot, null, 2)};
 
+const _podPath = ${JSON.stringify(resolvedPodPath)};
+
 /** Default locale (e.g. "de") */
 export const locale = ${JSON.stringify(defaultLocale)};
 
@@ -224,6 +230,19 @@ export function getLocaleEntry(collection, baseSlug, loc) {
   const variant = loc ? entries.find(e => e.slug === baseSlug + sep + loc) : null;
   if (variant) return Promise.resolve(variant);
   return Promise.resolve(entries.find(e => e.slug === baseSlug) ?? null);
+}
+
+export async function getPreviewEntry(collection, slug, previewToken) {
+  const { openPod } = await import('@a83/orbiter-core');
+  const db = openPod(_podPath);
+  const storedToken = db.getMeta('preview.token');
+  if (!previewToken || previewToken !== storedToken) { db.close(); return null; }
+  const row = db.db.prepare(
+    'SELECT * FROM _entries WHERE collection_id = ? AND slug = ? AND deleted_at IS NULL'
+  ).get(collection, slug);
+  db.close();
+  if (!row) return null;
+  return { ...row, data: JSON.parse(row.data) };
 }
 `;
                   }

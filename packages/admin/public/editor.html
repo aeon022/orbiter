@@ -480,10 +480,11 @@
     document.getElementById('collection-id-display').textContent = COLLECTION;
 
     // Load collection schema + entry
-    const [colData, entryData, versionsData, mediaData] = await Promise.all([
+    const [colData, entryData, versionsData, activityData, mediaData] = await Promise.all([
       fetch(`/api/collections/${COLLECTION}`,{credentials:'include'}).then(r=>r.ok?r.json():null),
       IS_NEW ? null : fetch(`/api/collections/${COLLECTION}/entries/${SLUG}`,{credentials:'include'}).then(r=>r.ok?r.json():null),
       IS_NEW ? [] : fetch(`/api/collections/${COLLECTION}/entries/${SLUG}/versions`,{credentials:'include'}).then(r=>r.ok?r.json():[]).catch(()=>[]),
+      IS_NEW ? [] : fetch(`/api/collections/${COLLECTION}/entries/${SLUG}/activity`,{credentials:'include'}).then(r=>r.ok?r.json():[]).catch(()=>[]),
       fetch('/api/media',{credentials:'include'}).then(r=>r.json()).catch(()=>[]),
     ]);
 
@@ -506,14 +507,20 @@
       }
     }
 
-    // Fetch preview URL for this collection
-    const previewMeta = await fetch(`/api/meta/preview_url~${COLLECTION}`,{credentials:'include'}).then(r=>r.json()).catch(()=>null);
+    // Fetch preview URL + token for this collection
+    const [previewMeta, previewTokenMeta] = await Promise.all([
+      fetch(`/api/meta/preview_url~${COLLECTION}`,{credentials:'include'}).then(r=>r.json()).catch(()=>null),
+      fetch('/api/meta/preview~token',{credentials:'include'}).then(r=>r.json()).catch(()=>null),
+    ]);
     const previewUrlTemplate = previewMeta?.value || '';
+    const previewToken = previewTokenMeta?.value || '';
     function updatePreviewLink() {
       const btn = document.getElementById('btn-preview-link');
       if (!btn || !previewUrlTemplate) return;
       const slug = document.getElementById('slug-input')?.value || currentSlug || SLUG;
-      btn.href = previewUrlTemplate.replace('{slug}', slug);
+      const base = previewUrlTemplate.replace('{slug}', slug);
+      const sep  = base.includes('?') ? '&' : '?';
+      btn.href = previewToken ? base + sep + 'preview_token=' + previewToken : base;
       btn.style.display = '';
     }
 
@@ -625,6 +632,15 @@
         </div>
       `).join('');
 
+      const actionLabel = { create:'Created', update:'Saved', publish:'Published', unpublish:'Unpublished', delete:'Moved to trash', restore:'Restored' };
+      const actHtml = activityData.slice(0,10).map(a=>`
+        <div style="display:flex;align-items:baseline;gap:8px;padding:4px 0;border-bottom:1px solid var(--line2);font-size:10px;">
+          <span style="color:var(--text);font-weight:500;flex-shrink:0">${actionLabel[a.action]??a.action}</span>
+          <span style="color:var(--muted);flex:1;text-align:right">${a.username}</span>
+          <span style="color:var(--muted);font-family:var(--mono);flex-shrink:0">${new Date(a.created_at).toLocaleDateString()}</span>
+        </div>
+      `).join('');
+
       const hasSeo = !!(seoFields.titleKey || seoFields.descKey);
       const serpHtml = hasSeo ? `<div class="serp-preview" id="serp-preview">
         <div class="serp-url" id="serp-url">${location.host}/${COLLECTION}/<span id="serp-slug-part">${escHtml(IS_NEW?'…':SLUG)}</span></div>
@@ -658,6 +674,7 @@
           ${updatedAt ? `<div class="meta-field"><div class="field-label">Modified</div><div class="field-readonly">${new Date(updatedAt).toLocaleDateString()}</div></div>` : ''}
         </div>
         ${versionsData.length ? `<div class="meta-section"><div class="meta-label">History</div>${versHtml}</div>` : ''}
+        ${activityData.length ? `<div class="meta-section"><div class="meta-label">Activity</div>${actHtml}</div>` : ''}
       `;
 
       // Wire up weekday toggles
