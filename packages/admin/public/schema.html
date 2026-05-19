@@ -279,6 +279,10 @@
             <div class="field-id-hint">{slug} is replaced with the entry slug when opening preview</div>
           </div>
         </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text);cursor:pointer;margin-bottom:12px;">
+          <input type="checkbox" id="new-col-singleton" />
+          <span>Singleton — single entry, opens directly from sidebar (for About pages, site config, etc.)</span>
+        </label>
         <div class="section-label">Fields</div>
         <div id="new-field-rows" class="field-rows"></div>
         <div class="editor-actions">
@@ -299,7 +303,8 @@
         if (!id||!label) { showBannerIn('banner','banner-err','ID and label are required'); return; }
         const schema=serializeSchema(document.getElementById('new-field-rows'));
         const previewUrl=(document.getElementById('new-preview-url')?.value??'').trim();
-        const res=await fetch('/api/collections',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,label,schema})});
+        const singleton=!!(document.getElementById('new-col-singleton')?.checked);
+        const res=await fetch('/api/collections',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,label,schema,singleton})});
         const json=await res.json();
         if (res.ok) {
           if (previewUrl) await fetch(`/api/meta/preview_url~${id}`,{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({value:previewUrl})}).catch(()=>{});
@@ -334,6 +339,10 @@
             <div class="field-id-hint">{slug} is replaced with the entry slug when opening preview</div>
           </div>
         </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text);cursor:pointer;margin-bottom:12px;">
+          <input type="checkbox" id="edit-col-singleton"${col.singleton?' checked':''} />
+          <span>Singleton — single entry, opens directly from sidebar</span>
+        </label>
         <div class="section-label">Fields</div>
         ${total>0?'<div class="delete-warn">Adding fields is non-destructive. Removing fields hides existing data but does not delete it.</div>':''}
         <div id="edit-field-rows" class="field-rows"></div>
@@ -356,8 +365,9 @@
         const label=document.getElementById('edit-label').value.trim();
         const schema=serializeSchema(rowsEl);
         const previewUrl=(document.getElementById('edit-preview-url')?.value??'').trim();
+        const singleton=!!(document.getElementById('edit-col-singleton')?.checked);
         const [res] = await Promise.all([
-          fetch(`/api/collections/${col.id}`,{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({label,schema})}),
+          fetch(`/api/collections/${col.id}`,{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({label,schema,singleton})}),
           fetch(`/api/meta/preview_url~${col.id}`,{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({value:previewUrl})}),
         ]);
         if (res.ok) { await loadColls(); showBannerIn('banner','banner-ok','Saved'); }

@@ -459,13 +459,24 @@
       location.replace('/login.html');
     });
 
-    // Parse ?collection=X&slug=Y from URL
+    // Parse ?collection=X&slug=Y&singleton=1 from URL
     const params = new URLSearchParams(location.search);
     const COLLECTION = params.get('collection');
-    const SLUG       = params.get('slug') ?? 'new';
-    const IS_NEW     = SLUG === 'new';
+    const IS_SINGLETON = params.get('singleton') === '1';
 
     if (!COLLECTION) { location.replace('/collections.html'); }
+
+    // Singleton: resolve the canonical entry slug before proceeding
+    let SLUG = params.get('slug') ?? 'new';
+    if (IS_SINGLETON) {
+      const singletonEntry = await fetch(`/api/collections/${COLLECTION}/singleton`,{credentials:'include'}).then(r=>r.ok?r.json():null);
+      if (singletonEntry?.slug) {
+        SLUG = singletonEntry.slug;
+        history.replaceState(null,'',`/editor.html?collection=${encodeURIComponent(COLLECTION)}&slug=${encodeURIComponent(SLUG)}&singleton=1`);
+      }
+    }
+    const IS_NEW = SLUG === 'new';
+
     document.getElementById('collection-id-display').textContent = COLLECTION;
 
     // Load collection schema + entry

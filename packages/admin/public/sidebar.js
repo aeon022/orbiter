@@ -40,14 +40,19 @@
         var frag = document.createDocumentFragment();
 
         topLevel.forEach(function (col) {
-          var isActive = (page === 'entries') && activeCol === col.id;
+          var isSingleton = !!col.singleton;
+          var isActive = isSingleton
+            ? (page === 'editor') && activeCol === col.id
+            : (page === 'entries') && activeCol === col.id;
           var a = document.createElement('a');
           a.className = 'nav-item' + (isActive ? ' active' : '');
-          a.href = '/entries.html?col=' + encodeURIComponent(col.id) + '&label=' + encodeURIComponent(col.label);
+          a.href = isSingleton
+            ? '/editor.html?collection=' + encodeURIComponent(col.id) + '&singleton=1'
+            : '/entries.html?col=' + encodeURIComponent(col.id) + '&label=' + encodeURIComponent(col.label);
           a.innerHTML =
-            '<span class="nav-icon">▤</span>' +
+            '<span class="nav-icon">' + (isSingleton ? '◈' : '▤') + '</span>' +
             '<span class="nav-label">' + col.label + '</span>' +
-            '<span class="nav-badge">' + col.total + '</span>';
+            (isSingleton ? '' : '<span class="nav-badge">' + col.total + '</span>');
           frag.appendChild(a);
 
           // Children

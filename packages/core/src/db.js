@@ -34,6 +34,7 @@ export class OrbiterDB {
         id         TEXT PRIMARY KEY,
         label      TEXT NOT NULL,
         schema     TEXT NOT NULL,  -- JSON
+        singleton  INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
 
@@ -85,6 +86,7 @@ export class OrbiterDB {
 
     // Migrations: add columns that didn't exist in older pods
     try { this.db.exec(`ALTER TABLE _media ADD COLUMN folder TEXT NOT NULL DEFAULT ''`); } catch {}
+    try { this.db.exec(`ALTER TABLE _collections ADD COLUMN singleton INTEGER NOT NULL DEFAULT 0`); } catch {}
 
     // Migration: make _media.data nullable, add url + path for external backends
     const mediaCols = this.db.prepare('PRAGMA table_info(_media)').all().map(c => c.name);
@@ -210,12 +212,16 @@ export class OrbiterDB {
   }
 
   // ── Collections (write) ───────────────────────────
-  createCollection(id, label, schema = {}) {
-    this.db.prepare('INSERT INTO _collections (id, label, schema) VALUES (?, ?, ?)').run(id, label, JSON.stringify(schema));
+  createCollection(id, label, schema = {}, singleton = false) {
+    this.db.prepare('INSERT INTO _collections (id, label, schema, singleton) VALUES (?, ?, ?, ?)').run(id, label, JSON.stringify(schema), singleton ? 1 : 0);
   }
 
-  updateCollection(id, label, schema) {
-    this.db.prepare('UPDATE _collections SET label = ?, schema = ? WHERE id = ?').run(label, JSON.stringify(schema), id);
+  updateCollection(id, label, schema, singleton) {
+    if (singleton !== undefined) {
+      this.db.prepare('UPDATE _collections SET label = ?, schema = ?, singleton = ? WHERE id = ?').run(label, JSON.stringify(schema), singleton ? 1 : 0, id);
+    } else {
+      this.db.prepare('UPDATE _collections SET label = ?, schema = ? WHERE id = ?').run(label, JSON.stringify(schema), id);
+    }
   }
 
   deleteCollection(id) {
