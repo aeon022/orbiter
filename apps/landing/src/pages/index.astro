@@ -127,7 +127,7 @@ const faqs = [
   },
   {
     q: 'Is it production-ready?',
-    a: 'Orbiter is at v0.3.1 — published to npm, actively maintained, and used in real projects. The API may evolve before v1.0. It\'s suitable for personal sites, client projects, and small teams. Check the GitHub issues for anything relevant to your use case.',
+    a: 'Orbiter is at v0.3.3 — published to npm, actively maintained, and used in real projects. The API may evolve before v1.0. It\'s suitable for personal sites, client projects, and small teams. Check the GitHub issues for anything relevant to your use case.',
   },
   {
     q: 'What\'s the license?',
@@ -272,7 +272,7 @@ const faqs = [
     </div>
 
     <div class="hero-inner">
-      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">v0.3.1 — S3, docs, auto-webhook · Changelog →</a>
+      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">v0.3.3 — singletons, sort, callouts, table blocks · Changelog →</a>
       <h1>Your entire CMS<br />in <span>one file.</span></h1>
       <p class="hero-sub">
         Content, media, schema, users — all in a single <code>.pod</code> file.
@@ -454,6 +454,24 @@ const faqs = [
         <div class="update-date">May<br />2026</div>
         <div class="update-dot"></div>
         <div class="update-body">
+          <div class="update-tag green">v0.3.3</div>
+          <div class="update-title">Singletons, drag-sort, editor blocks & version display</div>
+          <ul class="update-items">
+            <li><strong>Singleton collections</strong> — mark a collection as singleton to skip the entries list and go straight to the one record. Good for site settings, about pages, or any single-document content.</li>
+            <li><strong>Drag-to-sort entries</strong> — reorder entries manually with a drag handle. Order persists in the pod and is reflected in <code>getCollection()</code> output.</li>
+            <li><strong>Callout blocks</strong> — type <code>/note</code> in the block picker to insert a tinted info/warning box inline with prose.</li>
+            <li><strong>Table blocks</strong> — type <code>/tbl</code> for an editable 2×2 table. Tab to navigate cells, toolbar to add/remove rows and columns.</li>
+            <li><strong>Boolean field</strong> — on/off toggle field type for schema definitions.</li>
+            <li><strong>Preview URL per collection</strong> — set a URL template with <code>&#123;slug&#125;</code> in Schema; an ↗ Preview button appears in the editor topbar.</li>
+            <li><strong>Version display</strong> — admin sidebar footer now shows <em>Orbiter vX.Y.Z · pod vN</em> so you always know what's running.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="update-card reveal reveal-delay-1">
+        <div class="update-date">May<br />2026</div>
+        <div class="update-dot"></div>
+        <div class="update-body">
           <div class="update-tag green">v0.3.1</div>
           <div class="update-title">S3 backends, docs & auto-webhook</div>
           <ul class="update-items">
@@ -465,7 +483,7 @@ const faqs = [
         </div>
       </div>
 
-      <div class="update-card reveal reveal-delay-1">
+      <div class="update-card reveal reveal-delay-2">
         <div class="update-date">May<br />2025</div>
         <div class="update-dot"></div>
         <div class="update-body">
