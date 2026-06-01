@@ -100,6 +100,7 @@
           <button class="filter-tab active" data-status="">All</button>
           <button class="filter-tab" data-status="published">Published</button>
           <button class="filter-tab" data-status="draft">Drafts</button>
+          <button class="filter-tab" data-status="scheduled">Scheduled</button>
           <button class="filter-tab" data-status="trash" style="margin-left:auto">🗑 Trash</button>
         </div>
 
@@ -187,8 +188,9 @@
               const title   = e.data?.title || e.slug;
               const updated = e.updated_at ? e.updated_at.split(' ')[0] : '—';
               const deleted = e.deleted_at ? e.deleted_at.split(' ')[0] : '—';
-              const nextStatus = e.status === 'published' ? 'draft' : 'published';
-              const toggleLabel = e.status === 'published' ? 'Unpublish' : 'Publish';
+              const nextStatus  = e.status === 'published' ? 'draft' : 'published';
+              const toggleLabel = e.status === 'published' ? 'Unpublish' : e.status === 'scheduled' ? 'Publish now' : 'Publish';
+              const schedInfo   = e.status === 'scheduled' && e.publish_at ? ` · ${e.publish_at.split(' ')[0]}` : '';
               return `<tr data-slug="${e.slug}"${canSort ? ' draggable="true"' : ''}>
                 ${canSort ? `<td class="drag-col"><span class="drag-handle" title="Drag to reorder">⠿</span></td>` : ''}
                 <td class="cb-col"><input type="checkbox" class="row-cb" data-slug="${e.slug}" ${selected.has(e.slug) ? 'checked' : ''} /></td>
@@ -196,7 +198,7 @@
                   <div style="color:var(--heading);font-weight:500">${title}</div>
                   <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px">${e.slug}</div>
                 </td>
-                <td>${isTrash ? `<span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${deleted}</span>` : `<span class="badge badge-${e.status}">${e.status}</span>`}</td>
+                <td>${isTrash ? `<span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${deleted}</span>` : `<span class="badge badge-${e.status}">${e.status}${schedInfo}</span>`}</td>
                 <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${isTrash ? '' : updated}</td>
                 <td style="width:1%;white-space:nowrap">
                   <div class="row-actions">

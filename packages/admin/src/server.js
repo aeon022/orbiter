@@ -93,3 +93,24 @@ serve({ fetch: createApp(POD_PATH).fetch, port: PORT }, () => {
   console.log(`Orbiter Admin API  →  http://localhost:${PORT}`);
   console.log(`Pod: ${POD_PATH}`);
 });
+
+// Scheduled publishing — check every 60 s
+setInterval(() => {
+  try {
+    const db  = openPod(POD_PATH);
+    const due = db.getScheduledDue();
+    if (!due.length) { db.close(); return; }
+    const now = new Date().toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, '');
+    for (const entry of due) {
+      db.db.prepare("UPDATE _entries SET status = 'published', publish_at = NULL, updated_at = ? WHERE id = ?").run(now, entry.id);
+      db.logAudit(entry.id, 'scheduler', 'publish');
+    }
+    const webhookUrl = db.getMeta('build.webhook_url') ?? '';
+    if (webhookUrl) db.setMeta('build.last_triggered', new Date().toISOString());
+    db.close();
+    console.log(`[scheduler] Published ${due.length} scheduled entr${due.length === 1 ? 'y' : 'ies'}`);
+    if (webhookUrl) fetch(webhookUrl, { method: 'POST' }).catch(() => {});
+  } catch (e) {
+    console.warn('[scheduler]', e.message);
+  }
+}, 60_000);

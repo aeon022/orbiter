@@ -101,15 +101,21 @@
     /* Status */
     .status-bar { display:flex; align-items:center; gap:8px; padding:8px 0; margin-bottom:10px; }
     .status-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
-    .status-dot.published { background:var(--jade); }
-    .status-dot.draft { background:var(--gold); }
+    .status-dot.published  { background:var(--jade); }
+    .status-dot.draft      { background:var(--gold); }
+    .status-dot.scheduled  { background:var(--accent); }
     .status-lbl { font-size:11px; }
-    .status-lbl.published { color:var(--jade); }
-    .status-lbl.draft { color:var(--gold); }
+    .status-lbl.published  { color:var(--jade); }
+    .status-lbl.draft      { color:var(--gold); }
+    .status-lbl.scheduled  { color:var(--accent); }
     .btn-publish { display:block; width:100%; padding:9px; background:var(--gold); border:none; color:var(--bg0); font-family:var(--mono); font-size:10px; letter-spacing:.12em; cursor:pointer; transition:background .15s; margin-bottom:5px; border-radius:var(--radius); }
     .btn-publish:hover { background:#7a5520; }
-    .btn-draft { display:block; width:100%; padding:8px; background:transparent; border:1px solid var(--line); color:var(--mid); font-family:var(--mono); font-size:10px; cursor:pointer; transition:all .12s; border-radius:var(--radius); }
+    .btn-draft { display:block; width:100%; padding:8px; background:transparent; border:1px solid var(--line); color:var(--mid); font-family:var(--mono); font-size:10px; cursor:pointer; transition:all .12s; border-radius:var(--radius); margin-bottom:5px; }
     .btn-draft:hover { border-color:var(--mid); color:var(--text); }
+    .btn-schedule { display:block; width:100%; padding:8px; background:transparent; border:1px solid var(--accent); color:var(--accent); font-family:var(--mono); font-size:10px; cursor:pointer; transition:all .12s; border-radius:var(--radius); margin-bottom:5px; }
+    .btn-schedule:hover { background:var(--accent-bg); }
+    .schedule-picker { display:none; gap:4px; margin-bottom:5px; }
+    .schedule-picker.open { display:flex; }
 
     /* Schema fields in sidebar */
     .field-input,.field-select { width:100%; background:var(--bg0); border:1px solid var(--line); padding:6px 8px; color:var(--heading); font-family:var(--mono); font-size:11px; outline:none; appearance:none; transition:border-color .15s; border-radius:var(--radius); box-sizing:border-box; }
@@ -539,8 +545,10 @@
 
     function renderMetaPanel() {
       const panel = document.getElementById('meta-panel');
-      const status = IS_NEW ? 'draft' : (entryData?.status ?? 'draft');
+      const status    = IS_NEW ? 'draft' : (entryData?.status ?? 'draft');
       const updatedAt = entryData?.updated_at;
+      const publishAt = entryData?.publish_at ?? null;
+      const publishAtInput = publishAt ? publishAt.replace(' ', 'T').slice(0, 16) : '';
 
       let fieldsHtml = '';
       const seoFields = {};
@@ -653,10 +661,16 @@
         <div class="meta-section">
           <div class="status-bar">
             <div class="status-dot ${status}" id="status-dot"></div>
-            <div class="status-lbl ${status}" id="status-lbl">${status==='published'?'Published':'Draft'}</div>
+            <div class="status-lbl ${status}" id="status-lbl">${status==='published'?'Published':status==='scheduled'?'Scheduled':'Draft'}</div>
+            ${status==='scheduled'&&publishAt?`<span style="font-size:10px;color:var(--muted);margin-left:auto">${new Date(publishAt.replace(' ','T')).toLocaleDateString()}</span>`:''}
           </div>
-          <button type="button" class="btn-publish" id="btn-publish">Publish</button>
-          <button type="button" class="btn-draft"   id="btn-draft">Save as draft</button>
+          <button type="button" class="btn-publish" id="btn-publish">${status==='published'?'Republish':'Publish now'}</button>
+          <button type="button" class="btn-draft"   id="btn-draft">${status==='scheduled'?'Cancel schedule':'Save as draft'}</button>
+          <div class="schedule-picker${status==='scheduled'?' open':''}" id="schedule-picker">
+            <input type="datetime-local" class="field-input" id="publish-at-input" value="${publishAtInput}" style="flex:1;font-size:10px;padding:5px 8px;" />
+            <button type="button" id="btn-schedule-confirm" style="padding:5px 10px;background:var(--accent);border:none;color:var(--bg0);font-family:var(--mono);font-size:10px;cursor:pointer;border-radius:var(--radius);white-space:nowrap;">Set</button>
+          </div>
+          <button type="button" class="btn-schedule" id="btn-schedule">${status==='scheduled'?'Reschedule':'Schedule'}</button>
         </div>
         <div class="meta-section">
           <div class="meta-label">Details</div>
@@ -669,6 +683,7 @@
             <select class="field-select" id="status-select">
               <option value="draft"     ${status==='draft'     ?'selected':''}>Draft</option>
               <option value="published" ${status==='published' ?'selected':''}>Published</option>
+              <option value="scheduled" ${status==='scheduled' ?'selected':''}>Scheduled</option>
             </select>
           </div>
           ${updatedAt ? `<div class="meta-field"><div class="field-label">Modified</div><div class="field-readonly">${new Date(updatedAt).toLocaleDateString()}</div></div>` : ''}
@@ -729,9 +744,17 @@
         });
       });
 
-      // Publish / draft buttons
-      document.getElementById('btn-publish').addEventListener('click',()=>saveEntry('published'));
-      document.getElementById('btn-draft').addEventListener('click',()=>saveEntry('draft'));
+      // Publish / draft / schedule buttons
+      document.getElementById('btn-publish').addEventListener('click', () => saveEntry('published'));
+      document.getElementById('btn-draft').addEventListener('click',   () => saveEntry('draft'));
+      document.getElementById('btn-schedule').addEventListener('click', () => {
+        document.getElementById('schedule-picker').classList.toggle('open');
+      });
+      document.getElementById('btn-schedule-confirm').addEventListener('click', () => {
+        const val = document.getElementById('publish-at-input').value;
+        if (!val) { alert('Please select a date and time.'); return; }
+        saveEntry('scheduled');
+      });
 
       // Slug input → slug preview
       document.getElementById('slug-input').addEventListener('input', e=>{
@@ -802,8 +825,15 @@
     function updateStatusUI(status) {
       document.getElementById('status-dot').className = 'status-dot ' + status;
       document.getElementById('status-lbl').className = 'status-lbl ' + status;
-      document.getElementById('status-lbl').textContent = status==='published'?'Published':'Draft';
-      document.getElementById('status-select').value = status;
+      document.getElementById('status-lbl').textContent = status === 'published' ? 'Published' : status === 'scheduled' ? 'Scheduled' : 'Draft';
+      const sel = document.getElementById('status-select');
+      if (sel) sel.value = status;
+      const publishBtn = document.getElementById('btn-publish');
+      const draftBtn   = document.getElementById('btn-draft');
+      const schedBtn   = document.getElementById('btn-schedule');
+      if (publishBtn) publishBtn.textContent = status === 'published' ? 'Republish' : 'Publish now';
+      if (draftBtn)   draftBtn.textContent   = status === 'scheduled' ? 'Cancel schedule' : 'Save as draft';
+      if (schedBtn)   schedBtn.textContent   = status === 'scheduled' ? 'Reschedule' : 'Schedule';
     }
 
     function renderTags(key) {
@@ -880,6 +910,14 @@
     let currentPath = location.pathname + location.search;
 
     async function saveEntry(status, isAutosave=false) {
+      // Resolve publish_at for scheduled entries
+      let publish_at = null;
+      if (status === 'scheduled') {
+        const raw = document.getElementById('publish-at-input')?.value;
+        if (!raw) { if (!isAutosave) alert('Please select a date and time.'); return; }
+        publish_at = raw.replace('T', ' ') + ':00';
+      }
+
       const title = document.getElementById('title-input').value;
       syncToHidden();
       const body = document.getElementById('body-input').value;
@@ -907,7 +945,7 @@
         const res = await fetch(`/api/collections/${COLLECTION}/entries`,{
           method:'POST', credentials:'include',
           headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ slug, data, status }),
+          body: JSON.stringify({ slug, data, status, publish_at }),
         });
         const json = await res.json();
         if (json.slug || json.id) {
@@ -926,7 +964,7 @@
         const res = await fetch(`/api/collections/${COLLECTION}/entries/${targetSlug}`,{
           method:'PUT', credentials:'include',
           headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ slug, data, status }),
+          body: JSON.stringify({ slug, data, status, publish_at }),
         });
         if (res.ok) {
           const json = await res.json();

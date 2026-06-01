@@ -97,6 +97,7 @@ export class OrbiterDB {
     try { this.db.exec(`ALTER TABLE _collections ADD COLUMN singleton INTEGER NOT NULL DEFAULT 0`); } catch {}
     try { this.db.exec(`ALTER TABLE _entries ADD COLUMN sort_order INTEGER`); } catch {}
     try { this.db.exec(`ALTER TABLE _entries ADD COLUMN deleted_at TEXT`); } catch {}
+    try { this.db.exec(`ALTER TABLE _entries ADD COLUMN publish_at TEXT`); } catch {}
 
     // Migration: make _media.data nullable, add url + path for external backends
     const mediaCols = this.db.prepare('PRAGMA table_info(_media)').all().map(c => c.name);
@@ -256,12 +257,20 @@ export class OrbiterDB {
     return id;
   }
 
-  updateEntry(collectionId, slug, { slug: newSlug, data, status } = {}) {
+  updateEntry(collectionId, slug, { slug: newSlug, data, status, publish_at } = {}) {
     const entry = this.getEntry(collectionId, slug);
     if (!entry) return false;
-    this.db.prepare('UPDATE _entries SET slug = ?, data = ?, status = ?, updated_at = ? WHERE id = ?')
-      .run(newSlug ?? slug, JSON.stringify(data ?? entry.data), status ?? entry.status, sqliteNow(), entry.id);
+    const pa = publish_at !== undefined ? publish_at : (entry.publish_at ?? null);
+    this.db.prepare('UPDATE _entries SET slug = ?, data = ?, status = ?, publish_at = ?, updated_at = ? WHERE id = ?')
+      .run(newSlug ?? slug, JSON.stringify(data ?? entry.data), status ?? entry.status, pa, sqliteNow(), entry.id);
     return true;
+  }
+
+  getScheduledDue() {
+    const rows = this.db.prepare(
+      "SELECT * FROM _entries WHERE status = 'scheduled' AND publish_at <= datetime('now') AND deleted_at IS NULL"
+    ).all();
+    return rows.map(r => ({ ...r, data: JSON.parse(r.data) }));
   }
 
   deleteEntry(collectionId, slug) {

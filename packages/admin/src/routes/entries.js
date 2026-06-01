@@ -99,6 +99,8 @@ entryRoutes.put('/:collectionId/entries/:slug', async (c) => {
     db.logAudit(updated.id, username, 'publish');
   } else if (body.status === 'draft' && before?.status === 'published') {
     db.logAudit(updated.id, username, 'unpublish');
+  } else if (body.status === 'scheduled' && before?.status !== 'scheduled') {
+    db.logAudit(updated.id, username, 'schedule');
   } else {
     db.logAudit(updated.id, username, 'update');
   }
@@ -186,12 +188,16 @@ entryRoutes.post('/:collectionId/entries/:slug/duplicate', (c) => {
 // PATCH /api/collections/:id/entries/:slug/status
 entryRoutes.patch('/:collectionId/entries/:slug/status', async (c) => {
   const { collectionId, slug } = c.req.param();
-  const { status } = await c.req.json();
-  if (!['draft', 'published'].includes(status)) return c.json({ error: 'Invalid status' }, 400);
+  const { status, publish_at } = await c.req.json();
+  if (!['draft', 'published', 'scheduled'].includes(status)) return c.json({ error: 'Invalid status' }, 400);
+  if (status === 'scheduled' && !publish_at) return c.json({ error: 'publish_at required for scheduled status' }, 400);
   const db    = openPod(c.get('podPath'));
   const entry = db.getEntry(collectionId, slug);
   if (!entry) { db.close(); return c.json({ error: 'Not found' }, 404); }
-  db.updateEntry(collectionId, slug, { slug, data: entry.data, status });
+  const pa = status === 'scheduled' ? publish_at : null;
+  db.updateEntry(collectionId, slug, { slug, data: entry.data, status, publish_at: pa });
+  const username = c.get('user')?.username ?? 'unknown';
+  if (status === 'scheduled') db.logAudit(entry.id, username, 'schedule');
   db.close();
   if (status === 'published') fireWebhook(c.get('podPath'));
   return c.json({ ok: true });

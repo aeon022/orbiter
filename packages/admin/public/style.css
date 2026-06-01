@@ -936,8 +936,9 @@ td { padding: 10px 20px; font-size: 12px; color: var(--text); border-bottom: 1px
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: var(--row-hover); }
 .badge { display: inline-block; font-size: 10px; font-family: var(--mono); padding: 2px 7px; border-radius: 2px; letter-spacing: 0.04em; }
-.badge-published { background: var(--jade-bg); color: var(--jade); }
-.badge-draft     { background: var(--gold-bg);  color: var(--gold); }
+.badge-published  { background: var(--jade-bg);   color: var(--jade); }
+.badge-draft      { background: var(--gold-bg);   color: var(--gold); }
+.badge-scheduled  { background: var(--accent-bg); color: var(--accent); }
 
 /* ── Buttons ─────────────────────────────────────── */
 .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; font-size: 12px; font-family: var(--sans); border-radius: var(--radius); cursor: pointer; transition: all 0.12s; border: 1px solid transparent; font-weight: 400; letter-spacing: 0.01em; }
