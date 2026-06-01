@@ -1022,3 +1022,307 @@ html[data-style="glass"] .login-card {
 /* Scheme toggle icon labels (set in JS) */
 [data-scheme="dark"]  .scheme-toggle { color: var(--accent); }
 [data-scheme="light"] .scheme-toggle { color: var(--gold); }
+
+
+/* ════════════════════════════════════════════════════════════
+   XFCE DOCK MODE  (html[data-style="xfce"])
+   Space-station OS: status bar top, floating dock bottom.
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Glass vars inherited ─────────────────────────────────── */
+html[data-style="xfce"] {
+  --radius: 12px;
+  --glass-blur:    blur(28px) saturate(210%);
+  --glass-blur-sm: blur(16px) saturate(180%);
+  --glass-border:  color-mix(in srgb, var(--accent) 22%, transparent);
+  --glass-bg:      color-mix(in srgb, var(--bg2) 46%, transparent);
+  --glass-bg-side: color-mix(in srgb, var(--bg1) 48%, transparent);
+  --glass-shadow:  0 8px 40px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.07);
+  --sb-h: 26px;
+  --dock-h: 76px;
+  --dock-item-base: 44px;
+}
+
+html[data-style="xfce"][data-scheme="light"],
+html[data-style="xfce"] body[data-scheme="light"] {
+  --glass-shadow: 0 4px 20px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.6);
+}
+
+/* ── Layout overrides ─────────────────────────────────────── */
+html[data-style="xfce"] .app {
+  display: block !important;
+  height: 100vh;
+  overflow: hidden;
+}
+html[data-style="xfce"] .topbar  { display: none !important; }
+html[data-style="xfce"] .sidebar { display: none !important; }
+
+html[data-style="xfce"] .main {
+  height: 100vh;
+  box-sizing: border-box;
+  padding-top:    calc(var(--sb-h) + 20px) !important;
+  padding-bottom: calc(var(--dock-h) + 28px) !important;
+  overflow-y: auto;
+}
+
+/* Editor: fix full-height shell */
+html[data-style="xfce"] .editor-shell {
+  height: calc(100vh - var(--sb-h) - var(--dock-h) - 8px) !important;
+  position: relative;
+  top: var(--sb-h);
+}
+
+/* ── Status Bar ───────────────────────────────────────────── */
+.xfce-sb {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--sb-h, 26px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 0;
+  background: var(--glass-bg-side, rgba(20,20,32,.7));
+  backdrop-filter: var(--glass-blur, blur(24px));
+  -webkit-backdrop-filter: var(--glass-blur, blur(24px));
+  border-bottom: 1px solid var(--glass-border, rgba(139,124,248,.18));
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  user-select: none;
+}
+.xfce-sb-left  { display: flex; align-items: center; gap: 6px; flex: 1; }
+.xfce-sb-center{ flex: 1; text-align: center; color: var(--mid); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9.5px; letter-spacing: .04em; }
+.xfce-sb-right { flex: 1; display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+.xfce-sb-logo  { color: var(--accent); letter-spacing: .16em; font-size: 9px; font-weight: 600; display: flex; align-items: center; }
+.xfce-sb-div   { color: var(--line); }
+#xfce-sb-site  { color: var(--text); }
+#xfce-sb-user  { color: var(--mid); }
+#xfce-sb-clock { color: var(--gold); font-variant-numeric: tabular-nums; }
+
+/* ── Dock ─────────────────────────────────────────────────── */
+.xfce-dock {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99998;
+  padding: 6px 10px;
+  background: var(--glass-bg-side);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow: var(--glass-shadow), 0 0 0 1px color-mix(in srgb, var(--accent) 8%, transparent);
+  display: flex;
+  align-items: flex-end;
+}
+
+.xfce-dock-inner {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.xfce-dock-group {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+/* Dock separator */
+.xfce-dock-sep {
+  width: 1px;
+  height: 32px;
+  background: var(--glass-border);
+  margin: 0 6px;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+/* Dock items */
+.xfce-dock-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  width: var(--dock-item-base, 44px);
+  padding: 5px 4px 4px;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--muted);
+  transition: color .15s, background .15s;
+  transform: scale(var(--ds, 1));
+  transform-origin: bottom center;
+  transition: transform .1s cubic-bezier(.34,1.4,.64,1), color .12s, background .12s;
+  position: relative;
+}
+.xfce-dock-item:hover {
+  color: var(--heading);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.xfce-dock-item.active {
+  color: var(--accent);
+}
+.xfce-dock-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
+
+.xfce-dock-icon {
+  font-size: 18px;
+  line-height: 1;
+  display: block;
+  transition: inherit;
+}
+.xfce-dock-lbl {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: .05em;
+  margin-top: 3px;
+  color: var(--muted);
+  white-space: nowrap;
+  transition: color .12s;
+  opacity: .75;
+}
+.xfce-dock-item:hover .xfce-dock-lbl,
+.xfce-dock-item.active .xfce-dock-lbl {
+  opacity: 1;
+  color: var(--text);
+}
+
+/* ── HUD Panel ────────────────────────────────────────────── */
+.xfce-hud {
+  position: fixed;
+  top: var(--sb-h, 26px);
+  right: -280px;
+  width: 260px;
+  height: calc(100vh - var(--sb-h, 26px) - var(--dock-h, 76px) - 26px);
+  z-index: 99997;
+  background: var(--glass-bg-side);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-left: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+  border-radius: 0 0 0 14px;
+  box-shadow: var(--glass-shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: right .25s cubic-bezier(.4,0,.2,1);
+}
+.xfce-hud.open { right: 0; }
+
+.xfce-hud-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.xfce-hud-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.xfce-hud-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color .12s, background .12s;
+}
+.xfce-hud-close:hover { color: var(--heading); background: var(--hover-bg); }
+
+.xfce-hud-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+}
+
+.xfce-hud-section-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.xfce-hud-rows {}
+
+.xfce-hud-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line2);
+  font-size: 11px;
+}
+.xfce-hud-row:last-child { border-bottom: none; }
+.xfce-hud-row span:first-child { color: var(--muted); }
+.xfce-hud-row span:last-child  { color: var(--text); font-family: var(--mono); font-size: 10px; }
+
+.xfce-hud-nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.xfce-hud-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--mid);
+  font-size: 12px;
+  transition: background .1s, color .1s;
+}
+.xfce-hud-nav-item:hover { background: var(--hover-bg); color: var(--heading); }
+.xfce-hud-nav-item.active { color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.xfce-hud-nav-item span:first-child { font-size: 14px; width: 20px; text-align: center; }
+
+/* ── Animated background orbs (glass mode carries over) ───── */
+html[data-style="xfce"] body::before,
+html[data-style="xfce"] body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(80px);
+  animation: orb-drift 20s ease-in-out infinite alternate;
+}
+html[data-style="xfce"] body::before {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%);
+  top: -120px; left: -100px;
+}
+html[data-style="xfce"] body::after {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--gold) 8%, transparent), transparent 70%);
+  bottom: 60px; right: -80px;
+  animation-delay: -8s; animation-duration: 26s;
+}
+@keyframes orb-drift {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(30px, 20px) scale(1.08); }
+}

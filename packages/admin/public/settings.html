@@ -630,6 +630,26 @@
               <div class="theme-card-name">Glass</div>
               <div class="theme-card-sub">Glassmorphism · blur</div>
             </button>
+            <button class="style-card \${currentStyle==='xfce'?'active':''}" data-style="xfce">
+              <div class="style-preview sp-glass" style="position:relative;overflow:hidden;">
+                <div class="sp-orb sp-orb1"></div>
+                <div class="sp-orb sp-orb2"></div>
+                <div style="position:absolute;top:0;left:0;right:0;height:12%;background:color-mix(in srgb,var(--bg2) 60%,transparent);border-bottom:1px solid var(--line);"></div>
+                <div class="sp-body" style="margin:0;padding:8% 5% 25%;">
+                  <div class="sp-row sp-glass-panel"></div>
+                  <div class="sp-row sp-row-short sp-glass-panel"></div>
+                  <div class="sp-row sp-glass-panel"></div>
+                </div>
+                <div style="position:absolute;bottom:4%;left:50%;transform:translateX(-50%);background:color-mix(in srgb,var(--bg2) 60%,transparent);border:1px solid var(--accent);border-radius:8px;padding:3px 8px;display:flex;gap:4px;align-items:center;">
+                  <span style="width:6px;height:6px;background:var(--accent);border-radius:50%;display:block;"></span>
+                  <span style="width:6px;height:6px;background:var(--muted);border-radius:50%;display:block;"></span>
+                  <span style="width:6px;height:6px;background:var(--gold);border-radius:50%;display:block;"></span>
+                  <span style="width:6px;height:6px;background:var(--muted);border-radius:50%;display:block;"></span>
+                </div>
+              </div>
+              <div class="theme-card-name">Station</div>
+              <div class="theme-card-sub">Dock · no sidebar</div>
+            </button>
           </div>
         </div>
       </div>
@@ -779,9 +799,13 @@
         const s = btn.dataset.style;
         document.querySelectorAll('.style-card').forEach(b => b.classList.toggle('active', b.dataset.style === s));
         const root = document.documentElement;
-        if (s === 'glass') root.setAttribute('data-style', 'glass');
-        else root.removeAttribute('data-style');
+        root.removeAttribute('data-style');
+        if (s === 'glass' || s === 'xfce') root.setAttribute('data-style', s);
         localStorage.setItem('orb_style', s);
+        // xfce requires a reload to inject the dock
+        if (s === 'xfce' || document.documentElement.dataset.style === 'xfce') {
+          location.reload();
+        }
       });
     });
 

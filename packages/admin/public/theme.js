@@ -23,7 +23,8 @@
   if (theme !== 'space') root.setAttribute('data-theme', theme);
   if (scheme === 'dark')  root.setAttribute('data-scheme', 'dark');
   if (scheme === 'light') root.setAttribute('data-scheme', 'light');
-  if (style === 'glass')  root.setAttribute('data-style', 'glass');
+  if (style === 'glass') root.setAttribute('data-style', 'glass');
+  if (style === 'xfce')  root.setAttribute('data-style', 'xfce');
 
   // Wire up toggle button once DOM is ready
   document.addEventListener('DOMContentLoaded', function () {
