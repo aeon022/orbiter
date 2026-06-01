@@ -633,10 +633,11 @@
       }
 
       const versHtml = versionsData.slice(0,8).map((v,i)=>`
-        <div class="version-row">
+        <div class="version-row" data-vid="${v.id}">
           <div class="v-dot${i===0?' cur':''}"></div>
           <div class="v-hash">${v.id.slice(0,7)}</div>
           <div class="v-time">${new Date(v.created_at).toLocaleDateString()}</div>
+          ${i===0 ? '' : `<button class="btn-row v-restore-btn" data-vid="${v.id}" style="margin-left:auto;font-size:9px;padding:2px 6px">Restore</button>`}
         </div>
       `).join('');
 
@@ -754,6 +755,19 @@
         const val = document.getElementById('publish-at-input').value;
         if (!val) { alert('Please select a date and time.'); return; }
         saveEntry('scheduled');
+      });
+
+      // Version restore buttons
+      panel.querySelectorAll('.v-restore-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Restore this version? Current content will be overwritten.')) return;
+          const vid = btn.dataset.vid;
+          const targetSlug = currentSlug || SLUG;
+          const res = await fetch(`/api/collections/${COLLECTION}/entries/${targetSlug}/versions/${vid}/restore`, {
+            method: 'POST', credentials: 'include',
+          });
+          if (res.ok) { location.reload(); } else { alert('Restore failed.'); }
+        });
       });
 
       // Slug input → slug preview

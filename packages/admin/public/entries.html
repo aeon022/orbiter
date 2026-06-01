@@ -90,7 +90,11 @@
           <h1 class="page-title" id="page-title">Entries</h1>
           <p class="page-sub" id="page-sub"></p>
         </div>
-        <button class="btn btn-primary" id="new-btn" style="flex-shrink:0;margin-top:4px">+ New entry</button>
+        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;margin-top:4px">
+          <a id="export-btn" href="#" class="btn btn-ghost btn-sm" title="Export as CSV">↓ CSV</a>
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer" title="Import from CSV">↑ CSV<input type="file" id="import-file" accept=".csv" style="display:none" /></label>
+          <button class="btn btn-primary" id="new-btn">+ New entry</button>
+        </div>
       </div>
 
       <!-- Filter + table glass card -->
@@ -364,6 +368,29 @@
       const n = selected.size;
       if (!confirm(`Permanently delete ${n} entr${n !== 1 ? 'ies' : 'y'}? This cannot be undone.`)) return;
       await bulkAction('permanent');
+    });
+
+    // CSV Export
+    document.getElementById('export-btn').href = `/api/collections/${colId}/entries/export.csv`;
+
+    // CSV Import
+    document.getElementById('import-file').addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      const res  = await fetch(`/api/collections/${colId}/entries/import.csv`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'text/csv' },
+        body: text,
+      });
+      const json = await res.json();
+      if (res.ok) {
+        alert(`Import complete: ${json.created} created, ${json.updated} updated${json.skipped ? ', ' + json.skipped + ' skipped' : ''}.`);
+        renderEntries();
+      } else {
+        alert('Import failed: ' + (json.error ?? 'Unknown error'));
+      }
+      e.target.value = '';
     });
 
     // New entry modal

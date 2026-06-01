@@ -260,9 +260,26 @@ export class OrbiterDB {
   updateEntry(collectionId, slug, { slug: newSlug, data, status, publish_at } = {}) {
     const entry = this.getEntry(collectionId, slug);
     if (!entry) return false;
+    // Snapshot current state before overwriting
+    this.db.prepare('INSERT INTO _versions (id, entry_id, data, created_at) VALUES (?, ?, ?, ?)')
+      .run(randomUUID(), entry.id, entry.data ? JSON.stringify(entry.data) : '{}', sqliteNow());
+    // Keep only the 20 most recent versions
+    this.db.prepare(`
+      DELETE FROM _versions WHERE entry_id = ? AND id NOT IN (
+        SELECT id FROM _versions WHERE entry_id = ? ORDER BY created_at DESC LIMIT 20
+      )
+    `).run(entry.id, entry.id);
     const pa = publish_at !== undefined ? publish_at : (entry.publish_at ?? null);
     this.db.prepare('UPDATE _entries SET slug = ?, data = ?, status = ?, publish_at = ?, updated_at = ? WHERE id = ?')
       .run(newSlug ?? slug, JSON.stringify(data ?? entry.data), status ?? entry.status, pa, sqliteNow(), entry.id);
+    return true;
+  }
+
+  restoreVersion(entryId, versionId) {
+    const ver = this.db.prepare('SELECT * FROM _versions WHERE id = ? AND entry_id = ?').get(versionId, entryId);
+    if (!ver) return false;
+    const now = sqliteNow();
+    this.db.prepare('UPDATE _entries SET data = ?, updated_at = ? WHERE id = ?').run(ver.data, now, entryId);
     return true;
   }
 
