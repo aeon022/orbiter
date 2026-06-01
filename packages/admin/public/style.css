@@ -1049,20 +1049,32 @@ html[data-style="xfce"] body[data-scheme="light"] {
 }
 
 /* ── Layout overrides ─────────────────────────────────────── */
+html[data-style="xfce"],
+html[data-style="xfce"] body {
+  overscroll-behavior: none;
+}
 html[data-style="xfce"] .app {
   display: block !important;
-  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 html[data-style="xfce"] .topbar  { display: none !important; }
 html[data-style="xfce"] .sidebar { display: none !important; }
 
 html[data-style="xfce"] .main {
-  height: 100vh;
+  height: 100dvh;
   box-sizing: border-box;
   padding-top:    calc(var(--sb-h) + 20px) !important;
   padding-bottom: calc(var(--dock-h) + 28px) !important;
   overflow-y: auto;
+  overscroll-behavior-y: none;
+}
+/* Editor page: don't flex-column — editor-shell needs direct control */
+html[data-style="xfce"] .main:has(.editor-shell) {
+  display: block;
+  gap: 0;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 /* Editor: fix full-height shell */
@@ -1121,13 +1133,13 @@ html[data-style="xfce"] .editor-shell {
 .xfce-dock-inner {
   display: flex;
   align-items: flex-end;
-  gap: 2px;
+  gap: 6px;
 }
 
 .xfce-dock-group {
   display: flex;
   align-items: flex-end;
-  gap: 2px;
+  gap: 6px;
 }
 
 /* Dock separator */
@@ -1153,16 +1165,17 @@ html[data-style="xfce"] .editor-shell {
   border-radius: 12px;
   cursor: pointer;
   text-decoration: none;
-  color: var(--muted);
-  transition: color .15s, background .15s;
+  color: var(--mid);
   transform: scale(var(--ds, 1));
   transform-origin: bottom center;
-  transition: transform .1s cubic-bezier(.34,1.4,.64,1), color .12s, background .12s;
+  transition: transform .1s cubic-bezier(.34,1.4,.64,1), color .1s, background .1s, box-shadow .1s;
   position: relative;
 }
 .xfce-dock-item:hover {
   color: var(--heading);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 18%, transparent),
+              inset 0 1px 0 color-mix(in srgb, var(--accent) 22%, transparent);
 }
 .xfce-dock-item.active {
   color: var(--accent);
@@ -1184,22 +1197,32 @@ html[data-style="xfce"] .editor-shell {
   font-size: 18px;
   line-height: 1;
   display: block;
-  transition: inherit;
+  opacity: .38;
+  transition: filter .1s, transform .1s cubic-bezier(.34,1.4,.64,1), opacity .1s;
+}
+.xfce-dock-item:hover .xfce-dock-icon {
+  opacity: 1;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 55%, transparent));
+  transform: scale(1.12);
+}
+.xfce-dock-item.active .xfce-dock-icon {
+  opacity: .9;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 60%, transparent));
 }
 .xfce-dock-lbl {
   font-family: var(--mono);
   font-size: 8px;
   letter-spacing: .05em;
   margin-top: 3px;
-  color: var(--muted);
+  color: var(--mid);
   white-space: nowrap;
-  transition: color .12s;
-  opacity: .75;
+  transition: color .1s, opacity .1s;
+  opacity: .35;
 }
 .xfce-dock-item:hover .xfce-dock-lbl,
 .xfce-dock-item.active .xfce-dock-lbl {
   opacity: 1;
-  color: var(--text);
+  color: var(--heading);
 }
 
 /* ── HUD Panel ────────────────────────────────────────────── */
@@ -1325,4 +1348,781 @@ html[data-style="xfce"] body::after {
 @keyframes orb-drift {
   from { transform: translate(0, 0) scale(1); }
   to   { transform: translate(30px, 20px) scale(1.08); }
+}
+
+/* ── XFCE: Content centering + card polish ────────────────── */
+html[data-style="xfce"] .main {
+  padding-left:  max(24px, calc(50vw - 560px)) !important;
+  padding-right: max(24px, calc(50vw - 560px)) !important;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+/* Prevent cards from compressing — let main scroll instead */
+html[data-style="xfce"] .main > * {
+  flex-shrink: 0;
+}
+
+/* Rounded + glowing glass cards */
+html[data-style="xfce"] .glass-card,
+html[data-style="xfce"] .settings-group,
+html[data-style="xfce"] .table-wrap {
+  border-radius: 16px !important;
+  position: relative;
+  background: var(--glass-bg-side) !important;
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  border: 1px solid var(--glass-border) !important;
+  box-shadow:
+    var(--glass-shadow),
+    0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent) 5%, transparent) !important;
+  overflow: hidden;
+}
+
+/* Entries page: header and content card */
+html[data-style="xfce"] .page-header {
+  padding: 20px 24px !important;
+  margin-bottom: 0;
+}
+html[data-style="xfce"] .entries-content-card {
+  padding: 16px 20px !important;
+}
+html[data-style="xfce"] .filter-tab {
+  border-radius: 20px;
+  transition: all .12s;
+}
+html[data-style="xfce"] .filter-tab:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  color: var(--accent);
+}
+html[data-style="xfce"] .filter-tab.active {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+/* ── XFCE: Button hover glow ──────────────────────────────── */
+html[data-style="xfce"] .btn-primary:hover,
+html[data-style="xfce"] .btn-save:hover,
+html[data-style="xfce"] .btn-deploy:hover {
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 45%, transparent) !important;
+  transform: translateY(-1px) scale(1.02);
+}
+html[data-style="xfce"] .btn-ghost:hover {
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 20%, transparent) !important;
+  transform: translateY(-1px);
+}
+html[data-style="xfce"] .btn,
+html[data-style="xfce"] button:not(.xfce-dock-item):not(.xfce-hud-close) {
+  transition: background .15s, color .15s, border-color .15s, box-shadow .15s, transform .12s !important;
+}
+
+/* ── XFCE: Schema sidebar rounding ────────────────────────── */
+html[data-style="xfce"] .coll-panel {
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg-side);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  overflow: hidden;
+  margin-right: 0;
+}
+html[data-style="xfce"] .coll-panel-head {
+  border-radius: 14px 14px 0 0;
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+html[data-style="xfce"] .coll-item {
+  border-radius: 8px;
+  margin: 2px 6px;
+  border-bottom: none;
+  padding: 8px 12px;
+}
+html[data-style="xfce"] .coll-item:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--heading);
+}
+html[data-style="xfce"] .coll-item.active {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+html[data-style="xfce"] .coll-item.active::before {
+  border-radius: 2px 0 0 2px;
+  top: 6px; bottom: 6px;
+}
+
+/* ── XFCE: Dashboard window-manager blocks ────────────────── */
+html[data-style="xfce"] .hero.glass-card {
+  border-radius: 16px !important;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    118deg,
+    color-mix(in srgb, var(--accent) 22%, var(--glass-bg-side)),
+    var(--glass-bg-side) 68%
+  ) !important;
+  padding: 30px 36px 26px !important;
+  align-items: center !important;
+}
+html[data-style="xfce"] .hero-site {
+  font-size: 28px !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.06em !important;
+  background: linear-gradient(
+    90deg,
+    var(--heading) 50%,
+    color-mix(in srgb, var(--accent) 80%, var(--heading)) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px !important;
+}
+html[data-style="xfce"] .hero-date {
+  font-family: var(--mono) !important;
+  font-size: 11px !important;
+  letter-spacing: 0.08em !important;
+  color: var(--mid) !important;
+}
+html[data-style="xfce"] .hero-url {
+  border-radius: 20px !important;
+  padding: 7px 16px !important;
+  font-size: 10px !important;
+}
+html[data-style="xfce"] .btn-deploy {
+  border-radius: 20px !important;
+  padding: 8px 18px !important;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--gold) 25%, transparent);
+}
+html[data-style="xfce"] .hero.glass-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 90% 50%,
+    color-mix(in srgb, var(--gold) 6%, transparent) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
+/* Dashboard: 2-column grid — stats panel on the right */
+html[data-style="xfce"] .main:has(.stats-row) {
+  display: grid !important;
+  grid-template-columns: 1fr 190px;
+  grid-template-rows: auto auto auto;
+  grid-template-areas:
+    "hero  stats"
+    "dash  stats"
+    "ws    ws";
+}
+html[data-style="xfce"] .hero.glass-card      { grid-area: hero; }
+html[data-style="xfce"] .stats-row.glass-card  { grid-area: stats; }
+html[data-style="xfce"] .dash-content.glass-card { grid-area: dash; }
+html[data-style="xfce"] .workspace.glass-card  { grid-area: ws; }
+
+/* Stats: vertical compact list */
+html[data-style="xfce"] .stats-row.glass-card {
+  display: flex !important;
+  flex-direction: column !important;
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+html[data-style="xfce"] .stat-cell {
+  flex: 1;
+  border-right: none !important;
+  border-bottom: 1px solid var(--glass-border);
+  padding: 14px 16px !important;
+  transition: background .15s;
+}
+html[data-style="xfce"] .stat-cell:last-child { border-bottom: none; }
+html[data-style="xfce"] .stat-cell:hover {
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+html[data-style="xfce"] .stat-num {
+  font-size: 22px !important;
+  margin-bottom: 2px !important;
+}
+html[data-style="xfce"] .stat-label {
+  font-size: 8px !important;
+  letter-spacing: 0.22em !important;
+  margin-bottom: 6px !important;
+}
+html[data-style="xfce"] .stat-sub {
+  font-size: 9px !important;
+}
+html[data-style="xfce"] .stat-bar {
+  margin-top: 8px !important;
+}
+
+html[data-style="xfce"] .dash-content.glass-card {
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+html[data-style="xfce"] .content-main {
+  overflow-y: auto;
+  max-height: 380px;
+}
+html[data-style="xfce"] .content-side {
+  overflow-y: auto;
+  max-height: 380px;
+}
+
+html[data-style="xfce"] .workspace.glass-card {
+  border-radius: 16px !important;
+  overflow: visible; /* let panel content grow freely */
+}
+html[data-style="xfce"] .ws-panel {
+  transition: background .15s;
+  min-height: 0;
+}
+html[data-style="xfce"] .ws-panel:hover {
+  background: color-mix(in srgb, var(--accent) 3%, transparent);
+}
+html[data-style="xfce"] .ws-panel + .ws-panel {
+  border-left: 1px solid var(--glass-border);
+}
+html[data-style="xfce"] .notes-area {
+  min-height: 220px;
+  resize: vertical;
+}
+
+
+/* ── XFCE: Settings page ──────────────────────────────────── */
+html[data-style="xfce"] .settings-group {
+  border-radius: 16px !important;
+  border: 1px solid var(--glass-border) !important;
+  background: var(--glass-bg-side) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+  margin-bottom: 16px;
+}
+html[data-style="xfce"] .settings-group .group-header,
+html[data-style="xfce"] .settings-group-title {
+  border-radius: 16px 16px 0 0;
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+/* ── XFCE: Table wrap ─────────────────────────────────────── */
+html[data-style="xfce"] .table-wrap {
+  border-radius: 14px !important;
+  border: 1px solid var(--glass-border) !important;
+  overflow: hidden;
+}
+
+/* Settings content: center within padded main */
+html[data-style="xfce"] .settings-wrap {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* ── XFCE: Focus mode (spotlight) ─────────────────────────── */
+.xfce-focus-dim {
+  position: fixed;
+  inset: 0;
+  z-index: 9988;
+  background: rgba(0,0,0,0);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  pointer-events: none;
+  transition: background .25s, backdrop-filter .25s;
+}
+.xfce-focus-dim.active {
+  background: rgba(0,0,0,.56);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  pointer-events: all;
+  cursor: zoom-out;
+}
+
+/* Section head: zoom-in cursor + accent on hover */
+html[data-style="xfce"] .xfce-focus-trigger {
+  cursor: zoom-in;
+  user-select: none;
+  transition: color .12s;
+}
+html[data-style="xfce"] .xfce-focus-trigger:hover .section-title {
+  color: var(--accent);
+}
+html[data-style="xfce"] .xfce-focus-trigger::after {
+  content: '⊕';
+  font-size: 10px;
+  color: var(--muted);
+  margin-left: 8px;
+  opacity: 0;
+  transition: opacity .15s;
+  pointer-events: none;
+}
+html[data-style="xfce"] .xfce-focus-trigger:hover::after {
+  opacity: .65;
+}
+
+/* Focused card: brighter solid surface so content is readable */
+html[data-style="xfce"] .xfce-in-focus {
+  background: color-mix(in srgb, var(--bg1) 94%, transparent) !important;
+  backdrop-filter: blur(28px) brightness(1.06) !important;
+  -webkit-backdrop-filter: blur(28px) brightness(1.06) !important;
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--line)) !important;
+}
+
+/* Scale up content inside focused card */
+html[data-style="xfce"] .xfce-in-focus .content-main,
+html[data-style="xfce"] .xfce-in-focus .content-side {
+  padding: 32px 40px !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+html[data-style="xfce"] .xfce-in-focus .entry-row {
+  padding: 14px 18px !important;
+  grid-template-columns: 1fr 110px 80px !important;
+  gap: 20px !important;
+}
+html[data-style="xfce"] .xfce-in-focus .entry-name {
+  font-size: 13px !important;
+}
+html[data-style="xfce"] .xfce-in-focus .entry-coll,
+html[data-style="xfce"] .xfce-in-focus .entry-date {
+  font-size: 11px !important;
+}
+html[data-style="xfce"] .xfce-in-focus .section-title {
+  font-size: 10px !important;
+  letter-spacing: .28em !important;
+}
+html[data-style="xfce"] .xfce-in-focus .coll-card {
+  padding: 14px 0 !important;
+}
+html[data-style="xfce"] .xfce-in-focus .coll-card-name {
+  font-size: 13px !important;
+}
+html[data-style="xfce"] .xfce-in-focus .btn-sm {
+  font-size: 10px !important;
+  padding: 5px 12px !important;
+}
+
+/* Focused card: hint to close */
+html[data-style="xfce"] .xfce-in-focus .xfce-focus-trigger::after {
+  content: 'ESC';
+  opacity: .4;
+  font-size: 8px;
+  letter-spacing: .1em;
+}
+
+/* ── XFCE: Workspace overlay (Notes + To-do) ──────────────── */
+.xfce-ws-overlay {
+  position: fixed;
+  bottom: calc(var(--dock-h, 76px) + 30px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(620px, 90vw);
+  height: 420px;
+  z-index: 99996;
+  background: var(--glass-bg-side);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow), 0 0 0 1px color-mix(in srgb, var(--accent) 14%, transparent),
+              0 0 32px color-mix(in srgb, var(--accent) 8%, transparent);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+.xfce-ws-overlay.open { display: flex; }
+
+.xfce-ws-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+.xfce-ws-tabs { display: flex; gap: 4px; }
+.xfce-ws-tab {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--mid);
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .06em;
+  padding: 4px 11px;
+  transition: all .12s;
+}
+.xfce-ws-tab:hover { color: var(--heading); background: var(--hover-bg); }
+.xfce-ws-tab.active {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.xfce-ws-ind {
+  font-size: 9px;
+  font-family: var(--mono);
+  color: var(--muted);
+  transition: color .2s;
+  white-space: nowrap;
+}
+.xfce-ws-export {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .04em;
+  padding: 2px 8px;
+  transition: border-color .12s, color .12s;
+}
+.xfce-ws-export:hover { border-color: var(--accent); color: var(--accent); }
+.xfce-ws-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  transition: color .12s, background .12s;
+}
+.xfce-ws-close:hover { color: var(--heading); background: var(--hover-bg); }
+
+.xfce-ws-body {
+  flex: 1;
+  overflow: hidden;
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+}
+.xfce-ws-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+.xfce-ws-textarea {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  resize: none;
+  background: color-mix(in srgb, var(--bg0) 40%, transparent);
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.8;
+  outline: none;
+  border-radius: 10px;
+  transition: border-color .15s;
+  box-sizing: border-box;
+}
+.xfce-ws-textarea:focus { border-color: var(--accent); }
+
+.xfce-ws-todo-row {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg0) 40%, transparent);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.xfce-ws-todo-prompt { font-family: var(--mono); font-size: 11px; color: var(--muted); padding: 7px 6px 7px 10px; flex-shrink: 0; }
+.xfce-ws-todo-inp {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 7px 4px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  outline: none;
+}
+.xfce-ws-todo-add {
+  padding: 7px 12px;
+  background: transparent;
+  border: none;
+  border-left: 1px solid var(--line);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+  cursor: pointer;
+  transition: color .12s;
+  flex-shrink: 0;
+}
+.xfce-ws-todo-add:hover { color: var(--heading); }
+
+.xfce-ws-todo-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow-y: auto;
+}
+.xfce-ws-todo-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background .1s;
+  font-size: 12px;
+  color: var(--text);
+  user-select: none;
+}
+.xfce-ws-todo-item:hover { background: var(--hover-bg); }
+.xfce-ws-todo-item.done span { text-decoration: line-through; color: var(--muted); }
+.xfce-ws-todo-item input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 13px; height: 13px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.xfce-ws-todo-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  font-size: 10px;
+  color: var(--muted);
+  font-family: var(--mono);
+  flex-shrink: 0;
+}
+.xfce-ws-todo-empty {
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+  padding: 32px 0;
+  font-family: var(--mono);
+  letter-spacing: .04em;
+}
+
+/* ── XFCE: Tools popup (Schema / Build / Import) ──────────── */
+.xfce-tools-popup {
+  position: fixed;
+  bottom: calc(var(--dock-h, 76px) + 28px);
+  transform: translateX(-50%);
+  z-index: 99997;
+  background: var(--glass-bg-side);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  box-shadow: var(--glass-shadow), 0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent);
+  padding: 6px;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 130px;
+}
+.xfce-tools-popup.open {
+  display: flex;
+}
+.xfce-tools-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--mid);
+  font-size: 12px;
+  transition: background .1s, color .1s;
+}
+.xfce-tools-item:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--heading);
+}
+.xfce-tools-item.active {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.xfce-tools-icon {
+  font-size: 14px;
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════════════════════════
+   XFCE — MOBILE  (≤ 640px)
+   ════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+
+  /* Reduce chrome heights */
+  html[data-style="xfce"] {
+    --sb-h:   22px;
+    --dock-h: 62px;
+    --dock-item-base: 38px;
+  }
+
+  /* Status bar: hide center on small screens */
+  .xfce-sb-center { display: none; }
+  .xfce-sb { padding: 0 10px; }
+
+  /* ── Dock → full-width bottom tab bar ── */
+  .xfce-dock {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: none;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    padding: 4px 6px;
+    padding-bottom: max(4px, env(safe-area-inset-bottom));
+    justify-content: center;
+  }
+  .xfce-dock-inner {
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .xfce-dock-inner::-webkit-scrollbar { display: none; }
+  .xfce-dock-group { gap: 2px; }
+  .xfce-dock-sep   { margin: 0 3px; }
+
+  /* Hide labels — save horizontal space */
+  .xfce-dock-lbl { display: none; }
+
+  /* Tighter item padding */
+  .xfce-dock-item {
+    padding: 6px 4px 4px;
+  }
+
+  /* No magnification on touch — keep scale neutral */
+  .xfce-dock-item { transform: none !important; }
+
+  /* ── Main content: compact padding ── */
+  html[data-style="xfce"] .main {
+    padding-left:  16px !important;
+    padding-right: 16px !important;
+    padding-top:   calc(var(--sb-h) + 14px) !important;
+    gap: 12px;
+  }
+
+  /* ── Dashboard grid: single column ── */
+  html[data-style="xfce"] .main:has(.stats-row) {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: unset !important;
+    grid-auto-rows: auto !important;
+    grid-template-areas:
+      "hero"
+      "stats"
+      "dash"
+      "ws" !important;
+  }
+  /* Prevent grid children expanding beyond track width */
+  html[data-style="xfce"] .main > * {
+    min-width: 0;
+  }
+
+  /* Stats: 2×2 grid on mobile */
+  html[data-style="xfce"] .stats-row.glass-card {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    flex-direction: unset !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+  html[data-style="xfce"] .stat-cell {
+    border-right: none !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+    flex: unset !important;
+  }
+  html[data-style="xfce"] .stat-cell:nth-child(odd) {
+    border-right: 1px solid var(--glass-border) !important;
+  }
+  html[data-style="xfce"] .stat-cell:nth-last-child(-n+2) {
+    border-bottom: none !important;
+  }
+
+  /* Dash-content: stack recently edited + collections vertically */
+  html[data-style="xfce"] .dash-content {
+    grid-template-columns: 1fr !important;
+    overflow: visible !important;
+  }
+  html[data-style="xfce"] .content-main {
+    border-right: none !important;
+    border-bottom: 1px solid var(--glass-border);
+    padding: 16px !important;
+  }
+  /* Entry rows: hide date column, keep name + status */
+  html[data-style="xfce"] .content-main .entry-row {
+    grid-template-columns: 1fr 72px !important;
+    gap: 8px !important;
+  }
+  html[data-style="xfce"] .content-main .entry-date {
+    display: none !important;
+  }
+
+  /* ── HUD: full-width slide-in ── */
+  .xfce-hud {
+    width: 100%;
+    right: -100%;
+  }
+  .xfce-hud.open { right: 0; }
+
+  /* ── Workspace overlay: full available height ── */
+  .xfce-ws-overlay {
+    width: 94vw;
+    height: calc(100dvh - var(--sb-h) - var(--dock-h) - 20px);
+    bottom: calc(var(--dock-h) + 10px);
+  }
+
+  /* ── Tools popup: center on mobile ── */
+  .xfce-tools-popup {
+    left: 50% !important;
+    transform: translateX(-50%);
+    bottom: calc(var(--dock-h) + 8px);
+  }
+
+  /* ── Focus mode: full width ── */
+  html[data-style="xfce"] .xfce-in-focus {
+    left: 3vw !important;
+    width: 94vw !important;
+  }
+
+  /* ── Workspace: stack panels vertically on mobile ── */
+  html[data-style="xfce"] .workspace {
+    grid-template-columns: 1fr !important;
+  }
+  html[data-style="xfce"] .ws-panel {
+    padding: 16px !important;
+  }
+  html[data-style="xfce"] .ws-panel + .ws-panel {
+    border-left: none !important;
+    border-top: 1px solid var(--glass-border);
+  }
+
+  /* ── Hero: smaller title, tighter padding ── */
+  html[data-style="xfce"] .hero.glass-card {
+    padding: 18px 20px 16px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+    /* overflow:hidden + grid = row collapses to 0 min-size; clip avoids that */
+    overflow: clip !important;
+    align-self: start !important;
+  }
+  html[data-style="xfce"] .hero-site {
+    font-size: 20px !important;
+  }
+  html[data-style="xfce"] .hero-date {
+    font-size: 10px !important;
+  }
+
+  /* ── Page header: tighter ── */
+  html[data-style="xfce"] .page-header {
+    padding: 14px 16px !important;
+  }
 }

@@ -205,7 +205,7 @@
 
       <!-- Workspace: Notes + To-do -->
       <div class="workspace glass-card">
-        <div class="ws-panel">
+        <div class="ws-panel" id="notes">
           <div class="ws-head">
             <div class="section-title">Notes</div>
             <div style="display:flex;align-items:center;gap:10px">
@@ -215,7 +215,7 @@
           </div>
           <textarea class="notes-area" id="notes-area" placeholder="Jot something down…"></textarea>
         </div>
-        <div class="ws-panel">
+        <div class="ws-panel" id="todos">
           <div class="ws-head">
             <div class="section-title">To-Do</div>
             <div style="display:flex;align-items:center;gap:10px">
@@ -236,7 +236,34 @@
         </div>
       </div>
 
-    
+  <script>
+    // Scroll to workspace panel when navigated via dock hash link
+    (function () {
+      var hash = location.hash;
+      if (hash === '#notes' || hash === '#todos') {
+        window.addEventListener('load', function () {
+          var target = document.getElementById(hash.slice(1));
+          if (target) {
+            setTimeout(function () {
+              var main = document.querySelector('.main');
+              if (main) {
+                main.scrollTo({ top: target.offsetTop - 60, behavior: 'smooth' });
+              } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+              if (hash === '#notes') {
+                var ta = document.getElementById('notes-area');
+                if (ta) ta.focus();
+              } else {
+                var inp = document.getElementById('todo-input');
+                if (inp) inp.focus();
+              }
+            }, 400);
+          }
+        });
+      }
+    })();
+  </script>
   <script type="module">
     // Auth
     const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).catch(() => null);
