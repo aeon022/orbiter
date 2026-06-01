@@ -107,6 +107,7 @@ export class OrbiterDB {
     try { this.db.exec(`ALTER TABLE _entries ADD COLUMN sort_order INTEGER`); } catch {}
     try { this.db.exec(`ALTER TABLE _entries ADD COLUMN deleted_at TEXT`); } catch {}
     try { this.db.exec(`ALTER TABLE _entries ADD COLUMN publish_at TEXT`); } catch {}
+    try { this.db.exec(`ALTER TABLE _entries ADD COLUMN unpublish_at TEXT`); } catch {}
 
     // Migration: make _media.data nullable, add url + path for external backends
     const mediaCols = this.db.prepare('PRAGMA table_info(_media)').all().map(c => c.name);
@@ -266,7 +267,7 @@ export class OrbiterDB {
     return id;
   }
 
-  updateEntry(collectionId, slug, { slug: newSlug, data, status, publish_at } = {}) {
+  updateEntry(collectionId, slug, { slug: newSlug, data, status, publish_at, unpublish_at } = {}) {
     const entry = this.getEntry(collectionId, slug);
     if (!entry) return false;
     // Snapshot current state before overwriting
@@ -278,9 +279,10 @@ export class OrbiterDB {
         SELECT id FROM _versions WHERE entry_id = ? ORDER BY created_at DESC LIMIT 20
       )
     `).run(entry.id, entry.id);
-    const pa = publish_at !== undefined ? publish_at : (entry.publish_at ?? null);
-    this.db.prepare('UPDATE _entries SET slug = ?, data = ?, status = ?, publish_at = ?, updated_at = ? WHERE id = ?')
-      .run(newSlug ?? slug, JSON.stringify(data ?? entry.data), status ?? entry.status, pa, sqliteNow(), entry.id);
+    const pa  = publish_at   !== undefined ? publish_at   : (entry.publish_at   ?? null);
+    const ua  = unpublish_at !== undefined ? unpublish_at : (entry.unpublish_at ?? null);
+    this.db.prepare('UPDATE _entries SET slug = ?, data = ?, status = ?, publish_at = ?, unpublish_at = ?, updated_at = ? WHERE id = ?')
+      .run(newSlug ?? slug, JSON.stringify(data ?? entry.data), status ?? entry.status, pa, ua, sqliteNow(), entry.id);
     return true;
   }
 
@@ -295,6 +297,13 @@ export class OrbiterDB {
   getScheduledDue() {
     const rows = this.db.prepare(
       "SELECT * FROM _entries WHERE status = 'scheduled' AND publish_at <= datetime('now') AND deleted_at IS NULL"
+    ).all();
+    return rows.map(r => ({ ...r, data: JSON.parse(r.data) }));
+  }
+
+  getExpiredDue() {
+    const rows = this.db.prepare(
+      "SELECT * FROM _entries WHERE status = 'published' AND unpublish_at IS NOT NULL AND unpublish_at <= datetime('now') AND deleted_at IS NULL"
     ).all();
     return rows.map(r => ({ ...r, data: JSON.parse(r.data) }));
   }

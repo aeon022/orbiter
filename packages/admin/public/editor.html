@@ -116,6 +116,10 @@
     .btn-schedule:hover { background:var(--accent-bg); }
     .schedule-picker { display:none; gap:4px; margin-bottom:5px; }
     .schedule-picker.open { display:flex; }
+    .expiry-picker { display:none; gap:4px; margin-bottom:5px; }
+    .expiry-picker.open { display:flex; }
+    .btn-expiry { display:block; width:100%; padding:8px; background:transparent; border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:10px; cursor:pointer; transition:all .12s; border-radius:var(--radius); margin-bottom:5px; }
+    .btn-expiry:hover { border-color:var(--mid); color:var(--text); }
 
     /* Schema fields in sidebar */
     .field-input,.field-select { width:100%; background:var(--bg0); border:1px solid var(--line); padding:6px 8px; color:var(--heading); font-family:var(--mono); font-size:11px; outline:none; appearance:none; transition:border-color .15s; border-radius:var(--radius); box-sizing:border-box; }
@@ -399,6 +403,7 @@
           <button type="button" class="view-btn"        id="vbtn-preview" onclick="setViewMode('preview')">Preview</button>
         </div>
         <a id="btn-preview-link" href="#" target="_blank" rel="noopener" title="Open preview" style="display:none;font-size:11px;color:var(--muted);text-decoration:none;padding:4px 8px;border:1px solid var(--line);border-radius:var(--radius);">↗ Preview</a>
+        <button class="search-trigger" id="search-btn" title="Search (⌘K)" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 8px;font-size:13px;">⌘K</button>
         <button class="scheme-toggle" id="scheme-toggle" title="Toggle scheme">◐</button>
         <span class="user" id="topbar-user"></span>
         <span class="logout" id="logout-btn">Sign out</span>
@@ -563,8 +568,10 @@
       const panel = document.getElementById('meta-panel');
       const status    = IS_NEW ? 'draft' : (entryData?.status ?? 'draft');
       const updatedAt = entryData?.updated_at;
-      const publishAt = entryData?.publish_at ?? null;
-      const publishAtInput = publishAt ? publishAt.replace(' ', 'T').slice(0, 16) : '';
+      const publishAt    = entryData?.publish_at   ?? null;
+      const unpublishAt  = entryData?.unpublish_at ?? null;
+      const publishAtInput   = publishAt   ? publishAt.replace(' ', 'T').slice(0, 16)   : '';
+      const unpublishAtInput = unpublishAt ? unpublishAt.replace(' ', 'T').slice(0, 16) : '';
 
       let fieldsHtml = '';
       const seoFields = {};
@@ -688,6 +695,13 @@
             <button type="button" id="btn-schedule-confirm" style="padding:5px 10px;background:var(--accent);border:none;color:var(--bg0);font-family:var(--mono);font-size:10px;cursor:pointer;border-radius:var(--radius);white-space:nowrap;">Set</button>
           </div>
           <button type="button" class="btn-schedule" id="btn-schedule">${status==='scheduled'?'Reschedule':'Schedule'}</button>
+          ${status==='published'?`
+          <div class="expiry-picker${unpublishAt?' open':''}" id="expiry-picker">
+            <input type="datetime-local" class="field-input" id="unpublish-at-input" value="${unpublishAtInput}" style="flex:1;font-size:10px;padding:5px 8px;" />
+            <button type="button" id="btn-expiry-confirm" style="padding:5px 10px;background:var(--bg3);border:1px solid var(--line);color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;border-radius:var(--radius);white-space:nowrap;">Set</button>
+          </div>
+          <button type="button" class="btn-expiry" id="btn-expiry">${unpublishAt?'Change expiry':'Set expiry'}</button>
+          `:''}
         </div>
         <div class="meta-section">
           <div class="meta-label">Details</div>
@@ -789,6 +803,12 @@
         const val = document.getElementById('publish-at-input').value;
         if (!val) { alert('Please select a date and time.'); return; }
         saveEntry('scheduled');
+      });
+      document.getElementById('btn-expiry')?.addEventListener('click', () => {
+        document.getElementById('expiry-picker').classList.toggle('open');
+      });
+      document.getElementById('btn-expiry-confirm')?.addEventListener('click', () => {
+        saveEntry('published');
       });
 
       // Version restore buttons
@@ -1006,6 +1026,12 @@
         if (!raw) { if (!isAutosave) alert('Please select a date and time.'); return; }
         publish_at = raw.replace('T', ' ') + ':00';
       }
+      // Resolve unpublish_at for published entries with expiry
+      let unpublish_at = null;
+      if (status === 'published') {
+        const raw = document.getElementById('unpublish-at-input')?.value;
+        unpublish_at = raw ? raw.replace('T', ' ') + ':00' : null;
+      }
 
       const title = document.getElementById('title-input').value;
       syncToHidden();
@@ -1026,6 +1052,22 @@
         } else {
           const el = document.querySelector(`[name="${key}"]`);
           data[key] = el ? el.value : '';
+        }
+      }
+
+      // Required field validation (skip on autosave)
+      if (!isAutosave) {
+        const missing = extraFields
+          .filter(([key, field]) => {
+            if (!field.required) return false;
+            const val = data[key];
+            if (Array.isArray(val)) return val.length === 0;
+            return val === '' || val === null || val === undefined;
+          })
+          .map(([key, field]) => field.label || key);
+        if (missing.length) {
+          alert(`Required field${missing.length > 1 ? 's' : ''} missing: ${missing.join(', ')}`);
+          return;
         }
       }
 
@@ -1053,7 +1095,7 @@
         const res = await fetch(`/api/collections/${COLLECTION}/entries/${targetSlug}`,{
           method:'PUT', credentials:'include',
           headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ slug, data, status, publish_at }),
+          body: JSON.stringify({ slug, data, status, publish_at, unpublish_at }),
         });
         if (res.ok) {
           const json = await res.json();
@@ -1941,6 +1983,7 @@
   <input type="file" id="img-file-inp" accept="image/*" style="display:none">
 
   <script src="/sidebar.js"></script>
+  <script src="/search.js"></script>
   <script src="/router.js"></script>
 </body>
 </html>

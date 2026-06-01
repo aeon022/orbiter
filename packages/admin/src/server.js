@@ -101,17 +101,23 @@ serve({ fetch: createApp(POD_PATH).fetch, port: PORT }, () => {
 setInterval(() => {
   try {
     const db  = openPod(POD_PATH);
-    const due = db.getScheduledDue();
-    if (!due.length) { db.close(); return; }
+    const due     = db.getScheduledDue();
+    const expired = db.getExpiredDue();
+    if (!due.length && !expired.length) { db.close(); return; }
     const now = new Date().toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, '');
     for (const entry of due) {
       db.db.prepare("UPDATE _entries SET status = 'published', publish_at = NULL, updated_at = ? WHERE id = ?").run(now, entry.id);
       db.logAudit(entry.id, 'scheduler', 'publish');
     }
+    for (const entry of expired) {
+      db.db.prepare("UPDATE _entries SET status = 'draft', unpublish_at = NULL, updated_at = ? WHERE id = ?").run(now, entry.id);
+      db.logAudit(entry.id, 'scheduler', 'unpublish');
+    }
     const webhookUrl = db.getMeta('build.webhook_url') ?? '';
     if (webhookUrl) db.setMeta('build.last_triggered', new Date().toISOString());
     db.close();
-    console.log(`[scheduler] Published ${due.length} scheduled entr${due.length === 1 ? 'y' : 'ies'}`);
+    if (due.length)     console.log(`[scheduler] Published ${due.length} scheduled entr${due.length === 1 ? 'y' : 'ies'}`);
+    if (expired.length) console.log(`[scheduler] Unpublished ${expired.length} expired entr${expired.length === 1 ? 'y' : 'ies'}`);
     if (webhookUrl) fetch(webhookUrl, { method: 'POST' }).catch(() => {});
   } catch (e) {
     console.warn('[scheduler]', e.message);

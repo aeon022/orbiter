@@ -274,14 +274,15 @@ entryRoutes.post('/:collectionId/entries/:slug/duplicate', (c) => {
 // PATCH /api/collections/:id/entries/:slug/status
 entryRoutes.patch('/:collectionId/entries/:slug/status', async (c) => {
   const { collectionId, slug } = c.req.param();
-  const { status, publish_at } = await c.req.json();
+  const { status, publish_at, unpublish_at } = await c.req.json();
   if (!['draft', 'published', 'scheduled'].includes(status)) return c.json({ error: 'Invalid status' }, 400);
   if (status === 'scheduled' && !publish_at) return c.json({ error: 'publish_at required for scheduled status' }, 400);
   const db    = openPod(c.get('podPath'));
   const entry = db.getEntry(collectionId, slug);
   if (!entry) { db.close(); return c.json({ error: 'Not found' }, 404); }
-  const pa = status === 'scheduled' ? publish_at : null;
-  db.updateEntry(collectionId, slug, { slug, data: entry.data, status, publish_at: pa });
+  const pa  = status === 'scheduled' ? publish_at : null;
+  const ua  = status === 'published' ? (unpublish_at ?? null) : null;
+  db.updateEntry(collectionId, slug, { slug, data: entry.data, status, publish_at: pa, unpublish_at: ua });
   const username = c.get('user')?.username ?? 'unknown';
   if (status === 'scheduled') db.logAudit(entry.id, username, 'schedule');
   db.close();
