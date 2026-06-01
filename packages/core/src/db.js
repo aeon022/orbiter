@@ -90,6 +90,15 @@ export class OrbiterDB {
         action     TEXT NOT NULL,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
+
+      CREATE TABLE IF NOT EXISTS _comments (
+        id          TEXT PRIMARY KEY,
+        entry_id    TEXT NOT NULL,
+        username    TEXT NOT NULL,
+        body        TEXT NOT NULL,
+        resolved    INTEGER NOT NULL DEFAULT 0,
+        created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+      );
     `);
 
     // Migrations: add columns that didn't exist in older pods
@@ -336,6 +345,29 @@ export class OrbiterDB {
 
   deleteMedia(id) {
     this.db.prepare('DELETE FROM _media WHERE id = ?').run(id);
+  }
+
+  // ── Comments ───────────────────────────────────────
+  getComments(entryId) {
+    return this.db.prepare(
+      'SELECT * FROM _comments WHERE entry_id = ? ORDER BY created_at ASC'
+    ).all(entryId);
+  }
+
+  createComment(entryId, username, body) {
+    const id = randomUUID();
+    this.db.prepare(
+      'INSERT INTO _comments (id, entry_id, username, body) VALUES (?, ?, ?, ?)'
+    ).run(id, entryId, username, body);
+    return id;
+  }
+
+  resolveComment(id, resolved = true) {
+    this.db.prepare('UPDATE _comments SET resolved = ? WHERE id = ?').run(resolved ? 1 : 0, id);
+  }
+
+  deleteComment(id) {
+    this.db.prepare('DELETE FROM _comments WHERE id = ?').run(id);
   }
 
   // ── Audit log ──────────────────────────────────────

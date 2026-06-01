@@ -22,6 +22,7 @@ import { searchRoutes }     from './routes/search.js';
 import { githubRoutes }     from './routes/github.js';
 import { infoRoutes }       from './routes/info.js';
 import { importRoutes }     from './routes/import.js';
+import { commentRoutes }    from './routes/comments.js';
 import { requireAuth }      from './middleware/auth.js';
 
 const { version: adminVersion } = JSON.parse(
@@ -71,6 +72,8 @@ export function createApp(podPath) {
   api.route('/github',       githubRoutes);
   api.route('/info',         infoRoutes);
   api.route('/import',       importRoutes);
+  api.route('/collections',  commentRoutes);
+  api.route('/',             commentRoutes);
 
   app.route('/api', api);
 

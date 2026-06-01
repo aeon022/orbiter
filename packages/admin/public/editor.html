@@ -133,6 +133,21 @@
     .media-drop-zone img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
     .media-drop-label { font-size:9px; color:var(--muted); letter-spacing:.08em; position:relative; z-index:1; }
     .media-drop-zone.has-image .media-drop-label { display:none; }
+    /* Comments */
+    .comment-item { padding:8px 0; border-bottom:1px solid var(--line2); }
+    .comment-item:last-child { border-bottom:none; }
+    .comment-item.resolved { opacity:.45; }
+    .comment-meta { display:flex; align-items:center; gap:6px; margin-bottom:4px; }
+    .comment-user { font-size:10px; font-family:var(--mono); color:var(--accent); }
+    .comment-date { font-size:10px; color:var(--muted); margin-left:auto; }
+    .comment-body { font-size:12px; color:var(--text); line-height:1.5; word-break:break-word; }
+    .comment-actions { display:flex; gap:6px; margin-top:4px; }
+    .comment-actions button { font-size:9px; font-family:var(--mono); background:none; border:none; color:var(--muted); cursor:pointer; padding:0; }
+    .comment-actions button:hover { color:var(--text); }
+    .comment-input { width:100%; background:var(--bg0); border:1px solid var(--line); padding:6px 8px; color:var(--heading); font-family:var(--mono); font-size:11px; outline:none; resize:vertical; transition:border-color .15s; border-radius:var(--radius); box-sizing:border-box; min-height:56px; }
+    .comment-input:focus { border-color:var(--accent); }
+    .comment-submit { margin-top:4px; width:100%; padding:6px; background:var(--accent-bg); border:1px solid var(--accent); color:var(--accent); font-family:var(--mono); font-size:10px; cursor:pointer; border-radius:var(--radius); transition:background .12s; }
+    .comment-submit:hover { background:var(--accent); color:var(--bg0); }
     .weekday-grid { display:flex; gap:4px; flex-wrap:wrap; margin-top:4px; }
     .wd-btn { height:26px; min-width:32px; padding:0 4px; background:var(--bg0); border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:9px; cursor:pointer; transition:all .1s; border-radius:2px; }
     .wd-btn.active { background:var(--accent-bg); border-color:var(--accent); color:var(--accent); }
@@ -486,12 +501,13 @@
     document.getElementById('collection-id-display').textContent = COLLECTION;
 
     // Load collection schema + entry
-    const [colData, entryData, versionsData, activityData, mediaData] = await Promise.all([
+    const [colData, entryData, versionsData, activityData, mediaData, commentsData] = await Promise.all([
       fetch(`/api/collections/${COLLECTION}`,{credentials:'include'}).then(r=>r.ok?r.json():null),
       IS_NEW ? null : fetch(`/api/collections/${COLLECTION}/entries/${SLUG}`,{credentials:'include'}).then(r=>r.ok?r.json():null),
       IS_NEW ? [] : fetch(`/api/collections/${COLLECTION}/entries/${SLUG}/versions`,{credentials:'include'}).then(r=>r.ok?r.json():[]).catch(()=>[]),
       IS_NEW ? [] : fetch(`/api/collections/${COLLECTION}/entries/${SLUG}/activity`,{credentials:'include'}).then(r=>r.ok?r.json():[]).catch(()=>[]),
       fetch('/api/media',{credentials:'include'}).then(r=>r.json()).catch(()=>[]),
+      IS_NEW ? [] : fetch(`/api/collections/${COLLECTION}/entries/${SLUG}/comments`,{credentials:'include'}).then(r=>r.ok?r.json():[]).catch(()=>[]),
     ]);
 
     if (!colData) { location.replace('/collections.html'); }
@@ -691,6 +707,24 @@
         </div>
         ${versionsData.length ? `<div class="meta-section"><div class="meta-label">History</div>${versHtml}</div>` : ''}
         ${activityData.length ? `<div class="meta-section"><div class="meta-label">Activity</div>${actHtml}</div>` : ''}
+        ${IS_NEW ? '' : `<div class="meta-section" id="comments-section">
+          <div class="meta-label">Comments <span id="comment-count" style="color:var(--muted)">${commentsData.length ? '(' + commentsData.length + ')' : ''}</span></div>
+          <div id="comments-list">${commentsData.map(cm=>`
+            <div class="comment-item${cm.resolved?` resolved`:''}" data-cid="${cm.id}">
+              <div class="comment-meta">
+                <span class="comment-user">${escHtml(cm.username)}</span>
+                <span class="comment-date">${new Date(cm.created_at).toLocaleDateString()}</span>
+              </div>
+              <div class="comment-body">${escHtml(cm.body)}</div>
+              <div class="comment-actions">
+                <button class="cm-resolve-btn" data-cid="${cm.id}" data-resolved="${cm.resolved}">${cm.resolved?'Unresolve':'Resolve'}</button>
+                <button class="cm-delete-btn" data-cid="${cm.id}">Delete</button>
+              </div>
+            </div>
+          `).join('')}</div>
+          <textarea class="comment-input" id="comment-input" placeholder="Add a comment…" rows="2"></textarea>
+          <button class="comment-submit" id="comment-submit">Post comment</button>
+        </div>`}
       `;
 
       // Wire up weekday toggles
@@ -769,6 +803,47 @@
           if (res.ok) { location.reload(); } else { alert('Restore failed.'); }
         });
       });
+
+      // Comments
+      if (!IS_NEW) {
+        const targetSlug = currentSlug || SLUG;
+
+        document.getElementById('comment-submit')?.addEventListener('click', async () => {
+          const inp  = document.getElementById('comment-input');
+          const body = inp.value.trim();
+          if (!body) return;
+          const res = await fetch(`/api/collections/${COLLECTION}/entries/${targetSlug}/comments`, {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ body }),
+          });
+          if (res.ok) { inp.value = ''; location.reload(); }
+        });
+
+        panel.querySelectorAll('.cm-resolve-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const resolved = btn.dataset.resolved === '0' || btn.dataset.resolved === 'false' ? true : false;
+            await fetch(`/api/comments/${btn.dataset.cid}/resolve`, {
+              method: 'PATCH', credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ resolved }),
+            });
+            const item = btn.closest('.comment-item');
+            if (item) {
+              item.classList.toggle('resolved', resolved);
+              btn.textContent = resolved ? 'Unresolve' : 'Resolve';
+              btn.dataset.resolved = resolved ? '1' : '0';
+            }
+          });
+        });
+
+        panel.querySelectorAll('.cm-delete-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            await fetch(`/api/comments/${btn.dataset.cid}`, { method: 'DELETE', credentials: 'include' });
+            btn.closest('.comment-item')?.remove();
+          });
+        });
+      }
 
       // Slug input → slug preview
       document.getElementById('slug-input').addEventListener('input', e=>{

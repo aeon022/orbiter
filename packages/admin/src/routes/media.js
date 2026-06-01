@@ -1,6 +1,27 @@
 import { Hono } from 'hono';
 import { openPod, getMediaBackend } from '@a83/orbiter-core';
 import { randomUUID } from 'node:crypto';
+import sharp from 'sharp';
+
+const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/tiff']);
+
+async function optimizeImage(buffer, mimeType, db) {
+  if (!IMAGE_TYPES.has(mimeType)) return buffer;
+  const maxWidth = parseInt(db.getMeta('media.img_max_width') ?? '2400', 10);
+  const quality  = parseInt(db.getMeta('media.img_quality')   ?? '85',   10);
+  try {
+    const img  = sharp(buffer);
+    const meta = await img.metadata();
+    if (meta.width && meta.width > maxWidth) img.resize({ width: maxWidth, withoutEnlargement: true });
+    if (mimeType === 'image/jpeg') return await img.jpeg({ quality, mozjpeg: true }).toBuffer();
+    if (mimeType === 'image/png')  return await img.png({ quality }).toBuffer();
+    if (mimeType === 'image/webp') return await img.webp({ quality }).toBuffer();
+    if (mimeType === 'image/avif') return await img.avif({ quality }).toBuffer();
+    return await img.toBuffer();
+  } catch {
+    return buffer;
+  }
+}
 
 export const mediaRoutes = new Hono();
 
@@ -58,11 +79,12 @@ mediaRoutes.post('/', async (c) => {
 
   if (!file || typeof file === 'string') return c.json({ error: 'No file provided' }, 400);
 
-  const buffer  = Buffer.from(await file.arrayBuffer());
-  const id      = randomUUID();
-  const db      = openPod(c.get('podPath'));
+  const rawBuffer = Buffer.from(await file.arrayBuffer());
+  const id        = randomUUID();
+  const db        = openPod(c.get('podPath'));
 
   try {
+    const buffer  = await optimizeImage(rawBuffer, file.type, db);
     const backend = getMediaBackend(db);
     await backend.upload(id, file.name, file.type, buffer.byteLength, buffer, alt, folder);
     const item    = db.getMediaItem(id);
@@ -99,13 +121,14 @@ mediaRoutes.post('/import-url', async (c) => {
   }
   if (!resp.ok) return c.json({ error: `Remote returned ${resp.status}` }, 400);
 
-  const mime     = (resp.headers.get('content-type') || 'application/octet-stream').split(';')[0].trim();
-  const buffer   = Buffer.from(await resp.arrayBuffer());
-  const filename = url.split('/').pop()?.split('?')[0] || 'imported';
-  const id       = randomUUID();
-  const db       = openPod(c.get('podPath'));
+  const mime      = (resp.headers.get('content-type') || 'application/octet-stream').split(';')[0].trim();
+  const rawBuffer = Buffer.from(await resp.arrayBuffer());
+  const filename  = url.split('/').pop()?.split('?')[0] || 'imported';
+  const id        = randomUUID();
+  const db        = openPod(c.get('podPath'));
 
   try {
+    const buffer  = await optimizeImage(rawBuffer, mime, db);
     const backend = getMediaBackend(db);
     await backend.upload(id, filename, mime, buffer.byteLength, buffer, alt ?? null, folder ?? '');
     const item    = db.getMediaItem(id);
