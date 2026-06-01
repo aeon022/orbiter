@@ -1,0 +1,59 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="RSS Feeds & Sitemap" current="/docs/rss-sitemap" prev={{ href: '/docs/comments', title: 'Content comments' }} next={{ href: '/docs/schema-tools', title: 'Schema export & import' }}>
+
+<h1>RSS Feeds &amp; Sitemap</h1>
+<p class="lead">Orbiter automatically generates an RSS 2.0 feed for every collection and a unified XML sitemap covering all published entries — no configuration required.</p>
+
+<h2>How it works</h2>
+<p>The Orbiter Astro integration injects two route handlers into your site at build and dev time. They are added automatically when you add the integration to <code>astro.config.mjs</code> — you do not need to create any files or configure any options.</p>
+
+<h2>RSS feeds</h2>
+<pre>GET /orbiter/rss/[collection].xml</pre>
+<p>Replace <code>[collection]</code> with any collection slug (e.g. <code>/orbiter/rss/posts.xml</code>). The response is a valid <strong>RSS 2.0</strong> document. Only <code>published</code> entries are included. Each item contains:</p>
+<table>
+  <thead><tr><th>RSS element</th><th>Source</th></tr></thead>
+  <tbody>
+    <tr><td><code>&lt;title&gt;</code></td><td>Entry's <code>title</code> field (or slug if no title field exists)</td></tr>
+    <tr><td><code>&lt;link&gt;</code></td><td>Constructed from <code>site.url</code> + the collection's <strong>Preview URL</strong> pattern</td></tr>
+    <tr><td><code>&lt;description&gt;</code></td><td>Entry's <code>excerpt</code> or <code>description</code> field if present</td></tr>
+    <tr><td><code>&lt;pubDate&gt;</code></td><td>Entry's <code>published_at</code> timestamp</td></tr>
+    <tr><td><code>&lt;guid&gt;</code></td><td>Entry's canonical URL</td></tr>
+  </tbody>
+</table>
+
+<p>The feed's <code>&lt;channel&gt;</code> metadata is pulled from your pod's Settings:</p>
+<ul>
+  <li><strong>Feed title</strong> — <code>site.name</code> + collection name</li>
+  <li><strong>Feed link</strong> — <code>site.url</code></li>
+  <li><strong>Feed description</strong> — <code>site.description</code> (if set)</li>
+</ul>
+
+<h2>Sitemap</h2>
+<pre>GET /orbiter/sitemap.xml</pre>
+<p>Returns a single <strong>XML sitemap</strong> that includes every published entry across all collections. Each <code>&lt;url&gt;</code> entry contains:</p>
+<table>
+  <thead><tr><th>Element</th><th>Source</th></tr></thead>
+  <tbody>
+    <tr><td><code>&lt;loc&gt;</code></td><td>Canonical URL built from <code>site.url</code> + the collection's Preview URL pattern</td></tr>
+    <tr><td><code>&lt;lastmod&gt;</code></td><td>Entry's <code>updated_at</code> timestamp in <code>YYYY-MM-DD</code> format</td></tr>
+  </tbody>
+</table>
+<p>Collections that have no <strong>Preview URL</strong> configured in their schema are excluded from the sitemap — Orbiter cannot determine a canonical URL for them.</p>
+
+<h2>Settings that affect output</h2>
+<p>Both routes read from <strong>Settings → Site</strong>. Make sure these values are set:</p>
+<table>
+  <thead><tr><th>Setting</th><th>Used by</th></tr></thead>
+  <tbody>
+    <tr><td><code>site.url</code></td><td>RSS feed link, RSS item links, sitemap <code>&lt;loc&gt;</code></td></tr>
+    <tr><td><code>site.name</code></td><td>RSS channel title</td></tr>
+    <tr><td><code>site.description</code></td><td>RSS channel description (optional)</td></tr>
+  </tbody>
+</table>
+
+<h2>No configuration needed</h2>
+<p>The routes are injected by the integration. No pages, API routes, or plugin options are required on your side. To verify the routes are live, visit <code>/orbiter/rss/[collection].xml</code> in your local dev server after starting <code>astro dev</code>.</p>
+
+</DocsLayout>

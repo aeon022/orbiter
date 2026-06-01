@@ -14,15 +14,15 @@ const features = [
   { icon: '◈', title: 'One file. Everything.',        body: 'Content, media, schema, users, sessions — all in a single <code>.pod</code> file. Copy it anywhere. Back it up with <code>cp</code>.' },
   { icon: '⬡', title: 'Astro-native',                 body: 'One line in <code>astro.config.mjs</code> gives you <code>orbiter:collections</code> — a Vite virtual module that snapshots your published content at build time. Zero runtime fetch.' },
   { icon: '⌗', title: 'Familiar content API',         body: 'Read content with <code>getCollection</code> and <code>getEntry</code> — same shape as Astro\'s built-in content collections.' },
-  { icon: '▦', title: 'Schema editor',                body: 'Add or change fields in the admin without writing migrations. Changes apply immediately.' },
-  { icon: '◫', title: 'Media library',                body: 'Images and files stored as BLOBs directly in the pod. No CDN to configure, no broken paths after deploy.' },
-  { icon: '⟳', title: 'Version history',              body: 'Every save creates a snapshot. Roll back to any previous version of any entry directly in the admin.' },
-  { icon: '⊞', title: 'JSON API',                     body: '<code>GET /orbiter/api/[collection]</code> — optional Bearer token, ready to use from any frontend or mobile app.' },
+  { icon: '▦', title: 'Schema editor',                body: 'Add or change fields without migrations. Export and import schemas as JSON to copy them between collections or pods.' },
+  { icon: '◫', title: 'Media library',                body: 'Upload, browse, and manage files. Images are automatically resized and compressed on upload. Four storage backends: pod BLOB, local disk, GitHub CDN, or external URL.' },
+  { icon: '⟳', title: 'Version history',              body: 'Every save creates a snapshot, capped at 20 per entry. Restore any previous version with one click from the editor sidebar.' },
+  { icon: '⊞', title: 'JSON API + RSS/Sitemap',       body: '<code>GET /orbiter/api/[collection]</code> — optional Bearer token. Plus auto-generated RSS 2.0 feeds and an XML sitemap. All injected, no config.' },
   { icon: '⇅', title: 'Git sync mode',                 body: '<code>orbiter unpack</code> extracts media BLOBs to files, <code>orbiter pack</code> restores them. Commit your pod + media to Git — a GitHub Actions template is included for automatic rebuilds.' },
-  { icon: '↓', title: 'Import',                       body: 'Migrate from WordPress (WXR export) or bring in Markdown files. Done in the admin, no CLI needed.' },
-  { icon: '🌍', title: 'Multilingual',                body: 'Per-entry locale variants with <code>slug--locale</code> convention. <code>getLocaleCollection()</code> and locale fallback support built in.' },
+  { icon: '🗓', title: 'Scheduled publishing',        body: 'Set a <code>publish_at</code> date on any entry. The server auto-publishes and fires the build webhook at the right time. Set <code>unpublish_at</code> to expire content.' },
+  { icon: '💬', title: 'Editorial comments',          body: 'Per-entry comment thread in the editor. Post, resolve, delete. Optional email notification on new comments via SMTP.' },
   { icon: '⌘', title: 'Command palette',              body: '<code>⌘K</code> fuzzy search across all content and navigation. Installable as a PWA on mobile and desktop.' },
-  { icon: '👥', title: 'Multi-user & roles',           body: 'Admin and editor roles. Manage users in the UI — no config file, no code change.' },
+  { icon: '👥', title: 'Multi-user & roles',           body: 'Admin and editor roles. Entry locking warns when two editors open the same entry simultaneously. Manage users in the UI.' },
 ];
 
 const tradeoffs = [
@@ -127,7 +127,7 @@ const faqs = [
   },
   {
     q: 'Is it production-ready?',
-    a: 'Orbiter is at v0.3.9 — published to npm, actively maintained, and used in real projects. The API may evolve before v1.0. It\'s suitable for personal sites, client projects, and small teams. Check the GitHub issues for anything relevant to your use case.',
+    a: 'Orbiter is at v0.3.14 — published to npm, actively maintained, and used in real projects. The API may evolve before v1.0. It\'s suitable for personal sites, client projects, and small teams. Check the GitHub issues for anything relevant to your use case.',
   },
   {
     q: 'What\'s the license?',
@@ -272,7 +272,7 @@ const faqs = [
     </div>
 
     <div class="hero-inner">
-      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">v0.3.9 — trash, activity log & draft preview · Changelog →</a>
+      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">v0.3.14 — scheduled publishing, comments, RSS/sitemap & more · Changelog →</a>
       <h1>Your entire CMS<br />in <span>one file.</span></h1>
       <p class="hero-sub">
         Content, media, schema, users — all in a single <code>.pod</code> file.
@@ -449,6 +449,26 @@ const faqs = [
     <p class="section-lead reveal reveal-delay-1">Recent updates and improvements to Orbiter.</p>
 
     <div class="updates-feed">
+
+      <div class="update-card reveal" style="border-color:color-mix(in srgb,var(--accent) 40%,var(--line))">
+        <div class="update-date">Jun<br />2026</div>
+        <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">v0.3.14 — New</div>
+          <div class="update-title">Scheduled publishing, comments, RSS/sitemap, entry locking & email notifications</div>
+          <ul class="update-items">
+            <li><strong>Scheduled publishing</strong> — set a <code>publish_at</code> date on any entry. A server-side scheduler auto-publishes and fires the build webhook. Also supports <code>unpublish_at</code> to revert published entries to draft at a future date.</li>
+            <li><strong>Content comments</strong> — per-entry editorial comment thread directly in the editor. Post, resolve/unresolve, and delete comments. Stored in a <code>_comments</code> table, never mixed with entry data.</li>
+            <li><strong>RSS feeds & XML sitemap</strong> — <code>/orbiter/rss/[collection].xml</code> and <code>/orbiter/sitemap.xml</code> injected automatically by the integration. No configuration needed.</li>
+            <li><strong>Schema export & import</strong> — download any collection's schema as JSON, re-import to another collection or pod. Export/Import buttons in the schema edit panel.</li>
+            <li><strong>CSV import & export</strong> — bulk entry management. Export all entries as CSV, import to create or update by slug.</li>
+            <li><strong>Entry locking</strong> — when you open an entry, the editor claims a lock. If another user is already editing, a warning banner appears. Lock expires after 90 s without a heartbeat.</li>
+            <li><strong>Email notifications</strong> — configure SMTP in Settings. Get an email on publish and/or new comment. Powered by nodemailer, always async.</li>
+            <li><strong>Required field validation</strong> — fields marked <code>required</code> in the schema block saves (non-autosave) until filled.</li>
+            <li><strong>Image optimization</strong> — uploaded images are resized and compressed automatically via sharp. Max-width and quality configurable per pod in Settings.</li>
+          </ul>
+        </div>
+      </div>
 
       <div class="update-card reveal">
         <div class="update-date">May<br />2026</div>

@@ -1,0 +1,66 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Content Comments" current="/docs/comments" prev={{ href: '/docs/scheduled-publishing', title: 'Scheduled publishing' }} next={{ href: '/docs/rss-sitemap', title: 'RSS feeds & sitemap' }}>
+
+<h1>Content Comments</h1>
+<p class="lead">Leave editorial notes on any entry, resolve threads when the feedback is actioned, and optionally receive email notifications so nothing slips through the cracks.</p>
+
+<h2>The comments panel</h2>
+<p>Open any entry in the editor. A <strong>Comments</strong> tab appears in the right-hand panel alongside Meta and Activity. Each comment shows the author's username, timestamp, and body text. Resolved comments are dimmed and can be toggled on or off.</p>
+
+<h2>Adding a comment</h2>
+<ol>
+  <li>Open an entry and click the <strong>Comments</strong> tab in the editor panel.</li>
+  <li>Type your note in the text area at the bottom and press <strong>Add comment</strong>.</li>
+  <li>The comment is saved immediately and, if email notifications are enabled, an email is sent to all users who have opted in.</li>
+</ol>
+
+<h2>Resolve and unresolve</h2>
+<p>Click the <strong>Resolve</strong> button next to any open comment to mark it as actioned. Resolved comments are hidden by default; toggle <strong>Show resolved</strong> to bring them back. Clicking <strong>Unresolve</strong> reopens the thread. Any user can resolve or unresolve any comment.</p>
+
+<h2>API</h2>
+<table>
+  <thead><tr><th>Endpoint</th><th>Action</th></tr></thead>
+  <tbody>
+    <tr><td><code>GET /api/collections/:id/entries/:slug/comments</code></td><td>List all comments for an entry (open and resolved)</td></tr>
+    <tr><td><code>POST /api/collections/:id/entries/:slug/comments</code></td><td>Create a new comment <code>&#123; "body": "…" &#125;</code></td></tr>
+    <tr><td><code>PATCH /api/collections/:id/entries/:slug/comments/:commentId</code></td><td>Resolve or unresolve <code>&#123; "resolved": true &#125;</code></td></tr>
+    <tr><td><code>DELETE /api/collections/:id/entries/:slug/comments/:commentId</code></td><td>Permanently delete a comment (author or admin only)</td></tr>
+  </tbody>
+</table>
+
+<p>A <code>GET</code> response looks like:</p>
+<pre>[
+  &#123;
+    "id": "c_01j…",
+    "username": "alice",
+    "body": "Please shorten the intro paragraph.",
+    "resolved": false,
+    "created_at": "2026-05-20 10:14:00"
+  &#125;
+]</pre>
+
+<h2>Email notifications</h2>
+<p>When a comment is posted, Orbiter can notify all users by email. To enable this:</p>
+<ol>
+  <li>Go to <strong>Settings → Notifications</strong>.</li>
+  <li>Enable <strong>Comment notifications</strong> (<code>notify_comment = 1</code>).</li>
+  <li>Ensure SMTP is configured under <strong>Settings → Email</strong>.</li>
+</ol>
+
+<h2>SMTP configuration</h2>
+<p>All outgoing email — including comment notifications — is sent through your own SMTP server. Configure it in <strong>Settings → Email</strong>:</p>
+<table>
+  <thead><tr><th>Setting</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code>smtp_host</code></td><td>SMTP server hostname</td></tr>
+    <tr><td><code>smtp_port</code></td><td>Port — typically <code>587</code> (STARTTLS) or <code>465</code> (SSL)</td></tr>
+    <tr><td><code>smtp_user</code></td><td>SMTP username / login</td></tr>
+    <tr><td><code>smtp_pass</code></td><td>SMTP password or app password</td></tr>
+    <tr><td><code>smtp_from</code></td><td>From address shown in delivered email</td></tr>
+  </tbody>
+</table>
+<p>Orbiter does not store or queue email — delivery is attempted immediately when the comment is created. If SMTP is not configured, notifications are silently skipped.</p>
+
+</DocsLayout>

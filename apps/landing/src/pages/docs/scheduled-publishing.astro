@@ -1,0 +1,58 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Scheduled Publishing & Content Expiry" current="/docs/scheduled-publishing" prev={{ href: '/docs/draft-preview', title: 'Draft preview' }} next={{ href: '/docs/comments', title: 'Content comments' }}>
+
+<h1>Scheduled Publishing &amp; Content Expiry</h1>
+<p class="lead">Set a future date for an entry to go live automatically, and optionally set an unpublish time so content disappears just as cleanly as it appeared.</p>
+
+<h2>How scheduling works</h2>
+<p>Every entry supports two optional timestamp fields:</p>
+<table>
+  <thead><tr><th>Field</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td><code>publish_at</code></td><td>Entry is kept in <code>scheduled</code> status until this time, then automatically moved to <code>published</code>.</td></tr>
+    <tr><td><code>unpublish_at</code></td><td>A published entry is automatically moved back to <code>draft</code> at this time (content expiry).</td></tr>
+  </tbody>
+</table>
+
+<p>An entry with a <code>publish_at</code> value in the future appears in the entries list with a <strong>Scheduled</strong> badge and is excluded from all public API responses until the time passes.</p>
+
+<h2>Setting a schedule in the editor</h2>
+<ol>
+  <li>Open an entry in the editor.</li>
+  <li>In the <strong>Meta</strong> panel on the right, expand the <strong>Publishing</strong> section.</li>
+  <li>Click the <strong>Publish at</strong> date-time field and choose a future date and time (stored in UTC).</li>
+  <li>Optionally fill in the <strong>Unpublish at</strong> field to set a content expiry.</li>
+  <li>Save the entry. Its status is automatically set to <code>scheduled</code>.</li>
+</ol>
+
+<p>You can clear either field at any time to cancel the scheduled action. Manually publishing an entry before its <code>publish_at</code> time overrides the schedule.</p>
+
+<h2>The scheduler</h2>
+<p>The Orbiter server runs a <code>setInterval</code> loop every <strong>60 seconds</strong> that queries for entries where:</p>
+<ul>
+  <li><code>status = 'scheduled'</code> and <code>publish_at &lt;= now()</code> — these are moved to <code>published</code>.</li>
+  <li><code>status = 'published'</code> and <code>unpublish_at &lt;= now()</code> — these are moved to <code>draft</code>.</li>
+</ul>
+<p>The interval is defined in <code>server.js</code> and starts when the Orbiter pod boots. No external cron job or task queue is required.</p>
+
+<h2>Webhook on scheduled publish</h2>
+<p>When the scheduler promotes an entry to <code>published</code>, it fires your configured <strong>Build webhook</strong> exactly as if the entry had been published manually. The webhook payload is identical. See the <a href="/docs/build-webhook">Build Webhook</a> docs for payload format and configuration.</p>
+
+<h2>API</h2>
+<p>You can set or clear schedule fields via the REST API:</p>
+<pre>PATCH /api/collections/:collectionId/entries/:slug/status
+&#123;
+  "status":       "scheduled",
+  "publish_at":   "2026-07-01T09:00:00Z",
+  "unpublish_at": "2026-07-31T23:59:59Z"
+&#125;</pre>
+
+<p>To cancel scheduling, send <code>null</code> for either field:</p>
+<pre>PATCH /api/collections/:collectionId/entries/:slug/status
+&#123; "publish_at": null, "unpublish_at": null, "status": "draft" &#125;</pre>
+
+<p>The response always includes the current values of both fields alongside the resolved <code>status</code>.</p>
+
+</DocsLayout>

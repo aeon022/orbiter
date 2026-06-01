@@ -321,6 +321,8 @@ The integration injects a complete admin UI under `/orbiter` via Astro's `inject
 | `/orbiter/build` | Build trigger |
 | `/orbiter/import` | WordPress importer |
 | `/orbiter/api/[collection]` | JSON API |
+| `/orbiter/rss/[collection].xml` | RSS 2.0 feed per collection |
+| `/orbiter/sitemap.xml` | XML sitemap of all published entries |
 | `/orbiter/login` | Login |
 | `/orbiter/logout` | Logout |
 | `/orbiter/setup` | First-run setup wizard |
@@ -608,13 +610,16 @@ orbiter pack   --pod ./content.pod --dir ./media
 Entry counts per collection, recently edited entries, persistent scratchpad + todo list, build trigger status.
 
 ### Entry editor
-All schema fields rendered as inputs. Richtext block editor with live Markdown preview, autosave, version history, draft/published toggle. Inline image blocks with float alignment (left/right/center/full). Video embedding (YouTube, Vimeo, mp4). Media picker with three tabs: Library (browse pod), From URL (server-side import from Dropbox/Drive/OneDrive), External link (store URL reference without fetching). Relation picker, conditional field visibility.
+All schema fields rendered as inputs. Richtext block editor with live Markdown preview, autosave, version history, draft/published toggle. Inline image blocks with float alignment (left/right/center/full). Video embedding (YouTube, Vimeo, mp4). Media picker with three tabs: Library (browse pod), From URL (server-side import from Dropbox/Drive/OneDrive), External link (store URL reference without fetching). Relation picker, conditional field visibility. Required field validation before save. Scheduled publishing (set `publish_at`) and content expiry (`unpublish_at`). Per-entry editorial comments with resolve/unresolve. Entry locking — warns when another user is already editing the same entry. Version history with restore per snapshot.
 
 ### Media library
-Upload, browse, and manage files. Images, video, PDF, and any file type. Served at `/orbiter/media/[id]` — BLOB, disk file, or CDN redirect depending on configured backend. Folder categories, type filter, inline image and video preview, copy URL, alt text.
+Upload, browse, and manage files. Images, video, PDF, and any file type. Served at `/orbiter/media/[id]` — BLOB, disk file, or CDN redirect depending on configured backend. Folder categories, type filter, inline image and video preview, copy URL, alt text. Automatic image optimization on upload (resize + compress via sharp, configurable in Settings).
 
 ### Schema editor
-Add, edit, delete, and reorder fields on any collection. Changes take effect immediately — no migration or restart needed.
+Add, edit, delete, and reorder fields on any collection. Changes take effect immediately — no migration or restart needed. **Export schema** as JSON and **import** from file to copy schemas between collections or pods.
+
+### Entries list
+Trash (soft delete + restore + permanent delete), activity log, bulk actions (publish/draft/delete/restore), drag-to-sort, scheduled status tab. **CSV export and import** per collection for bulk content management.
 
 ### Command palette
 `⌘ K` / `Ctrl K` — fuzzy search across all content and navigation from any admin page.
@@ -850,6 +855,49 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 
 ## Changelog
 
+### June 2026 · v0.3.14 — Scheduled Publishing, Comments, RSS/Sitemap, Entry Locking & Email Notifications
+
+**Scheduled publishing & content expiry**
+- Set `publish_at` on any entry to schedule it — a 60-second server-side scheduler auto-publishes at the right time and fires the build webhook.
+- Set `unpublish_at` on published entries to automatically revert them to draft at a future date.
+- Both dates editable directly in the editor sidebar.
+
+**Content comments**
+- Per-entry editorial comment thread in the editor — post, resolve/unresolve, and delete comments.
+- Comments are stored in the `_comments` table alongside the entry, never in the entry data.
+- API: `GET/POST /{collection}/entries/{slug}/comments`, `PATCH /comments/{id}/resolve`, `DELETE /comments/{id}`.
+
+**RSS feeds & XML sitemap** *(integration routes, injected automatically)*
+- `GET /orbiter/rss/[collection].xml` — RSS 2.0 feed for any collection. Uses `site.name`, `site.url`, `site.description` from Settings.
+- `GET /orbiter/sitemap.xml` — full XML sitemap across all published entries in all collections.
+- No configuration needed — routes are injected when you add the integration.
+
+**Schema export & import**
+- Export the schema of any collection as a `.json` file (↓ Export schema button in the edit panel).
+- Import a schema JSON file to repopulate the field list — useful for copying schemas between collections or pods.
+
+**CSV import & export per collection**
+- Export all entries of a collection as a CSV file (↓ CSV button on the entries list).
+- Import entries from a CSV file (↑ CSV) — creates new entries or updates existing ones by slug.
+
+**Entry locking**
+- When an editor opens an entry, the server claims a lock via `POST /api/locks/{collection}/{slug}`.
+- If another user is already editing, a yellow warning banner appears: "X is currently editing this entry."
+- Lock refreshed every 60 s, expires after 90 s without a heartbeat, released on page close.
+
+**Email notifications**
+- Configure SMTP in Settings → Email notifications (host, port, user, pass, from, notify-to).
+- Toggle "notify on publish" and "notify on comment" independently.
+- Emails sent asynchronously via nodemailer — never blocks saves.
+
+**Required field validation**
+- Schema fields with `required: true` are validated in the editor before saving (non-autosave).
+- Missing required fields show a blocking alert listing the field names.
+
+**Image optimization**
+- Uploaded images are automatically resized (default max 2400 px) and compressed (default quality 85) via `sharp`.
+- Configurable per-pod in Settings → Image optimization.
+
 ### May 2025 — Media Backends, Build Webhook & External Links
 
 **Build webhook**
@@ -908,7 +956,28 @@ The block editor gains full rich-media embedding:
 | 03 | Warp | ✅ Done — block editor, version history, themes, i18n, relations |
 | 04 | Orbit | ✅ Done — multi-user, per-entry i18n, CLI, PWA, npm publish |
 | 05 | Station | ✅ Done — S3 backend, external media links, docs site, auto-publish webhook |
-| 06 | Horizon | 🔄 In progress — demo instance |
+| 06 | Horizon | ✅ Done — scheduled publishing, comments, RSS/sitemap, locking, email notifications |
+| 07 | Cosmos  | 🔄 In progress — demo instance, outgoing webhooks, 2FA |
+
+### v0.3.14 — released
+
+**Scheduled publishing & content expiry** — `publish_at` / `unpublish_at` on every entry. Fires build webhook on schedule.
+
+**Content comments** — per-entry editorial threads with resolve/unresolve. `_comments` table, full CRUD API.
+
+**RSS feeds & sitemap** — `/orbiter/rss/[collection].xml` and `/orbiter/sitemap.xml` injected by the integration automatically.
+
+**Schema export/import** — download schema as JSON, re-import into any collection or pod.
+
+**CSV import/export** — bulk entry management per collection.
+
+**Entry locking** — prevents silent overwrites when two editors open the same entry. 90-second lock with heartbeat.
+
+**Email notifications** — nodemailer SMTP config in Settings, optional notify-on-publish and notify-on-comment emails.
+
+**Required field validation** — blocks save (non-autosave) when `required: true` fields are empty.
+
+**Image optimization** — sharp resize + compress on upload, configurable max-width and quality per pod.
 
 ### v0.3.1 — released
 
