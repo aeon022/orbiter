@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
+import { sendNotification } from '../email.js';
 
 export const entryRoutes = new Hono();
 
@@ -108,6 +109,7 @@ entryRoutes.put('/:collectionId/entries/:slug', async (c) => {
 
   if (body.status === 'published' && before?.status !== 'published') {
     fireWebhook(c.get('podPath'));
+    sendNotification(c.get('podPath'), 'publish', { collection: collectionId, slug: body.slug ?? slug, username }).catch(()=>{});
   }
   return c.json(updated);
 });

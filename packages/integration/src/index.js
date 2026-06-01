@@ -147,6 +147,18 @@ export default function orbiter(options = {}) {
           entrypoint: resolve(routesDir, 'api-collection.js'),
         });
 
+        // RSS feeds per collection
+        injectRoute({
+          pattern:    '/orbiter/rss/[collection].xml',
+          entrypoint: resolve(routesDir, 'rss-feed.js'),
+        });
+
+        // XML sitemap for all published entries
+        injectRoute({
+          pattern:    '/orbiter/sitemap.xml',
+          entrypoint: resolve(routesDir, 'sitemap.js'),
+        });
+
         // ── Vite virtual modules ─────────────────
         updateConfig({
           vite: {

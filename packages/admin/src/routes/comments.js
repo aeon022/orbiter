@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
+import { sendNotification } from '../email.js';
 
 export const commentRoutes = new Hono();
 
@@ -25,6 +26,7 @@ commentRoutes.post('/:collectionId/entries/:slug/comments', async (c) => {
   const username = c.get('user')?.username ?? 'unknown';
   const id = db.createComment(entry.id, username, body.trim());
   db.close();
+  sendNotification(c.get('podPath'), 'comment', { collection: collectionId, slug, username, body: body.trim() }).catch(()=>{});
   return c.json({ ok: true, id }, 201);
 });
 

@@ -449,6 +449,42 @@
           </div>
         </div>
 
+        <div class="settings-group">
+          <div class="group-header">Email notifications</div>
+          <div class="setting-row">
+            <div><div class="setting-label">SMTP host</div><div class="setting-desc">e.g. smtp.fastmail.com, smtp.gmail.com</div></div>
+            <input class="input" name="email.smtp_host" value="${get('email.smtp_host')||''}" placeholder="smtp.example.com" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">SMTP port</div><div class="setting-desc">Usually 587 (STARTTLS) or 465 (SSL)</div></div>
+            <input class="input" name="email.smtp_port" type="number" value="${get('email.smtp_port')||'587'}" placeholder="587" style="max-width:100px" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">SMTP username</div></div>
+            <input class="input" name="email.smtp_user" value="${get('email.smtp_user')||''}" placeholder="you@example.com" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">SMTP password</div></div>
+            <input class="input" type="password" name="email.smtp_pass" value="${get('email.smtp_pass')||''}" placeholder="••••••••" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">From address</div><div class="setting-desc">Defaults to SMTP username if blank</div></div>
+            <input class="input" name="email.smtp_from" value="${get('email.smtp_from')||''}" placeholder="Orbiter &lt;noreply@example.com&gt;" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Notify to</div><div class="setting-desc">Recipient email address for notifications</div></div>
+            <input class="input" name="email.notify_to" value="${get('email.notify_to')||''}" placeholder="admin@example.com" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Notify on publish</div><div class="setting-desc">Send email when an entry is published</div></div>
+            <input type="checkbox" name="email.notify_publish" value="1" ${get('email.notify_publish')==='1'?'checked':''} style="accent-color:var(--accent);width:14px;height:14px;" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Notify on comment</div><div class="setting-desc">Send email when a new comment is posted</div></div>
+            <input type="checkbox" name="email.notify_comment" value="1" ${get('email.notify_comment')==='1'?'checked':''} style="accent-color:var(--accent);width:14px;height:14px;" />
+          </div>
+        </div>
+
         <div class="save-row">
           <button type="submit" class="btn-save">Save settings</button>
         </div>
@@ -668,9 +704,19 @@
         ['media.s3_access_key', fd.get('media.s3_access_key')],
         ['media.s3_secret_key', fd.get('media.s3_secret_key')],
         ['media.s3_public_url', fd.get('media.s3_public_url')],
-        ['api.enabled',         fd.get('api.enabled') ? '1' : '0'],
-        ['api.token',           fd.get('api.token')],
-        ['preview.token',       document.getElementById('preview-token-display').value || null],
+        ['api.enabled',              fd.get('api.enabled') ? '1' : '0'],
+        ['api.token',                fd.get('api.token')],
+        ['preview.token',            document.getElementById('preview-token-display').value || null],
+        ['media.img_max_width',      fd.get('media.img_max_width')],
+        ['media.img_quality',        fd.get('media.img_quality')],
+        ['email.smtp_host',          fd.get('email.smtp_host')],
+        ['email.smtp_port',          fd.get('email.smtp_port')],
+        ['email.smtp_user',          fd.get('email.smtp_user')],
+        ['email.smtp_pass',          fd.get('email.smtp_pass')],
+        ['email.smtp_from',          fd.get('email.smtp_from')],
+        ['email.notify_to',          fd.get('email.notify_to')],
+        ['email.notify_publish',     fd.get('email.notify_publish') ? '1' : '0'],
+        ['email.notify_comment',     fd.get('email.notify_comment') ? '1' : '0'],
       ]);
       showBanner('site-banner','banner-ok','Settings saved');
     });

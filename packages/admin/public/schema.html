@@ -390,9 +390,11 @@
         ${total>0?'<div class="delete-warn">Adding fields is non-destructive. Removing fields hides existing data but does not delete it.</div>':''}
         <div id="edit-field-rows" class="field-rows"></div>
         <div class="editor-actions">
-          <div style="display:flex;gap:10px;">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
             <button class="btn btn-primary" id="btn-save-edit">Save</button>
             <button class="btn" id="btn-add-edit">+ Add field</button>
+            <button class="btn" id="btn-export-schema">↓ Export schema</button>
+            <label class="btn" style="cursor:pointer;">↑ Import schema<input type="file" id="import-schema-file" accept=".json" style="display:none"></label>
           </div>
           <button class="btn" id="btn-del-col" style="color:var(--red);border-color:var(--red);">Delete collection</button>
         </div>
@@ -401,6 +403,22 @@
       enableFieldDrag(rowsEl);
       Object.entries(schema).forEach(([k,f])=>addFieldRow(rowsEl,k,f.label??k,f.type??'string',!!f.required,(f.options??[]).join(', '),f.collection??'',f.multiple!==false));
       document.getElementById('btn-add-edit').addEventListener('click',()=>addFieldRow(rowsEl));
+      document.getElementById('btn-export-schema').addEventListener('click',()=>{
+        const blob=new Blob([JSON.stringify(serializeSchema(rowsEl),null,2)],{type:'application/json'});
+        const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`${col.id}-schema.json`; a.click(); URL.revokeObjectURL(a.href);
+      });
+      document.getElementById('import-schema-file').addEventListener('change',e=>{
+        const file=e.target.files[0]; if (!file) return;
+        const reader=new FileReader();
+        reader.onload=ev=>{
+          try {
+            const s=JSON.parse(ev.target.result);
+            rowsEl.innerHTML='';
+            Object.entries(s).forEach(([k,f])=>addFieldRow(rowsEl,k,f.label??k,f.type??'string',!!f.required,(f.options??[]).join(', '),f.collection??'',f.multiple!==false));
+          } catch { alert('Invalid schema JSON'); }
+        };
+        reader.readAsText(file); e.target.value='';
+      });
       // Load existing preview URL for this collection
       fetch(`/api/meta/preview_url~${col.id}`,{credentials:'include'}).then(r=>r.json()).then(d=>{
         const inp=document.getElementById('edit-preview-url'); if(inp)inp.value=d.value??'';

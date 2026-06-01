@@ -15,6 +15,8 @@ const ALLOWED_KEYS = [
   'dashboard.notes', 'dashboard.todos',
   'ui.theme',
   'format_version',
+  'email.smtp_host', 'email.smtp_port', 'email.smtp_user', 'email.smtp_pass',
+  'email.smtp_from', 'email.notify_publish', 'email.notify_comment', 'email.notify_to',
 ];
 
 const PREVIEW_URL_RE = /^preview_url\.[a-z0-9_-]+$/;

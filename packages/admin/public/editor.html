@@ -409,6 +409,9 @@
         <span class="logout" id="logout-btn">Sign out</span>
       </div>
     </header>
+    <div id="lock-banner" style="display:none;background:color-mix(in srgb,var(--gold) 12%,var(--bg2));border-bottom:1px solid color-mix(in srgb,var(--gold) 30%,transparent);padding:7px 20px;font-size:11px;color:var(--text);display:none;align-items:center;gap:8px;">
+      <span style="color:var(--gold);">⚠</span> <span id="lock-banner-msg"></span>
+    </div>
     <div class="editor-shell" id="editor-shell">
       <div class="editor-main" id="editor-main">
         <div id="saved-flash" style="display:none;" class="saved-flash">Entry saved</div>
@@ -516,6 +519,35 @@
     ]);
 
     if (!colData) { location.replace('/collections.html'); }
+
+    // Entry locking — claim lock, warn if someone else is editing
+    let lockHeld = false;
+    let lockHeartbeat = null;
+    async function claimLock() {
+      if (IS_NEW) return;
+      const res = await fetch(`/api/locks/${COLLECTION}/${SLUG}`,{method:'POST',credentials:'include'}).catch(()=>null);
+      if (!res) return;
+      if (res.status === 409) {
+        const j = await res.json().catch(()=>({}));
+        const banner = document.getElementById('lock-banner');
+        document.getElementById('lock-banner-msg').textContent = `${j.by ?? 'Someone'} is currently editing this entry. Your changes may conflict.`;
+        banner.style.display = 'flex';
+        lockHeld = false;
+      } else {
+        lockHeld = true;
+      }
+    }
+    async function releaseLock() {
+      if (!lockHeld || IS_NEW) return;
+      lockHeld = false;
+      await fetch(`/api/locks/${COLLECTION}/${SLUG}`,{method:'DELETE',credentials:'include'}).catch(()=>{});
+    }
+    claimLock().then(()=>{
+      if (IS_NEW) return;
+      lockHeartbeat = setInterval(()=>fetch(`/api/locks/${COLLECTION}/${SLUG}`,{method:'POST',credentials:'include'}).catch(()=>{}), 60_000);
+    });
+    window.addEventListener('beforeunload', () => { if (lockHeld) releaseLock(); });
+    document.addEventListener('visibilitychange', () => { if (document.hidden && lockHeld) releaseLock(); });
 
     // Breadcrumb
     document.getElementById('back-to-col').textContent = colData.label;
