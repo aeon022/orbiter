@@ -1611,11 +1611,24 @@ html[data-style="xfce"] .table-wrap {
   overflow: hidden;
 }
 
-/* Settings content: center within padded main */
-html[data-style="xfce"] .settings-wrap {
+/* Settings / Import content: center within padded main */
+html[data-style="xfce"] .settings-wrap,
+html[data-style="xfce"] .import-wrap {
   width: 100%;
   max-width: 720px;
   margin: 0 auto;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Build card glass treatment */
+html[data-style="xfce"] .build-card {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 14px !important;
+  box-shadow: var(--glass-shadow);
 }
 
 /* ── XFCE: Focus mode (spotlight) ─────────────────────────── */

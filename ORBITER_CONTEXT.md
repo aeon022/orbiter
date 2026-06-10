@@ -1,6 +1,6 @@
 # ORBITER CMS — Claude Code Context
-**Letzte Aktualisierung:** 2026-03-27
-**Status:** Phase 3 (Warp) — in Arbeit
+**Letzte Aktualisierung:** 2026-06-10
+**Status:** Phase 3 (Warp) — fast abgeschlossen; i18n ausstehend
 
 ---
 
@@ -26,79 +26,120 @@ Inspiration: Keystatic (Astro-nativ, Schema-Definition) + PocketBase (Single-Fil
 ```
 ~/Sites/orbiter/
 ├── packages/
-│   ├── core/               # SQLite-Management (@a83/orbiter-core)
+│   ├── core/               # @a83/orbiter-core v0.3.8 — SQLite-Management
 │   │   └── src/
-│   │       ├── index.js    # exportiert OrbiterDB, createPod, openPod, hashPassword, verifyPassword, generateToken
-│   │       ├── db.js       # class OrbiterDB (better-sqlite3 wrapper)
-│   │       ├── pod.js      # createPod(), openPod() lifecycle helpers
-│   │       └── auth.js     # hashPassword, verifyPassword, generateToken (Node crypto / scrypt)
-│   ├── integration/        # Astro-Integration (@a83/orbiter-integration)
+│   │       ├── index.js         # OrbiterDB, createPod, openPod, hashPassword, verifyPassword, generateToken
+│   │       ├── db.js            # class OrbiterDB (better-sqlite3 wrapper)
+│   │       ├── pod.js           # createPod(), openPod() lifecycle helpers
+│   │       ├── auth.js          # hashPassword, verifyPassword, generateToken (Node crypto / scrypt)
+│   │       └── media-backend.js # S3/R2/B2-Backend-Abstraktion
+│   ├── integration/        # @a83/orbiter-integration v0.3.7 — Astro-Integration (schlank)
 │   │   ├── src/
-│   │   │   ├── index.js    # Vite virtual modules + injectRoute()
-│   │   │   └── admin-utils.js  # Dark mode + Command palette JS (als String in orbiter:admin-utils)
-│   │   ├── routes/         # Admin UI Routes (Astro files)
-│   │   │   ├── AdminLayout.astro   # Shared Layout (Props: title, activeNav, breadcrumbs, collections, podInfo)
-│   │   │   ├── login.astro         # /orbiter/login — Login-Seite
-│   │   │   ├── logout.astro        # /orbiter/logout — Session löschen
-│   │   │   ├── dashboard.astro     # /orbiter
-│   │   │   ├── collection.astro    # /orbiter/[collection]
-│   │   │   ├── editor.astro        # /orbiter/[collection]/[slug]
-│   │   │   ├── media.astro         # /orbiter/media
-│   │   │   ├── media-serve.astro   # /orbiter/media/[id]
-│   │   │   ├── build.astro         # /orbiter/build
-│   │   │   ├── settings.astro      # /orbiter/settings
-│   │   │   └── search.astro        # /orbiter/search (JSON API)
-│   │   └── styles/
-│   │       └── admin.css   # Shared CSS (wird via orbiter:admin-css als String geladen)
-│   └── admin/              # @a83/orbiter-admin — Placeholder, noch leer
-│       └── src/index.js    # nur VERSION export
+│   │   │   └── index.js    # Vite virtual modules + injectRoute()
+│   │   └── routes/
+│   │       ├── api-collection.js  # /orbiter/api/[collection] — read-only JSON API
+│   │       ├── media-serve.astro  # /orbiter/media/[id] — Media-Serve
+│   │       ├── rss-feed.js        # /rss.xml
+│   │       └── sitemap.js         # /sitemap.xml
+│   ├── admin/              # @a83/orbiter-admin v0.3.14 — Standalone Admin UI + Hono Server
+│   │   ├── src/
+│   │   │   ├── server.js        # Hono-Server, Port 4322, ORBITER_POD env var
+│   │   │   ├── index.js         # VERSION export
+│   │   │   ├── email.js         # E-Mail-Benachrichtigungen (nodemailer)
+│   │   │   ├── wp-importer.js   # WordPress XML → Orbiter Import
+│   │   │   ├── middleware/
+│   │   │   │   └── auth.js      # requireAuth Middleware
+│   │   │   └── routes/
+│   │   │       ├── auth.js        # POST /api/auth/login, logout, /me
+│   │   │       ├── account.js     # PATCH /api/account/password, /username
+│   │   │       ├── collections.js # CRUD /api/collections
+│   │   │       ├── entries.js     # CRUD /api/collections/:id/entries + versions, trash, lock
+│   │   │       ├── media.js       # CRUD /api/media
+│   │   │       ├── users.js       # CRUD /api/users (admin only)
+│   │   │       ├── meta.js        # GET/PATCH /api/meta (site settings, _meta table)
+│   │   │       ├── build.js       # POST /api/build (webhook trigger)
+│   │   │       ├── search.js      # GET /api/search
+│   │   │       ├── github.js      # GitHub deploy integration
+│   │   │       ├── info.js        # GET /api/info (version, pod stats)
+│   │   │       ├── import.js      # POST /api/import (CSV, WP-XML)
+│   │   │       ├── comments.js    # CRUD /api/comments (content comments)
+│   │   │       └── locks.js       # POST/DELETE /api/locks/:col/:slug (pessimistic locking)
+│   │   └── public/
+│   │       ├── style.css          # Globales Design-System (~2100 Zeilen)
+│   │       ├── theme.js           # Inline theme engine (läuft in <head> vor erstem Paint)
+│   │       ├── admin-utils.js     # Dark-Mode toggle, Command Palette
+│   │       ├── sidebar.js         # xfce-Dock Sidebar-Logik
+│   │       ├── router.js          # Client-seitiges Routing
+│   │       ├── search.js          # Globale Suche (Cmd+K)
+│   │       ├── xfce.js            # Space Station mode — Dock, HUD, Focus Mode
+│   │       ├── dashboard.html     # / Dashboard
+│   │       ├── editor.html        # /editor.html?col=&slug= — Block Editor
+│   │       ├── entries.html       # /entries.html?col= — Entries-Liste
+│   │       ├── collections.html   # Schema/Collections-Verwaltung
+│   │       ├── media.html         # Media-Library
+│   │       ├── users.html         # User-Verwaltung (Admin only)
+│   │       ├── settings.html      # Site-Settings, Account, Notifications, UI
+│   │       ├── schema.html        # Schema Export/Import
+│   │       ├── build.html         # Build & Deploy
+│   │       ├── import.html        # CSV/WP-Import
+│   │       └── login.html         # Login
+│   └── cli/                # @a83/orbiter-cli — CLI-Werkzeuge
 └── apps/
-    └── demo/               # Demo-Site
-        ├── astro.config.mjs  # output: 'server', port: 8080
-        ├── demo.pod          # SQLite Datenbankdatei (in .gitignore)
-        ├── scripts/
-        │   └── seed.js       # Erstellt demo.pod mit Testdaten + Admin-User
-        └── src/pages/index.astro
+    ├── demo/               # Demo-Site (Astro + orbiter-integration)
+    │   ├── astro.config.mjs  # output: 'server', port: 8080
+    │   ├── demo.pod          # SQLite (in .gitignore)
+    │   └── scripts/seed.js   # Erstellt demo.pod mit Testdaten + Admin-User
+    └── landing/            # Landing Page — orbiter.sh (Astro, statisch)
+        ├── src/pages/index.astro
+        ├── src/styles/landing.css
+        └── public/screenshots/   # WebP-Screenshots für Landing
 ```
 
-### .pod Datenbankschema
+### .pod Datenbankschema (aktuell)
 ```sql
-_meta         -- key, value (site.name, site.url, site.description, site.locale, format_version)
-_collections  -- id, label, schema (JSON), created_at
-_entries      -- id, collection_id, slug, status, data (JSON), created_at, updated_at
+_meta         -- key, value
+              -- Keys: site.name, site.url, site.description, site.locale, site.locales,
+              --       format_version, api.enabled, api.token, lock.* (Entry-Locks via _meta)
+
+_collections  -- id, label, schema (JSON), singleton INTEGER, created_at
+
+_entries      -- id, collection_id, slug, data (JSON), status, sort_order,
+              -- deleted_at (soft delete / Trash), publish_at, unpublish_at,
+              -- created_at, updated_at
               -- UNIQUE(collection_id, slug)
-_versions     -- id, entry_id, data (JSON), created_at
-_media        -- id, filename, mime_type, size, data (BLOB), alt, created_at
+
+_versions     -- id, entry_id, data (JSON snapshot), created_at
+
+_media        -- id, filename, mime_type, size, data (BLOB, nullable),
+              -- alt, folder, url (externe URL), path, created_at
+
 _users        -- id, username, password (scrypt salt:hash), role, created_at, last_login
-_sessions     -- token, user_id (FK _users), expires_at, created_at
+_sessions     -- token, user_id (FK), expires_at, created_at
+_audit        -- id, entry_id, username, action, created_at
+_comments     -- id, entry_id, username, body, resolved INTEGER, created_at
 ```
 
-### Virtual Modules (Vite)
-- `orbiter:collections` — statischer Snapshot für Build (`getCollection`, `getEntry`, `locale`, `locales`)
-- `orbiter:db` — exportiert `podPath` (String) für direkten DB-Zugriff in Admin-Routes
-- `orbiter:admin-utils` — Dark-Mode + Command-Palette JS als String (injiziert via `<script set:html={...} is:inline>`)
+Migrations werden via `try { ALTER TABLE ... } catch {}` beim Bootstrap automatisch angewendet.
+
+### Virtual Modules (Astro-Integration)
+- `orbiter:collections` — Build-Zeit-Snapshot: `getCollection`, `getEntry`, `locale`, `locales`
+- `orbiter:db` — exportiert `podPath` für Custom-Routes im Astro-Projekt
 
 ---
 
 ## 3. Auth-System
 
-### Überblick
 - Cookie-basierte Sessions: `orb_sess` (httpOnly, sameSite=lax, 7 Tage)
-- Passwort-Hashing: Node.js `crypto.scrypt` mit Random-Salt → Format `salt:hash` (hex)
-- Alle `/orbiter/*` Routen prüfen Session am Anfang des Frontmatter-Blocks
-
-### Auth-Guard Pattern (in jeder geschützten Route)
-```js
-{ const _db = openPod(podPath); const _u = _db.checkSession(Astro.cookies.get('orb_sess')?.value ?? ''); _db.close(); if (!_u) return Astro.redirect('/orbiter/login'); }
-```
-- Media-Serve und Search geben `401` statt Redirect zurück
-- Login/Logout haben keinen Guard
+- Passwort-Hashing: Node.js `crypto.scrypt` mit Random-Salt → `salt:hash` (hex)
+- Standalone Admin: `requireAuth` Hono-Middleware auf alle `/api/*` Protected-Routes
 
 ### OrbiterDB Auth-Methoden
 ```js
 db.getUserByUsername(username)           // → user row | null
-db.insertUser(id, username, hash, role)  // sync — hash vorher mit hashPassword() erzeugen
-db.createSession(userId, token, expiresAt) // + prune expired + update last_login
+db.getUsers()                            // → user rows (ohne password)
+db.insertUser(id, username, hash, role)
+db.deleteUser(id)
+db.createSession(userId, token, expiresAt)
 db.checkSession(token)                   // → {id, username, role} | null
 db.deleteSession(token)
 ```
@@ -106,204 +147,221 @@ db.deleteSession(token)
 ### Auth-Utilities (@a83/orbiter-core)
 ```js
 import { hashPassword, verifyPassword, generateToken } from '@a83/orbiter-core';
-// oder:
-import { hashPassword, verifyPassword, generateToken } from '@a83/orbiter-core/auth';
-
 await hashPassword('plaintext')        // → 'salt:hash'
 await verifyPassword('plain', stored)  // → boolean (timing-safe)
 generateToken(32)                      // → 64-char hex string
 ```
 
-### Seed-Login
-```
-username: admin
-password: admin
-```
-Nach erstem `npm run seed` verfügbar. Passwort in Produktion sofort ändern.
-
 ---
 
-## 4. Admin UI
+## 4. Admin UI (Standalone — packages/admin)
 
-### Routes & Auth
-| URL | File | Auth |
-|-----|------|------|
-| `/orbiter/login` | login.astro | ❌ öffentlich |
-| `/orbiter/logout` | logout.astro | ❌ öffentlich |
-| `/orbiter` | dashboard.astro | ✅ Session-Guard |
-| `/orbiter/[collection]` | collection.astro | ✅ Session-Guard |
-| `/orbiter/[collection]/[slug]` | editor.astro | ✅ Session-Guard |
-| `/orbiter/media` | media.astro | ✅ Session-Guard |
-| `/orbiter/media/[id]` | media-serve.astro | ✅ → 401 |
-| `/orbiter/build` | build.astro | ✅ Session-Guard |
-| `/orbiter/settings` | settings.astro | ✅ Session-Guard |
-| `/orbiter/search` | search.astro | ✅ → 401 JSON |
+### Seiten & Routen
+| Datei | URL | Beschreibung |
+|-------|-----|--------------|
+| `login.html` | `/login.html` | Login (public) |
+| `dashboard.html` | `/dashboard.html` | Übersicht, Stats, Schnellzugriff |
+| `entries.html` | `/entries.html?col=` | Entries-Liste einer Collection |
+| `editor.html` | `/editor.html?col=&slug=` | Block Editor |
+| `collections.html` | `/collections.html` | Schema/Collections-Verwaltung |
+| `media.html` | `/media.html` | Media-Library |
+| `users.html` | `/users.html` | User-Verwaltung (Admin only) |
+| `settings.html` | `/settings.html` | Site-Settings, Account, Notifications, UI |
+| `schema.html` | `/schema.html` | Schema Export/Import (JSON) |
+| `build.html` | `/build.html` | Build-Trigger, GitHub-Deploy |
+| `import.html` | `/import.html` | CSV / WordPress-XML Import |
 
-### AdminLayout.astro
-Shared Layout-Komponente mit Props: `title`, `activeNav`, `breadcrumbs`, `collections`, `podInfo`.
-Slots: `head` (für `<style>`), `topbar-right`, default.
-Enthält Topbar mit Abmelden-Link und Dark-Mode-Toggle.
-
-**Nutzung:** `settings.astro` und `build.astro` nutzen AdminLayout.
-`dashboard.astro`, `editor.astro`, `collection.astro` haben CSS noch vollständig inline (Konsolidierung ausstehend).
-
-### Design-System (Light Mode)
+### Design-System
 ```css
---bg0: #f5f2ec   /* Main Background */
---bg1: #faf8f3   /* Sidebar */
---bg2: #ffffff   /* Panels/Cards */
---bg3: #edeae3   /* Badges/Chips */
---line: #e0dbd0  /* Borders */
---text: #3a3228
---heading: #1a1510
---gold: #9a6e30  /* Accent, Buttons, Active-States */
---jade: #1e6b50  /* Published Status */
---accent: #3d4fa8 /* Links */
---crimson: #8b2635 /* Error/Delete */
-```
-**Fonts:** DM Mono (UI/Code), Noto Serif JP (Headings/Content)
+/* Light Mode (default) */
+--bg0: #f5f2ec; --bg1: #faf8f3; --bg2: #ffffff; --bg3: #edeae3;
+--line: #e0dbd0; --text: #3a3228; --heading: #1a1510;
+--gold: #9a6e30;      /* Accent, Buttons, Active */
+--jade: #1e6b50;      /* Published Status */
+--accent: #3d4fa8;    /* Links */
+--crimson: #8b2635;   /* Error/Delete */
 
-### CSS-Pattern (wichtig!)
-Zwei Strategien im Einsatz:
-1. **`AdminLayout.astro`** — `settings.astro` und `build.astro` nutzen die Komponente; page-spezifische Styles in eigenem `<style>`-Block **außerhalb** des `<AdminLayout>`-Tags (Astro hoists diese). Utility-Klassen wie `.field-input` müssen in der **Page** wiederholt werden, da Astro CSS-Scoping verhindert, dass Layout-Styles Slot-Content erreichen.
-2. **Vollständig inline** — `dashboard.astro`, `editor.astro`, `collection.astro` haben den gesamten CSS-Block direkt in der Route.
-
-### JS in Astro Routes (wichtig!)
-Astro behandelt `<script>` Tags als ES-Module — `onclick="fn()"` findet Funktionen nicht.
-**Fix:** Alle interaktiven Funktionen auf `window` setzen:
-```js
-window.setStatus = function(...) { ... }
-window.changeBlockType = function(...) { ... }
+/* Dark Mode (data-scheme="dark") + Themes: space (default), zen, catppuccin */
+/* Space Station / xfce mode (data-style="xfce"): Glassmorphism dark UI */
+--glass-bg, --glass-border, --glass-blur: eigene xfce-Variablen
 ```
+
+**Fonts:** DM Mono (UI/Code), Noto Serif JP (Headings/Content), Space Grotesk (xfce Überschriften)
+
+### Theme-System
+Gesteuert via `localStorage`:
+- `orb_theme`: `space` (default) | `zen` | `catppuccin`
+- `orb_scheme`: `auto` | `dark` | `light`
+- `orb_style`: `glass` (default) | `xfce` (Space Station mode)
+
+`theme.js` setzt `html[data-theme]`, `html[data-scheme]`, `html[data-style]` vor dem ersten Paint.
+
+### Space Station Mode (xfce / `data-style="xfce"`)
+Alternativer Dark-Glassmorphism-Look mit:
+- Floating Dock (Desktop: zentriert schwebend; Mobile: Bottom Tab Bar)
+- Status Bar oben
+- HUD-Panel (rechts, slide-in)
+- Focus Mode (Schreibmodus)
+- Vollständiges Mobile Layout (`@media (max-width: 640px)`)
+- JS: `xfce.js`, `sidebar.js`; CSS: Block am Ende von `style.css`
 
 ---
 
-## 5. Block Editor (editor.astro)
+## 5. Block Editor (`editor.html`)
 
-### Architektur
 - `div#be-editor` (contenteditable-Blöcke) — visuelle Editing-Oberfläche
-- `textarea#body-input` (hidden) — Markdown-Storage, wird bei jedem Block-Event via `syncToHidden()` synchronisiert
-- Alle bestehenden Systeme (Autosave, Preview, FormData) lesen unverändert aus dem Hidden-Textarea
+- `textarea#body-input` (hidden) — Markdown-Storage, via `syncToHidden()` synchronisiert
+- Autosave (2s Debounce), Cmd+S zum Speichern
+- Live Preview (Split + Preview Mode, marked.js)
+- Slug wird auto aus Titel generiert (`dataset.manual` Flag verhindert Überschreiben nach manuellem Edit)
 
-### Block-Typen
-`p`, `h1`, `h2`, `h3`, `blockquote`, `pre`, `ul`, `ol`, `hr`
+**Block-Typen:** `p`, `h1`, `h2`, `h3`, `blockquote`, `pre`, `ul`, `ol`, `hr`
 
-### Markdown-Shortcuts
-Tippe am Anfang eines leeren Blocks: `# ` → h1, `## ` → h2, `### ` → h3, `> ` → blockquote, `- ` → ul, `---` → hr, `/` → Block-Picker
-
-### Block-Picker
-`/` öffnet den Picker. Pfeil-Tasten navigieren, Enter einfügen, Escape schließen.
-
-### Toolbar
-- B / I / `</>` → `beCmd('bold' | 'italic' | 'code')` via `document.execCommand` oder Code-Node
-- H1 / H2 / H3 / Quote / List → `changeBlockType(type)`
-- Divider → `insertHr()`
+**Markdown-Shortcuts:** `# ` → h1, `## ` → h2, `### ` → h3, `> ` → blockquote, `- ` → ul, `---` → hr, `/` → Block-Picker
 
 ---
 
-## 6. Editor — Save-Funktionalität
+## 6. API-Überblick (Hono Server)
 
-Der Editor (`editor.astro`) verarbeitet POST-Requests direkt im Frontmatter:
-
-```js
-if (Astro.request.method === 'POST') {
-  const form = await Astro.request.formData();
-  // ... write to .pod via better-sqlite3
-  return Astro.redirect(`/orbiter/${collectionId}/${newSlug}?saved=1`);
-}
 ```
+POST   /api/auth/login              public
+POST   /api/auth/logout             public
+GET    /api/auth/me                 public
 
-**Datum-Format:** `sqliteNow()` → `YYYY-MM-DD HH:MM:SS` (kein ISO-Format mit T und Z)
-```js
-const sqliteNow = () => new Date().toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, '');
+GET    /api/collections             protected
+POST   /api/collections             protected
+PATCH  /api/collections/:id         protected
+DELETE /api/collections/:id         protected
+
+GET    /api/collections/:id/entries protected
+POST   /api/collections/:id/entries protected
+GET    /api/collections/:id/entries/:slug  protected
+PATCH  /api/collections/:id/entries/:slug  protected
+DELETE /api/collections/:id/entries/:slug  protected
+POST   /api/collections/:id/entries/:slug/publish   protected
+POST   /api/collections/:id/entries/:slug/unpublish protected
+GET    /api/collections/:id/entries/:slug/versions  protected
+POST   /api/collections/:id/entries/:slug/restore/:versionId protected
+
+GET    /api/media                   protected
+POST   /api/media                   protected
+DELETE /api/media/:id               protected
+
+GET    /api/users                   admin only
+POST   /api/users                   admin only
+DELETE /api/users/:id               admin only
+
+PATCH  /api/account/password        protected
+PATCH  /api/account/username        protected
+
+GET/PATCH /api/meta                 protected
+
+POST   /api/build                   protected
+GET    /api/search                  protected
+GET    /api/info                    protected
+
+POST   /api/locks/:col/:slug        protected
+DELETE /api/locks/:col/:slug        protected
+
+GET    /api/collections/:id/entries/:slug/comments  protected
+POST   /api/collections/:id/entries/:slug/comments  protected
+PATCH  /api/comments/:id            protected (resolve)
+DELETE /api/comments/:id            protected
 ```
-
-**Slug-Auto-Generierung:** Wird live aus dem Titel generiert, solange der Slug-Input nicht manuell bearbeitet wurde (`dataset.manual` Flag).
 
 ---
 
 ## 7. Demo-Seed (`apps/demo/scripts/seed.js`)
 
-Erstellt `demo.pod` neu mit:
-- **Admin-User:** admin / admin (Passwort mit scrypt gehashed)
-- **Site-Meta:** name, url, description, locale
-- **Collections:** posts (title, excerpt, body, tags, image), pages (title, body, seo_title, seo_desc), authors, events (mit Recurring-Schema)
-- **Einträge:** 3 Posts, 3 Pages, 3 Events (je 2 published, 1 draft), 1 Author
-- **Media:** 2 Placeholder-Assets (1×1 transparentes PNG als BLOB)
-- **Versions:** 1 Snapshot pro published Post
-
 ```bash
 npm run seed --workspace=apps/demo
+# → erstellt apps/demo/demo.pod mit: admin/admin, Collections, Einträge, Media
 ```
 
 ---
 
 ## 8. Was funktioniert ✅
 
-- Login/Logout mit Session-Cookies (scrypt Passwort-Hashing)
-- Alle Admin-Routen durch Session-Guard geschützt
-- Block Editor (contenteditable-Blöcke → Markdown → Hidden Textarea)
-- Live Preview (Split + Preview Mode mit marked.js)
-- Autosave (2s Debounce, X-Autosave Header)
-- Cmd+S zum Speichern
-- Media Upload/Serve/Delete (BLOBs in .pod)
-- Build-Trigger via Webhook (POST)
-- Settings speichern/lesen
-- Dark Mode (localStorage-persisted)
-- Command Palette (Strg+K)
-- Filter-Pills (All/Published/Draft) in Collection-Liste
-- Version History wird bei jedem Save angelegt
-- `orbiter:collections` exportiert `locale` und `locales`
-- Demo-Site läuft auf `localhost:8080`
+- Login/Logout mit Session-Cookies (scrypt)
+- Block Editor + Live Preview + Autosave
+- Media Upload/Serve/Delete (BLOB oder S3/R2/B2-Backend)
+- Collections & Schema (inkl. Singleton, Drag-Sort, Export/Import)
+- Alle Feldtypen: string, richtext, number, boolean, date, datetime, select, array, image, media, url, email, relation, weekdays
+- Version History + Restore
+- Trash (Soft Delete) + Restore
+- Activity Log (`_audit`)
+- Content Comments (resolve/unresolve)
+- Entry Locking (pessimistisch, 90s TTL, via `_meta`)
+- Scheduled Publishing (`publish_at`, `unpublish_at`)
+- Content Expiry
+- Required Field Validation
+- Global Search (Cmd+K)
+- CSV Export/Import + WordPress XML Import
+- Schema Export/Import (JSON)
+- RSS-Feed + Sitemap (via integration routes)
+- E-Mail-Benachrichtigungen (nodemailer)
+- GitHub Deploy Integration
+- User-Verwaltung (Admin kann User anlegen/löschen)
+- Account-Settings (Passwort + Username ändern)
+- Dark Mode / Theme-System (space/zen/catppuccin × dark/light/auto)
+- Space Station mode (xfce-dock): Glassmorphism-UI, Floating Dock, HUD, Focus Mode, Mobile Layout
+- API-Token-Auth für Read-only-Zugriff von außen
 
 ---
 
 ## 9. Was noch fehlt / TODO
 
-### Phase 3 — Warp (aktuell)
-- [ ] Alle Routes auf AdminLayout migrieren (dashboard, editor, collection noch inline)
-- [ ] Account-Settings im Admin (Passwort ändern, Username ändern)
-- [ ] Mehrere User verwalten (nur Admin kann User anlegen/löschen)
-- [ ] i18n: Mehrsprachige Einträge (pro Entry mehrere Locales)
+### Phase 3 — Warp (fast fertig)
+- [ ] **i18n: Mehrsprachige Entries** — `locale`-Feld in `_entries`, `UNIQUE(collection_id, slug, locale)`, Locale-Switcher im Editor
 
 ### Phase 4 — Orbit
-- [ ] CLI (`orbiter init`, `orbiter add-user`, `orbiter export`)
-- [ ] PWA / Mobile Admin
+- [ ] CLI verbessern (`orbiter init`, `orbiter add-user`, `orbiter export`)
 - [ ] Public Launch / npm publish
+
+### Backlog (irgendwann)
+- Runtime-Adapter für `orbiter:collections` (aktuell nur Build-Zeit)
+- CSRF-Schutz (aktuell: SameSite=Lax als einziger Schutz)
+- SvelteKit / Next.js Adapter
+- Demo-Instanz (öffentlich erreichbar, auto-reset)
 
 ---
 
 ## 10. Key-Learnings & Gotchas
 
-1. **`output: 'server'` ist Pflicht** in `astro.config.mjs`
-2. **Astro Script-Scope:** `<script>` = ES-Modul → `window.fn = function()` statt `function fn()`
-3. **Astro CSS-Scoping:** Layout-`<style>` erreicht Slot-Content nicht → Utility-Klassen in Page wiederholen
-4. **`<style>` vor `<AdminLayout>`** — Astro hoists diese korrekt in `<head>`; `slot="head"` auf `<style>` funktioniert nicht zuverlässig
-5. **Favicon-Bug:** `href="data:image/svg+xml,<svg xmlns="..."` — innere Double-Quotes terminieren das href-Attribut → inner Quotes durch Single-Quotes ersetzen
-6. **SQLite Datum:** Einheitlich `YYYY-MM-DD HH:MM:SS` via `sqliteNow()`, nicht `toISOString()`
-7. **`_media` hat `data BLOB NOT NULL`** — Media-Dateien werden als BLOBs direkt in der .pod gespeichert
-8. **Auth-Guard öffnet DB zweimal** — erst für Session-Check, dann für Route-Logik. Für ein lokales CMS akzeptabel.
-9. **scrypt ist async** — `hashPassword` und `verifyPassword` sind async → `await` in Frontmatter verwenden
+1. **`output: 'server'` ist Pflicht** in `astro.config.mjs` (Astro-Demo)
+2. **CSS Grid min-width:** Grid-Kinder haben `min-width: auto` → brechen aus Container raus. Fix: `min-width: 0` auf Grid-Kinder.
+3. **`overflow: hidden` vs `clip` in Grid:** `overflow: hidden` supprimiert automatische Mindestgröße (Grid-Zeile kollabiert auf 0). `overflow: clip` clipped visuell ohne diesen Effekt → für Glassmorphism-Cards in xfce verwenden.
+4. **`overscroll-behavior: none` + `100dvh`** für korrekte Mobile-Viewport-Behandlung (kein Bounce in xfce).
+5. **Entry Locks via `_meta`:** Keine eigene Tabelle — Lock-State wird als `lock.{col}.{slug}` Key in `_meta` gespeichert, mit `username|timestamp` als Value. Stale nach 90s.
+6. **SQLite Datum:** Einheitlich `YYYY-MM-DD HH:MM:SS` via `sqliteNow()`, nicht `toISOString()`.
+7. **Media BLOB nullable:** `_media.data` ist `BLOB` (nullable) — bei S3/R2-Backend bleibt `data = NULL`, stattdessen `url` und `path` befüllt.
+8. **Landing Page Deploy:** `deploy/landing` Branch enthält nur statische Build-Artefakte (kein Source). Deploy-Workflow: `npm run build --workspace=apps/landing` → git worktree → force push.
+9. **`loading="lazy"` in Puppeteer:** Lazy-Images werden in headless Screenshots nicht geladen. Fix: `img.loading = 'eager'` + alle `.reveal`-Elemente sichtbar setzen via JS vor dem Screenshot.
 
 ---
 
 ## 11. Entwicklungsumgebung
 
 ```bash
-cd ~/Sites/orbiter
-node --version  # v22.x (via nvm)
+# Standalone Admin (Hauptentwicklung):
+ORBITER_POD=apps/demo/demo.pod npm run dev --workspace=packages/admin
+# → http://localhost:4322
 
-# Seed (löscht und erstellt demo.pod neu):
-npm run seed --workspace=apps/demo
+# Demo-Site (Astro-Integration testen):
+npm run seed --workspace=apps/demo  # demo.pod neu erstellen
+npm run dev --workspace=apps/demo
+# → http://localhost:8080/orbiter — Login: admin / admin
 
-# Dev-Server:
-npm run dev
+# Landing Page:
+npm run dev --workspace=apps/landing
+# → http://localhost:4321
 
-# → http://localhost:8080/orbiter → Login: admin / admin
-
-# DB direkt checken:
-sqlite3 apps/demo/demo.pod "SELECT username, role FROM _users"
-sqlite3 apps/demo/demo.pod "SELECT collection_id, slug, status FROM _entries"
+# Landing Page deployen:
+npm run build --workspace=apps/landing
+git worktree add /tmp/deploy-landing deploy/landing
+# contents von apps/landing/dist/ → worktree, dann:
+git add -A && git commit -m "deploy: <hash>" && git push --force origin deploy/landing
+git worktree remove /tmp/deploy-landing
 ```
 
 **Git:** Repository auf GitHub unter `aeon022/orbiter`
