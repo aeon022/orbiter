@@ -1,7 +1,18 @@
 /**
  * sidebar.js — dynamically populates collection links + pod footer in every page.
  * Supports parent/child hierarchy (matching SidebarCollections.astro in the original).
+ * Also bootstraps xfce.js when orb_style === 'xfce'.
  */
+;(function () {
+  if (localStorage.getItem('orb_style') === 'xfce') {
+    var xs = document.createElement('script');
+    xs.src = '/xfce.js';
+    var cs = document.currentScript;
+    if (cs && cs.parentNode) cs.parentNode.insertBefore(xs, cs.nextSibling);
+    else document.head.appendChild(xs);
+  }
+})();
+
 (function () {
   document.addEventListener('DOMContentLoaded', function () {
     var params    = new URLSearchParams(location.search);

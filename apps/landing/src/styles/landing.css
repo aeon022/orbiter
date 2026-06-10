@@ -2437,6 +2437,99 @@ html.is-leaving body {
   .metric              { padding: 18px 24px; }
 }
 
+/* ===== COMING UP SECTION ===== */
+
+.coming-section {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 100px 0;
+  text-align: center;
+}
+
+.coming-layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 12px;
+  margin-top: 40px;
+  text-align: left;
+}
+
+.coming-main .screenshot-frame { height: 100%; }
+.coming-main .screenshot-frame img { height: 100%; object-fit: cover; object-position: top left; }
+
+.coming-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.coming-side-shot { display: flex; flex-direction: column; }
+.coming-side-shot .screenshot-frame img { object-fit: cover; object-position: top left; }
+
+.coming-mobile-row {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  margin-top: 40px;
+  text-align: left;
+}
+
+.coming-mobile-frame {
+  flex-shrink: 0;
+}
+
+.coming-mobile-shot {
+  width: 180px;
+}
+
+.coming-mobile-shot img {
+  width: 100%;
+  height: auto;
+}
+
+.coming-mobile-text {
+  max-width: 420px;
+}
+
+.coming-mobile-label {
+  font-family: 'SF Mono', ui-monospace, monospace;
+  font-size: 0.68rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.coming-mobile-text p {
+  font-size: 0.93rem;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.coming-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.coming-chip {
+  font-family: 'SF Mono', ui-monospace, monospace;
+  font-size: 0.68rem;
+  letter-spacing: .06em;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 3px 12px;
+  transition: color .2s, border-color .2s;
+}
+
+.coming-chip:hover {
+  color: var(--text);
+  border-color: var(--border-hi);
+}
+
+
 @media (max-width: 640px) {
   body                 { padding: 0 18px; }
   nav                  { width: calc(100vw - 24px); padding: 11px 16px; top: 10px; border-radius: 12px; gap: 12px; }
@@ -2458,6 +2551,9 @@ html.is-leaving body {
   .built-by            { flex-direction: column; gap: 10px; padding: 22px 20px; }
   .faq-toggle          { padding: 18px 20px; }
   .faq-body-inner      { padding: 0 20px 18px; }
+  .coming-layout       { grid-template-columns: 1fr; }
+  .coming-mobile-row   { flex-direction: column; align-items: flex-start; gap: 24px; }
+  .coming-mobile-shot  { width: 140px; }
 }
 
 
