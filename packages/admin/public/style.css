@@ -1040,7 +1040,7 @@ html[data-style="xfce"] {
   --glass-shadow:  0 8px 40px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.07);
   --sb-h: 26px;
   --dock-h: 76px;
-  --dock-item-base: 44px;
+  --dock-item-base: 50px;
 }
 
 html[data-style="xfce"][data-scheme="light"],
@@ -1158,8 +1158,8 @@ html[data-style="xfce"] .editor-shell {
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  width: var(--dock-item-base, 44px);
-  padding: 5px 4px 4px;
+  width: var(--dock-item-base, 50px);
+  padding: 8px 7px 7px;
   background: transparent;
   border: none;
   border-radius: 12px;
@@ -1217,7 +1217,7 @@ html[data-style="xfce"] .editor-shell {
   font-size: 18px;
   line-height: 1;
   display: block;
-  opacity: .35;
+  opacity: .58;
   transition: filter .12s, transform .12s cubic-bezier(.34,1.5,.64,1), opacity .12s, color .12s;
 }
 .xfce-dock-item:hover .xfce-dock-icon {
@@ -1239,7 +1239,7 @@ html[data-style="xfce"] .editor-shell {
   color: var(--mid);
   white-space: nowrap;
   transition: color .12s, opacity .12s;
-  opacity: .32;
+  opacity: .48;
 }
 .xfce-dock-item:hover .xfce-dock-lbl {
   opacity: 1;

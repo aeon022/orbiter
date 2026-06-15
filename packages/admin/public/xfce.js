@@ -564,7 +564,7 @@
         var r   = item.getBoundingClientRect();
         var mid = r.left + r.width / 2;
         var d   = Math.abs(cx - mid);
-        var s   = d < 96 ? 1 + (1 - d / 96) * 0.95 : 1;
+        var s   = d < 80 ? 1 + (1 - d / 80) * 0.50 : 1;
         item.style.setProperty('--ds', s.toFixed(3));
       });
     }
