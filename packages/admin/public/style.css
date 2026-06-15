@@ -1168,46 +1168,68 @@ html[data-style="xfce"] .editor-shell {
   color: var(--mid);
   transform: scale(var(--ds, 1));
   transform-origin: bottom center;
-  transition: transform .1s cubic-bezier(.34,1.4,.64,1), color .1s, background .1s, box-shadow .1s;
+  transition: transform .12s cubic-bezier(.34,1.5,.64,1), color .12s, background .12s, box-shadow .12s;
   position: relative;
+  overflow: hidden;
 }
+/* top-light radial spot — appears on hover */
+.xfce-dock-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse 90% 55% at 50% -10%,
+    color-mix(in srgb, var(--accent) 40%, transparent) 0%,
+    transparent 70%);
+  opacity: 0;
+  transition: opacity .12s;
+  pointer-events: none;
+}
+.xfce-dock-item:hover::before { opacity: 1; }
 .xfce-dock-item:hover {
   color: var(--heading);
-  background: color-mix(in srgb, var(--accent) 20%, transparent);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 18%, transparent),
-              inset 0 1px 0 color-mix(in srgb, var(--accent) 22%, transparent);
+  background: color-mix(in srgb, var(--accent) 13%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 38%, transparent),
+    0 0 18px color-mix(in srgb, var(--accent) 28%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 22%, transparent);
 }
 .xfce-dock-item.active {
   color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
 }
+.xfce-dock-item.active::before { opacity: .5; }
+/* active indicator: glowing scan-line instead of dot */
 .xfce-dock-item.active::after {
   content: '';
   position: absolute;
-  bottom: -3px;
+  bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 6px var(--accent);
+  width: 60%;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent) 30%, var(--accent) 70%, transparent);
+  box-shadow: 0 0 8px 1px color-mix(in srgb, var(--accent) 70%, transparent);
 }
 
 .xfce-dock-icon {
   font-size: 18px;
   line-height: 1;
   display: block;
-  opacity: .38;
-  transition: filter .1s, transform .1s cubic-bezier(.34,1.4,.64,1), opacity .1s;
+  opacity: .35;
+  transition: filter .12s, transform .12s cubic-bezier(.34,1.5,.64,1), opacity .12s, color .12s;
 }
 .xfce-dock-item:hover .xfce-dock-icon {
   opacity: 1;
-  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 55%, transparent));
-  transform: scale(1.12);
+  color: var(--accent);
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--accent) 75%, transparent));
+  transform: scale(1.14);
 }
 .xfce-dock-item.active .xfce-dock-icon {
-  opacity: .9;
-  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 60%, transparent));
+  opacity: .95;
+  color: var(--accent);
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 65%, transparent));
 }
 .xfce-dock-lbl {
   font-family: var(--mono);
@@ -1216,13 +1238,16 @@ html[data-style="xfce"] .editor-shell {
   margin-top: 3px;
   color: var(--mid);
   white-space: nowrap;
-  transition: color .1s, opacity .1s;
-  opacity: .35;
+  transition: color .12s, opacity .12s;
+  opacity: .32;
 }
-.xfce-dock-item:hover .xfce-dock-lbl,
-.xfce-dock-item.active .xfce-dock-lbl {
+.xfce-dock-item:hover .xfce-dock-lbl {
   opacity: 1;
-  color: var(--heading);
+  color: color-mix(in srgb, var(--accent) 80%, var(--heading));
+}
+.xfce-dock-item.active .xfce-dock-lbl {
+  opacity: .85;
+  color: var(--accent);
 }
 
 /* ── HUD Panel ────────────────────────────────────────────── */
