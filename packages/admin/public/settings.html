@@ -10,14 +10,29 @@
   <link rel="stylesheet" href="/style.css" />
   <script src="/theme.js"></script>
   <style>
-    .settings-wrap { max-width:720px; padding-bottom:40px; }
+    .settings-wrap { max-width:1100px; padding-bottom:40px; }
+
+    /* Two-column grid for settings groups */
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+    .settings-grid .settings-group { margin-bottom: 0; }
+    .settings-wrap > .settings-group { margin-bottom: 12px; }
+
+    @media (max-width: 720px) {
+      .settings-wrap { max-width: 720px; }
+      .settings-grid { grid-template-columns: 1fr; }
+    }
 
     /* Card — einheitliches bg2, eine Farbe, kein Alternieren */
     .settings-group {
       background: var(--bg2);
       border: 1px solid var(--line);
       border-radius: 10px;
-      margin-bottom: 12px;
       overflow: hidden;
     }
 
@@ -250,8 +265,9 @@
       </div>
     </nav>
     <main class="main">
-      <div class="page-header glass-card">
+      <div class="page-header glass-card" style="display:flex;align-items:center;justify-content:space-between;">
         <h1 class="page-title">Settings</h1>
+        <button type="submit" form="site-form" class="btn-save" id="header-save-btn">Save settings</button>
       </div>
       <div class="settings-wrap" id="settings-content">
         <div class="empty"><div class="spinner"></div></div>
@@ -301,6 +317,7 @@
 
       <!-- Site + Build + GitHub + API — one form -->
       <form id="site-form">
+        <div class="settings-grid">
         <div class="settings-group">
           <div class="group-header">Site</div>
           <div class="setting-row">
@@ -485,9 +502,7 @@
           </div>
         </div>
 
-        <div class="save-row">
-          <button type="submit" class="btn-save">Save settings</button>
-        </div>
+        </div><!-- /settings-grid -->
       </form>
 
       <!-- GitHub Sync (conditional) -->
@@ -508,8 +523,9 @@
       </div>
       ` : ''}
 
-      <!-- Account -->
+      <!-- Account + Interface language (two-column) -->
       <div id="account-banner" class="banner" style="display:none"></div>
+      <div class="settings-grid">
       <div class="settings-group">
         <div class="group-header">Account — ${me.user.username}</div>
         <form id="pw-form">
@@ -555,8 +571,9 @@
           </div>
         </div>
       </div>
+      </div><!-- /settings-grid account+lang -->
 
-      <!-- Appearance -->
+      <!-- Appearance (full width) -->
       <div class="settings-group">
         <div class="group-header">Appearance</div>
         <div style="padding:16px 28px;border-bottom:1px solid var(--line2)">
@@ -654,7 +671,8 @@
         </div>
       </div>
 
-      <!-- Data + Import -->
+      <!-- Data + Pod (two-column) -->
+      <div class="settings-grid">
       <div class="settings-group">
         <div class="group-header">Data</div>
         <div class="setting-row">
@@ -666,7 +684,6 @@
         </div>
       </div>
 
-      <!-- Pod info -->
       <div class="settings-group" id="pod-info-group">
         <div class="group-header">Pod</div>
         <div class="pod-meta">
@@ -676,6 +693,11 @@
         <div id="pod-collections-list">
           <div class="pod-col-row"><span class="pod-col-name" style="color:var(--muted)">Loading…</span></div>
         </div>
+      </div>
+      </div><!-- /settings-grid data+pod -->
+
+      <div class="save-row">
+        <button type="submit" form="site-form" class="btn-save">Save settings</button>
       </div>
 
       <!-- Support widget -->

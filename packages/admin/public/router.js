@@ -24,7 +24,10 @@
   function updateActiveNav(href) {
     var target;
     try { target = new URL(href, location.origin); } catch (e) { return; }
-    document.querySelectorAll('.nav-item').forEach(function (a) {
+    var pg = target.pathname.split('/').pop().replace('.html', '');
+
+    // Update classic sidebar + xfce dock/HUD link items
+    document.querySelectorAll('.nav-item, a.xfce-dock-item, a.xfce-hud-nav-item, a.xfce-tools-item').forEach(function (a) {
       var raw = a.getAttribute('href');
       if (!raw) return;
       var itemUrl;
@@ -37,6 +40,12 @@
       }
       a.classList.toggle('active', match);
     });
+
+    // xfce tools button is a <button> (not an <a>), update separately
+    var toolsBtn = document.getElementById('xfce-tools-btn');
+    if (toolsBtn) {
+      toolsBtn.classList.toggle('active', ['schema', 'build', 'import'].indexOf(pg) !== -1);
+    }
   }
 
   function swapPageStyle(doc) {
