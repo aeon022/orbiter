@@ -1,11 +1,11 @@
 {
   "name": "@a83/orbiter-admin",
-  "version": "0.3.16",
+  "version": "0.3.17",
   "description": "Standalone admin server for Orbiter CMS",
   "type": "module",
   "main": "./src/server.js",
   "bin": {
-    "orbiter-admin": "./src/cli.js"
+    "orbiter-admin": "src/cli.js"
   },
   "scripts": {
     "start": "node src/cli.js",
@@ -25,7 +25,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/aeon022/orbiter.git",
+    "url": "git+https://github.com/aeon022/orbiter.git",
     "directory": "packages/admin"
   },
   "dependencies": {
