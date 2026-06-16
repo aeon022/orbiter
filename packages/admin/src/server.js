@@ -24,6 +24,7 @@ import { infoRoutes }       from './routes/info.js';
 import { importRoutes }     from './routes/import.js';
 import { commentRoutes }    from './routes/comments.js';
 import { lockRoutes }       from './routes/locks.js';
+import { terminalRoutes }   from './routes/terminal.js';
 import { requireAuth }      from './middleware/auth.js';
 import { csrfMiddleware }  from './middleware/csrf.js';
 
@@ -78,6 +79,7 @@ export function createApp(podPath) {
   api.route('/collections',  commentRoutes);
   api.route('/',             commentRoutes);
   api.route('/locks',        lockRoutes);
+  api.route('/terminal',     terminalRoutes);
 
   app.route('/api', api);
 

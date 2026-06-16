@@ -2046,65 +2046,73 @@ a.xfce-sb-logo:hover     { opacity: .8; }
   opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto;
 }
 
-/* ── Command Palette ─────────────────────────────────────── */
-.xfce-palette {
+/* ── Orbiter Terminal ────────────────────────────────────── */
+.xfce-terminal {
   display: none; position: fixed; inset: 0; z-index: 10000;
   background: rgba(0,0,0,0);
   align-items: flex-end; justify-content: center;
   padding-bottom: calc(var(--dock-h, 76px) + 20px);
   transition: background .18s;
 }
-.xfce-palette.open {
+.xfce-terminal.open {
   display: flex;
   background: rgba(0,0,0,.28);
 }
 
-.xfce-palette-inner {
-  width: min(560px, 92vw);
-  background: var(--glass-bg, color-mix(in srgb, var(--bg1) 90%, transparent));
-  border: 1px solid var(--line);
+.xfce-term-inner {
+  width: min(680px, 92vw); max-height: min(480px, 60vh);
+  background: #0a0a14;
+  border: 1px solid rgba(120,90,210,.25);
+  border-top: 2px solid var(--accent, #7c6fcd);
   border-radius: 12px;
-  box-shadow: 0 -2px 32px rgba(0,0,0,.25), 0 0 0 1px color-mix(in srgb,var(--accent) 20%,transparent);
+  box-shadow: 0 -2px 48px rgba(0,0,0,.5);
   overflow: hidden;
-  transform: translateY(14px);
-  opacity: 0;
+  display: flex; flex-direction: column;
+  transform: translateY(14px); opacity: 0;
   transition: transform .2s cubic-bezier(.34,1.15,.64,1), opacity .15s;
 }
-.xfce-palette.open .xfce-palette-inner {
-  transform: translateY(0);
-  opacity: 1;
+.xfce-terminal.open .xfce-term-inner {
+  transform: translateY(0); opacity: 1;
 }
 
-.xfce-palette-bar {
+.xfce-term-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 14px; border-bottom: 1px solid rgba(255,255,255,.06); flex-shrink: 0;
+}
+.xfce-term-title {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--accent, #7c6fcd);
+}
+.xfce-term-esc {
+  font-family: var(--mono); font-size: 8px; color: rgba(150,150,200,.5);
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1);
+  border-radius: 3px; padding: 1px 5px;
+}
+
+.xfce-term-output {
+  flex: 1; overflow-y: auto; padding: 10px 0;
+  font-family: var(--mono); font-size: 11px; line-height: 1.7;
+}
+.xfce-term-line   { padding: 0 16px; color: rgba(200,200,230,.75); white-space: pre; }
+.xfce-term-cmd    { color: rgba(200,200,230,.9); }
+.xfce-term-ok     { color: #5dc97e; }
+.xfce-term-err    { color: #e06c6c; }
+.xfce-term-dim    { color: rgba(150,150,190,.6); }
+.xfce-term-muted  { color: rgba(120,120,170,.45); }
+
+.xfce-term-input-row {
   display: flex; align-items: center; gap: 8px;
-  padding: 10px 14px; border-bottom: 1px solid var(--line);
+  padding: 10px 16px; border-top: 1px solid rgba(255,255,255,.06); flex-shrink: 0;
 }
-.xfce-palette-cmd  { color: var(--accent); font-size: 13px; flex-shrink: 0; }
-.xfce-palette-inp  {
+.xfce-term-prompt {
+  font-family: var(--mono); font-size: 11px;
+  color: var(--accent, #7c6fcd); white-space: nowrap; flex-shrink: 0;
+}
+.xfce-term-input {
   flex: 1; background: none; border: none; outline: none;
-  font-family: var(--mono); font-size: 13px; color: var(--heading);
+  font-family: var(--mono); font-size: 11px; color: rgba(220,220,255,.9);
+  caret-color: var(--accent, #7c6fcd);
 }
-.xfce-palette-inp::placeholder { color: var(--muted); }
-.xfce-palette-hint { font-size: 8px; color: var(--muted); font-family: var(--mono); white-space: nowrap; }
-
-.xfce-palette-results {
-  max-height: 360px; overflow-y: auto; padding: 6px 0;
-}
-.xfce-pal-group {
-  font-size: 8px; font-family: var(--mono); color: var(--muted);
-  letter-spacing: .08em; text-transform: uppercase;
-  padding: 8px 14px 4px;
-}
-.xfce-pal-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 7px 14px; cursor: pointer; transition: background .1s;
-}
-.xfce-pal-item:hover, .xfce-pal-item.pal-active {
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-}
-.xfce-pal-icon  { width: 20px; text-align: center; font-size: 13px; color: var(--accent); flex-shrink: 0; }
-.xfce-pal-label { font-size: 12px; color: var(--heading); font-family: var(--mono); }
-.xfce-pal-empty { padding: 20px 14px; color: var(--muted); font-size: 11px; font-family: var(--mono); }
 
 /* ── Toast host (above dock) ─────────────────────────────── */
 .xfce-toast-host {

@@ -28,10 +28,8 @@
     { icon: '☑', label: 'To-do', pane: 'todos' },
   ];
 
-  // palette items populated after /api/info loads
-  var _palItems = NAV.concat(TOOLS).map(function (n) {
-    return { icon: n.icon, label: n.label, href: n.href, group: n.key in { schema:1, build:1, import:1 } ? 'Tools' : 'Nav' };
-  });
+  // collections loaded by /api/info — used by terminal
+  var _termCols = [];
 
   // ── Helpers ───────────────────────────────────────────────────────────
   function el(tag, cls, html) {
@@ -96,7 +94,7 @@
     // Palette trigger in status bar
     document.getElementById('xfce-sb-palette-btn').addEventListener('click', function (e) {
       e.stopPropagation();
-      openPalette();
+      openTerminal();
     });
   }
 
@@ -162,7 +160,7 @@
     palBtn.addEventListener('click', function (e) {
       e.stopPropagation();
       toolsPopup.classList.remove('open');
-      openPalette();
+      openTerminal();
     });
     toolsPopup.appendChild(palBtn);
     document.body.appendChild(toolsPopup);
@@ -212,128 +210,277 @@
     if (colCreateEl) colCreateEl.classList.remove('visible');
   }
 
-  // ── Command Palette ───────────────────────────────────────────────────
-  var palette, paletteInp, paletteResults, palActive = -1;
+  // ── Orbiter Terminal ─────────────────────────────────────────────────
+  var terminal, termOutput, termInput;
+  var termHistory = [], termHistIdx = -1;
+  var TERM_CMDS = ['help','clear','info','ls','go','new','search','build','export'];
+  var NAV_DEST  = {
+    dashboard: '/dashboard.html', media: '/media.html', settings: '/settings.html',
+    users: '/users.html', schema: '/schema.html', build: '/build.html',
+    import: '/import.html', account: '/account.html',
+  };
 
-  function buildPalette() {
-    palette = el('div', 'xfce-palette');
-    palette.id = 'xfce-palette';
-    palette.innerHTML = [
-      '<div class="xfce-palette-inner">',
-        '<div class="xfce-palette-bar">',
-          '<span class="xfce-palette-cmd">⌘</span>',
-          '<input id="xfce-palette-inp" class="xfce-palette-inp" placeholder="Go to page or collection…" autocomplete="off" spellcheck="false" />',
-          '<span class="xfce-palette-hint">ESC to close</span>',
+  function buildTerminal() {
+    terminal = el('div', 'xfce-terminal');
+    terminal.id = 'xfce-terminal';
+    terminal.innerHTML = [
+      '<div class="xfce-term-inner">',
+        '<div class="xfce-term-bar">',
+          '<span class="xfce-term-title">◈ orbiter terminal</span>',
+          '<kbd class="xfce-term-esc">ESC</kbd>',
         '</div>',
-        '<div id="xfce-palette-results" class="xfce-palette-results"></div>',
+        '<div id="xfce-term-output" class="xfce-term-output"></div>',
+        '<div class="xfce-term-input-row">',
+          '<span class="xfce-term-prompt">orbiter $</span>',
+          '<input id="xfce-term-input" class="xfce-term-input" autocomplete="off" spellcheck="false" />',
+        '</div>',
       '</div>',
     ].join('');
-    document.body.appendChild(palette);
+    document.body.appendChild(terminal);
 
-    paletteInp     = document.getElementById('xfce-palette-inp');
-    paletteResults = document.getElementById('xfce-palette-results');
+    termOutput = document.getElementById('xfce-term-output');
+    termInput  = document.getElementById('xfce-term-input');
 
-    paletteInp.addEventListener('input', function () {
-      palActive = -1;
-      renderPalette(paletteInp.value);
-    });
+    termPrint('Orbiter Admin  ·  type \'help\' for available commands', 'muted');
+    termPrint('', '');
 
-    paletteInp.addEventListener('keydown', function (e) {
-      var items = paletteResults.querySelectorAll('.xfce-pal-item');
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        palActive = Math.min(palActive + 1, items.length - 1);
-        updatePalActive(items);
+    termInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        var line = termInput.value.trim();
+        termInput.value = '';
+        if (!line) return;
+        termHistIdx = -1;
+        if (!termHistory.length || termHistory[0] !== line) termHistory.unshift(line);
+        if (termHistory.length > 50) termHistory.pop();
+        termPrint('orbiter $ ' + line, 'cmd');
+        execCmd(line);
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        palActive = Math.max(palActive - 1, 0);
-        updatePalActive(items);
-      } else if (e.key === 'Enter') {
-        var active = paletteResults.querySelector('.xfce-pal-item.pal-active');
-        if (active) { location.href = active.dataset.href; closePalette(); }
-        else {
-          var first = paletteResults.querySelector('.xfce-pal-item');
-          if (first) { location.href = first.dataset.href; closePalette(); }
-        }
+        if (termHistIdx < termHistory.length - 1) { termHistIdx++; termInput.value = termHistory[termHistIdx]; }
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (termHistIdx > 0) { termHistIdx--; termInput.value = termHistory[termHistIdx]; }
+        else { termHistIdx = -1; termInput.value = ''; }
+      } else if (e.key === 'Tab') {
+        e.preventDefault();
+        termTabComplete();
       } else if (e.key === 'Escape') {
-        closePalette();
+        closeTerminal();
       }
     });
 
-    palette.addEventListener('click', function (e) {
-      if (e.target === palette) closePalette();
+    terminal.addEventListener('click', function (e) {
+      if (e.target === terminal) closeTerminal();
     });
   }
 
-  function updatePalActive(items) {
-    items.forEach(function (it, i) {
-      it.classList.toggle('pal-active', i === palActive);
-      if (i === palActive) it.scrollIntoView({ block: 'nearest' });
-    });
+  function termPrint(text, cls) {
+    var line = document.createElement('div');
+    line.className = 'xfce-term-line' + (cls ? ' xfce-term-' + cls : '');
+    line.textContent = text;
+    termOutput.appendChild(line);
+    termOutput.scrollTop = termOutput.scrollHeight;
   }
 
-  function renderPalette(q) {
-    q = (q || '').toLowerCase().trim();
-    var filtered = q
-      ? _palItems.filter(function (it) { return it.label.toLowerCase().includes(q); })
-      : _palItems;
+  function termClear() { termOutput.innerHTML = ''; }
 
-    if (!filtered.length) {
-      paletteResults.innerHTML = '<div class="xfce-pal-empty">No results</div>';
+  function execCmd(raw) {
+    var parts = raw.trim().split(/\s+/);
+    var cmd   = parts[0].toLowerCase();
+    var args  = parts.slice(1);
+    switch (cmd) {
+      case 'help':   termHelp();               break;
+      case 'clear':  termClear();              break;
+      case 'info':   termInfo();               break;
+      case 'ls':     termLs(args);             break;
+      case 'go':     termGo(args);             break;
+      case 'new':    termNew(args);            break;
+      case 'search': termSearch(args.join(' ')); break;
+      case 'build':  termBuild();              break;
+      case 'export': termExport(args);         break;
+      default: termPrint('command not found: ' + cmd + '  (try \'help\')', 'err');
+    }
+    termPrint('', '');
+  }
+
+  function termHelp() {
+    termPrint('', '');
+    [
+      '  go <page|collection>   navigate to a page or collection',
+      '  new <collection>       open editor for a new entry',
+      '  ls [collection]        list collections or recent entries',
+      '  search <term>          full-text search across all content',
+      '  info                   show pod and version info',
+      '  build                  trigger deploy webhook',
+      '  export <col> [flags]   download entries   flags: --md  --drafts',
+      '  clear                  clear terminal',
+      '  help                   show this message',
+      '',
+      '  shortcuts: ↑↓ history  ·  Tab completion  ·  ⌘K toggle',
+    ].forEach(function (l) { termPrint(l, 'dim'); });
+  }
+
+  function termInfo() {
+    fetch('/api/info', { credentials: 'include' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) { termPrint('error fetching info', 'err'); return; }
+        var total = (d.collections || []).reduce(function (s, c) { return s + (c.total || 0); }, 0);
+        termPrint('', '');
+        termPrint('  pod         ' + d.podPath.split('/').pop(), 'dim');
+        termPrint('  format      v' + d.formatVersion, 'dim');
+        termPrint('  admin       v' + d.adminVersion, 'dim');
+        termPrint('  collections ' + (d.collections || []).length, 'dim');
+        termPrint('  published   ' + total + ' entries', 'dim');
+      });
+  }
+
+  function termLs(args) {
+    if (!args.length) {
+      if (!_termCols.length) { termPrint('no collections loaded yet', 'muted'); return; }
+      termPrint('', '');
+      _termCols.forEach(function (col) {
+        var info = col.total + ' entr' + (col.total === 1 ? 'y' : 'ies');
+        if (col.drafts > 0) info += '  ' + col.drafts + ' draft' + (col.drafts === 1 ? '' : 's');
+        termPrint('  ' + col.id.padEnd(22) + info, 'dim');
+      });
       return;
     }
-
-    // Group items
-    var groups = {};
-    filtered.forEach(function (it) {
-      if (!groups[it.group]) groups[it.group] = [];
-      groups[it.group].push(it);
-    });
-
-    var html = '';
-    Object.keys(groups).forEach(function (g) {
-      html += '<div class="xfce-pal-group">' + g + '</div>';
-      groups[g].forEach(function (it) {
-        html += '<div class="xfce-pal-item" data-href="' + it.href + '">'
-          + '<span class="xfce-pal-icon">' + it.icon + '</span>'
-          + '<span class="xfce-pal-label">' + it.label + '</span>'
-          + '</div>';
+    var colId = args[0];
+    fetch('/api/collections/' + encodeURIComponent(colId) + '/entries?status=published&limit=25', { credentials: 'include' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) { termPrint('collection not found: ' + colId, 'err'); return; }
+        var entries = d.entries || (Array.isArray(d) ? d : []);
+        termPrint('', '');
+        if (!entries.length) { termPrint('  (no published entries)', 'muted'); return; }
+        entries.forEach(function (e) {
+          var date = (e.updated_at || e.created_at || '').substring(0, 10);
+          termPrint('  ' + (e.slug || e.id || '').padEnd(36) + date, 'dim');
+        });
+        if (d.total > entries.length) termPrint('  … ' + (d.total - entries.length) + ' more', 'muted');
       });
-    });
-    paletteResults.innerHTML = html;
-
-    paletteResults.querySelectorAll('.xfce-pal-item').forEach(function (item) {
-      item.addEventListener('click', function () {
-        location.href = item.dataset.href;
-        closePalette();
-      });
-      item.addEventListener('mouseenter', function () {
-        var items = paletteResults.querySelectorAll('.xfce-pal-item');
-        palActive = Array.from(items).indexOf(item);
-        updatePalActive(items);
-      });
-    });
   }
 
-  function openPalette() {
-    if (!palette) buildPalette();
-    palette.style.display = 'flex';
-    paletteInp.value = '';
-    palActive = -1;
-    renderPalette('');
+  function termGo(args) {
+    if (!args.length) { termPrint('usage: go <page|collection>', 'err'); return; }
+    var dest = args[0].toLowerCase();
+    if (NAV_DEST[dest]) {
+      termPrint('→ ' + dest, 'ok');
+      closeTerminal();
+      setTimeout(function () { location.href = NAV_DEST[dest]; }, 180);
+      return;
+    }
+    var col = _termCols.find(function (c) { return c.id === dest || c.label.toLowerCase() === dest; });
+    if (col) {
+      termPrint('→ ' + col.label, 'ok');
+      closeTerminal();
+      var href = col.singleton
+        ? '/editor.html?collection=' + encodeURIComponent(col.id) + '&singleton=1'
+        : '/entries.html?col=' + encodeURIComponent(col.id) + '&label=' + encodeURIComponent(col.label);
+      setTimeout(function () { location.href = href; }, 180);
+      return;
+    }
+    termPrint('not found: ' + dest, 'err');
+  }
+
+  function termNew(args) {
+    if (!args.length) { termPrint('usage: new <collection>', 'err'); return; }
+    var dest = args[0].toLowerCase();
+    var col  = _termCols.find(function (c) { return c.id === dest || c.label.toLowerCase() === dest; });
+    if (!col) { termPrint('collection not found: ' + dest, 'err'); return; }
+    termPrint('→ new entry in ' + col.label, 'ok');
+    closeTerminal();
+    setTimeout(function () { location.href = '/editor.html?collection=' + encodeURIComponent(col.id); }, 180);
+  }
+
+  function termSearch(term) {
+    if (!term) { termPrint('usage: search <term>', 'err'); return; }
+    termPrint('searching…', 'muted');
+    fetch('/api/search?q=' + encodeURIComponent(term), { credentials: 'include' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) { termPrint('search error', 'err'); return; }
+        var results = d.results || (Array.isArray(d) ? d : []);
+        termPrint('', '');
+        if (!results.length) { termPrint('  no results for "' + term + '"', 'muted'); return; }
+        results.slice(0, 15).forEach(function (r) {
+          termPrint('  › ' + (r.collection || '') + '/' + (r.slug || r.id || ''), 'ok');
+          if (r.title) termPrint('    ' + r.title, 'dim');
+        });
+        if (results.length > 15) termPrint('  … ' + (results.length - 15) + ' more', 'muted');
+      });
+  }
+
+  function termBuild() {
+    termPrint('triggering build…', 'muted');
+    fetch('/api/build', { method: 'POST', credentials: 'include' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.ok || d.message) termPrint('✓ ' + (d.message || 'build triggered'), 'ok');
+        else termPrint('build: ' + (d.error || JSON.stringify(d)), 'err');
+      })
+      .catch(function () { termPrint('build request failed', 'err'); });
+  }
+
+  function termExport(args) {
+    if (!args.length) { termPrint('usage: export <collection> [--md] [--drafts]', 'err'); return; }
+    var colId  = args[0];
+    var format = args.indexOf('--md') !== -1 ? 'md' : 'json';
+    var drafts = args.indexOf('--drafts') !== -1 ? '1' : '0';
+    var col    = _termCols.find(function (c) { return c.id === colId; });
+    if (!col) { termPrint('collection not found: ' + colId, 'err'); return; }
+    termPrint('exporting ' + col.label + ' as ' + format + '…', 'muted');
+    fetch('/api/terminal/export?col=' + encodeURIComponent(colId) + '&format=' + format + '&drafts=' + drafts, { credentials: 'include' })
+      .then(function (r) {
+        if (!r.ok) return r.json().then(function (e) { throw new Error(e.error || r.status); });
+        return r.blob().then(function (blob) {
+          var a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = colId + '.' + format;
+          document.body.appendChild(a); a.click(); a.remove();
+          termPrint('✓ downloaded ' + colId + '.' + format, 'ok');
+        });
+      })
+      .catch(function (err) { termPrint('export failed: ' + err.message, 'err'); });
+  }
+
+  function termTabComplete() {
+    var val   = termInput.value;
+    var parts = val.split(/\s+/);
+    if (parts.length === 1) {
+      var p = parts[0].toLowerCase();
+      var m = TERM_CMDS.filter(function (c) { return c.startsWith(p); });
+      if (m.length === 1) termInput.value = m[0] + ' ';
+      else if (m.length > 1) termPrint(m.join('   '), 'muted');
+    } else if (parts.length === 2) {
+      var cmd2 = parts[0].toLowerCase(), p2 = parts[1].toLowerCase();
+      var pool = _termCols.map(function (c) { return c.id; });
+      if (cmd2 === 'go') pool = pool.concat(Object.keys(NAV_DEST));
+      if (['go','new','ls','export'].indexOf(cmd2) !== -1) {
+        var m2 = pool.filter(function (c) { return c.startsWith(p2); });
+        if (m2.length === 1) termInput.value = parts[0] + ' ' + m2[0];
+        else if (m2.length > 1) termPrint(m2.join('   '), 'muted');
+      }
+    }
+  }
+
+  function openTerminal() {
+    if (!terminal) buildTerminal();
+    terminal.style.display = 'flex';
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
-        palette.classList.add('open');
-        setTimeout(function () { paletteInp.focus(); }, 40);
+        terminal.classList.add('open');
+        setTimeout(function () { termInput.focus(); }, 40);
       });
     });
   }
 
-  function closePalette() {
-    if (!palette) return;
-    palette.classList.remove('open');
+  function closeTerminal() {
+    if (!terminal) return;
+    terminal.classList.remove('open');
     setTimeout(function () {
-      if (!palette.classList.contains('open')) palette.style.display = 'none';
+      if (!terminal.classList.contains('open')) terminal.style.display = 'none';
     }, 200);
   }
 
@@ -821,8 +968,8 @@
 
             colGroup.appendChild(item);
 
-            // Add to palette
-            _palItems.push({ icon: abbr, label: col.label, href: href, group: 'Collections' });
+            // Add to terminal collection list
+            _termCols.push({ id: col.id, label: col.label, total: col.total || 0, drafts: col.drafts || 0, singleton: !!col.singleton });
           });
         }
 
@@ -880,11 +1027,11 @@
     document.addEventListener('keydown', function (e) {
       var mod = e.metaKey || e.ctrlKey;
 
-      // ⌘K — command palette
+      // ⌘K — terminal
       if (mod && !e.shiftKey && (e.key === 'k' || e.key === 'K')) {
         e.preventDefault();
-        if (palette && palette.classList.contains('open')) closePalette();
-        else openPalette();
+        if (terminal && terminal.classList.contains('open')) closeTerminal();
+        else openTerminal();
         return;
       }
 
