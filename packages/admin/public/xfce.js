@@ -28,6 +28,11 @@
     { icon: '☑', label: 'To-do', pane: 'todos' },
   ];
 
+  // palette items populated after /api/info loads
+  var _palItems = NAV.concat(TOOLS).map(function (n) {
+    return { icon: n.icon, label: n.label, href: n.href, group: n.key in { schema:1, build:1, import:1 } ? 'Tools' : 'Nav' };
+  });
+
   // ── Helpers ───────────────────────────────────────────────────────────
   function el(tag, cls, html) {
     var e = document.createElement(tag);
@@ -36,31 +41,38 @@
     return e;
   }
 
+  function isEditing(target) {
+    var t = target.tagName;
+    return t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT' || target.isContentEditable;
+  }
+
   // ── Status Bar ────────────────────────────────────────────────────────
   function buildStatusBar() {
     var sb = el('div', 'xfce-sb');
     sb.innerHTML = [
       '<div class="xfce-sb-left">',
-        '<span class="xfce-sb-logo">',
+        '<a class="xfce-sb-logo" href="/dashboard.html">',
           '<svg viewBox="0 0 20 20" width="12" height="12" fill="none" style="margin-right:5px;vertical-align:middle">',
             '<circle cx="10" cy="10" r="4.5" fill="currentColor" opacity=".9"/>',
             '<ellipse cx="10" cy="10" rx="9" ry="3.2" stroke="currentColor" stroke-width="1" opacity=".5" transform="rotate(-22 10 10)"/>',
           '</svg>ORBITER',
-        '</span>',
+        '</a>',
         '<span class="xfce-sb-div">·</span>',
         '<span id="xfce-sb-site">—</span>',
       '</div>',
       '<div class="xfce-sb-center" id="xfce-sb-title"></div>',
       '<div class="xfce-sb-right">',
-        '<span id="xfce-sb-user"></span>',
+        '<a id="xfce-sb-user" href="/account.html" class="xfce-sb-user-link"></a>',
+        '<span class="xfce-sb-div">·</span>',
+        '<button id="xfce-sb-logout" class="xfce-sb-logout" title="Log out">⏻</button>',
         '<span class="xfce-sb-div">·</span>',
         '<span id="xfce-sb-clock"></span>',
       '</div>',
     ].join('');
     document.body.insertBefore(sb, document.body.firstChild);
 
-    // Page title from document.title (strip " — Orbiter")
-    var title = document.title.replace(/\s*—\s*Orbiter.*$/, '').trim();
+    // Page title from document.title
+    var title  = document.title.replace(/\s*—\s*Orbiter.*$/, '').trim();
     var titleEl = document.getElementById('xfce-sb-title');
     if (titleEl && title) titleEl.textContent = title;
 
@@ -72,6 +84,12 @@
     }
     tick();
     setInterval(tick, 15000);
+
+    // Logout
+    document.getElementById('xfce-sb-logout').addEventListener('click', function () {
+      fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+        .finally(function () { location.href = '/login.html'; });
+    });
   }
 
   // ── HUD Meta Panel ────────────────────────────────────────────────────
@@ -100,7 +118,6 @@
       metaPanel.classList.remove('open');
     });
 
-    // Nav links inside HUD (all items including tools)
     var navWrap = document.getElementById('xfce-hud-nav');
     if (navWrap) {
       NAV.concat(TOOLS).forEach(function (n) {
@@ -148,6 +165,152 @@
     toolsPopup.classList.toggle('open');
   }
 
+  // ── Command Palette ───────────────────────────────────────────────────
+  var palette, paletteInp, paletteResults, palActive = -1;
+
+  function buildPalette() {
+    palette = el('div', 'xfce-palette');
+    palette.id = 'xfce-palette';
+    palette.innerHTML = [
+      '<div class="xfce-palette-inner">',
+        '<div class="xfce-palette-bar">',
+          '<span class="xfce-palette-cmd">⌘</span>',
+          '<input id="xfce-palette-inp" class="xfce-palette-inp" placeholder="Go to page or collection…" autocomplete="off" spellcheck="false" />',
+          '<span class="xfce-palette-hint">ESC to close</span>',
+        '</div>',
+        '<div id="xfce-palette-results" class="xfce-palette-results"></div>',
+      '</div>',
+    ].join('');
+    document.body.appendChild(palette);
+
+    paletteInp     = document.getElementById('xfce-palette-inp');
+    paletteResults = document.getElementById('xfce-palette-results');
+
+    paletteInp.addEventListener('input', function () {
+      palActive = -1;
+      renderPalette(paletteInp.value);
+    });
+
+    paletteInp.addEventListener('keydown', function (e) {
+      var items = paletteResults.querySelectorAll('.xfce-pal-item');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        palActive = Math.min(palActive + 1, items.length - 1);
+        updatePalActive(items);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        palActive = Math.max(palActive - 1, 0);
+        updatePalActive(items);
+      } else if (e.key === 'Enter') {
+        var active = paletteResults.querySelector('.xfce-pal-item.pal-active');
+        if (active) { location.href = active.dataset.href; closePalette(); }
+        else {
+          var first = paletteResults.querySelector('.xfce-pal-item');
+          if (first) { location.href = first.dataset.href; closePalette(); }
+        }
+      } else if (e.key === 'Escape') {
+        closePalette();
+      }
+    });
+
+    palette.addEventListener('click', function (e) {
+      if (e.target === palette) closePalette();
+    });
+  }
+
+  function updatePalActive(items) {
+    items.forEach(function (it, i) {
+      it.classList.toggle('pal-active', i === palActive);
+      if (i === palActive) it.scrollIntoView({ block: 'nearest' });
+    });
+  }
+
+  function renderPalette(q) {
+    q = (q || '').toLowerCase().trim();
+    var filtered = q
+      ? _palItems.filter(function (it) { return it.label.toLowerCase().includes(q); })
+      : _palItems;
+
+    if (!filtered.length) {
+      paletteResults.innerHTML = '<div class="xfce-pal-empty">No results</div>';
+      return;
+    }
+
+    // Group items
+    var groups = {};
+    filtered.forEach(function (it) {
+      if (!groups[it.group]) groups[it.group] = [];
+      groups[it.group].push(it);
+    });
+
+    var html = '';
+    Object.keys(groups).forEach(function (g) {
+      html += '<div class="xfce-pal-group">' + g + '</div>';
+      groups[g].forEach(function (it) {
+        html += '<div class="xfce-pal-item" data-href="' + it.href + '">'
+          + '<span class="xfce-pal-icon">' + it.icon + '</span>'
+          + '<span class="xfce-pal-label">' + it.label + '</span>'
+          + '</div>';
+      });
+    });
+    paletteResults.innerHTML = html;
+
+    paletteResults.querySelectorAll('.xfce-pal-item').forEach(function (item) {
+      item.addEventListener('click', function () {
+        location.href = item.dataset.href;
+        closePalette();
+      });
+      item.addEventListener('mouseenter', function () {
+        var items = paletteResults.querySelectorAll('.xfce-pal-item');
+        palActive = Array.from(items).indexOf(item);
+        updatePalActive(items);
+      });
+    });
+  }
+
+  function openPalette() {
+    if (!palette) buildPalette();
+    palette.classList.add('open');
+    paletteInp.value = '';
+    palActive = -1;
+    renderPalette('');
+    setTimeout(function () { paletteInp.focus(); }, 30);
+  }
+
+  function closePalette() {
+    if (palette) palette.classList.remove('open');
+  }
+
+  // ── Toast system ──────────────────────────────────────────────────────
+  function buildToastHost() {
+    var host = el('div', 'xfce-toast-host');
+    host.id = 'xfce-toast-host';
+    document.body.appendChild(host);
+  }
+
+  window.xfceToast = function (msg, type) {
+    var host = document.getElementById('xfce-toast-host');
+    if (!host) return;
+    var t = el('div', 'xfce-toast' + (type ? ' xfce-toast-' + type : ''));
+    t.textContent = msg;
+    host.appendChild(t);
+    requestAnimationFrame(function () { t.classList.add('show'); });
+    setTimeout(function () {
+      t.classList.remove('show');
+      setTimeout(function () { t.remove(); }, 300);
+    }, 2500);
+  };
+
+  function observeSavedFlash() {
+    var flash = document.getElementById('saved-flash');
+    if (!flash) return;
+    new MutationObserver(function () {
+      if (flash.style.display !== 'none' && flash.textContent.trim()) {
+        window.xfceToast(flash.textContent.trim(), 'success');
+      }
+    }).observe(flash, { attributes: true, attributeFilter: ['style'] });
+  }
+
   // ── Workspace overlay (Notes + To-do) ────────────────────────────────
   var wsOverlay, wsActivePane = 'notes', wsNotesTimer, wsTodosData = [];
 
@@ -186,12 +349,10 @@
     ].join('');
     document.body.appendChild(wsOverlay);
 
-    // Tabs
     wsOverlay.querySelectorAll('.xfce-ws-tab').forEach(function (btn) {
       btn.addEventListener('click', function () { switchWsPane(btn.dataset.pane); });
     });
 
-    // Close
     document.getElementById('xfce-ws-close').addEventListener('click', closeWorkspace);
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && wsOverlay.classList.contains('open')) closeWorkspace();
@@ -202,7 +363,6 @@
       closeWorkspace();
     });
 
-    // Notes auto-save
     var notesEl = document.getElementById('xfce-ws-notes');
     var ind = document.getElementById('xfce-ws-ind');
     notesEl.addEventListener('input', function () {
@@ -221,9 +381,8 @@
       }, 1200);
     });
 
-    // Todo add
     function addTodo() {
-      var inp = document.getElementById('xfce-ws-todo-inp');
+      var inp  = document.getElementById('xfce-ws-todo-inp');
       var text = inp.value.trim();
       if (!text) return;
       wsTodosData.push({ text: text, done: false });
@@ -236,13 +395,11 @@
       if (e.key === 'Enter') addTodo();
     });
 
-    // Clear done
     document.getElementById('xfce-ws-todo-clear').addEventListener('click', function () {
       wsTodosData = wsTodosData.filter(function (t) { return !t.done; });
       renderTodos(); saveTodos();
     });
 
-    // Export .md
     document.getElementById('xfce-ws-export').addEventListener('click', function () {
       var date = new Date().toISOString().slice(0, 10);
       var text, filename;
@@ -306,7 +463,6 @@
   }
 
   function loadWsData() {
-    // On dashboard, read directly from the page's own elements if available
     var dashNotes = document.getElementById('notes-area');
     if (dashNotes) {
       var ta = document.getElementById('xfce-ws-notes');
@@ -347,13 +503,12 @@
 
   function closeWorkspace() {
     if (wsOverlay) wsOverlay.classList.remove('open');
-    // Sync indicator on dock buttons
     document.querySelectorAll('[data-wspane]').forEach(function (btn) {
       btn.classList.remove('active');
     });
   }
 
-  // ── Focus mode (spotlight on recently edited) ─────────────────────────
+  // ── Focus mode ────────────────────────────────────────────────────────
   var focusedEl      = null;
   var focusOrigStyle = null;
 
@@ -368,11 +523,9 @@
 
   function enterFocusMode(target) {
     if (focusedEl) return;
-
     var dim  = document.getElementById('xfce-focus-dim') || buildFocusDim();
     var rect = target.getBoundingClientRect();
 
-    // Capture current computed inline style so we can fully restore it
     focusOrigStyle = {
       position:  target.style.position  || '',
       left:      target.style.left      || '',
@@ -391,7 +544,6 @@
     var maxH = Math.round(window.innerHeight * 0.86);
     var tl   = Math.round((window.innerWidth - tw) / 2);
 
-    // Fix position and set target width — let height be auto so it fits content
     target.style.transition = 'none';
     target.style.position   = 'fixed';
     target.style.left       = rect.left + 'px';
@@ -403,11 +555,9 @@
     target.style.overflow   = 'auto';
     target.classList.add('xfce-in-focus');
 
-    // Reflow so the browser computes auto height at the new width
     var actualH = Math.min(target.scrollHeight, maxH);
     var tt      = Math.round((window.innerHeight - actualH) / 2);
 
-    // Animate only position — height stays auto (content-driven)
     target.style.transition = [
       'left .32s cubic-bezier(.34,1.15,.64,1)',
       'top .32s cubic-bezier(.34,1.15,.64,1)',
@@ -430,7 +580,6 @@
     if (dim) dim.classList.remove('active');
     document.removeEventListener('keydown', onFocusKey);
 
-    // Fade out, restore, fade back in
     target.style.transition = 'opacity .18s';
     target.style.opacity    = '0';
 
@@ -493,7 +642,6 @@
     });
     dockInner.appendChild(navGroup);
 
-    // Separator
     dockInner.appendChild(el('div', 'xfce-dock-sep'));
 
     // Collections group (populated by /api/info)
@@ -501,10 +649,9 @@
     colGroup.id = 'xfce-dock-cols';
     dockInner.appendChild(colGroup);
 
-    // Separator
     dockInner.appendChild(el('div', 'xfce-dock-sep'));
 
-    // Workspace group: Notes + To-do (open overlay)
+    // Workspace group
     var wsGroup = el('div', 'xfce-dock-group');
     WORKSPACE.forEach(function (w) {
       var btn = makeDockItem(w.icon, w.label, null, false, true);
@@ -517,10 +664,9 @@
     });
     dockInner.appendChild(wsGroup);
 
-    // Separator
     dockInner.appendChild(el('div', 'xfce-dock-sep'));
 
-    // Tools popup button (Schema, Build, Import)
+    // Tools popup button
     var toolsActive = TOOLS.some(function (t) { return t.key === page; });
     var toolsBtn = makeDockItem('⚒', 'Tools', null, toolsActive, true);
     toolsBtn.id = 'xfce-tools-btn';
@@ -530,16 +676,15 @@
     });
     dockInner.appendChild(toolsBtn);
 
-    // Separator
     dockInner.appendChild(el('div', 'xfce-dock-sep'));
 
-    // HUD toggle button
+    // HUD toggle
     var hudBtn = makeDockItem('▣', 'HUD', null, false, true);
     hudBtn.addEventListener('click', toggleHUD);
     dockInner.appendChild(hudBtn);
 
     // Scheme toggle
-    var schemeBtn = document.getElementById('scheme-toggle');
+    var schemeBtn   = document.getElementById('scheme-toggle');
     var schemeClone = makeDockItem('◐', 'Scheme', null, false, true);
     schemeClone.addEventListener('click', function () {
       if (schemeBtn) schemeBtn.click();
@@ -551,8 +696,6 @@
 
     document.body.appendChild(dock);
 
-    // Any click inside the dock exits focus mode (capture phase runs
-    // before stopPropagation on individual buttons can block it)
     dock.addEventListener('click', function () {
       if (focusedEl) exitFocusMode();
     }, true);
@@ -584,7 +727,7 @@
       .then(function (info) {
         if (!info) return;
 
-        // Site name
+        // Site name in status bar
         var siteEl = document.getElementById('xfce-sb-site');
         if (siteEl) siteEl.textContent = info.siteName || info.podPath.split('/').pop().replace('.pod', '');
 
@@ -592,7 +735,7 @@
         var colGroup = document.getElementById('xfce-dock-cols');
         if (colGroup) {
           var topLevel = (info.collections || []).filter(function (c) { return !c.parent; });
-          topLevel.forEach(function (col) {
+          topLevel.forEach(function (col, idx) {
             var isSingleton = !!col.singleton;
             var href = isSingleton
               ? '/editor.html?collection=' + encodeURIComponent(col.id) + '&singleton=1'
@@ -600,12 +743,32 @@
             var isActive = isSingleton
               ? page === 'editor' && activeCol === col.id
               : page === 'entries' && activeCol === col.id;
-            // Abbreviation icon (first char of label)
             var abbr = col.label.substring(0, 2);
             var item = makeDockItem(abbr, col.label, href, isActive, false);
             item.querySelector('.xfce-dock-icon').style.cssText = 'font-size:9px;font-family:var(--mono);letter-spacing:-.02em;line-height:1;';
+            item.dataset.dockIdx = idx + 1;
+
+            // Draft badge
+            if (col.drafts > 0) {
+              var badge = el('span', 'xfce-dock-badge');
+              badge.textContent = col.drafts;
+              badge.title = col.drafts + ' draft' + (col.drafts === 1 ? '' : 's');
+              item.appendChild(badge);
+            }
+
             colGroup.appendChild(item);
+
+            // Add to palette
+            _palItems.push({ icon: abbr, label: col.label, href: href, group: 'Collections' });
           });
+
+          // Quick-create: + button when viewing a collection's entries
+          if (page === 'entries' && activeCol) {
+            var createHref = '/editor.html?collection=' + encodeURIComponent(activeCol);
+            var createBtn  = makeDockItem('+', 'New entry', createHref, false, false);
+            createBtn.classList.add('xfce-dock-create');
+            colGroup.appendChild(createBtn);
+          }
         }
 
         // HUD pod section
@@ -613,11 +776,11 @@
         if (hudPod) {
           var total = (info.collections || []).reduce(function (s, c) { return s + (c.total || 0); }, 0);
           hudPod.innerHTML = [
-            hudRow('File', info.podPath.split('/').pop()),
-            hudRow('Format', 'v' + info.formatVersion),
-            hudRow('Admin', 'v' + info.adminVersion),
+            hudRow('File',        info.podPath.split('/').pop()),
+            hudRow('Format',      'v' + info.formatVersion),
+            hudRow('Admin',       'v' + info.adminVersion),
             hudRow('Collections', info.collections.length),
-            hudRow('Entries', total),
+            hudRow('Published',   total),
           ].join('');
         }
 
@@ -625,7 +788,8 @@
         var hudCols = document.getElementById('xfce-hud-cols');
         if (hudCols) {
           hudCols.innerHTML = (info.collections || []).map(function (col) {
-            return hudRow(col.label, col.total + ' entr' + (col.total === 1 ? 'y' : 'ies'));
+            var draftTxt = col.drafts > 0 ? ', ' + col.drafts + ' draft' + (col.drafts === 1 ? '' : 's') : '';
+            return hudRow(col.label, col.total + ' published' + draftTxt);
           }).join('');
         }
       })
@@ -641,18 +805,15 @@
       })
       .catch(function () {});
 
-    // User from topbar (wait for other scripts to populate it)
-    setTimeout(function () {
-      var topbarUser = document.getElementById('topbar-user');
-      var sbUser     = document.getElementById('xfce-sb-user');
-      if (sbUser && topbarUser) {
-        var observer = new MutationObserver(function () {
-          sbUser.textContent = topbarUser.textContent;
-        });
-        observer.observe(topbarUser, { childList: true, characterData: true, subtree: true });
-        sbUser.textContent = topbarUser.textContent;
-      }
-    }, 300);
+    // Current user
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || !d.user) return;
+        var sbUser = document.getElementById('xfce-sb-user');
+        if (sbUser) sbUser.textContent = d.user.username;
+      })
+      .catch(function () {});
   }
 
   function hudRow(label, value) {
@@ -663,18 +824,44 @@
   function bindKeys() {
     document.addEventListener('keydown', function (e) {
       var mod = e.metaKey || e.ctrlKey;
-      if (!mod || !e.shiftKey) return;
 
-      if (e.key === 'd' || e.key === 'D') {
+      // ⌘K — command palette
+      if (mod && !e.shiftKey && (e.key === 'k' || e.key === 'K')) {
         e.preventDefault();
-        toggleHUD();
+        if (palette && palette.classList.contains('open')) closePalette();
+        else openPalette();
+        return;
       }
 
-      // ⌘⇧L — cycle back to glass
-      if (e.key === 'l' || e.key === 'L') {
+      // ⌘⇧D — toggle HUD
+      if (mod && e.shiftKey && (e.key === 'd' || e.key === 'D')) {
+        e.preventDefault();
+        toggleHUD();
+        return;
+      }
+
+      // ⌘⇧L — switch back to glass mode
+      if (mod && e.shiftKey && (e.key === 'l' || e.key === 'L')) {
         e.preventDefault();
         localStorage.setItem('orb_style', 'glass');
         location.reload();
+        return;
+      }
+
+      // 1–9 — jump to nth dock link (no modifier, not in input)
+      if (!mod && !e.shiftKey && !e.altKey && !isEditing(e.target)) {
+        var n = parseInt(e.key);
+        if (n >= 1 && n <= 9) {
+          var links = dockInner
+            ? Array.from(dockInner.querySelectorAll('a.xfce-dock-item')).filter(function (a) {
+                return !a.classList.contains('xfce-dock-create');
+              })
+            : [];
+          if (links[n - 1]) {
+            e.preventDefault();
+            location.href = links[n - 1].href;
+          }
+        }
       }
     });
   }
@@ -684,9 +871,11 @@
     buildStatusBar();
     buildMetaPanel();
     buildDock();
+    buildToastHost();
     loadInfo();
     bindKeys();
     initFocusMode();
+    observeSavedFlash();
   }
 
   if (document.readyState === 'loading') {

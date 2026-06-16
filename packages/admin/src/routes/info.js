@@ -16,10 +16,11 @@ infoRoutes.get('/', (c) => {
   const podPath = c.get('podPath');
   const db      = openPod(podPath);
   const cols    = db.getCollections().map(col => ({
-    id:     col.id,
-    label:  col.label,
-    total:  db.getEntries(col.id).length,
-    parent: db.getMeta(`collection.${col.id}.parent`) ?? null,
+    id:        col.id,
+    label:     col.label,
+    total:     db.getEntries(col.id, { status: 'published' }).length,
+    drafts:    db.getEntries(col.id, { status: 'draft' }).length,
+    parent:    db.getMeta(`collection.${col.id}.parent`) ?? null,
     singleton: !!col.singleton,
   }));
   const version = db.getMeta('format_version') ?? '1';

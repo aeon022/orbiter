@@ -1995,6 +1995,103 @@ html[data-style="xfce"] .xfce-in-focus .xfce-focus-trigger::after {
   flex-shrink: 0;
 }
 
+/* Status bar links & logout */
+a.xfce-sb-logo           { text-decoration: none; color: var(--accent); }
+a.xfce-sb-logo:hover     { opacity: .8; }
+.xfce-sb-user-link       { color: var(--mid); text-decoration: none; font-size: 9px; font-family: var(--mono); }
+.xfce-sb-user-link:hover { color: var(--text); }
+.xfce-sb-logout {
+  background: none; border: none; cursor: pointer;
+  font-size: 10px; color: var(--muted); padding: 0; line-height: 1;
+  font-family: var(--mono); transition: color .15s;
+}
+.xfce-sb-logout:hover { color: var(--red); }
+
+/* Draft badge on dock items */
+.xfce-dock-badge {
+  position: absolute; top: 2px; right: 2px;
+  background: var(--gold); color: #000;
+  font-size: 7px; font-family: var(--mono); font-weight: 700;
+  min-width: 12px; height: 12px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 3px; pointer-events: none; line-height: 1;
+}
+.xfce-dock-item { position: relative; }
+
+/* Quick-create button */
+.xfce-dock-create .xfce-dock-icon {
+  font-size: 16px !important; font-family: inherit !important;
+  color: var(--accent); font-weight: 300;
+}
+
+/* ── Command Palette ─────────────────────────────────────── */
+.xfce-palette {
+  display: none; position: fixed; inset: 0; z-index: 10000;
+  background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+  align-items: flex-start; justify-content: center;
+  padding-top: 12vh;
+}
+.xfce-palette.open { display: flex; }
+
+.xfce-palette-inner {
+  width: min(560px, 92vw);
+  background: var(--glass-bg, color-mix(in srgb, var(--bg1) 90%, transparent));
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(0,0,0,.5), 0 0 0 1px color-mix(in srgb,var(--accent) 20%,transparent);
+  overflow: hidden;
+}
+
+.xfce-palette-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-bottom: 1px solid var(--line);
+}
+.xfce-palette-cmd  { color: var(--accent); font-size: 13px; flex-shrink: 0; }
+.xfce-palette-inp  {
+  flex: 1; background: none; border: none; outline: none;
+  font-family: var(--mono); font-size: 13px; color: var(--heading);
+}
+.xfce-palette-inp::placeholder { color: var(--muted); }
+.xfce-palette-hint { font-size: 8px; color: var(--muted); font-family: var(--mono); white-space: nowrap; }
+
+.xfce-palette-results {
+  max-height: 360px; overflow-y: auto; padding: 6px 0;
+}
+.xfce-pal-group {
+  font-size: 8px; font-family: var(--mono); color: var(--muted);
+  letter-spacing: .08em; text-transform: uppercase;
+  padding: 8px 14px 4px;
+}
+.xfce-pal-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 14px; cursor: pointer; transition: background .1s;
+}
+.xfce-pal-item:hover, .xfce-pal-item.pal-active {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.xfce-pal-icon  { width: 20px; text-align: center; font-size: 13px; color: var(--accent); flex-shrink: 0; }
+.xfce-pal-label { font-size: 12px; color: var(--heading); font-family: var(--mono); }
+.xfce-pal-empty { padding: 20px 14px; color: var(--muted); font-size: 11px; font-family: var(--mono); }
+
+/* ── Toast host (above dock) ─────────────────────────────── */
+.xfce-toast-host {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+  z-index: 9990; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  pointer-events: none;
+}
+.xfce-toast {
+  background: var(--bg2); border: 1px solid var(--line);
+  border-radius: 8px; padding: 6px 14px;
+  font-family: var(--mono); font-size: 10px; color: var(--text);
+  box-shadow: 0 4px 16px rgba(0,0,0,.3);
+  opacity: 0; transform: translateY(8px);
+  transition: opacity .2s, transform .2s;
+  white-space: nowrap;
+}
+.xfce-toast.show { opacity: 1; transform: translateY(0); }
+.xfce-toast.xfce-toast-success { border-color: var(--jade); color: var(--jade); }
+.xfce-toast.xfce-toast-error   { border-color: var(--red);  color: var(--red);  }
+
 /* ════════════════════════════════════════════════════════════
    XFCE — MOBILE  (≤ 640px)
    ════════════════════════════════════════════════════════════ */
