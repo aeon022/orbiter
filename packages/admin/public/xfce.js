@@ -1095,14 +1095,21 @@
 
   // ── Keyboard shortcuts ────────────────────────────────────────────────
   function bindKeys() {
+    // Capture-phase ⌘K: fires before admin-utils.js bubble-phase listener, stops it
+    document.addEventListener('keydown', function (e) {
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        if (palette && palette.classList.contains('open')) closePalette();
+        else openPalette();
+      }
+    }, true);
+
     document.addEventListener('keydown', function (e) {
       var mod = e.metaKey || e.ctrlKey;
 
-      // ⌘K — command palette
+      // ⌘K handled above in capture phase
       if (mod && !e.shiftKey && (e.key === 'k' || e.key === 'K')) {
-        e.preventDefault();
-        if (palette && palette.classList.contains('open')) closePalette();
-        else openPalette();
         return;
       }
 
