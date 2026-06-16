@@ -143,9 +143,38 @@
     document.getElementById('col-label').textContent  = colLabel;
     document.getElementById('page-title').textContent = colLabel;
 
-    let allEntries  = [];
+    // Load site locales to build locale filter tabs
+    const siteLocalesMeta = await fetch('/api/meta/site~locales',{credentials:'include'}).then(r=>r.ok?r.json():null).catch(()=>null);
+    const siteLocales = (siteLocalesMeta?.value ?? '').split(',').map(s => s.trim()).filter(Boolean);
+
+    let allEntries   = [];
     let activeFilter = '';
-    let selected    = new Set();
+    let activeLocale = '';  // '' = default/primary locale
+    let selected     = new Set();
+
+    // Render locale tabs if multiple locales configured
+    if (siteLocales.length > 1) {
+      const filterBar = document.querySelector('.entries-filter-bar');
+      const sep = document.createElement('div');
+      sep.style.cssText = 'width:1px;background:var(--line);margin:0 4px;';
+      filterBar.insertBefore(sep, filterBar.querySelector('[data-status="trash"]'));
+      siteLocales.forEach((loc, i) => {
+        const dbLocale = i === 0 ? '' : loc;
+        const btn = document.createElement('button');
+        btn.className = 'filter-tab' + (dbLocale === '' ? ' active' : '');
+        btn.dataset.locale = dbLocale;
+        btn.textContent = loc.toUpperCase();
+        btn.title = i === 0 ? `${loc.toUpperCase()} (default)` : loc.toUpperCase();
+        btn.style.cssText = 'margin-left:' + (i === 0 ? '4px' : '0');
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.filter-tab[data-locale]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          activeLocale = dbLocale;
+          loadEntries();
+        });
+        filterBar.insertBefore(btn, filterBar.querySelector('[data-status="trash"]'));
+      });
+    }
 
     function updateBulkBar() {
       const bar   = document.getElementById('bulk-bar');
@@ -163,7 +192,10 @@
     async function loadEntries() {
       selected.clear();
       updateBulkBar();
-      const url = `/api/collections/${colId}/entries` + (activeFilter ? `?status=${activeFilter}` : '');
+      const qp = new URLSearchParams();
+      if (activeFilter) qp.set('status', activeFilter);
+      if (activeLocale !== undefined) qp.set('locale', activeLocale);
+      const url = `/api/collections/${colId}/entries` + (qp.toString() ? '?' + qp.toString() : '');
       allEntries = await fetch(url, { credentials: 'include' }).then(r => r.json());
       renderEntries(allEntries);
     }
@@ -195,11 +227,13 @@
               const nextStatus  = e.status === 'published' ? 'draft' : 'published';
               const toggleLabel = e.status === 'published' ? 'Unpublish' : e.status === 'scheduled' ? 'Publish now' : 'Publish';
               const schedInfo   = e.status === 'scheduled' && e.publish_at ? ` · ${e.publish_at.split(' ')[0]}` : '';
-              return `<tr data-slug="${e.slug}"${canSort ? ' draggable="true"' : ''}>
+              const localeParam = e.locale ? `&locale=${encodeURIComponent(e.locale)}` : '';
+              const localeBadge = e.locale ? `<span style="font-family:var(--mono);font-size:9px;color:var(--muted);background:var(--bg3);border:1px solid var(--line);border-radius:4px;padding:1px 5px;margin-left:5px;vertical-align:middle">${e.locale}</span>` : '';
+              return `<tr data-slug="${e.slug}" data-locale="${e.locale ?? ''}"${canSort ? ' draggable="true"' : ''}>
                 ${canSort ? `<td class="drag-col"><span class="drag-handle" title="Drag to reorder">⠿</span></td>` : ''}
-                <td class="cb-col"><input type="checkbox" class="row-cb" data-slug="${e.slug}" ${selected.has(e.slug) ? 'checked' : ''} /></td>
+                <td class="cb-col"><input type="checkbox" class="row-cb" data-slug="${e.slug}" data-locale="${e.locale ?? ''}" ${selected.has(e.slug) ? 'checked' : ''} /></td>
                 <td>
-                  <div style="color:var(--heading);font-weight:500">${title}</div>
+                  <div style="color:var(--heading);font-weight:500">${title}${localeBadge}</div>
                   <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px">${e.slug}</div>
                 </td>
                 <td>${isTrash ? `<span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${deleted}</span>` : `<span class="badge badge-${e.status}">${e.status}${schedInfo}</span>`}</td>
@@ -207,12 +241,12 @@
                 <td style="width:1%;white-space:nowrap">
                   <div class="row-actions">
                     ${isTrash
-                      ? `<button class="btn-row restore-btn" data-slug="${e.slug}">Restore</button>
-                         <button class="btn-row btn-row-danger perm-del-btn" data-slug="${e.slug}">Delete forever</button>`
-                      : `<a class="btn-row" href="/editor.html?collection=${colId}&slug=${e.slug}">Edit</a>
-                         <button class="btn-row btn-row-toggle status-toggle" data-slug="${e.slug}" data-next="${nextStatus}">${toggleLabel}</button>
-                         <button class="btn-row btn-row-icon dup-btn" data-slug="${e.slug}" title="Duplicate">⧉</button>
-                         <button class="btn-row btn-row-danger delete-btn" data-slug="${e.slug}">Trash</button>`
+                      ? `<button class="btn-row restore-btn" data-slug="${e.slug}" data-locale="${e.locale ?? ''}">Restore</button>
+                         <button class="btn-row btn-row-danger perm-del-btn" data-slug="${e.slug}" data-locale="${e.locale ?? ''}">Delete forever</button>`
+                      : `<a class="btn-row" href="/editor.html?collection=${colId}&slug=${e.slug}${localeParam}">Edit</a>
+                         <button class="btn-row btn-row-toggle status-toggle" data-slug="${e.slug}" data-locale="${e.locale ?? ''}" data-next="${nextStatus}">${toggleLabel}</button>
+                         <button class="btn-row btn-row-icon dup-btn" data-slug="${e.slug}" data-locale="${e.locale ?? ''}" title="Duplicate">⧉</button>
+                         <button class="btn-row btn-row-danger delete-btn" data-slug="${e.slug}" data-locale="${e.locale ?? ''}">Trash</button>`
                     }
                   </div>
                 </td>
@@ -288,7 +322,7 @@
           await fetch(`/api/collections/${colId}/entries/${btn.dataset.slug}/status`, {
             method: 'PATCH', credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: btn.dataset.next }),
+            body: JSON.stringify({ status: btn.dataset.next, locale: btn.dataset.locale ?? '' }),
           });
           loadEntries();
         });
@@ -298,7 +332,8 @@
       wrap.querySelectorAll('.dup-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
           btn.disabled = true;
-          const res = await fetch(`/api/collections/${colId}/entries/${btn.dataset.slug}/duplicate`, {
+          const loc = btn.dataset.locale ?? '';
+          const res = await fetch(`/api/collections/${colId}/entries/${btn.dataset.slug}/duplicate${loc ? '?locale=' + encodeURIComponent(loc) : ''}`, {
             method: 'POST', credentials: 'include',
           });
           if (res.ok) loadEntries();
@@ -309,7 +344,8 @@
       // Delete → Trash
       wrap.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
-          await fetch(`/api/collections/${colId}/entries/${btn.dataset.slug}`, {
+          const loc = btn.dataset.locale ?? '';
+          await fetch(`/api/collections/${colId}/entries/${btn.dataset.slug}${loc ? '?locale=' + encodeURIComponent(loc) : ''}`, {
             method: 'DELETE', credentials: 'include',
           });
           loadEntries();
@@ -319,7 +355,8 @@
       // Restore from Trash
       wrap.querySelectorAll('.restore-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
-          await fetch(`/api/collections/${colId}/entries/${btn.dataset.slug}/restore`, {
+          const loc = btn.dataset.locale ?? '';
+          await fetch(`/api/collections/${colId}/entries/${btn.dataset.slug}/restore${loc ? '?locale=' + encodeURIComponent(loc) : ''}`, {
             method: 'POST', credentials: 'include',
           });
           loadEntries();
@@ -330,7 +367,8 @@
       wrap.querySelectorAll('.perm-del-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
           if (!confirm(`Permanently delete "${btn.dataset.slug}"? This cannot be undone.`)) return;
-          await fetch(`/api/collections/${colId}/entries/${btn.dataset.slug}/permanent`, {
+          const loc = btn.dataset.locale ?? '';
+          await fetch(`/api/collections/${colId}/entries/${btn.dataset.slug}/permanent${loc ? '?locale=' + encodeURIComponent(loc) : ''}`, {
             method: 'DELETE', credentials: 'include',
           });
           loadEntries();
@@ -356,7 +394,7 @@
       await fetch(`/api/collections/${colId}/entries/bulk`, {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, slugs }),
+        body: JSON.stringify({ action, slugs, locale: activeLocale }),
       });
       loadEntries();
     }
@@ -424,11 +462,12 @@
       const res = await fetch(`/api/collections/${colId}/entries`, {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug, data: { title }, status: 'draft' }),
+        body: JSON.stringify({ slug, data: { title }, status: 'draft', locale: activeLocale }),
       });
       if (res.ok) {
         overlay.style.display = 'none';
-        location.href = `/editor.html?collection=${colId}&slug=${slug}`;
+        const localeParam = activeLocale ? `&locale=${encodeURIComponent(activeLocale)}` : '';
+        location.href = `/editor.html?collection=${colId}&slug=${slug}${localeParam}`;
       } else {
         const d = await res.json();
         errEl.textContent = d.error ?? 'Could not create entry';

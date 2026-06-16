@@ -15,18 +15,18 @@ function fireWebhook(podPath) {
 // POST /api/collections/:id/entries/bulk — bulk publish or delete
 entryRoutes.post('/:collectionId/entries/bulk', async (c) => {
   const { collectionId } = c.req.param();
-  const { action, slugs } = await c.req.json();
+  const { action, slugs, locale = '' } = await c.req.json();
   if (!Array.isArray(slugs) || !slugs.length) return c.json({ error: 'slugs required' }, 400);
   if (!['publish', 'draft', 'delete', 'restore', 'permanent'].includes(action)) return c.json({ error: 'Invalid action' }, 400);
   const db = openPod(c.get('podPath'));
-  if (action === 'delete')    { slugs.forEach(slug => db.deleteEntry(collectionId, slug)); }
-  else if (action === 'restore')   { slugs.forEach(slug => db.restoreEntry(collectionId, slug)); }
-  else if (action === 'permanent') { slugs.forEach(slug => db.permanentDeleteEntry(collectionId, slug)); }
+  if (action === 'delete')    { slugs.forEach(slug => db.deleteEntry(collectionId, slug, locale)); }
+  else if (action === 'restore')   { slugs.forEach(slug => db.restoreEntry(collectionId, slug, locale)); }
+  else if (action === 'permanent') { slugs.forEach(slug => db.permanentDeleteEntry(collectionId, slug, locale)); }
   else {
     const status = action === 'publish' ? 'published' : 'draft';
     slugs.forEach(slug => {
-      const entry = db.getEntry(collectionId, slug);
-      if (entry) db.updateEntry(collectionId, slug, { slug, data: entry.data, status });
+      const entry = db.getEntry(collectionId, slug, locale);
+      if (entry) db.updateEntry(collectionId, slug, { slug, data: entry.data, status, locale });
     });
   }
   db.close();
@@ -47,39 +47,50 @@ entryRoutes.patch('/:collectionId/entries/reorder', async (c) => {
   return c.json({ ok: true });
 });
 
-// GET /api/collections/:id/entries?status=draft|published
+// GET /api/collections/:id/entries?status=draft|published&locale=
 entryRoutes.get('/:collectionId/entries', (c) => {
   const { collectionId } = c.req.param();
-  const status  = c.req.query('status') || undefined;
-  const db      = openPod(c.get('podPath'));
+  const status = c.req.query('status') || undefined;
+  const locale = c.req.query('locale');          // undefined = all locales
+  const db     = openPod(c.get('podPath'));
   if (!db.getCollection(collectionId)) { db.close(); return c.json({ error: 'Collection not found' }, 404); }
-  const entries = db.getEntries(collectionId, { status });
+  const entries = db.getEntries(collectionId, { status, locale });
   db.close();
   return c.json(entries);
 });
 
-// GET /api/collections/:id/entries/:slug
+// GET /api/collections/:id/entries/:slug?locale=
 entryRoutes.get('/:collectionId/entries/:slug', (c) => {
   const { collectionId, slug } = c.req.param();
-  const db    = openPod(c.get('podPath'));
-  const entry = db.getEntry(collectionId, slug);
+  const locale = c.req.query('locale') ?? '';
+  const db     = openPod(c.get('podPath'));
+  const entry  = db.getEntry(collectionId, slug, locale);
   db.close();
   if (!entry) return c.json({ error: 'Not found' }, 404);
   return c.json(entry);
 });
 
+// GET /api/collections/:id/entries/:slug/locales — list all locale versions
+entryRoutes.get('/:collectionId/entries/:slug/locales', (c) => {
+  const { collectionId, slug } = c.req.param();
+  const db      = openPod(c.get('podPath'));
+  const locales = db.getEntryLocales(collectionId, slug);
+  db.close();
+  return c.json(locales);
+});
+
 // POST /api/collections/:id/entries
 entryRoutes.post('/:collectionId/entries', async (c) => {
   const { collectionId } = c.req.param();
-  const { slug, data = {}, status = 'draft' } = await c.req.json();
+  const { slug, data = {}, status = 'draft', locale = '' } = await c.req.json();
   if (!slug) return c.json({ error: 'slug is required' }, 400);
 
   const db = openPod(c.get('podPath'));
   if (!db.getCollection(collectionId)) { db.close(); return c.json({ error: 'Collection not found' }, 404); }
-  if (db.getEntry(collectionId, slug)) { db.close(); return c.json({ error: `Entry "${slug}" already exists` }, 409); }
+  if (db.getEntry(collectionId, slug, locale)) { db.close(); return c.json({ error: `Entry "${slug}" (${locale || 'default'}) already exists` }, 409); }
 
-  const id    = db.createEntry(collectionId, slug, data, status);
-  const entry = db.getEntry(collectionId, slug);
+  const id    = db.createEntry(collectionId, slug, data, status, locale);
+  const entry = db.getEntry(collectionId, slug, locale);
   db.logAudit(id, c.get('user')?.username ?? 'unknown', 'create');
   db.close();
   return c.json({ ...entry, id }, 201);
@@ -88,13 +99,14 @@ entryRoutes.post('/:collectionId/entries', async (c) => {
 // PUT /api/collections/:id/entries/:slug
 entryRoutes.put('/:collectionId/entries/:slug', async (c) => {
   const { collectionId, slug } = c.req.param();
-  const body = await c.req.json();
+  const body   = await c.req.json();
+  const locale = body.locale ?? c.req.query('locale') ?? '';
 
   const db     = openPod(c.get('podPath'));
-  const before = db.getEntry(collectionId, slug);
-  const ok     = db.updateEntry(collectionId, slug, body);
+  const before = db.getEntry(collectionId, slug, locale);
+  const ok     = db.updateEntry(collectionId, slug, { ...body, locale });
   if (!ok) { db.close(); return c.json({ error: 'Not found' }, 404); }
-  const updated  = db.getEntry(collectionId, body.slug ?? slug);
+  const updated  = db.getEntry(collectionId, body.slug ?? slug, locale);
   const username = c.get('user')?.username ?? 'unknown';
   if (body.status === 'published' && before?.status !== 'published') {
     db.logAudit(updated.id, username, 'publish');
@@ -114,35 +126,38 @@ entryRoutes.put('/:collectionId/entries/:slug', async (c) => {
   return c.json(updated);
 });
 
-// DELETE /api/collections/:id/entries/:slug → soft delete (trash)
+// DELETE /api/collections/:id/entries/:slug?locale= → soft delete (trash)
 entryRoutes.delete('/:collectionId/entries/:slug', (c) => {
   const { collectionId, slug } = c.req.param();
-  const db    = openPod(c.get('podPath'));
-  const entry = db.getEntry(collectionId, slug);
+  const locale = c.req.query('locale') ?? '';
+  const db     = openPod(c.get('podPath'));
+  const entry  = db.getEntry(collectionId, slug, locale);
   if (!entry) { db.close(); return c.json({ error: 'Not found' }, 404); }
-  db.deleteEntry(collectionId, slug);
+  db.deleteEntry(collectionId, slug, locale);
   db.logAudit(entry.id, c.get('user')?.username ?? 'unknown', 'delete');
   db.close();
   return c.json({ ok: true });
 });
 
-// POST /api/collections/:id/entries/:slug/restore — move from trash back to draft
+// POST /api/collections/:id/entries/:slug/restore?locale=
 entryRoutes.post('/:collectionId/entries/:slug/restore', (c) => {
   const { collectionId, slug } = c.req.param();
-  const db    = openPod(c.get('podPath'));
-  const row   = db.db.prepare('SELECT * FROM _entries WHERE collection_id = ? AND slug = ? AND deleted_at IS NOT NULL').get(collectionId, slug);
-  const ok    = db.restoreEntry(collectionId, slug);
+  const locale = c.req.query('locale') ?? '';
+  const db     = openPod(c.get('podPath'));
+  const row    = db.db.prepare('SELECT * FROM _entries WHERE collection_id = ? AND slug = ? AND locale = ? AND deleted_at IS NOT NULL').get(collectionId, slug, locale);
+  const ok     = db.restoreEntry(collectionId, slug, locale);
   if (row) db.logAudit(row.id, c.get('user')?.username ?? 'unknown', 'restore');
   db.close();
   if (!ok) return c.json({ error: 'Not found in trash' }, 404);
   return c.json({ ok: true });
 });
 
-// DELETE /api/collections/:id/entries/:slug/permanent — hard delete from trash
+// DELETE /api/collections/:id/entries/:slug/permanent?locale=
 entryRoutes.delete('/:collectionId/entries/:slug/permanent', (c) => {
   const { collectionId, slug } = c.req.param();
-  const db = openPod(c.get('podPath'));
-  const ok = db.permanentDeleteEntry(collectionId, slug);
+  const locale = c.req.query('locale') ?? '';
+  const db     = openPod(c.get('podPath'));
+  const ok     = db.permanentDeleteEntry(collectionId, slug, locale);
   db.close();
   if (!ok) return c.json({ error: 'Not found' }, 404);
   return c.json({ ok: true });
@@ -258,17 +273,18 @@ entryRoutes.post('/:collectionId/entries/import.csv', async (c) => {
   return c.json({ ok: true, created, updated, skipped });
 });
 
-// POST /api/collections/:id/entries/:slug/duplicate
+// POST /api/collections/:id/entries/:slug/duplicate?locale=
 entryRoutes.post('/:collectionId/entries/:slug/duplicate', (c) => {
   const { collectionId, slug } = c.req.param();
-  const db    = openPod(c.get('podPath'));
-  const entry = db.getEntry(collectionId, slug);
+  const locale = c.req.query('locale') ?? '';
+  const db     = openPod(c.get('podPath'));
+  const entry  = db.getEntry(collectionId, slug, locale);
   if (!entry) { db.close(); return c.json({ error: 'Not found' }, 404); }
   let newSlug = slug + '-copy';
   let i = 2;
-  while (db.getEntry(collectionId, newSlug)) newSlug = `${slug}-copy-${i++}`;
-  db.createEntry(collectionId, newSlug, entry.data, 'draft');
-  const created = db.getEntry(collectionId, newSlug);
+  while (db.getEntry(collectionId, newSlug, locale)) newSlug = `${slug}-copy-${i++}`;
+  db.createEntry(collectionId, newSlug, entry.data, 'draft', locale);
+  const created = db.getEntry(collectionId, newSlug, locale);
   db.close();
   return c.json(created, 201);
 });
@@ -276,15 +292,15 @@ entryRoutes.post('/:collectionId/entries/:slug/duplicate', (c) => {
 // PATCH /api/collections/:id/entries/:slug/status
 entryRoutes.patch('/:collectionId/entries/:slug/status', async (c) => {
   const { collectionId, slug } = c.req.param();
-  const { status, publish_at, unpublish_at } = await c.req.json();
+  const { status, publish_at, unpublish_at, locale = '' } = await c.req.json();
   if (!['draft', 'published', 'scheduled'].includes(status)) return c.json({ error: 'Invalid status' }, 400);
   if (status === 'scheduled' && !publish_at) return c.json({ error: 'publish_at required for scheduled status' }, 400);
   const db    = openPod(c.get('podPath'));
-  const entry = db.getEntry(collectionId, slug);
+  const entry = db.getEntry(collectionId, slug, locale);
   if (!entry) { db.close(); return c.json({ error: 'Not found' }, 404); }
   const pa  = status === 'scheduled' ? publish_at : null;
   const ua  = status === 'published' ? (unpublish_at ?? null) : null;
-  db.updateEntry(collectionId, slug, { slug, data: entry.data, status, publish_at: pa, unpublish_at: ua });
+  db.updateEntry(collectionId, slug, { slug, data: entry.data, status, publish_at: pa, unpublish_at: ua, locale });
   const username = c.get('user')?.username ?? 'unknown';
   if (status === 'scheduled') db.logAudit(entry.id, username, 'schedule');
   db.close();

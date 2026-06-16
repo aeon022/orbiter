@@ -381,6 +381,14 @@
     .serp-url { font-size:9px; color:var(--jade); margin-bottom:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .serp-title { font-size:13px; color:#8ab4f8; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .serp-desc { font-size:10px; color:var(--mid); line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    /* Locale switcher bar */
+    .locale-bar { display:flex; align-items:center; gap:6px; padding:6px 20px; border-bottom:1px solid var(--line); background:var(--bg1); flex-shrink:0; }
+    .locale-bar-label { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.12em; margin-right:2px; }
+    .locale-tab { font-size:10px; font-family:var(--mono); letter-spacing:0.08em; text-transform:uppercase; padding:3px 10px; border:1px solid var(--line); border-radius:12px; cursor:pointer; background:none; color:var(--muted); text-decoration:none; transition:all .12s; }
+    .locale-tab:hover { border-color:var(--accent); color:var(--accent); }
+    .locale-tab.active { background:var(--accent-bg); border-color:var(--accent); color:var(--accent); font-weight:500; }
+    .locale-tab.missing { border-style:dashed; opacity:0.55; }
+    .locale-tab.missing:hover { opacity:1; border-style:solid; }
   </style>
 </head>
 <body>
@@ -440,6 +448,10 @@
             </button>
           </div>
         </div>
+        <div id="locale-bar" class="locale-bar" style="display:none">
+          <span class="locale-bar-label">Locale</span>
+          <div id="locale-tabs" style="display:flex;gap:5px;"></div>
+        </div>
         <div class="editor-scroll">
           <div class="editor-page">
             <textarea id="title-input" class="editor-title-input" placeholder="Untitled" rows="1"
@@ -488,10 +500,11 @@
       location.replace('/login.html');
     });
 
-    // Parse ?collection=X&slug=Y&singleton=1 from URL
+    // Parse ?collection=X&slug=Y&singleton=1&locale=de from URL
     const params = new URLSearchParams(location.search);
     const COLLECTION = params.get('collection');
     const IS_SINGLETON = params.get('singleton') === '1';
+    const LOCALE = params.get('locale') ?? '';
 
     if (!COLLECTION) { location.replace('/collections.html'); }
 
@@ -505,20 +518,45 @@
       }
     }
     const IS_NEW = SLUG === 'new';
+    const localeQ = LOCALE ? `?locale=${encodeURIComponent(LOCALE)}` : '';
 
     document.getElementById('collection-id-display').textContent = COLLECTION;
 
-    // Load collection schema + entry
-    const [colData, entryData, versionsData, activityData, mediaData, commentsData] = await Promise.all([
+    // Load collection schema + entry + locale meta
+    const [colData, entryData, versionsData, activityData, mediaData, commentsData, siteLocalesMeta, entryLocalesData] = await Promise.all([
       fetch(`/api/collections/${COLLECTION}`,{credentials:'include'}).then(r=>r.ok?r.json():null),
-      IS_NEW ? null : fetch(`/api/collections/${COLLECTION}/entries/${SLUG}`,{credentials:'include'}).then(r=>r.ok?r.json():null),
+      IS_NEW ? null : fetch(`/api/collections/${COLLECTION}/entries/${SLUG}${localeQ}`,{credentials:'include'}).then(r=>r.ok?r.json():null),
       IS_NEW ? [] : fetch(`/api/collections/${COLLECTION}/entries/${SLUG}/versions`,{credentials:'include'}).then(r=>r.ok?r.json():[]).catch(()=>[]),
       IS_NEW ? [] : fetch(`/api/collections/${COLLECTION}/entries/${SLUG}/activity`,{credentials:'include'}).then(r=>r.ok?r.json():[]).catch(()=>[]),
       fetch('/api/media',{credentials:'include'}).then(r=>r.json()).catch(()=>[]),
       IS_NEW ? [] : fetch(`/api/collections/${COLLECTION}/entries/${SLUG}/comments`,{credentials:'include'}).then(r=>r.ok?r.json():[]).catch(()=>[]),
+      fetch('/api/meta/site~locales',{credentials:'include'}).then(r=>r.ok?r.json():null).catch(()=>null),
+      IS_NEW ? [] : fetch(`/api/collections/${COLLECTION}/entries/${SLUG}/locales`,{credentials:'include'}).then(r=>r.ok?r.json():[]).catch(()=>[]),
     ]);
 
+    // IS_TRANSLATION_NEW: slug exists but no entry for this locale yet
+    const IS_TRANSLATION_NEW = !IS_NEW && !entryData && LOCALE !== '';
+
     if (!colData) { location.replace('/collections.html'); }
+
+    // ── Locale switcher ───────────────────────────────────────────────
+    const siteLocales = (siteLocalesMeta?.value ?? '').split(',').map(s => s.trim()).filter(Boolean);
+    if (siteLocales.length > 1 && !IS_NEW) {
+      const existingLocales = new Set(entryLocalesData.map(l => l.locale));
+      const bar    = document.getElementById('locale-bar');
+      const tabsEl = document.getElementById('locale-tabs');
+      tabsEl.innerHTML = siteLocales.map((loc, i) => {
+        // First locale in the list maps to the default (locale='')
+        const dbLocale  = i === 0 ? '' : loc;
+        const isActive  = dbLocale === LOCALE;
+        const exists    = existingLocales.has(dbLocale);
+        const localeParam = dbLocale ? `&locale=${encodeURIComponent(dbLocale)}` : '';
+        const href = `/editor.html?collection=${encodeURIComponent(COLLECTION)}&slug=${encodeURIComponent(SLUG)}${localeParam}`;
+        const title = exists ? loc.toUpperCase() : `${loc.toUpperCase()} — click to create`;
+        return `<a href="${href}" class="locale-tab${isActive?' active':''}${!exists?' missing':''}" title="${title}">${loc.toUpperCase()}</a>`;
+      }).join('');
+      bar.style.display = 'flex';
+    }
 
     // Entry locking — claim lock, warn if someone else is editing
     let lockHeld = false;
@@ -552,7 +590,8 @@
     // Breadcrumb
     document.getElementById('back-to-col').textContent = colData.label;
     document.getElementById('back-to-col').href = `/entries.html?col=${COLLECTION}&label=${encodeURIComponent(colData.label)}`;
-    document.getElementById('breadcrumb-slug').textContent = IS_NEW ? 'New entry' : SLUG;
+    const breadcrumbSlug = IS_NEW ? 'New entry' : IS_TRANSLATION_NEW ? `${SLUG} [${LOCALE}] — new translation` : LOCALE ? `${SLUG} [${LOCALE}]` : SLUG;
+    document.getElementById('breadcrumb-slug').textContent = breadcrumbSlug;
     document.title = `${IS_NEW ? 'New entry' : SLUG} — ${colData.label} — Orbiter`;
 
     const schema = colData.schema ? (typeof colData.schema==='string'?JSON.parse(colData.schema):colData.schema) : {};
@@ -1103,19 +1142,20 @@
         }
       }
 
-      if (IS_NEW && !currentSlug) {
-        // Create new entry
+      const localeParam = LOCALE ? `&locale=${encodeURIComponent(LOCALE)}` : '';
+      if ((IS_NEW || IS_TRANSLATION_NEW) && !currentSlug) {
+        // Create new entry (or new translation of existing slug)
         const res = await fetch(`/api/collections/${COLLECTION}/entries`,{
           method:'POST', credentials:'include',
           headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ slug, data, status, publish_at }),
+          body: JSON.stringify({ slug, data, status, publish_at, locale: LOCALE }),
         });
         const json = await res.json();
         if (json.slug || json.id) {
           currentSlug = json.slug ?? slug;
           document.getElementById('slug-preview').textContent = currentSlug;
           slugInput.value = currentSlug;
-          const newUrl = `/editor.html?collection=${COLLECTION}&slug=${currentSlug}`;
+          const newUrl = `/editor.html?collection=${COLLECTION}&slug=${currentSlug}${localeParam}`;
           history.replaceState(null,'',newUrl);
           currentPath = newUrl;
           setIndicator('saved');
@@ -1127,13 +1167,13 @@
         const res = await fetch(`/api/collections/${COLLECTION}/entries/${targetSlug}`,{
           method:'PUT', credentials:'include',
           headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ slug, data, status, publish_at, unpublish_at }),
+          body: JSON.stringify({ slug, data, status, publish_at, unpublish_at, locale: LOCALE }),
         });
         if (res.ok) {
           const json = await res.json();
           if (json.slug && json.slug!==currentSlug) {
             currentSlug = json.slug;
-            const newUrl = `/editor.html?collection=${COLLECTION}&slug=${currentSlug}`;
+            const newUrl = `/editor.html?collection=${COLLECTION}&slug=${currentSlug}${localeParam}`;
             history.replaceState(null,'',newUrl);
             document.getElementById('slug-preview').textContent = currentSlug;
             slugInput.value = currentSlug;

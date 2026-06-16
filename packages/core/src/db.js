@@ -109,6 +109,38 @@ export class OrbiterDB {
     try { this.db.exec(`ALTER TABLE _entries ADD COLUMN publish_at TEXT`); } catch {}
     try { this.db.exec(`ALTER TABLE _entries ADD COLUMN unpublish_at TEXT`); } catch {}
 
+    // Migration: add locale column + change UNIQUE constraint to (collection_id, slug, locale)
+    const entryCols = this.db.prepare('PRAGMA table_info(_entries)').all().map(c => c.name);
+    if (!entryCols.includes('locale')) {
+      this.db.pragma('foreign_keys = OFF');
+      this.db.exec(`
+        BEGIN;
+        CREATE TABLE _entries_new (
+          id            TEXT PRIMARY KEY,
+          collection_id TEXT NOT NULL REFERENCES _collections(id),
+          slug          TEXT NOT NULL,
+          locale        TEXT NOT NULL DEFAULT '',
+          data          TEXT NOT NULL,
+          status        TEXT NOT NULL DEFAULT 'draft',
+          sort_order    INTEGER,
+          deleted_at    TEXT,
+          publish_at    TEXT,
+          unpublish_at  TEXT,
+          created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at    TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(collection_id, slug, locale)
+        );
+        INSERT INTO _entries_new
+          SELECT id, collection_id, slug, '', data, status, sort_order,
+                 deleted_at, publish_at, unpublish_at, created_at, updated_at
+          FROM _entries;
+        DROP TABLE _entries;
+        ALTER TABLE _entries_new RENAME TO _entries;
+        COMMIT;
+      `);
+      this.db.pragma('foreign_keys = ON');
+    }
+
     // Migration: make _media.data nullable, add url + path for external backends
     const mediaCols = this.db.prepare('PRAGMA table_info(_media)').all().map(c => c.name);
     if (!mediaCols.includes('url')) {
@@ -155,26 +187,34 @@ export class OrbiterDB {
   }
 
   // ── Entries ────────────────────────────────
-  getEntries(collectionId, { status } = {}) {
+  getEntries(collectionId, { status, locale } = {}) {
     if (status === 'trash') {
       const rows = this.db.prepare(
         'SELECT * FROM _entries WHERE collection_id = ? AND deleted_at IS NOT NULL ORDER BY deleted_at DESC'
       ).all(collectionId);
       return rows.map(r => ({ ...r, data: JSON.parse(r.data) }));
     }
-    const q = status
-      ? this.db.prepare('SELECT * FROM _entries WHERE collection_id = ? AND status = ? AND deleted_at IS NULL ORDER BY COALESCE(sort_order,999999) ASC, updated_at DESC')
-      : this.db.prepare('SELECT * FROM _entries WHERE collection_id = ? AND deleted_at IS NULL ORDER BY COALESCE(sort_order,999999) ASC, updated_at DESC');
-    const rows = status ? q.all(collectionId, status) : q.all(collectionId);
-    return rows.map(r => ({ ...r, data: JSON.parse(r.data) }));
+    let sql = 'SELECT * FROM _entries WHERE collection_id = ? AND deleted_at IS NULL';
+    const args = [collectionId];
+    if (status) { sql += ' AND status = ?'; args.push(status); }
+    if (locale !== undefined) { sql += ' AND locale = ?'; args.push(locale); }
+    sql += ' ORDER BY COALESCE(sort_order,999999) ASC, updated_at DESC';
+    return this.db.prepare(sql).all(...args).map(r => ({ ...r, data: JSON.parse(r.data) }));
   }
 
-  getEntry(collectionId, slug) {
+  getEntry(collectionId, slug, locale = '') {
     const row = this.db
-      .prepare('SELECT * FROM _entries WHERE collection_id = ? AND slug = ? AND deleted_at IS NULL')
-      .get(collectionId, slug);
+      .prepare('SELECT * FROM _entries WHERE collection_id = ? AND slug = ? AND locale = ? AND deleted_at IS NULL')
+      .get(collectionId, slug, locale);
     if (!row) return null;
     return { ...row, data: JSON.parse(row.data) };
+  }
+
+  /** Returns all locale versions of a given slug (non-deleted). */
+  getEntryLocales(collectionId, slug) {
+    return this.db
+      .prepare('SELECT locale, status, updated_at FROM _entries WHERE collection_id = ? AND slug = ? AND deleted_at IS NULL')
+      .all(collectionId, slug);
   }
 
   // ── Users ──────────────────────────────────
@@ -257,18 +297,18 @@ export class OrbiterDB {
   }
 
   // ── Entries (write) ────────────────────────────────
-  createEntry(collectionId, slug, data, status = 'draft') {
+  createEntry(collectionId, slug, data, status = 'draft', locale = '') {
     const id  = randomUUID();
     const now = sqliteNow();
     this.db.prepare(`
-      INSERT INTO _entries (id, collection_id, slug, data, status, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(id, collectionId, slug, JSON.stringify(data), status, now, now);
+      INSERT INTO _entries (id, collection_id, slug, locale, data, status, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, collectionId, slug, locale, JSON.stringify(data), status, now, now);
     return id;
   }
 
-  updateEntry(collectionId, slug, { slug: newSlug, data, status, publish_at, unpublish_at } = {}) {
-    const entry = this.getEntry(collectionId, slug);
+  updateEntry(collectionId, slug, { slug: newSlug, data, status, publish_at, unpublish_at, locale } = {}) {
+    const entry = this.getEntry(collectionId, slug, locale ?? '');
     if (!entry) return false;
     // Snapshot current state before overwriting
     this.db.prepare('INSERT INTO _versions (id, entry_id, data, created_at) VALUES (?, ?, ?, ?)')
@@ -308,26 +348,26 @@ export class OrbiterDB {
     return rows.map(r => ({ ...r, data: JSON.parse(r.data) }));
   }
 
-  deleteEntry(collectionId, slug) {
-    const entry = this.getEntry(collectionId, slug);
+  deleteEntry(collectionId, slug, locale = '') {
+    const entry = this.getEntry(collectionId, slug, locale);
     if (!entry) return false;
     this.db.prepare('UPDATE _entries SET deleted_at = ? WHERE id = ?').run(sqliteNow(), entry.id);
     return true;
   }
 
-  restoreEntry(collectionId, slug) {
+  restoreEntry(collectionId, slug, locale = '') {
     const row = this.db
-      .prepare('SELECT * FROM _entries WHERE collection_id = ? AND slug = ? AND deleted_at IS NOT NULL')
-      .get(collectionId, slug);
+      .prepare('SELECT * FROM _entries WHERE collection_id = ? AND slug = ? AND locale = ? AND deleted_at IS NOT NULL')
+      .get(collectionId, slug, locale);
     if (!row) return false;
     this.db.prepare('UPDATE _entries SET deleted_at = NULL, status = ? WHERE id = ?').run('draft', row.id);
     return true;
   }
 
-  permanentDeleteEntry(collectionId, slug) {
+  permanentDeleteEntry(collectionId, slug, locale = '') {
     const row = this.db
-      .prepare('SELECT * FROM _entries WHERE collection_id = ? AND slug = ?')
-      .get(collectionId, slug);
+      .prepare('SELECT * FROM _entries WHERE collection_id = ? AND slug = ? AND locale = ?')
+      .get(collectionId, slug, locale);
     if (!row) return false;
     this.db.prepare('DELETE FROM _versions WHERE entry_id = ?').run(row.id);
     this.db.prepare('DELETE FROM _entries WHERE id = ?').run(row.id);
