@@ -25,6 +25,7 @@ import { importRoutes }     from './routes/import.js';
 import { commentRoutes }    from './routes/comments.js';
 import { lockRoutes }       from './routes/locks.js';
 import { requireAuth }      from './middleware/auth.js';
+import { csrfMiddleware }  from './middleware/csrf.js';
 
 const { version: adminVersion } = JSON.parse(
   readFileSync(join(__dirname, '../package.json'), 'utf8')
@@ -55,6 +56,8 @@ export function createApp(podPath) {
     origin:      ALLOWED_ORIGINS,
     credentials: true,
   }));
+
+  app.use('/api/*', csrfMiddleware(ALLOWED_ORIGINS));
 
   // Public routes
   app.route('/api/auth', authRoutes);
