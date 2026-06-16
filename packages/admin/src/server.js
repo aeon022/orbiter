@@ -57,13 +57,12 @@ export function createApp(podPath) {
     credentials: true,
   }));
 
-  app.use('/api/*', csrfMiddleware(ALLOWED_ORIGINS));
-
-  // Public routes
+  // Public routes (no CSRF needed — login can't be meaningfully CSRF-attacked)
   app.route('/api/auth', authRoutes);
 
-  // Protected routes
+  // Protected routes — CSRF + auth
   const api = new Hono();
+  api.use('*', csrfMiddleware(ALLOWED_ORIGINS));
   api.use('*', requireAuth);
   api.route('/collections',  collectionRoutes);
   api.route('/collections',  entryRoutes);
