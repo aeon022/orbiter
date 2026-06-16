@@ -1,0 +1,113 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="orbiter-client" current="/docs/client" prev={{ href: '/docs/collections-api', title: 'orbiter:collections' }} next={{ href: '/docs/typescript', title: 'TypeScript' }}>
+
+<h1>orbiter-client</h1>
+<p class="lead">A framework-agnostic Node.js client for Orbiter. Use it in SvelteKit, Next.js, Nuxt, Remix, or any other Node.js framework — no Vite virtual modules required.</p>
+
+<h2>Install</h2>
+<pre>npm install @a83/orbiter-client</pre>
+
+<h2>Quick start</h2>
+<pre>import &#123; createClient &#125; from '@a83/orbiter-client';
+
+const orb = createClient('./content.pod');
+
+const posts = await orb.getCollection('posts');
+const post  = await orb.getEntry('posts', 'my-post');
+</pre>
+
+<p>Call <code>createClient()</code> once at the module level (server singleton). The returned client keeps the SQLite connection open — opening once and reusing is faster than opening per request.</p>
+
+<h2>SvelteKit</h2>
+<pre>// src/lib/orbiter.js — create once, import everywhere
+import &#123; createClient &#125; from '@a83/orbiter-client';
+export const orb = createClient('./content.pod');
+</pre>
+<pre>// src/routes/blog/+page.server.js
+import &#123; orb &#125; from '$lib/orbiter';
+
+export async function load() &#123;
+  const posts = await orb.getCollection('posts');
+  return &#123; posts &#125;;
+&#125;
+</pre>
+<pre>// src/routes/blog/[slug]/+page.server.js
+import &#123; orb &#125; from '$lib/orbiter';
+
+export async function load(&#123; params &#125;) &#123;
+  const post = await orb.getEntry('posts', params.slug);
+  if (!post) error(404);
+  return &#123; post &#125;;
+&#125;
+</pre>
+
+<h2>Next.js (App Router)</h2>
+<pre>// lib/orbiter.js
+import &#123; createClient &#125; from '@a83/orbiter-client';
+export const orb = createClient('./content.pod');
+</pre>
+<pre>// app/blog/page.jsx  (Server Component)
+import &#123; orb &#125; from '@/lib/orbiter';
+
+export default async function BlogPage() &#123;
+  const posts = await orb.getCollection('posts');
+  return (
+    &lt;ul&gt;
+      &#123;posts.map(p => &lt;li key=&#123;p.slug&#125;&gt;&#123;p.data.title&#125;&lt;/li&gt;)&#125;
+    &lt;/ul&gt;
+  );
+&#125;
+</pre>
+<pre>// app/blog/[slug]/page.jsx
+import &#123; orb &#125; from '@/lib/orbiter';
+import &#123; notFound &#125; from 'next/navigation';
+
+export async function generateStaticParams() &#123;
+  const posts = await orb.getCollection('posts');
+  return posts.map(p => (&#123; slug: p.slug &#125;));
+&#125;
+
+export default async function PostPage(&#123; params &#125;) &#123;
+  const post = await orb.getEntry('posts', params.slug);
+  if (!post) notFound();
+  return &lt;article dangerouslySetInnerHTML=&#123;&#123; __html: post.data.body &#125;&#125; /&gt;;
+&#125;
+</pre>
+
+<div class="callout">In Next.js, the pod file must be on the same machine as the Node.js server. For static export (<code>next export</code>), use <code>createClient</code> inside <code>generateStaticParams</code> and page components — Next.js runs these at build time.</div>
+
+<h2>API</h2>
+
+<h3>createClient(podPath)</h3>
+<p>Opens the pod file and returns a client. <code>podPath</code> is resolved relative to <code>process.cwd()</code>.</p>
+
+<h3>orb.getCollection(name)</h3>
+<p>Returns all published entries (default locale) sorted by <code>sort_order</code>, then <code>updated_at</code>.</p>
+
+<h3>orb.getEntry(collection, slug)</h3>
+<p>Returns a single published entry by slug (default locale), or <code>null</code>.</p>
+
+<h3>orb.getLocaleCollection(name, locale)</h3>
+<p>Returns published entries for a specific locale.</p>
+<pre>const dePosts = await orb.getLocaleCollection('posts', 'de');</pre>
+
+<h3>orb.getLocaleEntry(collection, slug, locale)</h3>
+<p>Returns an entry in the requested locale, falling back to the default locale if no translation exists.</p>
+<pre>const post = await orb.getLocaleEntry('posts', 'my-post', 'de');</pre>
+
+<h3>orb.getPreviewEntry(collection, slug, previewToken)</h3>
+<p>Returns any entry (including drafts) if <code>previewToken</code> matches the site's preview token. Returns <code>null</code> on mismatch.</p>
+
+<h3>orb.locale / orb.locales</h3>
+<pre>orb.locale   // 'en'              — default locale from Settings
+orb.locales  // ['en', 'de', 'fr'] — all configured locales</pre>
+
+<h3>orb.close()</h3>
+<p>Closes the SQLite connection. Call on process shutdown if needed — in most long-lived server processes this is optional.</p>
+
+<h2>Relation fields</h2>
+<p>Relation fields are resolved automatically at query time — the UUID reference is replaced with the full entry object, identical to the <code>orbiter:collections</code> behaviour.</p>
+
+</DocsLayout>

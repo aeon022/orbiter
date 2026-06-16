@@ -1,0 +1,38 @@
+{
+  "name": "@a83/orbiter-client",
+  "version": "0.1.0",
+  "description": "Framework-agnostic client for Orbiter CMS — SvelteKit, Next.js, Nuxt, Remix",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "build": "echo 'No build step'"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "cms",
+    "orbiter",
+    "sveltekit",
+    "nextjs",
+    "headless-cms",
+    "sqlite"
+  ],
+  "author": "ABTEILUNG83",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aeon022/orbiter.git",
+    "directory": "packages/client"
+  },
+  "homepage": "https://github.com/aeon022/orbiter#readme",
+  "dependencies": {
+    "@a83/orbiter-core": "^0.3.1"
+  }
+}
