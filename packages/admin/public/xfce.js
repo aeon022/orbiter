@@ -65,6 +65,8 @@
       '<div class="xfce-sb-right">',
         '<button id="xfce-sb-palette-btn" class="xfce-sb-palette-btn" title="Command palette (⌘K)">⌘</button>',
         '<span class="xfce-sb-div">·</span>',
+        '<span id="xfce-sb-build" class="xfce-sb-build" title="Last build"></span>',
+        '<span id="xfce-sb-build-sep" class="xfce-sb-div" style="display:none">·</span>',
         '<a id="xfce-sb-user" href="/account.html" class="xfce-sb-user-link"></a>',
         '<span class="xfce-sb-div">·</span>',
         '<button id="xfce-sb-logout" class="xfce-sb-logout" title="Log out">⏻</button>',
@@ -215,6 +217,7 @@
 
   // ── Command Palette ───────────────────────────────────────────────────
   var palette, paletteInp, paletteResults, palActive = -1;
+  var _cmdHistory = [], _cmdHistIdx = -1;
 
   var NAV_DEST = {
     dashboard: '/dashboard.html', media: '/media.html', settings: '/settings.html',
@@ -247,10 +250,18 @@
 
     paletteInp.addEventListener('keydown', function (e) {
       var val = paletteInp.value.trim();
+      var inCmdMode = val.startsWith('>');
+
       if (e.key === 'Enter') {
-        if (val.startsWith('>')) {
+        if (inCmdMode) {
           e.preventDefault();
-          execPaletteCmd(val.slice(1).trim());
+          var cmd = val.slice(1).trim();
+          if (cmd) {
+            if (!_cmdHistory.length || _cmdHistory[0] !== cmd) _cmdHistory.unshift(cmd);
+            if (_cmdHistory.length > 30) _cmdHistory.pop();
+          }
+          _cmdHistIdx = -1;
+          execPaletteCmd(cmd);
         } else {
           var active = paletteResults.querySelector('.xfce-pal-item.pal-active');
           if (active && active.dataset.href) { location.href = active.dataset.href; closePalette(); }
@@ -259,16 +270,28 @@
             if (first) { location.href = first.dataset.href; closePalette(); }
           }
         }
-      } else if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        var items = paletteResults.querySelectorAll('.xfce-pal-item[data-href]');
-        palActive = Math.min(palActive + 1, items.length - 1);
-        updatePalActive(items);
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        var items = paletteResults.querySelectorAll('.xfce-pal-item[data-href]');
-        palActive = Math.max(palActive - 1, 0);
-        updatePalActive(items);
+        if (inCmdMode && _cmdHistory.length) {
+          _cmdHistIdx = Math.min(_cmdHistIdx + 1, _cmdHistory.length - 1);
+          paletteInp.value = '> ' + _cmdHistory[_cmdHistIdx];
+          renderPalette(paletteInp.value);
+        } else if (!inCmdMode) {
+          var items = paletteResults.querySelectorAll('.xfce-pal-item[data-href]');
+          palActive = Math.max(palActive - 1, 0);
+          updatePalActive(items);
+        }
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (inCmdMode && _cmdHistory.length) {
+          _cmdHistIdx = Math.max(_cmdHistIdx - 1, -1);
+          paletteInp.value = _cmdHistIdx < 0 ? '> ' : '> ' + _cmdHistory[_cmdHistIdx];
+          renderPalette(paletteInp.value);
+        } else if (!inCmdMode) {
+          var items = paletteResults.querySelectorAll('.xfce-pal-item[data-href]');
+          palActive = Math.min(palActive + 1, items.length - 1);
+          updatePalActive(items);
+        }
       } else if (e.key === 'Escape') {
         closePalette();
       }
@@ -480,11 +503,15 @@
         var results = d.results || (Array.isArray(d) ? d : []);
         if (!results.length) { palPrint('no results for “' + escHtml(term) + '”', 'muted'); return; }
         var html = results.slice(0, 15).map(function (r) {
-          var href = '/editor.html?collection=' + encodeURIComponent(r.collection || '') + '&id=' + encodeURIComponent(r.id || '');
-          return '<div class="xfce-pal-item" data-href="' + href + '">'
-            + '<span class="xfce-pal-icon">⌕</span>'
-            + '<span class="xfce-pal-label">' + escHtml(r.title || r.slug || r.id || '') + '</span>'
-            + '<span class="xfce-pal-hint-r">' + escHtml(r.collection || '') + '</span>'
+          var href = '/editor.html?collection=' + encodeURIComponent(r.collection || '') + '&slug=' + encodeURIComponent(r.slug || '');
+          var snippet = r.snippet ? '<div class=”xfce-pal-snippet”>' + escHtml(r.snippet) + '</div>' : '';
+          return '<div class=”xfce-pal-item xfce-pal-item--rich” data-href=”' + href + '”>'
+            + '<span class=”xfce-pal-icon”>⌕</span>'
+            + '<span class=”xfce-pal-item-body”>'
+            + '<span class=”xfce-pal-label”>' + escHtml(r.title || r.slug || '') + '</span>'
+            + snippet
+            + '</span>'
+            + '<span class=”xfce-pal-hint-r”>' + escHtml(r.label || r.collection || '') + '</span>'
             + '</div>';
         }).join('');
         palSetItems(html);
@@ -494,7 +521,7 @@
 
   function palBuild() {
     palPrint('triggering build…', 'muted');
-    fetch('/api/build', { method: 'POST', credentials: 'include' })
+    fetch('/api/build/trigger', { method: 'POST', credentials: 'include' })
       .then(function (r) { return r.json(); })
       .then(function (d) {
         paletteResults.innerHTML = '';
@@ -1036,6 +1063,9 @@
             item.addEventListener('mouseenter', function () { showColCreate(createHref, item); });
             item.addEventListener('mouseleave', function () { colCreateTimer = setTimeout(hideColCreate, 120); });
 
+            // Right-click context menu
+            addDockCtxMenu(item, col);
+
             colGroup.appendChild(item);
 
             // Add to palette fuzzy search and command list
@@ -1154,6 +1184,104 @@
     });
   }
 
+  // ── Build status in status bar ────────────────────────────────────────
+  function loadBuildStatus() {
+    fetch('/api/build/status', { credentials: 'include' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || !d.lastTriggered) return;
+        var el2 = document.getElementById('xfce-sb-build');
+        var sep = document.getElementById('xfce-sb-build-sep');
+        if (!el2) return;
+        var dt = new Date(d.lastTriggered.replace(' ', 'T'));
+        var now = new Date();
+        var diffM = Math.floor((now - dt) / 60000);
+        var label = diffM < 1 ? 'built now'
+          : diffM < 60 ? 'built ' + diffM + 'm ago'
+          : diffM < 1440 ? 'built ' + Math.floor(diffM / 60) + 'h ago'
+          : 'built ' + dt.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        el2.textContent = '◉ ' + label;
+        el2.title = 'Last build: ' + d.lastTriggered;
+        if (sep) sep.style.display = '';
+      });
+  }
+
+  // ── Dock right-click context menu ─────────────────────────────────────
+  var _ctxMenu = null;
+
+  function buildCtxMenu() {
+    _ctxMenu = document.createElement('div');
+    _ctxMenu.className = 'xfce-ctx-menu';
+    _ctxMenu.id = 'xfce-ctx-menu';
+    document.body.appendChild(_ctxMenu);
+    document.addEventListener('click', function (e) {
+      if (_ctxMenu && !_ctxMenu.contains(e.target)) closeCtxMenu();
+    }, true);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeCtxMenu();
+    });
+  }
+
+  function openCtxMenu(x, y, items) {
+    if (!_ctxMenu) buildCtxMenu();
+    _ctxMenu.innerHTML = items.map(function (it) {
+      return '<button class="xfce-ctx-item" data-href="' + (it.href || '') + '">'
+        + '<span class="xfce-ctx-icon">' + it.icon + '</span>'
+        + '<span>' + it.label + '</span>'
+        + '</button>';
+    }).join('');
+    _ctxMenu.querySelectorAll('.xfce-ctx-item').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var href = btn.dataset.href;
+        closeCtxMenu();
+        if (href) location.href = href;
+      });
+    });
+    var vw = window.innerWidth, vh = window.innerHeight;
+    _ctxMenu.style.display = 'block';
+    var w = _ctxMenu.offsetWidth, h = _ctxMenu.offsetHeight;
+    _ctxMenu.style.left = Math.min(x, vw - w - 8) + 'px';
+    _ctxMenu.style.top  = Math.min(y, vh - h - 8) + 'px';
+    _ctxMenu.classList.add('open');
+  }
+
+  function closeCtxMenu() {
+    if (!_ctxMenu) return;
+    _ctxMenu.classList.remove('open');
+    setTimeout(function () { if (_ctxMenu) _ctxMenu.style.display = 'none'; }, 120);
+  }
+
+  function addDockCtxMenu(item, col) {
+    item.addEventListener('contextmenu', function (e) {
+      e.preventDefault();
+      var entriesHref = col.singleton
+        ? '/editor.html?collection=' + encodeURIComponent(col.id) + '&singleton=1'
+        : '/entries.html?col=' + encodeURIComponent(col.id) + '&label=' + encodeURIComponent(col.label);
+      var newHref = '/editor.html?collection=' + encodeURIComponent(col.id);
+      openCtxMenu(e.clientX, e.clientY, [
+        { icon: '◫', label: 'View entries', href: entriesHref },
+        { icon: '+', label: 'New entry',    href: newHref },
+        { icon: '↓', label: 'Export JSON',  href: '' },
+      ]);
+      // Wire export separately (needs fetch, not href)
+      var exportBtn = _ctxMenu.querySelectorAll('.xfce-ctx-item')[2];
+      if (exportBtn) {
+        exportBtn.addEventListener('click', function (ev) {
+          ev.stopImmediatePropagation();
+          closeCtxMenu();
+          fetch('/api/terminal/export?col=' + encodeURIComponent(col.id) + '&format=json&drafts=0', { credentials: 'include' })
+            .then(function (r) { return r.blob(); })
+            .then(function (blob) {
+              var a = document.createElement('a');
+              a.href = URL.createObjectURL(blob);
+              a.download = col.id + '.json';
+              document.body.appendChild(a); a.click(); a.remove();
+            });
+        }, { once: true });
+      }
+    });
+  }
+
   // ── Init ──────────────────────────────────────────────────────────────
   function init() {
     buildStatusBar();
@@ -1161,6 +1289,7 @@
     buildDock();
     buildToastHost();
     loadInfo();
+    loadBuildStatus();
     bindKeys();
     initFocusMode();
     observeSavedFlash();

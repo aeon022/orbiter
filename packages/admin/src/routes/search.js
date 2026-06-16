@@ -29,6 +29,16 @@ searchRoutes.get('/recent', (c) => {
   return c.json(results);
 });
 
+function makeSnippet(body, q, maxLen) {
+  if (!body) return '';
+  const lower = body.toLowerCase();
+  const idx   = lower.indexOf(q);
+  if (idx < 0) return body.slice(0, maxLen) + (body.length > maxLen ? '…' : '');
+  const start = Math.max(0, idx - 30);
+  const end   = Math.min(body.length, idx + q.length + 60);
+  return (start > 0 ? '…' : '') + body.slice(start, end).trim() + (end < body.length ? '…' : '');
+}
+
 // GET /api/search?q=
 searchRoutes.get('/', (c) => {
   const q = (c.req.query('q') ?? '').trim().toLowerCase();
@@ -42,8 +52,8 @@ searchRoutes.get('/', (c) => {
     const entries = db.getEntries(col.id);
     for (const entry of entries) {
       const title = (entry.data?.title ?? entry.slug ?? '').toLowerCase();
-      const body  = (entry.data?.body  ?? '').toLowerCase();
-      if (title.includes(q) || body.includes(q) || entry.slug.includes(q)) {
+      const body  = entry.data?.body ?? '';
+      if (title.includes(q) || body.toLowerCase().includes(q) || entry.slug.includes(q)) {
         results.push({
           type:       'entry',
           collection: col.id,
@@ -51,6 +61,7 @@ searchRoutes.get('/', (c) => {
           slug:       entry.slug,
           title:      entry.data?.title ?? entry.slug,
           status:     entry.status,
+          snippet:    makeSnippet(body, q, 100),
         });
         if (results.length >= 20) break;
       }

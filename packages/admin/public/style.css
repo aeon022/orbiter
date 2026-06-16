@@ -2115,6 +2115,36 @@ a.xfce-sb-logo:hover     { opacity: .8; }
 .xfce-pal-muted   { color: var(--muted); opacity: .7; }
 .xfce-pal-cmd-hint { color: var(--accent); }
 
+/* search result with snippet */
+.xfce-pal-item--rich { align-items: flex-start; }
+.xfce-pal-item--rich .xfce-pal-icon { margin-top: 2px; }
+.xfce-pal-item-body  { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.xfce-pal-snippet    { font-size: 10px; color: var(--muted); font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Status bar build indicator ──────────────────────────── */
+.xfce-sb-build { font-size: 9px; font-family: var(--mono); color: var(--muted); white-space: nowrap; }
+
+/* ── Dock context menu ───────────────────────────────────── */
+.xfce-ctx-menu {
+  display: none; position: fixed; z-index: 100000;
+  background: var(--bg1); border: 1px solid var(--line);
+  border-top: 2px solid var(--accent);
+  border-radius: 8px; padding: 4px 0;
+  box-shadow: 0 4px 24px rgba(0,0,0,.25);
+  min-width: 160px;
+  opacity: 0; transform: scale(.96); transform-origin: top left;
+  transition: opacity .1s, transform .1s;
+}
+.xfce-ctx-menu.open { opacity: 1; transform: scale(1); }
+.xfce-ctx-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; background: none; border: none; cursor: pointer;
+  padding: 7px 14px; font-size: 12px; font-family: var(--mono);
+  color: var(--body); text-align: left; transition: background .1s;
+}
+.xfce-ctx-item:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--heading); }
+.xfce-ctx-icon { width: 16px; text-align: center; color: var(--accent); flex-shrink: 0; }
+
 /* ── Toast host (above dock) ─────────────────────────────── */
 .xfce-toast-host {
   position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
