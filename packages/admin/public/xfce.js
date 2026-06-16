@@ -1113,6 +1113,14 @@
         return;
       }
 
+      // / — open palette (when not typing in an input)
+      if (!mod && !e.shiftKey && !e.altKey && e.key === '/' && !isEditing(e.target)) {
+        e.preventDefault();
+        if (palette && palette.classList.contains('open')) closePalette();
+        else openPalette();
+        return;
+      }
+
       // ⌘⇧D — toggle HUD
       if (mod && e.shiftKey && (e.key === 'd' || e.key === 'D')) {
         e.preventDefault();
