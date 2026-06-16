@@ -63,6 +63,7 @@
       '</div>',
       '<div class="xfce-sb-center" id="xfce-sb-title"></div>',
       '<div class="xfce-sb-right">',
+        '<span id="xfce-sb-g-ind" class="xfce-sb-g-ind" style="display:none" title="g — type destination key">g_</span>',
         '<button id="xfce-sb-palette-btn" class="xfce-sb-palette-btn" title="Command palette (⌘K)">⌘</button>',
         '<span class="xfce-sb-div">·</span>',
         '<span id="xfce-sb-build" class="xfce-sb-build" title="Last build"></span>',
@@ -168,6 +169,30 @@
       openPalette();
     });
     toolsPopup.appendChild(palBtn);
+
+    var dockSep2 = document.createElement('div');
+    dockSep2.className = 'xfce-tools-sep';
+    toolsPopup.appendChild(dockSep2);
+
+    var dockPosBtn = el('button', 'xfce-tools-item');
+    dockPosBtn.id = 'xfce-dock-pos-btn';
+    function updateDockPosLabel() {
+      var pos = document.documentElement.dataset.dockPos || 'bottom';
+      dockPosBtn.innerHTML = '<span class="xfce-tools-icon">' + (pos === 'left' ? '⬌' : '⬍') + '</span>'
+        + '<span>Dock: ' + (pos === 'left' ? 'left' : 'bottom') + '</span>';
+    }
+    updateDockPosLabel();
+    dockPosBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var cur = document.documentElement.dataset.dockPos || 'bottom';
+      var next = cur === 'bottom' ? 'left' : 'bottom';
+      localStorage.setItem('orb_dock_pos', next);
+      document.documentElement.dataset.dockPos = next;
+      updateDockPosLabel();
+      toolsPopup.classList.remove('open');
+      _previewCache = {};
+    });
+    toolsPopup.appendChild(dockPosBtn);
     document.body.appendChild(toolsPopup);
     document.addEventListener('click', function () {
       toolsPopup.classList.remove('open');
@@ -187,32 +212,86 @@
     toolsPopup.classList.toggle('open');
   }
 
-  // ── Hover + badge above collection items ─────────────────────────────
-  var colCreateEl, colCreateTimer;
+  // ── Hover preview card above collection items ────────────────────────
+  var _previewEl = null, _previewTimer = null, _previewCache = {};
 
-  function buildColCreate() {
-    colCreateEl = el('a', 'xfce-col-create');
-    colCreateEl.id = 'xfce-col-create';
-    colCreateEl.textContent = '+';
-    colCreateEl.addEventListener('mouseenter', function () { clearTimeout(colCreateTimer); });
-    colCreateEl.addEventListener('mouseleave', function () { colCreateTimer = setTimeout(hideColCreate, 120); });
-    document.body.appendChild(colCreateEl);
+  function buildPreview() {
+    _previewEl = el('div', 'xfce-col-preview');
+    _previewEl.id = 'xfce-col-preview';
+    _previewEl.addEventListener('mouseenter', function () { clearTimeout(_previewTimer); });
+    _previewEl.addEventListener('mouseleave', function () { _previewTimer = setTimeout(hideColPreview, 150); });
+    document.body.appendChild(_previewEl);
   }
 
-  function showColCreate(href, itemEl) {
-    if (!colCreateEl) buildColCreate();
-    clearTimeout(colCreateTimer);
-    var dock = document.getElementById('xfce-dock');
-    var dockTop = dock ? dock.getBoundingClientRect().top : 0;
-    var itemRect = itemEl.getBoundingClientRect();
-    colCreateEl.href = href;
-    colCreateEl.style.left = Math.round(itemRect.left + itemRect.width / 2) + 'px';
-    colCreateEl.style.top  = Math.round(dockTop - 34) + 'px';
-    colCreateEl.classList.add('visible');
+  function showColPreview(col, itemEl) {
+    if (!_previewEl) buildPreview();
+    clearTimeout(_previewTimer);
+    _previewTimer = setTimeout(function () { _renderPreview(col, itemEl); }, 280);
   }
 
-  function hideColCreate() {
-    if (colCreateEl) colCreateEl.classList.remove('visible');
+  function _renderPreview(col, itemEl) {
+    var dock    = document.getElementById('xfce-dock');
+    var isLeft  = document.documentElement.dataset.dockPos === 'left';
+    var dockR   = dock ? dock.getBoundingClientRect() : { top: 0, right: 0 };
+    var itemR   = itemEl.getBoundingClientRect();
+
+    function place() {
+      if (isLeft) {
+        _previewEl.style.left = Math.round(dockR.right + 10) + 'px';
+        _previewEl.style.top  = Math.round(itemR.top + itemR.height / 2 - _previewEl.offsetHeight / 2) + 'px';
+        _previewEl.style.bottom = 'auto';
+      } else {
+        var cx = Math.round(itemR.left + itemR.width / 2);
+        _previewEl.style.left   = cx + 'px';
+        _previewEl.style.bottom = Math.round(window.innerHeight - dockR.top + 10) + 'px';
+        _previewEl.style.top    = 'auto';
+      }
+    }
+
+    var newHref     = '/editor.html?collection=' + encodeURIComponent(col.id);
+    var entriesHref = col.singleton
+      ? newHref + '&singleton=1'
+      : '/entries.html?col=' + encodeURIComponent(col.id) + '&label=' + encodeURIComponent(col.label);
+
+    function render(entries) {
+      var rows = entries.length
+        ? entries.slice(0, 3).map(function (e) {
+            var slug = e.slug || e.id || '';
+            var date = (e.updated_at || e.created_at || '').substring(5, 10);
+            var href = '/editor.html?collection=' + encodeURIComponent(col.id) + '&slug=' + encodeURIComponent(slug);
+            return '<a class="xfce-preview-row" href="' + href + '">'
+              + '<span class="xfce-preview-slug">' + escHtml(slug) + '</span>'
+              + '<span class="xfce-preview-date">' + date + '</span>'
+              + '</a>';
+          }).join('')
+        : '<div class="xfce-preview-empty">no entries yet</div>';
+      _previewEl.innerHTML =
+        '<div class="xfce-preview-head"><a href="' + entriesHref + '">' + escHtml(col.label) + '</a></div>'
+        + '<div class="xfce-preview-entries">' + rows + '</div>'
+        + '<a class="xfce-preview-new" href="' + newHref + '">+ new entry</a>';
+      _previewEl.classList.add('visible');
+      place();
+    }
+
+    if (_previewCache[col.id]) {
+      render(_previewCache[col.id]);
+      return;
+    }
+    _previewEl.innerHTML = '<div class="xfce-preview-loading">…</div>';
+    _previewEl.classList.add('visible');
+    place();
+    fetch('/api/collections/' + encodeURIComponent(col.id) + '/entries?limit=3', { credentials: 'include' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        var entries = d ? (d.entries || (Array.isArray(d) ? d : [])) : [];
+        _previewCache[col.id] = entries;
+        if (_previewEl.classList.contains('visible')) render(entries);
+      });
+  }
+
+  function hideColPreview() {
+    clearTimeout(_previewTimer);
+    if (_previewEl) _previewEl.classList.remove('visible');
   }
 
   // ── Command Palette ───────────────────────────────────────────────────
@@ -1000,19 +1079,25 @@
       if (focusedEl) exitFocusMode();
     }, true);
 
+    // Apply saved dock position
+    var _savedDockPos = localStorage.getItem('orb_dock_pos') || 'bottom';
+    document.documentElement.dataset.dockPos = _savedDockPos;
+
     // ── Magnification ─────────────────────────────────────────────────
-    function applyMag(cx) {
-      var items = dockInner.querySelectorAll('.xfce-dock-item');
+    function applyMag(cx, cy) {
+      var isLeft = document.documentElement.dataset.dockPos === 'left';
+      var items  = dockInner.querySelectorAll('.xfce-dock-item');
       items.forEach(function (item) {
         var r   = item.getBoundingClientRect();
-        var mid = r.left + r.width / 2;
-        var d   = Math.abs(cx - mid);
+        var mid = isLeft ? (r.top + r.height / 2) : (r.left + r.width / 2);
+        var pos = isLeft ? cy : cx;
+        var d   = Math.abs(pos - mid);
         var s   = d < 80 ? 1 + (1 - d / 80) * 0.50 : 1;
         item.style.setProperty('--ds', s.toFixed(3));
       });
     }
 
-    dock.addEventListener('mousemove', function (e) { applyMag(e.clientX); });
+    dock.addEventListener('mousemove', function (e) { applyMag(e.clientX, e.clientY); });
     dock.addEventListener('mouseleave', function () {
       dockInner.querySelectorAll('.xfce-dock-item').forEach(function (item) {
         item.style.setProperty('--ds', '1');
@@ -1056,12 +1141,9 @@
               item.appendChild(badge);
             }
 
-            // Hover shows + badge above this item
-            var createHref = col.singleton
-              ? '/editor.html?collection=' + encodeURIComponent(col.id) + '&singleton=1'
-              : '/editor.html?collection=' + encodeURIComponent(col.id);
-            item.addEventListener('mouseenter', function () { showColCreate(createHref, item); });
-            item.addEventListener('mouseleave', function () { colCreateTimer = setTimeout(hideColCreate, 120); });
+            // Hover shows preview card with recent entries
+            item.addEventListener('mouseenter', function () { showColPreview(col, item); });
+            item.addEventListener('mouseleave', function () { _previewTimer = setTimeout(hideColPreview, 150); });
 
             // Right-click context menu
             addDockCtxMenu(item, col);
@@ -1124,6 +1206,17 @@
   }
 
   // ── Keyboard shortcuts ────────────────────────────────────────────────
+  var _gPending = false, _gTimer = null;
+  var G_MAP = { d: '/dashboard.html', m: '/media.html', s: '/settings.html',
+                u: '/users.html',     b: '/build.html',  i: '/import.html',
+                h: '/schema.html',   a: '/account.html' };
+
+  function setGMode(on) {
+    _gPending = on;
+    var ind = document.getElementById('xfce-sb-g-ind');
+    if (ind) ind.style.display = on ? '' : 'none';
+  }
+
   function bindKeys() {
     // Capture-phase ⌘K: fires before admin-utils.js bubble-phase listener, stops it
     document.addEventListener('keydown', function (e) {
@@ -1146,8 +1239,23 @@
       // / — open palette (when not typing in an input; Shift+7 on DE keyboard also produces '/')
       if (!mod && !e.altKey && e.key === '/' && !isEditing(e.target)) {
         e.preventDefault();
+        setGMode(false); clearTimeout(_gTimer);
         if (palette && palette.classList.contains('open')) closePalette();
         else openPalette();
+        return;
+      }
+
+      // g — vim-style navigation prefix (g d = dashboard, g m = media, …)
+      if (!mod && !e.shiftKey && !e.altKey && e.key === 'g' && !isEditing(e.target)) {
+        e.preventDefault();
+        setGMode(true);
+        clearTimeout(_gTimer);
+        _gTimer = setTimeout(function () { setGMode(false); }, 1500);
+        return;
+      }
+      if (_gPending && !isEditing(e.target)) {
+        clearTimeout(_gTimer); setGMode(false);
+        if (G_MAP[e.key]) { e.preventDefault(); location.href = G_MAP[e.key]; }
         return;
       }
 

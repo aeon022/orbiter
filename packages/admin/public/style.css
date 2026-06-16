@@ -2028,23 +2028,47 @@ a.xfce-sb-logo:hover     { opacity: .8; }
 }
 .xfce-dock-item { position: relative; }
 
-/* Hover + badge above collection dock items */
-.xfce-col-create {
+/* Hover preview card above collection dock items */
+.xfce-col-preview {
   position: fixed; z-index: 99990;
-  width: 22px; height: 22px; border-radius: 50%;
-  background: var(--accent);
-  color: color-mix(in srgb, var(--bg1) 15%, #000);
-  font-size: 17px; line-height: 22px; font-weight: 300;
-  text-align: center; text-decoration: none;
   transform: translateX(-50%) translateY(6px);
   opacity: 0; pointer-events: none;
-  transition: opacity .13s, transform .13s cubic-bezier(.34,1.5,.64,1);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
-  user-select: none;
+  transition: opacity .15s, transform .15s cubic-bezier(.34,1.4,.64,1);
+  background: var(--bg1); border: 1px solid var(--line);
+  border-top: 2px solid var(--accent);
+  border-radius: 10px; min-width: 180px; max-width: 240px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.25);
+  overflow: hidden; font-family: var(--mono);
 }
-.xfce-col-create.visible {
+.xfce-col-preview.visible {
   opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto;
 }
+html[data-dock-pos="left"] .xfce-col-preview {
+  transform: translateX(0) translateY(-50%);
+}
+html[data-dock-pos="left"] .xfce-col-preview.visible {
+  transform: translateX(6px) translateY(-50%);
+}
+.xfce-preview-head { padding: 7px 12px; border-bottom: 1px solid var(--line); }
+.xfce-preview-head a { font-size: 10px; font-weight: 600; color: var(--accent); text-decoration: none; text-transform: uppercase; letter-spacing: .06em; }
+.xfce-preview-head a:hover { text-decoration: underline; }
+.xfce-preview-entries { padding: 4px 0; }
+.xfce-preview-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 12px; gap: 8px; text-decoration: none;
+  transition: background .1s;
+}
+.xfce-preview-row:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.xfce-preview-slug { font-size: 10px; color: var(--body); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.xfce-preview-date { font-size: 9px; color: var(--muted); flex-shrink: 0; }
+.xfce-preview-empty { padding: 6px 12px; font-size: 10px; color: var(--muted); }
+.xfce-preview-loading { padding: 10px 12px; font-size: 10px; color: var(--muted); }
+.xfce-preview-new {
+  display: block; padding: 6px 12px; font-size: 10px;
+  color: var(--accent); text-decoration: none; border-top: 1px solid var(--line);
+  transition: background .1s;
+}
+.xfce-preview-new:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
 
 /* ── Command Palette ─────────────────────────────────────── */
 .xfce-palette {
@@ -2123,6 +2147,38 @@ a.xfce-sb-logo:hover     { opacity: .8; }
 
 /* ── Status bar build indicator ──────────────────────────── */
 .xfce-sb-build { font-size: 9px; font-family: var(--mono); color: var(--muted); white-space: nowrap; }
+.xfce-sb-g-ind { font-size: 10px; font-family: var(--mono); color: var(--accent); font-weight: 600; letter-spacing: .05em; animation: xfce-blink .7s step-end infinite; }
+@keyframes xfce-blink { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+
+/* ── Left dock mode ───────────────────────────────────────── */
+html[data-style="xfce"][data-dock-pos="left"] .main {
+  padding-bottom: 20px !important;
+  padding-left: 100px !important;
+}
+html[data-style="xfce"][data-dock-pos="left"] .xfce-dock {
+  bottom: auto; left: 16px; top: 50%;
+  transform: translateY(-50%);
+  padding: 10px 6px;
+  align-items: center;
+}
+html[data-style="xfce"][data-dock-pos="left"] .xfce-dock-inner {
+  flex-direction: column; align-items: center; gap: 4px;
+}
+html[data-style="xfce"][data-dock-pos="left"] .xfce-dock-group {
+  flex-direction: column; align-items: center; gap: 4px;
+}
+html[data-style="xfce"][data-dock-pos="left"] .xfce-dock-sep {
+  width: 28px; height: 1px; margin: 2px 0;
+}
+html[data-style="xfce"][data-dock-pos="left"] .xfce-dock-item {
+  transform-origin: left center;
+}
+html[data-style="xfce"][data-dock-pos="left"] .xfce-toast-host {
+  bottom: 20px; left: 110px; transform: none;
+}
+html[data-style="xfce"][data-dock-pos="left"] .xfce-palette {
+  padding-bottom: 20px; padding-left: 100px; align-items: center;
+}
 
 /* ── Dock context menu ───────────────────────────────────── */
 .xfce-ctx-menu {
