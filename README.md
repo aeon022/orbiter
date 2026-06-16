@@ -27,29 +27,32 @@ your-site/
 
 You need **Node.js 20+** and **npm 10+**.
 
+### Option A — Scaffold a new project (recommended)
+
+```bash
+npx @a83/orbiter-cli init my-site
+cd my-site
+```
+
+The CLI creates a project folder, a `.pod` file with sample collections, and starts the admin automatically.
+
+Open **http://localhost:4322** and log in with `admin / admin`.
+
+### Option B — Run the demo repo
+
 ```bash
 git clone https://github.com/aeon022/orbiter.git
 cd orbiter
 npm install
 npm run seed   # creates apps/demo/demo.pod with sample content
-```
-
-Start the admin:
-
-```bash
 ORBITER_POD=$(pwd)/apps/demo/demo.pod npm run dev --workspace=packages/admin
 ```
 
-Open **http://localhost:4322** and log in:
-
-```
-Username: admin
-Password: admin
-```
+Open **http://localhost:4322** — login: `admin / admin`.
 
 The demo includes Posts, Pages, Authors, Events, and Categories — all pre-filled with sample content and draft/published entries.
 
-To also run the public demo site:
+To also run the public demo Astro site:
 
 ```bash
 npm run dev   # → http://localhost:8080
@@ -862,6 +865,25 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 
 ## Changelog
 
+### June 2026 · v0.3.20 — Multilingual (i18n) & Space Station mode
+
+**Multilingual content (i18n)**
+- New `locale TEXT NOT NULL DEFAULT ''` column in `_entries` — replaces the old `slug--locale` slug suffix convention.
+- First locale in `site.locales` (Settings → Language) maps to `locale = ''` for backwards compatibility; additional locales stored as their language code.
+- Locale tab bar in the editor: existing variants show as solid tabs, untranslated as dashed. Click a dashed tab to create that locale variant.
+- Locale filter tabs on the entries list — one tab per configured locale.
+- All admin API routes accept a `?locale=` query parameter (`GET`, `POST`, `PUT`, `DELETE`, restore, duplicate, status, bulk).
+- New endpoint: `GET /api/collections/:id/entries/:slug/locales` — list all locale variants of an entry.
+- `orbiter:collections` updated: `getCollection()` and `getEntry()` return default locale only; `getLocaleCollection(name, loc)` and `getLocaleEntry(collection, slug, loc)` use the locale column with automatic fallback.
+- Automatic migration — existing pods gain the `locale` column and updated `UNIQUE(collection_id, slug, locale)` constraint on first start.
+
+**Space Station mode**
+- New layout option: floating magnification dock (macOS-style, icons scale on hover), HUD status panel (stats + scratchpad/to-do), frosted glass page headers with contextual action buttons.
+- Toggle in Settings → Interface → Layout → Station.
+- Mobile: dock collapses to a native-feeling bottom tab bar on screens ≤ 768 px.
+- Settings page reflows into a two-column grid to reduce scrolling; Save button pinned in the glass header and repeated at the bottom.
+- Packages: `@a83/orbiter-core@0.3.9`, `@a83/orbiter-admin@0.3.20`, `@a83/orbiter-integration@0.3.8`.
+
 ### June 2026 · v0.3.14 — Scheduled Publishing, Comments, RSS/Sitemap, Entry Locking & Email Notifications
 
 **Scheduled publishing & content expiry**
@@ -944,7 +966,7 @@ The block editor gains full rich-media embedding:
 
 - Published `@a83/orbiter-core`, `@a83/orbiter-integration`, `@a83/orbiter-admin`, `@a83/orbiter-cli` to npm.
 - Block-based richtext editor with live Markdown preview, autosave, version history.
-- Per-entry locale variants (`slug--locale` convention), `getLocaleCollection()` and locale fallback.
+- Basic locale support via `slug--locale` slug convention (superseded in v0.3.20 by a dedicated `locale` column).
 - Relation fields resolved at build time into full Entry objects.
 - Multi-user auth — admin and editor roles, user management in the UI.
 - WordPress WXR importer — runs in the browser, no CLI needed.
@@ -960,11 +982,25 @@ The block editor gains full rich-media embedding:
 |-------|------|--------|
 | 01 | Ignition | ✅ Done — core DB, virtual modules, basic admin |
 | 02 | Bridge | ✅ Done — full admin UI, media library, auth |
-| 03 | Warp | ✅ Done — block editor, version history, themes, i18n, relations |
-| 04 | Orbit | ✅ Done — multi-user, per-entry i18n, CLI, PWA, npm publish |
-| 05 | Station | ✅ Done — S3 backend, external media links, docs site, auto-publish webhook |
+| 03 | Warp | ✅ Done — block editor, version history, themes, relations |
+| 04 | Orbit | ✅ Done — multi-user, CLI, PWA, npm publish |
+| 05 | Station | ✅ Done — S3 backend, external media, docs site, auto-publish webhook |
 | 06 | Horizon | ✅ Done — scheduled publishing, comments, RSS/sitemap, locking, email notifications |
-| 07 | Cosmos  | 🔄 In progress — demo instance, outgoing webhooks, 2FA |
+| 07 | Cosmos  | ✅ Done — Space Station mode, multilingual i18n (locale column), settings overhaul |
+| 08 | Frontier | 🔄 In progress — CLI improvements, runtime adapter, CSRF protection |
+
+### Next up (v0.4.x)
+
+- **CLI improvements** — `orbiter init` full scaffolding with Astro template, `orbiter add-user` interactive prompt, `orbiter export` to Markdown/JSON files
+- **CSRF protection** — CSRF tokens on all state-mutating admin routes
+- **SSR / runtime adapter** — `orbiter:collections` currently snapshots at build time; a runtime adapter for live content without rebuilding
+- **SvelteKit / Next.js integration** — the virtual module concept is framework-agnostic; Astro is first, others follow
+
+### v0.3.20 — released
+
+**Multilingual (i18n)** — `locale` column in `_entries`, locale tab bar in editor, `?locale=` on all API routes, `getLocaleCollection()` / `getLocaleEntry()` updated in `orbiter:collections`. Automatic migration from slug--locale convention.
+
+**Space Station mode** — floating magnification dock, HUD panel, glass page headers, settings two-column grid, mobile bottom tab bar.
 
 ### v0.3.14 — released
 
@@ -995,12 +1031,6 @@ The block editor gains full rich-media embedding:
 **Auto-publish webhook** — fires automatically on `draft → published` transition, not just manual trigger.
 
 **Documentation site** — full reference at [orbiter.sh/docs](https://orbiter.sh/docs), integrated into the landing page.
-
-### Later
-
-- **SSR / runtime mode** — `orbiter:collections` currently snapshots at build time; a runtime adapter for sites that need live content without rebuilding
-- **SvelteKit / Next.js integration** — the virtual module concept is framework-agnostic; Astro is first, others follow
-- **Orbiter Cloud** — hosted pod management for teams who don't want to self-host
 
 ---
 
