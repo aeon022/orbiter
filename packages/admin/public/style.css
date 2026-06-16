@@ -2063,12 +2063,17 @@ html[data-dock-pos="left"] .xfce-col-preview.visible {
 .xfce-preview-date { font-size: 9px; color: var(--muted); flex-shrink: 0; }
 .xfce-preview-empty { padding: 6px 12px; font-size: 10px; color: var(--muted); }
 .xfce-preview-loading { padding: 10px 12px; font-size: 10px; color: var(--muted); }
-.xfce-preview-new {
-  display: block; padding: 6px 12px; font-size: 10px;
-  color: var(--accent); text-decoration: none; border-top: 1px solid var(--line);
-  transition: background .1s;
+.xfce-preview-actions {
+  display: flex; border-top: 1px solid var(--line);
 }
-.xfce-preview-new:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.xfce-preview-action {
+  flex: 1; padding: 6px 8px; font-size: 10px; font-family: var(--mono);
+  color: var(--accent); text-decoration: none; text-align: center;
+  background: none; border: none; cursor: pointer;
+  transition: background .1s; white-space: nowrap;
+}
+.xfce-preview-action + .xfce-preview-action { border-left: 1px solid var(--line); }
+.xfce-preview-action:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
 
 /* ── Command Palette ─────────────────────────────────────── */
 .xfce-palette {
@@ -2147,8 +2152,13 @@ html[data-dock-pos="left"] .xfce-col-preview.visible {
 
 /* ── Status bar build indicator ──────────────────────────── */
 .xfce-sb-build { font-size: 9px; font-family: var(--mono); color: var(--muted); white-space: nowrap; }
-.xfce-sb-g-ind { font-size: 10px; font-family: var(--mono); color: var(--accent); font-weight: 600; letter-spacing: .05em; animation: xfce-blink .7s step-end infinite; }
-@keyframes xfce-blink { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+.xfce-sb-g-ind {
+  font-size: 10px; font-family: var(--mono); font-weight: 700; white-space: nowrap;
+  color: var(--bg1); background: var(--accent);
+  border-radius: 4px; padding: 1px 6px; letter-spacing: .04em;
+  animation: xfce-blink .6s step-end infinite;
+}
+@keyframes xfce-blink { 0%,100% { opacity:1; } 50% { opacity:.4; } }
 
 /* ── Left dock mode ───────────────────────────────────────── */
 html[data-style="xfce"][data-dock-pos="left"] .main {
@@ -2179,27 +2189,12 @@ html[data-style="xfce"][data-dock-pos="left"] .xfce-toast-host {
 html[data-style="xfce"][data-dock-pos="left"] .xfce-palette {
   padding-bottom: 20px; padding-left: 100px; align-items: center;
 }
-
-/* ── Dock context menu ───────────────────────────────────── */
-.xfce-ctx-menu {
-  display: none; position: fixed; z-index: 100000;
-  background: var(--bg1); border: 1px solid var(--line);
-  border-top: 2px solid var(--accent);
-  border-radius: 8px; padding: 4px 0;
-  box-shadow: 0 4px 24px rgba(0,0,0,.25);
-  min-width: 160px;
-  opacity: 0; transform: scale(.96); transform-origin: top left;
-  transition: opacity .1s, transform .1s;
+html[data-style="xfce"][data-dock-pos="left"] .xfce-tools-popup {
+  bottom: auto;
 }
-.xfce-ctx-menu.open { opacity: 1; transform: scale(1); }
-.xfce-ctx-item {
-  display: flex; align-items: center; gap: 10px;
-  width: 100%; background: none; border: none; cursor: pointer;
-  padding: 7px 14px; font-size: 12px; font-family: var(--mono);
-  color: var(--body); text-align: left; transition: background .1s;
+html[data-style="xfce"][data-dock-pos="left"] .xfce-ws-overlay {
+  bottom: auto; left: 110px; top: 50%; transform: translateY(-50%);
 }
-.xfce-ctx-item:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--heading); }
-.xfce-ctx-icon { width: 16px; text-align: center; color: var(--accent); flex-shrink: 0; }
 
 /* ── Toast host (above dock) ─────────────────────────────── */
 .xfce-toast-host {

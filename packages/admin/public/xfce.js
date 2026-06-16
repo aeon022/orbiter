@@ -63,7 +63,7 @@
       '</div>',
       '<div class="xfce-sb-center" id="xfce-sb-title"></div>',
       '<div class="xfce-sb-right">',
-        '<span id="xfce-sb-g-ind" class="xfce-sb-g-ind" style="display:none" title="g — type destination key">g_</span>',
+        '<span id="xfce-sb-g-ind" class="xfce-sb-g-ind" style="display:none" title="g mode: d=dashboard m=media s=settings u=users b=build i=import h=schema a=account">g ›</span>',
         '<button id="xfce-sb-palette-btn" class="xfce-sb-palette-btn" title="Command palette (⌘K)">⌘</button>',
         '<span class="xfce-sb-div">·</span>',
         '<span id="xfce-sb-build" class="xfce-sb-build" title="Last build"></span>',
@@ -204,10 +204,23 @@
 
   function toggleToolsPopup() {
     if (!toolsPopup) buildToolsPopup();
-    var btn = document.getElementById('xfce-tools-btn');
-    if (btn) {
-      var rect = btn.getBoundingClientRect();
-      toolsPopup.style.left = Math.round(rect.left + rect.width / 2) + 'px';
+    var btn  = document.getElementById('xfce-tools-btn');
+    var dock = document.getElementById('xfce-dock');
+    var isLeft = document.documentElement.dataset.dockPos === 'left';
+    if (btn && dock) {
+      var bRect = btn.getBoundingClientRect();
+      var dRect = dock.getBoundingClientRect();
+      if (isLeft) {
+        toolsPopup.style.left   = Math.round(dRect.right + 10) + 'px';
+        toolsPopup.style.top    = Math.round(bRect.top + bRect.height / 2) + 'px';
+        toolsPopup.style.bottom = 'auto';
+        toolsPopup.style.transform = 'translateY(-50%)';
+      } else {
+        toolsPopup.style.left      = Math.round(bRect.left + bRect.width / 2) + 'px';
+        toolsPopup.style.top       = '';
+        toolsPopup.style.bottom    = '';
+        toolsPopup.style.transform = '';
+      }
     }
     toolsPopup.classList.toggle('open');
   }
@@ -268,7 +281,23 @@
       _previewEl.innerHTML =
         '<div class="xfce-preview-head"><a href="' + entriesHref + '">' + escHtml(col.label) + '</a></div>'
         + '<div class="xfce-preview-entries">' + rows + '</div>'
-        + '<a class="xfce-preview-new" href="' + newHref + '">+ new entry</a>';
+        + '<div class="xfce-preview-actions">'
+        +   '<a class="xfce-preview-action" href="' + newHref + '">+ new entry</a>'
+        +   '<a class="xfce-preview-action" href="' + entriesHref + '">◫ view all</a>'
+        +   '<button class="xfce-preview-action xfce-preview-export" data-col="' + escHtml(col.id) + '">↓ export</button>'
+        + '</div>';
+      var expBtn = _previewEl.querySelector('.xfce-preview-export');
+      if (expBtn) expBtn.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        fetch('/api/terminal/export?col=' + encodeURIComponent(col.id) + '&format=json&drafts=0', { credentials: 'include' })
+          .then(function (r) { return r.blob(); })
+          .then(function (blob) {
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob); a.download = col.id + '.json';
+            document.body.appendChild(a); a.click(); a.remove();
+          });
+        hideColPreview();
+      });
       _previewEl.classList.add('visible');
       place();
     }
@@ -1145,9 +1174,6 @@
             item.addEventListener('mouseenter', function () { showColPreview(col, item); });
             item.addEventListener('mouseleave', function () { _previewTimer = setTimeout(hideColPreview, 150); });
 
-            // Right-click context menu
-            addDockCtxMenu(item, col);
-
             colGroup.appendChild(item);
 
             // Add to palette fuzzy search and command list
@@ -1314,81 +1340,6 @@
       });
   }
 
-  // ── Dock right-click context menu ─────────────────────────────────────
-  var _ctxMenu = null;
-
-  function buildCtxMenu() {
-    _ctxMenu = document.createElement('div');
-    _ctxMenu.className = 'xfce-ctx-menu';
-    _ctxMenu.id = 'xfce-ctx-menu';
-    document.body.appendChild(_ctxMenu);
-    document.addEventListener('click', function (e) {
-      if (_ctxMenu && !_ctxMenu.contains(e.target)) closeCtxMenu();
-    }, true);
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') closeCtxMenu();
-    });
-  }
-
-  function openCtxMenu(x, y, items) {
-    if (!_ctxMenu) buildCtxMenu();
-    _ctxMenu.innerHTML = items.map(function (it) {
-      return '<button class="xfce-ctx-item" data-href="' + (it.href || '') + '">'
-        + '<span class="xfce-ctx-icon">' + it.icon + '</span>'
-        + '<span>' + it.label + '</span>'
-        + '</button>';
-    }).join('');
-    _ctxMenu.querySelectorAll('.xfce-ctx-item').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var href = btn.dataset.href;
-        closeCtxMenu();
-        if (href) location.href = href;
-      });
-    });
-    var vw = window.innerWidth, vh = window.innerHeight;
-    _ctxMenu.style.display = 'block';
-    var w = _ctxMenu.offsetWidth, h = _ctxMenu.offsetHeight;
-    _ctxMenu.style.left = Math.min(x, vw - w - 8) + 'px';
-    _ctxMenu.style.top  = Math.min(y, vh - h - 8) + 'px';
-    _ctxMenu.classList.add('open');
-  }
-
-  function closeCtxMenu() {
-    if (!_ctxMenu) return;
-    _ctxMenu.classList.remove('open');
-    setTimeout(function () { if (_ctxMenu) _ctxMenu.style.display = 'none'; }, 120);
-  }
-
-  function addDockCtxMenu(item, col) {
-    item.addEventListener('contextmenu', function (e) {
-      e.preventDefault();
-      var entriesHref = col.singleton
-        ? '/editor.html?collection=' + encodeURIComponent(col.id) + '&singleton=1'
-        : '/entries.html?col=' + encodeURIComponent(col.id) + '&label=' + encodeURIComponent(col.label);
-      var newHref = '/editor.html?collection=' + encodeURIComponent(col.id);
-      openCtxMenu(e.clientX, e.clientY, [
-        { icon: '◫', label: 'View entries', href: entriesHref },
-        { icon: '+', label: 'New entry',    href: newHref },
-        { icon: '↓', label: 'Export JSON',  href: '' },
-      ]);
-      // Wire export separately (needs fetch, not href)
-      var exportBtn = _ctxMenu.querySelectorAll('.xfce-ctx-item')[2];
-      if (exportBtn) {
-        exportBtn.addEventListener('click', function (ev) {
-          ev.stopImmediatePropagation();
-          closeCtxMenu();
-          fetch('/api/terminal/export?col=' + encodeURIComponent(col.id) + '&format=json&drafts=0', { credentials: 'include' })
-            .then(function (r) { return r.blob(); })
-            .then(function (blob) {
-              var a = document.createElement('a');
-              a.href = URL.createObjectURL(blob);
-              a.download = col.id + '.json';
-              document.body.appendChild(a); a.click(); a.remove();
-            });
-        }, { once: true });
-      }
-    });
-  }
 
   // ── Init ──────────────────────────────────────────────────────────────
   function init() {
