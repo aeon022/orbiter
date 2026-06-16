@@ -333,17 +333,20 @@ The integration injects a complete admin UI under `/orbiter` via Astro's `inject
 ## `orbiter:collections` API
 
 ```ts
-// All published entries in a collection
+// All published entries in default locale
 getCollection(name: string): Promise<Entry[]>
 
-// Single entry by slug
+// Single entry by slug (default locale)
 getEntry(collection: string, slug: string): Promise<Entry | null>
 
-// All entries for a specific locale (slug--locale variants)
-getLocaleCollection(name: string, locale?: string): Promise<Entry[]>
+// All published entries for a specific locale
+getLocaleCollection(name: string, locale: string): Promise<Entry[]>
 
-// Locale variant, falls back to base entry if variant doesn't exist
-getLocaleEntry(collection: string, baseSlug: string, locale: string): Promise<Entry | null>
+// Entry for a specific locale, falls back to default locale if not translated
+getLocaleEntry(collection: string, slug: string, locale: string): Promise<Entry | null>
+
+// Preview a draft entry (requires preview token from Settings → API)
+getPreviewEntry(collection: string, slug: string, token: string): Promise<Entry | null>
 
 // Configured locales (from Settings → Language)
 locale: string    // default locale, e.g. "en"
@@ -547,22 +550,22 @@ No CLI required — the entire import runs in the browser via the admin UI.
 
 ## Multilingual (i18n)
 
-Orbiter uses a `slug--locale` convention:
+Each entry has a `locale` field in the database. The first locale in **Settings → Language → Locales** maps to the default (`locale = ''`), additional locales are stored as their language code (`'de'`, `'fr'`, etc.).
 
-```
-my-post          ← default / primary entry
-my-post--de      ← German variant
-my-post--fr      ← French variant
-```
-
-Configure locales in **Settings → Language** (`locale` + `locales`). The locale switcher appears automatically in the entry editor.
+Configure locales in **Settings → Language** — the locale switcher appears automatically in the entry editor. Create translation variants from the locale tabs; the slug stays the same across all locales.
 
 ```astro
 ---
-import { getLocaleCollection, getLocaleEntry, locales } from 'orbiter:collections';
+import { getCollection, getLocaleCollection, getLocaleEntry, locales } from 'orbiter:collections';
 
-const posts = await getLocaleCollection('posts', 'de');
-const post  = await getLocaleEntry('posts', 'my-post', 'de'); // falls back to base
+// Default locale only
+const posts = await getCollection('posts');
+
+// All German posts
+const dePosts = await getLocaleCollection('posts', 'de');
+
+// A specific entry in German, falls back to default locale if not translated
+const post = await getLocaleEntry('posts', 'my-post', 'de');
 ---
 ```
 
@@ -570,12 +573,14 @@ Static paths for multilingual sites:
 
 ```astro
 export async function getStaticPaths() {
-  const posts = await getCollection('posts');
-  const base  = posts.filter(p => !p.slug.includes('--'));
-  return base.flatMap(post =>
+  const posts = await getCollection('posts');          // default locale entries
+  return posts.flatMap(post =>
     locales.map(loc => ({ params: { slug: post.slug, lang: loc } }))
   );
 }
+
+const { lang, slug } = Astro.params;
+const post = await getLocaleEntry('posts', slug, lang); // falls back to default
 ```
 
 ---
@@ -612,6 +617,8 @@ Entry counts per collection, recently edited entries, persistent scratchpad + to
 ### Entry editor
 All schema fields rendered as inputs. Richtext block editor with live Markdown preview, autosave, version history, draft/published toggle. Inline image blocks with float alignment (left/right/center/full). Video embedding (YouTube, Vimeo, mp4). Media picker with three tabs: Library (browse pod), From URL (server-side import from Dropbox/Drive/OneDrive), External link (store URL reference without fetching). Relation picker, conditional field visibility. Required field validation before save. Scheduled publishing (set `publish_at`) and content expiry (`unpublish_at`). Per-entry editorial comments with resolve/unresolve. Entry locking — warns when another user is already editing the same entry. Version history with restore per snapshot.
 
+**Multilingual:** When locales are configured (Settings → Language), a locale tab bar appears below the editor toolbar. Each tab shows existing locale variants; dashed tabs are untranslated. Click a dashed tab to create that translation variant.
+
 ### Media library
 Upload, browse, and manage files. Images, video, PDF, and any file type. Served at `/orbiter/media/[id]` — BLOB, disk file, or CDN redirect depending on configured backend. Folder categories, type filter, inline image and video preview, copy URL, alt text. Automatic image optimization on upload (resize + compress via sharp, configurable in Settings).
 
@@ -619,7 +626,7 @@ Upload, browse, and manage files. Images, video, PDF, and any file type. Served 
 Add, edit, delete, and reorder fields on any collection. Changes take effect immediately — no migration or restart needed. **Export schema** as JSON and **import** from file to copy schemas between collections or pods.
 
 ### Entries list
-Trash (soft delete + restore + permanent delete), activity log, bulk actions (publish/draft/delete/restore), drag-to-sort, scheduled status tab. **CSV export and import** per collection for bulk content management.
+Trash (soft delete + restore + permanent delete), activity log, bulk actions (publish/draft/delete/restore), drag-to-sort, scheduled status tab. **CSV export and import** per collection for bulk content management. When locales are configured, locale filter tabs appear in the filter bar.
 
 ### Command palette
 `⌘ K` / `Ctrl K` — fuzzy search across all content and navigation from any admin page.
@@ -634,7 +641,7 @@ Three themes × two schemes (dark/light) × two layouts, switchable in Settings:
 | **Zen** | Japandi — slate, mauve, moss | Japandi light |
 | **Catppuccin** | Mocha | Latte |
 
-**Layouts:** Classic (grid) or Glass (frosted panels, backdrop blur, animated gradient orbs). Glass is the default. Preference saved to `localStorage`.
+**Layouts:** Classic (sidebar + content grid) or **Station** (Space Station mode — floating magnification dock, HUD panel with stats/notes, frosted glass page headers). Layout and theme saved to `localStorage`.
 
 ### PWA
 The admin is installable as a Progressive Web App on mobile and desktop. Service worker caches assets, offline page shown when disconnected.

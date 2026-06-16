@@ -1,0 +1,44 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Appearance & Themes" current="/docs/appearance" prev={{ href: '/docs/i18n', title: 'Multilingual (i18n)' }} next={{ href: '/docs/media', title: 'Media library' }}>
+
+<h1>Appearance &amp; Themes</h1>
+<p class="lead">Three themes, two colour schemes, and two distinct layout modes — including Space Station mode with its floating dock and mobile tab bar.</p>
+
+<h2>Themes</h2>
+<p>Switch themes in <strong>Settings → Interface</strong>. The preference is saved to <code>localStorage</code> and takes effect immediately — no reload needed.</p>
+
+<table>
+  <thead><tr><th>Theme</th><th>Dark</th><th>Light</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Space</strong></td><td>Space Station HUD — cyan + electric blue</td><td>Solar Command — ice blue, clean panels</td></tr>
+    <tr><td><strong>Zen</strong></td><td>Japandi — slate, mauve, moss</td><td>Japandi light</td></tr>
+    <tr><td><strong>Catppuccin</strong></td><td>Mocha</td><td>Latte</td></tr>
+  </tbody>
+</table>
+
+<h2>Space Station mode</h2>
+<p>Space Station mode is a separate layout built for the Space theme. It replaces the left sidebar with a floating magnification dock similar to macOS, adds a HUD status bar at the top, and includes a sidebar with a live notes widget and to-do list.</p>
+
+<p>Enable it in <strong>Settings → Interface → Layout → Station</strong>.</p>
+
+<h3>Floating dock</h3>
+<p>The dock sits at the bottom of the screen. Icons magnify on hover (macOS-style). Navigation, build trigger, tools, and theme toggle are all in the dock. On mobile, the dock collapses into a native-feeling bottom tab bar.</p>
+
+<h3>HUD panel</h3>
+<p>A collapsible right panel shows site stats (entry count, published count, last build time) and the scratchpad + to-do widget. Toggle it with the HUD button in the dock.</p>
+
+<h3>Glass page headers</h3>
+<p>Each page gets a frosted glass header bar with the page title and contextual action buttons (e.g. "Save settings" on the settings page, "New entry" on the entries list). This keeps the primary action always visible without scrolling.</p>
+
+<h3>Mobile layout</h3>
+<p>On screens narrower than 768 px, Station mode automatically switches to a bottom tab bar with five tabs: Dashboard, Entries, Media, Schema, and Tools. The dock magnification effect is disabled on touch devices.</p>
+
+<h2>Classic layout</h2>
+<p>The default (non-Station) layout uses a fixed left sidebar and full-width content area. It supports all three themes and both colour schemes.</p>
+
+<h2>Glassmorphism panels</h2>
+<p>All themes support a <strong>Glass</strong> surface mode — frosted panels with backdrop blur and animated gradient orbs in the background. Switch between Glass and Solid in Settings. Glass is the default.</p>
+
+</DocsLayout>

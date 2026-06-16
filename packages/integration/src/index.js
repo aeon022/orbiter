@@ -221,27 +221,27 @@ export const locale = ${JSON.stringify(defaultLocale)};
 export const locales = ${JSON.stringify(locales)};
 
 export function getCollection(name) {
-  return Promise.resolve(collections[name] ?? []);
+  return Promise.resolve((collections[name] ?? []).filter(e => (e.locale ?? '') === ''));
 }
 
 export function getEntry(collection, slug) {
   const entries = collections[collection] ?? [];
-  return Promise.resolve(entries.find(e => e.slug === slug) ?? null);
+  return Promise.resolve(entries.find(e => e.slug === slug && (e.locale ?? '') === '') ?? null);
 }
 
 export function getLocaleCollection(name, loc) {
-  const sep = '--';
   const all = collections[name] ?? [];
-  if (!loc) return Promise.resolve(all.filter(e => !e.slug.includes(sep)));
-  return Promise.resolve(all.filter(e => e.slug.endsWith(sep + loc)));
+  // First locale in the locales array maps to locale='' in the DB
+  const dbLoc = (!loc || loc === locales[0]) ? '' : loc;
+  return Promise.resolve(all.filter(e => (e.locale ?? '') === dbLoc));
 }
 
 export function getLocaleEntry(collection, baseSlug, loc) {
-  const sep = '--';
   const entries = collections[collection] ?? [];
-  const variant = loc ? entries.find(e => e.slug === baseSlug + sep + loc) : null;
+  const dbLoc = (!loc || loc === locales[0]) ? '' : loc;
+  const variant = entries.find(e => e.slug === baseSlug && (e.locale ?? '') === dbLoc);
   if (variant) return Promise.resolve(variant);
-  return Promise.resolve(entries.find(e => e.slug === baseSlug) ?? null);
+  return Promise.resolve(entries.find(e => e.slug === baseSlug && (e.locale ?? '') === '') ?? null);
 }
 
 export async function getPreviewEntry(collection, slug, previewToken) {

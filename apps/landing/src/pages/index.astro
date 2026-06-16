@@ -23,6 +23,8 @@ const features = [
   { icon: '💬', title: 'Editorial comments',          body: 'Per-entry comment thread in the editor. Post, resolve, delete. Optional email notification on new comments via SMTP.' },
   { icon: '⌘', title: 'Command palette',              body: '<code>⌘K</code> fuzzy search across all content and navigation. Installable as a PWA on mobile and desktop.' },
   { icon: '👥', title: 'Multi-user & roles',           body: 'Admin and editor roles. Entry locking warns when two editors open the same entry simultaneously. Manage users in the UI.' },
+  { icon: '⌾', title: 'Multilingual (i18n)',           body: 'Per-entry locale variants — same slug, separate locale columns. Configure locales in Settings, translate entries via locale tabs in the editor. <code>getLocaleCollection()</code> and <code>getLocaleEntry()</code> with automatic fallback.' },
+  { icon: '◉', title: 'Space Station mode',           body: 'A dark glassmorphism layout with a floating magnification dock, HUD status bar, sidebar widgets, and a full mobile tab-bar layout. Three themes × two colour schemes, switchable in one click.' },
 ];
 
 const tradeoffs = [
@@ -395,6 +397,10 @@ const faqs = [
         <div class="screenshot-frame"><img src="/screenshots/import.webp" alt="" width="1390" height="839" loading="lazy" /></div>
         <div class="screenshot-caption">Import Tool</div>
       </button>
+      <button class="screenshot-thumb" data-src="/screenshots/xfce-editor-locale.webp" data-caption="Multilingual editor — locale tab bar with DE / EN / FR variants, dashed tab = untranslated" aria-label="i18n locale editor">
+        <div class="screenshot-frame"><img src="/screenshots/xfce-editor-locale.webp" alt="" width="1440" height="900" loading="lazy" /></div>
+        <div class="screenshot-caption">i18n locale switcher</div>
+      </button>
     </div>
   </section>
 
@@ -454,7 +460,22 @@ const faqs = [
         <div class="update-date">Jun<br />2026</div>
         <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">v0.3.14 — New</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">v0.3.20 — New</div>
+          <div class="update-title">Space Station mode, multilingual i18n & settings overhaul</div>
+          <ul class="update-items">
+            <li><strong>Space Station mode</strong> — a distinct admin layout: floating magnification dock (macOS-style), HUD status-bar panel with stats and notes, frosted glass page headers with contextual action buttons. Toggle in Settings → Interface → Layout.</li>
+            <li><strong>Mobile tab bar</strong> — in Station mode, the dock collapses to a native-feeling bottom tab bar on screens under 768 px. Stats stack to a 2×2 grid; cards resize automatically.</li>
+            <li><strong>Multilingual (i18n)</strong> — per-entry locale variants using a dedicated <code>locale</code> column (not slug suffixes). Configure locales in Settings → Language; locale tabs appear in the editor automatically. <code>getLocaleCollection()</code> and <code>getLocaleEntry()</code> in <code>orbiter:collections</code> with automatic fallback to the default locale.</li>
+            <li><strong>Settings two-column layout</strong> — settings groups reflow into a responsive two-column grid to reduce scrolling. Save button pinned to the page header and repeated at the bottom.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="update-card reveal">
+        <div class="update-date">Jun<br />2026</div>
+        <div class="update-dot"></div>
+        <div class="update-body">
+          <div class="update-tag">v0.3.14</div>
           <div class="update-title">Scheduled publishing, comments, RSS/sitemap, entry locking & email notifications</div>
           <ul class="update-items">
             <li><strong>Scheduled publishing</strong> — set a <code>publish_at</code> date on any entry. A server-side scheduler auto-publishes and fires the build webhook. Also supports <code>unpublish_at</code> to revert published entries to draft at a future date.</li>
@@ -1051,11 +1072,10 @@ ORBITER_POD=$(pwd)/content.pod npm start</code></pre>
     </div>
   </section>
 
-  <!-- COMING UP -->
-  <section class="coming-section" id="coming-up">
-    <div class="ai-kicker reveal"><span class="ai-dot"></span>In development</div>
+  <!-- STATION MODE -->
+  <section class="coming-section" id="station-mode">
     <h2 class="reveal">Space Station mode.</h2>
-    <p class="section-lead reveal reveal-delay-1">A new look for the admin — dark glassmorphism, floating dock, focus mode, and a full mobile layout. Switching themes is one click.</p>
+    <p class="section-lead reveal reveal-delay-1">A distinct layout for the admin — dark glassmorphism, floating magnification dock, HUD status bar, notes &amp; to-do sidebar, and a full mobile tab-bar layout. Switch themes in one click from Settings.</p>
 
     <div class="coming-layout reveal reveal-delay-2">
       <div class="coming-main">
