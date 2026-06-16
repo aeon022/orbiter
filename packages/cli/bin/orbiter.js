@@ -33,11 +33,16 @@ function printHelp() {
   Usage: orbiter <command> [options]
 
   Commands:
-    init          Scaffold a new Orbiter + Astro project
-    add-user      Add a user to an existing .pod file
-    export        Export content from a .pod file to JSON
-    unpack        Extract media BLOBs to files (pod → git mode)
-    pack          Re-insert media files as BLOBs (git → server mode)
+    init                           Scaffold a new Orbiter + Astro project
+    add-user [--pod <path>]        Add a user to an existing .pod file
+    export   [--pod <path>]        Export content from a .pod file
+             [--out <dir>]           Output directory (default: ./export)
+             [--format json|md]      Output format (default: json)
+             [--collection <id>]     Export a single collection
+             [--locale <code>]       Export a specific locale only
+             [--drafts]              Include draft entries
+    unpack   [--pod <path>]        Extract media BLOBs to files (pod → git mode)
+    pack     [--pod <path>]        Re-insert media files as BLOBs (git → server mode)
 
   Options:
     -h, --help    Show this help message

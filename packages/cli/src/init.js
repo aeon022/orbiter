@@ -47,8 +47,9 @@ export async function run(args) {
 
   // ── Create project structure ──────────────────────────
   console.log(`\n  Creating project…`);
-  mkdirSync(join(targetDir, 'src/pages'), { recursive: true });
-  mkdirSync(join(targetDir, 'public'),    { recursive: true });
+  mkdirSync(join(targetDir, 'src/pages'),                      { recursive: true });
+  mkdirSync(join(targetDir, 'public'),                         { recursive: true });
+  mkdirSync(join(targetDir, '.github/workflows'),              { recursive: true });
 
   // package.json
   const pkgRaw = readFileSync(join(templatesDir, 'package.json'), 'utf8');
@@ -57,15 +58,23 @@ export async function run(args) {
   // astro.config.mjs
   copyFileSync(join(templatesDir, 'astro.config.mjs'), join(targetDir, 'astro.config.mjs'));
 
+  // tsconfig.json
+  copyFileSync(join(templatesDir, 'tsconfig.json'), join(targetDir, 'tsconfig.json'));
+
   // src/pages/index.astro
   copyFileSync(join(templatesDir, 'index.astro'), join(targetDir, 'src/pages/index.astro'));
 
-  // .gitignore
+  // .github/workflows/orbiter-build.yml
+  copyFileSync(
+    join(templatesDir, 'orbiter-build.yml'),
+    join(targetDir, '.github/workflows/orbiter-build.yml'),
+  );
+
+  // .gitignore — pod must be committed so CI can read content
   writeFileSync(join(targetDir, '.gitignore'), [
     'node_modules',
     'dist',
     '.env',
-    '*.pod',
   ].join('\n') + '\n');
 
   // ── Create .pod ───────────────────────────────────────
@@ -105,9 +114,11 @@ export async function run(args) {
 
   Next steps:
     cd ${name}
-    npm run dev
+    npm run admin      # Admin panel → http://localhost:4322
+    npm run dev        # Astro site  → http://localhost:4321
 
-  Admin:  http://localhost:4321/orbiter
-  Login:  ${adminUser} / (your password)
+    (or run both at once: npm run dev:all)
+
+  Login: ${adminUser} / (your password)
 `);
 }

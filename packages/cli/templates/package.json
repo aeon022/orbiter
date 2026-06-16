@@ -4,13 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev":   "astro dev",
-    "build": "astro build",
-    "start": "node ./dist/server/entry.mjs"
+    "dev":     "astro dev",
+    "build":   "astro build",
+    "admin":   "orbiter-admin --pod ./content.pod",
+    "dev:all": "npm run admin & npm run dev"
   },
   "dependencies": {
     "@a83/orbiter-integration": "latest",
-    "@astrojs/node": "^10.0.0",
+    "@a83/orbiter-admin": "latest",
     "astro": "^6.0.0"
   }
 }
