@@ -158,6 +158,13 @@
       a.innerHTML = '<span class="xfce-tools-icon">' + t.icon + '</span><span>' + t.label + '</span>';
       toolsPopup.appendChild(a);
     });
+    var settingsSep = document.createElement('div');
+    settingsSep.className = 'xfce-tools-sep';
+    toolsPopup.appendChild(settingsSep);
+    var settingsLink = el('a', 'xfce-tools-item' + (page === 'settings' ? ' active' : ''));
+    settingsLink.href = '/settings.html';
+    settingsLink.innerHTML = '<span class="xfce-tools-icon">⚙</span><span>Settings</span>';
+    toolsPopup.appendChild(settingsLink);
     var sep = document.createElement('div');
     sep.className = 'xfce-tools-sep';
     toolsPopup.appendChild(sep);
