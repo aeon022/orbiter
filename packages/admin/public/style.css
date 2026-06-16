@@ -1994,6 +1994,9 @@ html[data-style="xfce"] .xfce-in-focus .xfce-focus-trigger::after {
   text-align: center;
   flex-shrink: 0;
 }
+.xfce-tools-sep     { height: 1px; background: var(--line); margin: 4px 6px; }
+.xfce-tools-palette { width: 100%; background: none; border: none; cursor: pointer; text-align: left; font-family: inherit; }
+.xfce-tools-kbd     { margin-left: auto; font-family: var(--mono); font-size: 8px; color: var(--muted); background: color-mix(in srgb, var(--mid) 14%, transparent); padding: 2px 5px; border-radius: 3px; border: none; font-style: normal; }
 
 /* Status bar links & logout */
 a.xfce-sb-logo           { text-decoration: none; color: var(--accent); }
@@ -2006,6 +2009,13 @@ a.xfce-sb-logo:hover     { opacity: .8; }
   font-family: var(--mono); transition: color .15s;
 }
 .xfce-sb-logout:hover { color: var(--red); }
+.xfce-sb-palette-btn {
+  background: none; border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 4px; cursor: pointer; padding: 1px 6px;
+  font-size: 13px; color: var(--accent); line-height: 1.4;
+  font-family: var(--mono); transition: background .15s;
+}
+.xfce-sb-palette-btn:hover { background: color-mix(in srgb, var(--accent) 14%, transparent); }
 
 /* Draft badge on dock items */
 .xfce-dock-badge {
@@ -2018,28 +2028,51 @@ a.xfce-sb-logo:hover     { opacity: .8; }
 }
 .xfce-dock-item { position: relative; }
 
-/* Quick-create button */
-.xfce-dock-create .xfce-dock-icon {
-  font-size: 16px !important; font-family: inherit !important;
-  color: var(--accent); font-weight: 300;
+/* Hover + badge above collection dock items */
+.xfce-col-create {
+  position: fixed; z-index: 99990;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent);
+  color: color-mix(in srgb, var(--bg1) 15%, #000);
+  font-size: 17px; line-height: 22px; font-weight: 300;
+  text-align: center; text-decoration: none;
+  transform: translateX(-50%) translateY(6px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .13s, transform .13s cubic-bezier(.34,1.5,.64,1);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
+  user-select: none;
+}
+.xfce-col-create.visible {
+  opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto;
 }
 
 /* ── Command Palette ─────────────────────────────────────── */
 .xfce-palette {
   display: none; position: fixed; inset: 0; z-index: 10000;
-  background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
-  align-items: flex-start; justify-content: center;
-  padding-top: 12vh;
+  background: rgba(0,0,0,0);
+  align-items: flex-end; justify-content: center;
+  padding-bottom: calc(var(--dock-h, 76px) + 20px);
+  transition: background .18s;
 }
-.xfce-palette.open { display: flex; }
+.xfce-palette.open {
+  display: flex;
+  background: rgba(0,0,0,.28);
+}
 
 .xfce-palette-inner {
   width: min(560px, 92vw);
   background: var(--glass-bg, color-mix(in srgb, var(--bg1) 90%, transparent));
   border: 1px solid var(--line);
   border-radius: 12px;
-  box-shadow: 0 24px 60px rgba(0,0,0,.5), 0 0 0 1px color-mix(in srgb,var(--accent) 20%,transparent);
+  box-shadow: 0 -2px 32px rgba(0,0,0,.25), 0 0 0 1px color-mix(in srgb,var(--accent) 20%,transparent);
   overflow: hidden;
+  transform: translateY(14px);
+  opacity: 0;
+  transition: transform .2s cubic-bezier(.34,1.15,.64,1), opacity .15s;
+}
+.xfce-palette.open .xfce-palette-inner {
+  transform: translateY(0);
+  opacity: 1;
 }
 
 .xfce-palette-bar {

@@ -62,6 +62,8 @@
       '</div>',
       '<div class="xfce-sb-center" id="xfce-sb-title"></div>',
       '<div class="xfce-sb-right">',
+        '<button id="xfce-sb-palette-btn" class="xfce-sb-palette-btn" title="Command palette (⌘K)">⌘</button>',
+        '<span class="xfce-sb-div">·</span>',
         '<a id="xfce-sb-user" href="/account.html" class="xfce-sb-user-link"></a>',
         '<span class="xfce-sb-div">·</span>',
         '<button id="xfce-sb-logout" class="xfce-sb-logout" title="Log out">⏻</button>',
@@ -89,6 +91,12 @@
     document.getElementById('xfce-sb-logout').addEventListener('click', function () {
       fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
         .finally(function () { location.href = '/login.html'; });
+    });
+
+    // Palette trigger in status bar
+    document.getElementById('xfce-sb-palette-btn').addEventListener('click', function (e) {
+      e.stopPropagation();
+      openPalette();
     });
   }
 
@@ -146,6 +154,17 @@
       a.innerHTML = '<span class="xfce-tools-icon">' + t.icon + '</span><span>' + t.label + '</span>';
       toolsPopup.appendChild(a);
     });
+    var sep = document.createElement('div');
+    sep.className = 'xfce-tools-sep';
+    toolsPopup.appendChild(sep);
+    var palBtn = el('button', 'xfce-tools-item xfce-tools-palette');
+    palBtn.innerHTML = '<span class="xfce-tools-icon">⌘</span><span>Palette</span><kbd class="xfce-tools-kbd">⌘K</kbd>';
+    palBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      toolsPopup.classList.remove('open');
+      openPalette();
+    });
+    toolsPopup.appendChild(palBtn);
     document.body.appendChild(toolsPopup);
     document.addEventListener('click', function () {
       toolsPopup.classList.remove('open');
@@ -163,6 +182,34 @@
       toolsPopup.style.left = Math.round(rect.left + rect.width / 2) + 'px';
     }
     toolsPopup.classList.toggle('open');
+  }
+
+  // ── Hover + badge above collection items ─────────────────────────────
+  var colCreateEl, colCreateTimer;
+
+  function buildColCreate() {
+    colCreateEl = el('a', 'xfce-col-create');
+    colCreateEl.id = 'xfce-col-create';
+    colCreateEl.textContent = '+';
+    colCreateEl.addEventListener('mouseenter', function () { clearTimeout(colCreateTimer); });
+    colCreateEl.addEventListener('mouseleave', function () { colCreateTimer = setTimeout(hideColCreate, 120); });
+    document.body.appendChild(colCreateEl);
+  }
+
+  function showColCreate(href, itemEl) {
+    if (!colCreateEl) buildColCreate();
+    clearTimeout(colCreateTimer);
+    var dock = document.getElementById('xfce-dock');
+    var dockTop = dock ? dock.getBoundingClientRect().top : 0;
+    var itemRect = itemEl.getBoundingClientRect();
+    colCreateEl.href = href;
+    colCreateEl.style.left = Math.round(itemRect.left + itemRect.width / 2) + 'px';
+    colCreateEl.style.top  = Math.round(dockTop - 34) + 'px';
+    colCreateEl.classList.add('visible');
+  }
+
+  function hideColCreate() {
+    if (colCreateEl) colCreateEl.classList.remove('visible');
   }
 
   // ── Command Palette ───────────────────────────────────────────────────
@@ -270,15 +317,24 @@
 
   function openPalette() {
     if (!palette) buildPalette();
-    palette.classList.add('open');
+    palette.style.display = 'flex';
     paletteInp.value = '';
     palActive = -1;
     renderPalette('');
-    setTimeout(function () { paletteInp.focus(); }, 30);
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        palette.classList.add('open');
+        setTimeout(function () { paletteInp.focus(); }, 40);
+      });
+    });
   }
 
   function closePalette() {
-    if (palette) palette.classList.remove('open');
+    if (!palette) return;
+    palette.classList.remove('open');
+    setTimeout(function () {
+      if (!palette.classList.contains('open')) palette.style.display = 'none';
+    }, 200);
   }
 
   // ── Toast system ──────────────────────────────────────────────────────
@@ -745,7 +801,7 @@
               : page === 'entries' && activeCol === col.id;
             var abbr = col.label.substring(0, 2);
             var item = makeDockItem(abbr, col.label, href, isActive, false);
-            item.querySelector('.xfce-dock-icon').style.cssText = 'font-size:9px;font-family:var(--mono);letter-spacing:-.02em;line-height:1;';
+            item.querySelector('.xfce-dock-icon').style.cssText = 'font-size:14px;font-weight:700;font-family:var(--mono);letter-spacing:-.03em;line-height:1;opacity:1;';
             item.dataset.dockIdx = idx + 1;
 
             // Draft badge
@@ -756,19 +812,18 @@
               item.appendChild(badge);
             }
 
+            // Hover shows + badge above this item
+            var createHref = col.singleton
+              ? '/editor.html?collection=' + encodeURIComponent(col.id) + '&singleton=1'
+              : '/editor.html?collection=' + encodeURIComponent(col.id);
+            item.addEventListener('mouseenter', function () { showColCreate(createHref, item); });
+            item.addEventListener('mouseleave', function () { colCreateTimer = setTimeout(hideColCreate, 120); });
+
             colGroup.appendChild(item);
 
             // Add to palette
             _palItems.push({ icon: abbr, label: col.label, href: href, group: 'Collections' });
           });
-
-          // Quick-create: + button when viewing a collection's entries
-          if (page === 'entries' && activeCol) {
-            var createHref = '/editor.html?collection=' + encodeURIComponent(activeCol);
-            var createBtn  = makeDockItem('+', 'New entry', createHref, false, false);
-            createBtn.classList.add('xfce-dock-create');
-            colGroup.appendChild(createBtn);
-          }
         }
 
         // HUD pod section
