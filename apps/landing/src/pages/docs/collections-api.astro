@@ -4,10 +4,29 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <DocsLayout title="orbiter:collections" current="/docs/collections-api" prev={{ href: '/docs/media-backends', title: 'Media backends' }} next={{ href: '/docs/typescript', title: 'TypeScript' }}>
 
 <h1>orbiter:collections</h1>
-<p class="lead">A Vite virtual module that gives you typed access to your published content in Astro pages. Snapshots at build time — zero runtime database access.</p>
+<p class="lead">A Vite virtual module that gives you typed access to your published content in Astro pages. Works in both static (build-time snapshot) and SSR (live queries at request time) output modes.</p>
 
 <h2>Setup</h2>
 <p>The module is available automatically after adding <code>@a83/orbiter-integration</code> to your Astro config. No additional imports needed.</p>
+
+<h3>Static output (default)</h3>
+<p>Content is snapshotted when <code>astro build</code> runs. Pages reflect the pod state at build time — republish to pick up new content.</p>
+<pre>// astro.config.mjs
+import orbiter from '@a83/orbiter-integration';
+export default defineConfig(&#123;
+  integrations: [orbiter(&#123; pod: './content.pod' &#125;)],
+&#125;);</pre>
+
+<h3>SSR / hybrid output</h3>
+<p>When <code>output</code> is <code>'server'</code> or <code>'hybrid'</code>, <code>getCollection</code> and friends query the pod file at <strong>request time</strong>. Content changes are reflected immediately — no rebuild needed.</p>
+<pre>import node from '@astrojs/node';
+import orbiter from '@a83/orbiter-integration';
+export default defineConfig(&#123;
+  output: 'server',
+  adapter: node(&#123; mode: 'standalone' &#125;),
+  integrations: [orbiter(&#123; pod: './content.pod' &#125;)],
+&#125;);</pre>
+<div class="callout">In SSR mode the pod file must be readable at runtime (i.e. on the server). The API surface is identical — only when queries run changes.</div>
 
 <h2>API</h2>
 
@@ -24,14 +43,14 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 // → Entry | null</pre>
 
 <h3>getLocaleCollection(name, locale?)</h3>
-<p>Returns entries for a specific locale. Entries follow the <code>slug--locale</code> convention. If <code>locale</code> is omitted, returns all entries including variants.</p>
+<p>Returns published entries for a specific locale. The default locale (first entry in Settings → Locales) is stored as <code>locale = ''</code> in the database — pass its code and it maps correctly.</p>
 <pre>const dePosts = await getLocaleCollection('posts', 'de');
-// → Entry[] where slug ends with '--de'</pre>
+// → Entry[] with locale 'de'</pre>
 
 <h3>getLocaleEntry(collection, baseSlug, locale)</h3>
-<p>Returns a locale variant of an entry, falling back to the base entry if the variant doesn't exist.</p>
+<p>Returns a locale variant of an entry. Falls back to the default locale if the translation doesn't exist yet.</p>
 <pre>const post = await getLocaleEntry('posts', 'my-post', 'de');
-// → returns 'my-post--de' if it exists, otherwise 'my-post'</pre>
+// → German variant if it exists, otherwise default locale</pre>
 
 <h3>locale and locales</h3>
 <pre>import &#123; locale, locales &#125; from 'orbiter:collections';
@@ -70,9 +89,8 @@ const post = await getEntry('posts', Astro.params.slug);
 import &#123; getCollection, locales &#125; from 'orbiter:collections';
 
 export async function getStaticPaths() &#123;
-  const posts = await getCollection('posts');
-  const base  = posts.filter(p => !p.slug.includes('--'));
-  return base.flatMap(post =>
+  const posts = await getCollection('posts'); // default locale only
+  return posts.flatMap(post =>
     locales.map(loc => (&#123;
       params: &#123; slug: post.slug, lang: loc &#125;
     &#125;))
@@ -101,7 +119,7 @@ export async function GET() &#123;
 <div class="callout"><code>orbiter:db</code> only works in server-rendered routes (<code>output: 'server'</code> or <code>'hybrid'</code>). In static output there is no runtime to open the pod.</div>
 
 <h2>Relation fields</h2>
-<p>Relation fields are resolved at build time. The raw UUID reference is replaced with the full <code>Entry</code> object of the related entry.</p>
+<p>Relation fields are resolved automatically — at build time in static mode, at request time in SSR mode. The raw UUID reference is replaced with the full <code>Entry</code> object of the related entry.</p>
 <pre>&#123;posts.map(post => (
   &lt;div&gt;
     &lt;h2&gt;&#123;post.data.title&#125;&lt;/h2&gt;

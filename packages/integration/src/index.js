@@ -107,6 +107,94 @@ const VIRTUAL_DB_ID = 'orbiter:db';
 const RESOLVED_DB_ID = `\0${VIRTUAL_DB_ID}`;
 
 /**
+ * Generate the runtime version of orbiter:collections.
+ * Schemas are baked at build time (for relation resolution); all content
+ * queries hit the pod file at request time — no rebuild needed after edits.
+ */
+function generateRuntimeModule(podPath, defaultLocale, locales, schemas) {
+  return `
+import { openPod } from '@a83/orbiter-core';
+
+const _podPath = ${JSON.stringify(podPath)};
+
+export const locale  = ${JSON.stringify(defaultLocale)};
+export const locales = ${JSON.stringify(locales)};
+
+// Schemas baked at build time for inline relation resolution
+const _schemas = ${JSON.stringify(schemas, null, 2)};
+
+function _resolveRelations(entries, colId, db) {
+  const schema = _schemas[colId];
+  if (!schema) return entries;
+  const relFields = Object.entries(schema).filter(([, f]) => f.type === 'relation');
+  if (!relFields.length) return entries;
+  const byId = (id) => {
+    const row = db.db.prepare(
+      'SELECT * FROM _entries WHERE id = ? AND deleted_at IS NULL'
+    ).get(id);
+    return row ? { ...row, data: JSON.parse(row.data) } : id;
+  };
+  for (const entry of entries) {
+    for (const [key, field] of relFields) {
+      const raw  = entry.data[key];
+      const ids  = Array.isArray(raw) ? raw : (raw ? [raw] : []);
+      const resolved = ids.map(byId).filter(Boolean);
+      entry.data[key] = field.multiple !== false ? resolved : (resolved[0] ?? null);
+    }
+  }
+  return entries;
+}
+
+export function getCollection(name) {
+  const db      = openPod(_podPath);
+  const entries = db.getEntries(name, { status: 'published' }).filter(e => (e.locale ?? '') === '');
+  _resolveRelations(entries, name, db);
+  db.close();
+  return Promise.resolve(entries);
+}
+
+export function getEntry(collection, slug) {
+  const db    = openPod(_podPath);
+  const entry = db.getEntry(collection, slug, '');
+  if (entry) _resolveRelations([entry], collection, db);
+  db.close();
+  return Promise.resolve(entry ?? null);
+}
+
+export function getLocaleCollection(name, loc) {
+  const dbLoc   = (!loc || loc === locales[0]) ? '' : loc;
+  const db      = openPod(_podPath);
+  const entries = db.getEntries(name, { status: 'published', locale: dbLoc });
+  _resolveRelations(entries, name, db);
+  db.close();
+  return Promise.resolve(entries);
+}
+
+export function getLocaleEntry(collection, baseSlug, loc) {
+  const dbLoc = (!loc || loc === locales[0]) ? '' : loc;
+  const db    = openPod(_podPath);
+  let entry   = db.getEntry(collection, baseSlug, dbLoc);
+  if (!entry) entry = db.getEntry(collection, baseSlug, '');
+  if (entry) _resolveRelations([entry], collection, db);
+  db.close();
+  return Promise.resolve(entry ?? null);
+}
+
+export async function getPreviewEntry(collection, slug, previewToken) {
+  const db          = openPod(_podPath);
+  const storedToken = db.getMeta('preview.token');
+  if (!previewToken || previewToken !== storedToken) { db.close(); return null; }
+  const row = db.db
+    .prepare('SELECT * FROM _entries WHERE collection_id = ? AND slug = ? AND deleted_at IS NULL')
+    .get(collection, slug);
+  db.close();
+  if (!row) return null;
+  return { ...row, data: JSON.parse(row.data) };
+}
+`;
+}
+
+/**
  * @param {{ pod: string }} options
  * @returns {import('astro').AstroIntegration}
  */
@@ -118,7 +206,8 @@ export default function orbiter(options = {}) {
 
     hooks: {
       'astro:config:setup': ({ updateConfig, config, injectRoute, logger }) => {
-        logger.info(`◆ Orbiter — loading pod: ${podPath}`);
+        const mode = (config.output === 'server' || config.output === 'hybrid') ? 'runtime' : 'static';
+        logger.info(`◆ Orbiter — loading pod: ${podPath} (${mode} mode)`);
 
         // Generate TypeScript types from schema
         try {
@@ -175,18 +264,30 @@ export default function orbiter(options = {}) {
                     podPath
                   );
 
-                  // orbiter:collections — static snapshot of published content for build
+                  // orbiter:collections
                   if (id === RESOLVED_COLLECTIONS_ID) {
                     const db = openPod(resolvedPodPath);
-                    const collections = db.getCollections();
+                    const collections   = db.getCollections();
+                    const defaultLocale = db.getMeta('site.locale') ?? 'en';
+                    const rawLocales    = db.getMeta('site.locales') ?? defaultLocale;
+                    const locales       = rawLocales.split(',').map(l => l.trim()).filter(Boolean);
+
+                    // SSR / hybrid: queries hit the pod at request time
+                    const isSSR = config.output === 'server' || config.output === 'hybrid';
+                    if (isSSR) {
+                      const schemas = {};
+                      for (const col of collections) {
+                        schemas[col.id] = col.schema ? JSON.parse(col.schema) : {};
+                      }
+                      db.close();
+                      return generateRuntimeModule(resolvedPodPath, defaultLocale, locales, schemas);
+                    }
+
+                    // Static: snapshot at build time
                     const snapshot = {};
                     for (const col of collections) {
                       snapshot[col.id] = db.getEntries(col.id, { status: 'published' });
                     }
-
-                    const defaultLocale = db.getMeta('site.locale') ?? 'en';
-                    const rawLocales    = db.getMeta('site.locales') ?? defaultLocale;
-                    const locales       = rawLocales.split(',').map(l => l.trim()).filter(Boolean);
 
                     // Resolve relation fields inline
                     const byId = {};
@@ -214,10 +315,7 @@ export const collections = ${JSON.stringify(snapshot, null, 2)};
 
 const _podPath = ${JSON.stringify(resolvedPodPath)};
 
-/** Default locale (e.g. "de") */
-export const locale = ${JSON.stringify(defaultLocale)};
-
-/** All configured locales (e.g. ["de", "en"]) */
+export const locale  = ${JSON.stringify(defaultLocale)};
 export const locales = ${JSON.stringify(locales)};
 
 export function getCollection(name) {
@@ -230,15 +328,14 @@ export function getEntry(collection, slug) {
 }
 
 export function getLocaleCollection(name, loc) {
-  const all = collections[name] ?? [];
-  // First locale in the locales array maps to locale='' in the DB
+  const all   = collections[name] ?? [];
   const dbLoc = (!loc || loc === locales[0]) ? '' : loc;
   return Promise.resolve(all.filter(e => (e.locale ?? '') === dbLoc));
 }
 
 export function getLocaleEntry(collection, baseSlug, loc) {
   const entries = collections[collection] ?? [];
-  const dbLoc = (!loc || loc === locales[0]) ? '' : loc;
+  const dbLoc   = (!loc || loc === locales[0]) ? '' : loc;
   const variant = entries.find(e => e.slug === baseSlug && (e.locale ?? '') === dbLoc);
   if (variant) return Promise.resolve(variant);
   return Promise.resolve(entries.find(e => e.slug === baseSlug && (e.locale ?? '') === '') ?? null);
