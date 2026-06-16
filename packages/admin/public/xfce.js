@@ -1113,8 +1113,8 @@
         return;
       }
 
-      // / — open palette (when not typing in an input)
-      if (!mod && !e.shiftKey && !e.altKey && e.key === '/' && !isEditing(e.target)) {
+      // / — open palette (when not typing in an input; Shift+7 on DE keyboard also produces '/')
+      if (!mod && !e.altKey && e.key === '/' && !isEditing(e.target)) {
         e.preventDefault();
         if (palette && palette.classList.contains('open')) closePalette();
         else openPalette();
