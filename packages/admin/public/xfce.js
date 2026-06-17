@@ -64,7 +64,7 @@
       '</div>',
       '<div class="xfce-sb-center" id="xfce-sb-title"></div>',
       '<div class="xfce-sb-right">',
-        '<span id="xfce-sb-g-ind" class="xfce-sb-g-ind" style="display:none" title="g mode: d=dashboard m=media s=settings u=users b=build i=import h=schema a=account">g ›</span>',
+        '<span id="xfce-sb-g-ind" class="xfce-sb-g-ind" style="display:none" title="g mode: d=dashboard m=media s=settings u=users b=build i=import c=schema h=HUD a=account">g ›</span>',
         '<button id="xfce-sb-bell" class="xfce-sb-bell" title="Notifications"><span id="xfce-sb-bell-icon">○</span><span id="xfce-sb-bell-badge" class="xfce-sb-bell-badge" style="display:none"></span></button>',
         '<span class="xfce-sb-div">·</span>',
         '<button id="xfce-sb-cheat" class="xfce-sb-cheat" title="Shortcuts (?)">?</button>',
@@ -1516,7 +1516,8 @@
             cheatRow('g &nbsp;+&nbsp; s', 'Settings'),
             cheatRow('g &nbsp;+&nbsp; b', 'Build'),
             cheatRow('g &nbsp;+&nbsp; i', 'Import'),
-            cheatRow('g &nbsp;+&nbsp; h', 'Schema'),
+            cheatRow('g &nbsp;+&nbsp; c', 'Schema'),
+            cheatRow('g &nbsp;+&nbsp; h', 'Toggle HUD'),
             cheatRow('g &nbsp;+&nbsp; a', 'Account'),
             cheatRow('1 – 9', 'Jump to nth dock item'),
           '</div>',
@@ -1568,7 +1569,7 @@
   var _gPending = false, _gTimer = null;
   var G_MAP = { d: '/dashboard.html', m: '/media.html', s: '/settings.html',
                 u: '/users.html',     b: '/build.html',  i: '/import.html',
-                h: '/schema.html',   a: '/account.html' };
+                c: '/schema.html',   a: '/account.html' };
 
   function setGMode(on) {
     _gPending = on;
@@ -1614,7 +1615,8 @@
       }
       if (_gPending && !isEditing(e.target)) {
         clearTimeout(_gTimer); setGMode(false);
-        if (G_MAP[e.key]) { e.preventDefault(); location.href = G_MAP[e.key]; }
+        if (e.key === 'h') { e.preventDefault(); toggleHUD(); }
+        else if (G_MAP[e.key]) { e.preventDefault(); location.href = G_MAP[e.key]; }
         return;
       }
 
