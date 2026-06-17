@@ -25,33 +25,33 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <p>SEO fields are available as a top-level <code>seo</code> property on every entry returned by <code>getCollection</code>, <code>getEntry</code>, and the locale variants:</p>
 
 <pre>---
-import { getCollection } from 'orbiter:collections';
+import &#123; getCollection &#125; from 'orbiter:collections';
 const posts = await getCollection('blog');
 ---
 
-{posts.map(post => (
+&#123;posts.map(post =&gt; (
   &lt;!-- post.seo.title, post.seo.description, post.seo.ogImage --&gt;
-))}
+))&#125;
 </pre>
 
 <h2>Using in &lt;head&gt;</h2>
 
 <pre>---
-import { getEntry } from 'orbiter:collections';
+import &#123; getEntry &#125; from 'orbiter:collections';
 const entry = await getEntry('blog', Astro.params.slug);
 const seoTitle = entry.seo.title || entry.data.title;
 const seoDesc  = entry.seo.description;
 const ogImage  = entry.seo.ogImage
-  ? `/orbiter/media/${entry.seo.ogImage}`
+  ? `/orbiter/media/$&#123;entry.seo.ogImage&#125;`
   : '/default-og.png';
 ---
 &lt;html&gt;
 &lt;head&gt;
-  &lt;title&gt;{seoTitle}&lt;/title&gt;
-  &lt;meta name="description" content={seoDesc} /&gt;
-  &lt;meta property="og:title"       content={seoTitle} /&gt;
-  &lt;meta property="og:description" content={seoDesc} /&gt;
-  &lt;meta property="og:image"       content={ogImage} /&gt;
+  &lt;title&gt;&#123;seoTitle&#125;&lt;/title&gt;
+  &lt;meta name="description" content=&#123;seoDesc&#125; /&gt;
+  &lt;meta property="og:title"       content=&#123;seoTitle&#125; /&gt;
+  &lt;meta property="og:description" content=&#123;seoDesc&#125; /&gt;
+  &lt;meta property="og:image"       content=&#123;ogImage&#125; /&gt;
   &lt;meta name="twitter:card"       content="summary_large_image" /&gt;
 &lt;/head&gt;
 ...</pre>
@@ -59,11 +59,11 @@ const ogImage  = entry.seo.ogImage
 <h2>TypeScript type</h2>
 <p>The <code>OrbiterSeo</code> interface is included in the auto-generated <code>orbiter-env.d.ts</code>:</p>
 
-<pre>interface OrbiterSeo {
+<pre>interface OrbiterSeo &#123;
   title: string;        // empty string if not set
   description: string;  // empty string if not set
   ogImage: string;      // media ID, or empty string if not set
-}</pre>
+&#125;</pre>
 
 <p>All three fields are always strings (never null/undefined), so you can safely use <code>entry.seo.title || fallback</code> without defensive checks.</p>
 

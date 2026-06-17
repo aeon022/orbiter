@@ -26,14 +26,14 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 &lt;/form&gt;
 
 &lt;script&gt;
-  document.getElementById('contact-form').addEventListener('submit', async e =&gt; {
+  document.getElementById('contact-form').addEventListener('submit', async e =&gt; &#123;
     e.preventDefault();
-    const res = await fetch('https://admin.example.com/api/form/contact', {
+    const res = await fetch('https://admin.example.com/api/form/contact', &#123;
       method: 'POST',
       body: new FormData(e.target),
-    });
+    &#125;);
     if (res.ok) alert('Message sent!');
-  });
+  &#125;);
 &lt;/script&gt;</pre>
 
 <p>The endpoint accepts both <code>multipart/form-data</code> and <code>application/json</code>.</p>
