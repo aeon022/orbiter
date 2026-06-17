@@ -744,15 +744,36 @@
         </div>
       `).join('');
 
-      const hasSeo = !!(seoFields.titleKey || seoFields.descKey);
-      const serpHtml = hasSeo ? `<div class="serp-preview" id="serp-preview">
-        <div class="serp-url" id="serp-url">${location.host}/${COLLECTION}/<span id="serp-slug-part">${escHtml(IS_NEW?'…':SLUG)}</span></div>
-        <div class="serp-title" id="serp-title">${escHtml(document.getElementById('title-input')?.value||'Untitled')}</div>
-        <div class="serp-desc" id="serp-desc">—</div>
-      </div>` : '';
+      const _seoData  = entryData?.data?._seo ?? {};
+      const _seoTitle = _seoData.title ?? '';
+      const _seoDesc  = _seoData.description ?? '';
+      const _seoOg    = _seoData.ogImage ?? '';
 
       panel.innerHTML = `
-        ${extraFields.length ? `<div class="meta-section"><div class="meta-label">Fields</div>${fieldsHtml}${serpHtml}</div>` : ''}
+        ${extraFields.length ? `<div class="meta-section"><div class="meta-label">Fields</div>${fieldsHtml}</div>` : ''}
+        <div class="meta-section">
+          <div class="meta-label">SEO</div>
+          <div class="serp-preview" id="serp-preview">
+            <div class="serp-url" id="serp-url">${location.host}/${COLLECTION}/<span id="serp-slug-part">${escHtml(IS_NEW?'…':SLUG)}</span></div>
+            <div class="serp-title" id="serp-title">${escHtml(_seoTitle||document.getElementById('title-input')?.value||'Untitled')}</div>
+            <div class="serp-desc" id="serp-desc">${escHtml(_seoDesc)||'—'}</div>
+          </div>
+          <div class="meta-field">
+            <div class="field-label" style="display:flex;justify-content:space-between">Meta title <span class="seo-counter" id="seo-ctr-_title">${_seoTitle.length}</span></div>
+            <input type="text" class="field-input" id="seo-inp-_title" value="${escHtml(_seoTitle)}" maxlength="120" placeholder="Leave empty to use entry title" />
+          </div>
+          <div class="meta-field">
+            <div class="field-label" style="display:flex;justify-content:space-between">Description <span class="seo-counter" id="seo-ctr-_desc">${_seoDesc.length}</span></div>
+            <textarea class="field-input" id="seo-inp-_desc" rows="3" maxlength="320" style="resize:vertical;">${escHtml(_seoDesc)}</textarea>
+          </div>
+          <div class="meta-field">
+            <div class="field-label">OG Image</div>
+            <select class="field-select" id="seo-inp-_ogimage">
+              <option value="">— none —</option>
+              ${mediaData.map(m=>`<option value="${m.id}"${_seoOg===m.id?' selected':''}>${escHtml(m.filename)}${m.alt?` (${m.alt})`:''}</option>`).join('')}
+            </select>
+          </div>
+        </div>
         <div class="meta-section">
           <div class="status-bar">
             <div class="status-dot ${status}" id="status-dot"></div>
@@ -951,8 +972,8 @@
       // showWhen conditional fields
       initConditional();
 
-      // SEO char counters + SERP preview live update
-      if (hasSeo) {
+      // SEO char counters + SERP preview live update (always active)
+      {
         function seoCounterClass(len, isTitle) {
           const [lo, hi] = isTitle ? [30, 60] : [120, 160];
           if (len === 0) return '';
@@ -967,35 +988,32 @@
           const slugVal = document.getElementById('slug-input')?.value || document.getElementById('slug-preview')?.textContent || '…';
           if (slugEl) slugEl.textContent = slugVal;
           if (titleEl) {
-            const seoTitle = seoFields.titleKey ? document.getElementById('seo-inp-'+seoFields.titleKey)?.value : '';
+            const seoTitle = document.getElementById('seo-inp-_title')?.value ?? '';
             titleEl.textContent = seoTitle || document.getElementById('title-input')?.value || 'Untitled';
           }
           if (descEl) {
-            const seoDesc = seoFields.descKey ? document.getElementById('seo-inp-'+seoFields.descKey)?.value : '';
+            const seoDesc = document.getElementById('seo-inp-_desc')?.value ?? '';
             descEl.textContent = seoDesc || '—';
           }
         }
-        if (seoFields.titleKey) {
-          const inp = document.getElementById('seo-inp-'+seoFields.titleKey);
-          const ctr = document.getElementById('seo-ctr-'+seoFields.titleKey);
-          inp?.addEventListener('input',()=>{
-            const len = inp.value.length;
-            if (ctr) { ctr.textContent=len; ctr.className='seo-counter '+seoCounterClass(len,true); }
-            updateSerp();
-          });
-          if (ctr && inp) { const l=inp.value.length; ctr.textContent=l; ctr.className='seo-counter '+seoCounterClass(l,true); }
-        }
-        if (seoFields.descKey) {
-          const inp = document.getElementById('seo-inp-'+seoFields.descKey);
-          const ctr = document.getElementById('seo-ctr-'+seoFields.descKey);
-          inp?.addEventListener('input',()=>{
-            const len = inp.value.length;
-            if (ctr) { ctr.textContent=len; ctr.className='seo-counter '+seoCounterClass(len,false); }
-            updateSerp();
-          });
-          if (ctr && inp) { const l=inp.value.length; ctr.textContent=l; ctr.className='seo-counter '+seoCounterClass(l,false); }
-        }
-        // Also update SERP when title or slug changes
+        const titleInp = document.getElementById('seo-inp-_title');
+        const titleCtr = document.getElementById('seo-ctr-_title');
+        titleInp?.addEventListener('input', () => {
+          const len = titleInp.value.length;
+          if (titleCtr) { titleCtr.textContent = len; titleCtr.className = 'seo-counter ' + seoCounterClass(len, true); }
+          updateSerp();
+        });
+        if (titleCtr && titleInp) { const l = titleInp.value.length; titleCtr.textContent = l; titleCtr.className = 'seo-counter ' + seoCounterClass(l, true); }
+
+        const descInp = document.getElementById('seo-inp-_desc');
+        const descCtr = document.getElementById('seo-ctr-_desc');
+        descInp?.addEventListener('input', () => {
+          const len = descInp.value.length;
+          if (descCtr) { descCtr.textContent = len; descCtr.className = 'seo-counter ' + seoCounterClass(len, false); }
+          updateSerp();
+        });
+        if (descCtr && descInp) { const l = descInp.value.length; descCtr.textContent = l; descCtr.className = 'seo-counter ' + seoCounterClass(l, false); }
+
         document.getElementById('title-input')?.addEventListener('input', updateSerp);
         document.getElementById('slug-input')?.addEventListener('input', updateSerp);
         updateSerp();
@@ -1125,6 +1143,13 @@
           data[key] = el ? el.value : '';
         }
       }
+
+      // Gather _seo values (always present, independent of schema)
+      data._seo = {
+        title:       document.getElementById('seo-inp-_title')?.value   ?? '',
+        description: document.getElementById('seo-inp-_desc')?.value    ?? '',
+        ogImage:     document.getElementById('seo-inp-_ogimage')?.value ?? '',
+      };
 
       // Required field validation (skip on autosave)
       if (!isAutosave) {

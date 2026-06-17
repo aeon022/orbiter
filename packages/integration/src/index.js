@@ -50,6 +50,12 @@ function generateTypes(db) {
     '',
     "declare module 'orbiter:collections' {",
     '',
+    '  export interface OrbiterSeo {',
+    '    title: string;',
+    '    description: string;',
+    '    ogImage: string;',
+    '  }',
+    '',
     '  export interface OrbiterEntry<T = Record<string, unknown>> {',
     '    id: string;',
     '    slug: string;',
@@ -57,6 +63,7 @@ function generateTypes(db) {
     '    created_at: string;',
     '    updated_at: string;',
     '    sort_order: number | null;',
+    '    seo: OrbiterSeo;',
     '    data: T;',
     '  }',
     '',
@@ -123,6 +130,12 @@ export const locales = ${JSON.stringify(locales)};
 // Schemas baked at build time for inline relation resolution
 const _schemas = ${JSON.stringify(schemas, null, 2)};
 
+function _withSeo(entry) {
+  if (!entry) return null;
+  const s = entry.data?._seo ?? {};
+  return { ...entry, seo: { title: s.title ?? '', description: s.description ?? '', ogImage: s.ogImage ?? '' } };
+}
+
 function _resolveRelations(entries, colId, db) {
   const schema = _schemas[colId];
   if (!schema) return entries;
@@ -150,7 +163,7 @@ export function getCollection(name) {
   const entries = db.getEntries(name, { status: 'published' }).filter(e => (e.locale ?? '') === '');
   _resolveRelations(entries, name, db);
   db.close();
-  return Promise.resolve(entries);
+  return Promise.resolve(entries.map(_withSeo));
 }
 
 export function getEntry(collection, slug) {
@@ -158,7 +171,7 @@ export function getEntry(collection, slug) {
   const entry = db.getEntry(collection, slug, '');
   if (entry) _resolveRelations([entry], collection, db);
   db.close();
-  return Promise.resolve(entry ?? null);
+  return Promise.resolve(_withSeo(entry));
 }
 
 export function getLocaleCollection(name, loc) {
@@ -167,7 +180,7 @@ export function getLocaleCollection(name, loc) {
   const entries = db.getEntries(name, { status: 'published', locale: dbLoc });
   _resolveRelations(entries, name, db);
   db.close();
-  return Promise.resolve(entries);
+  return Promise.resolve(entries.map(_withSeo));
 }
 
 export function getLocaleEntry(collection, baseSlug, loc) {
@@ -177,7 +190,7 @@ export function getLocaleEntry(collection, baseSlug, loc) {
   if (!entry) entry = db.getEntry(collection, baseSlug, '');
   if (entry) _resolveRelations([entry], collection, db);
   db.close();
-  return Promise.resolve(entry ?? null);
+  return Promise.resolve(_withSeo(entry));
 }
 
 export async function getPreviewEntry(collection, slug, previewToken) {
@@ -189,7 +202,7 @@ export async function getPreviewEntry(collection, slug, previewToken) {
     .get(collection, slug);
   db.close();
   if (!row) return null;
-  return { ...row, data: JSON.parse(row.data) };
+  return _withSeo({ ...row, data: JSON.parse(row.data) });
 }
 `;
 }
