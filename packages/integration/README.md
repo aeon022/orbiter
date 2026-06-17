@@ -223,6 +223,26 @@ The full admin UI lives in [`@a83/orbiter-admin`](https://www.npmjs.com/package/
 
 ---
 
+## npm audit / esbuild warning
+
+Running `npm audit` in an Astro 6 project may report a high-severity warning in the `astro → vite → esbuild` chain. This is a **false positive** — the advisory targets esbuild's local dev server, which Orbiter never exposes publicly.
+
+Do **not** run `npm audit fix --force` — npm may downgrade Astro to 2.x to "fix" it, which breaks peer dependency requirements.
+
+The safe fix is to add `overrides` to your project's `package.json`:
+
+```json
+{
+  "overrides": {
+    "esbuild": "^0.28.1"
+  }
+}
+```
+
+Then re-run `npm install`. `npm audit` will be clean without touching Astro or Vite.
+
+---
+
 ## Deployment
 
 Orbiter uses `better-sqlite3` — a native Node.js module that needs **real filesystem access**. It does not run on edge runtimes or Cloudflare Workers.
