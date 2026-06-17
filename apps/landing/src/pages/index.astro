@@ -27,6 +27,9 @@ const features = [
   { icon: '◉', title: 'Space Station mode',           body: 'A distinct layout with a floating magnification dock, command palette (<code>⌘K</code>), vim keyboard navigation, HUD panel, notification center, zen mode, and a full mobile tab-bar. Three themes × two colour schemes.' },
   { icon: '⊡', title: 'Trash & restore',              body: 'Deleted entries move to a recoverable Trash tab. Restore to draft or permanently delete. Bulk restore and bulk purge. Activity log records every action with actor and timestamp.' },
   { icon: '◎', title: 'Draft preview',                body: 'Generate a preview token in Settings → API. Attach it to your preview URL — <code>getPreviewEntry()</code> reads any draft directly from the pod, bypassing the published snapshot.' },
+  { icon: '✉', title: 'Form inbox',                   body: 'Receive contact and booking form submissions from your Astro site via <code>POST /api/form/:formId</code>. View, filter, reply by email, and mark as confirmed, rejected, or done — all from the admin UI.' },
+  { icon: '◉', title: 'Built-in SEO',                 body: 'Every entry has a built-in SEO panel — meta title, description, and OG image. No schema changes needed. Access via <code>entry.seo.title</code>, <code>entry.seo.description</code>, and <code>entry.seo.ogImage</code>.' },
+  { icon: '↑', title: 'FTP / FTPS deploy',            body: 'Upload your Astro <code>dist/</code> directly to any shared hosting via FTP or FTPS. Configure host, port, credentials, and remote path in Settings. One click to deploy — or trigger automatically after a build webhook.' },
 ];
 
 const tradeoffs = [
@@ -331,7 +334,7 @@ const faqs = [
       <span class="metric-label">your entire CMS</span>
     </div>
     <div class="metric">
-      <span class="metric-value">16</span>
+      <span class="metric-value">19</span>
       <span class="metric-label">built-in features</span>
     </div>
     <div class="metric">

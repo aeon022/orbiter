@@ -1,0 +1,75 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Built-in SEO" current="/docs/seo" prev={{ href: '/docs/inbox', title: 'Form inbox' }} next={{ href: '/docs/collections-api', title: 'orbiter:collections' }}>
+
+<h1>Built-in SEO</h1>
+<p class="lead">Every entry has a built-in SEO panel — meta title, description, and OG image. No schema changes needed. Values are available via <code>entry.seo</code> in your Astro templates.</p>
+
+<h2>Where to find it</h2>
+<p>Open any entry in the editor. The <strong>SEO</strong> section is always visible in the right-hand meta panel, below any custom schema fields. It shows a live SERP preview that updates as you type.</p>
+
+<h2>Fields</h2>
+<table>
+  <thead><tr><th>Field</th><th>Recommended length</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td>Meta title</td><td>30–60 characters</td><td>Overrides the entry title in search results. Leave empty to use the entry title as a fallback in your template.</td></tr>
+    <tr><td>Description</td><td>120–160 characters</td><td>Meta description shown in search snippets and social previews.</td></tr>
+    <tr><td>OG Image</td><td>1200×630 px recommended</td><td>Open Graph image for social sharing. Picked from the media library.</td></tr>
+  </tbody>
+</table>
+
+<p>The char counter turns green when you're in the optimal range, yellow when too short, and red when over the limit.</p>
+
+<h2>Accessing SEO values in Astro</h2>
+<p>SEO fields are available as a top-level <code>seo</code> property on every entry returned by <code>getCollection</code>, <code>getEntry</code>, and the locale variants:</p>
+
+<pre>---
+import { getCollection } from 'orbiter:collections';
+const posts = await getCollection('blog');
+---
+
+{posts.map(post => (
+  &lt;!-- post.seo.title, post.seo.description, post.seo.ogImage --&gt;
+))}
+</pre>
+
+<h2>Using in &lt;head&gt;</h2>
+
+<pre>---
+import { getEntry } from 'orbiter:collections';
+const entry = await getEntry('blog', Astro.params.slug);
+const seoTitle = entry.seo.title || entry.data.title;
+const seoDesc  = entry.seo.description;
+const ogImage  = entry.seo.ogImage
+  ? `/orbiter/media/${entry.seo.ogImage}`
+  : '/default-og.png';
+---
+&lt;html&gt;
+&lt;head&gt;
+  &lt;title&gt;{seoTitle}&lt;/title&gt;
+  &lt;meta name="description" content={seoDesc} /&gt;
+  &lt;meta property="og:title"       content={seoTitle} /&gt;
+  &lt;meta property="og:description" content={seoDesc} /&gt;
+  &lt;meta property="og:image"       content={ogImage} /&gt;
+  &lt;meta name="twitter:card"       content="summary_large_image" /&gt;
+&lt;/head&gt;
+...</pre>
+
+<h2>TypeScript type</h2>
+<p>The <code>OrbiterSeo</code> interface is included in the auto-generated <code>orbiter-env.d.ts</code>:</p>
+
+<pre>interface OrbiterSeo {
+  title: string;        // empty string if not set
+  description: string;  // empty string if not set
+  ogImage: string;      // media ID, or empty string if not set
+}</pre>
+
+<p>All three fields are always strings (never null/undefined), so you can safely use <code>entry.seo.title || fallback</code> without defensive checks.</p>
+
+<h2>Storage</h2>
+<p>SEO values are stored as <code>data._seo</code> inside the entry's JSON data column. They are independent of the collection schema — you don't need to add any fields to your schema to use them.</p>
+
+<div class="callout"><strong>Schema SEO fields:</strong> If you previously added <code>meta_title</code>, <code>seo_title</code>, or <code>meta_description</code> fields to your collection schema, they still work as before and appear in the Fields section. The built-in <code>_seo</code> panel is separate and does not replace them.</div>
+
+</DocsLayout>

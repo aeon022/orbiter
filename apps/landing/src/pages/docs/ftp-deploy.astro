@@ -1,0 +1,58 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="FTP deploy" current="/docs/ftp-deploy" prev={{ href: '/docs/deployment', title: 'Deployment' }} next={{ href: '/docs/git-sync', title: 'Git sync mode' }}>
+
+<h1>FTP / FTPS deploy</h1>
+<p class="lead">Upload your Astro <code>dist/</code> folder directly to any shared hosting provider via FTP or FTPS. No CI/CD required — one click from the admin build page.</p>
+
+<h2>Who this is for</h2>
+<p>Shared hosting (World4You, Strato, IONOS, 1&1, cPanel hosts) runs on PHP and doesn't support Node.js. The typical Orbiter workflow for these providers:</p>
+
+<ol>
+  <li>Run <strong>Orbiter Admin</strong> locally (or on a Hetzner VPS)</li>
+  <li>Edit content in the admin, trigger an Astro build</li>
+  <li>Click <strong>Deploy via FTP</strong> — Orbiter uploads the <code>dist/</code> folder to your host</li>
+</ol>
+
+<h2>Configuration</h2>
+<p>Go to <strong>Settings → FTP / FTPS Deploy</strong> and fill in:</p>
+
+<table>
+  <thead><tr><th>Field</th><th>Example</th></tr></thead>
+  <tbody>
+    <tr><td>FTP host</td><td><code>ftp.world4you.com</code></td></tr>
+    <tr><td>Port</td><td><code>21</code> (FTP) or <code>990</code> (implicit FTPS)</td></tr>
+    <tr><td>Username</td><td><code>u12345678</code></td></tr>
+    <tr><td>Password</td><td>your FTP password</td></tr>
+    <tr><td>Use FTPS</td><td>Enable for explicit TLS (port 21 with STARTTLS)</td></tr>
+    <tr><td>Remote path</td><td><code>/public_html</code> or <code>/www</code></td></tr>
+    <tr><td>Local dist path</td><td><code>/Users/me/my-site/dist</code> (absolute path)</td></tr>
+  </tbody>
+</table>
+
+<p>Click <strong>Test connection</strong> to verify the credentials before saving. Save your settings, then go to <strong>Build</strong> to deploy.</p>
+
+<h2>Running a deploy</h2>
+<p>On the <strong>Build</strong> page, the FTP Deploy card shows the last deploy time and status. Click <strong>↑ Deploy via FTP</strong> to upload. The entire <code>dist/</code> directory is mirrored to the remote path — files are uploaded, existing remote files are overwritten.</p>
+
+<h2>Auto-deploy after build</h2>
+<p>Enable <strong>Auto-deploy after build</strong> in Settings to trigger an FTP upload automatically whenever the build webhook fires a successful build. This lets you set up a fully automatic pipeline:</p>
+
+<ol>
+  <li>Content saved in admin</li>
+  <li>Build webhook triggers <code>astro build</code></li>
+  <li>FTP deploy uploads <code>dist/</code> to shared hosting</li>
+</ol>
+
+<h2>FTPS vs SFTP</h2>
+<p>Orbiter supports <strong>FTPS</strong> (FTP over TLS), which is what most cPanel and shared hosts provide. This is different from <strong>SFTP</strong> (SSH File Transfer Protocol). Check your host's control panel — if it says "FTP" or "FTPS", you're in the right place.</p>
+
+<h2>API</h2>
+<pre>GET  /api/deploy/ftp/status  — last deploy time, status, and error
+POST /api/deploy/ftp          — run a full deploy
+POST /api/deploy/ftp/test     — test FTP connection only (no upload)</pre>
+
+<div class="callout"><strong>Credentials are stored in the pod.</strong> The pod file is not meant to be public — keep it on your local machine or a private server. Do not commit it to a public repository.</div>
+
+</DocsLayout>

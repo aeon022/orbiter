@@ -1,0 +1,90 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Form inbox" current="/docs/inbox" prev={{ href: '/docs/media-backends', title: 'Media backends' }} next={{ href: '/docs/seo', title: 'Built-in SEO' }}>
+
+<h1>Form inbox</h1>
+<p class="lead">Receive contact and booking form submissions from your Astro site. Submissions land in the admin inbox where you can read, reply, and manage them.</p>
+
+<h2>How it works</h2>
+<p>Orbiter exposes a public endpoint that accepts form submissions from your static Astro site. No serverless function or third-party service needed.</p>
+
+<pre>POST /api/form/:formId</pre>
+
+<p><code>:formId</code> is any string you choose — e.g. <code>contact</code>, <code>booking</code>, <code>support</code>. Submissions from the same <code>formId</code> appear together as a tab in the admin inbox.</p>
+
+<h2>Connecting a form in Astro</h2>
+<p>Add a <code>fetch</code> handler to any HTML form. The admin server must be reachable from the browser (same domain, or a separate subdomain).</p>
+
+<pre>&lt;form id="contact-form"&gt;
+  &lt;input  name="name"    required /&gt;
+  &lt;input  name="email"   type="email" required /&gt;
+  &lt;textarea name="message" required&gt;&lt;/textarea&gt;
+  &lt;!-- honeypot: hidden, left empty by humans, filled by bots --&gt;
+  &lt;input name="_honeypot" style="display:none" tabindex="-1" autocomplete="off" /&gt;
+  &lt;button type="submit"&gt;Send&lt;/button&gt;
+&lt;/form&gt;
+
+&lt;script&gt;
+  document.getElementById('contact-form').addEventListener('submit', async e =&gt; {
+    e.preventDefault();
+    const res = await fetch('https://admin.example.com/api/form/contact', {
+      method: 'POST',
+      body: new FormData(e.target),
+    });
+    if (res.ok) alert('Message sent!');
+  });
+&lt;/script&gt;</pre>
+
+<p>The endpoint accepts both <code>multipart/form-data</code> and <code>application/json</code>.</p>
+
+<h2>Honeypot spam filter</h2>
+<p>Add a hidden <code>_honeypot</code> field to your form. Legitimate users never fill it in; bots usually do. If the field is non-empty, Orbiter silently accepts the request without saving it.</p>
+
+<h2>Booking forms</h2>
+<p>Booking requests work exactly like contact forms — just include date, time, and persons fields:</p>
+
+<pre>&lt;input name="date"    type="date"   required /&gt;
+&lt;input name="time"    type="time"   /&gt;
+&lt;input name="persons" type="number" min="1" /&gt;</pre>
+
+<p>In the admin, booking submissions get <strong>Confirm</strong> and <strong>Reject</strong> buttons in addition to the standard status controls.</p>
+
+<h2>Managing submissions in the admin</h2>
+<p>Go to <strong>Tools → Inbox</strong> (or press <code>g n</code> in Space Station mode). Each form ID appears as a tab. Submissions are sorted newest first.</p>
+
+<p>Each submission can be:</p>
+<ul>
+  <li>Expanded to read the full field values</li>
+  <li>Marked as <code>read</code>, <code>done</code>, <code>confirmed</code>, <code>rejected</code>, or <code>spam</code></li>
+  <li>Replied to by email — if the submission contains an <code>email</code> field, a <strong>Reply</strong> button appears that opens an inline compose panel</li>
+  <li>Deleted permanently</li>
+</ul>
+
+<h2>Email notifications</h2>
+<p>To receive an email when a new submission arrives, configure SMTP in <strong>Settings → Email</strong> and enable <strong>Notify on form submission</strong>.</p>
+
+<h2>Status values</h2>
+<table>
+  <thead><tr><th>Status</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><code>new</code></td><td>Just arrived, unread</td></tr>
+    <tr><td><code>read</code></td><td>Opened (auto-set when you expand a submission)</td></tr>
+    <tr><td><code>confirmed</code></td><td>Booking or inquiry accepted</td></tr>
+    <tr><td><code>rejected</code></td><td>Booking or inquiry declined</td></tr>
+    <tr><td><code>done</code></td><td>Handled / archived</td></tr>
+    <tr><td><code>spam</code></td><td>Marked as spam</td></tr>
+  </tbody>
+</table>
+
+<h2>API reference</h2>
+<pre>POST   /api/form/:formId           — public, submit a form (no auth)
+GET    /api/forms                  — list form IDs with counts (auth)
+GET    /api/forms/:formId          — list submissions (auth)
+PUT    /api/forms/:id/status       — update status (auth)
+POST   /api/forms/:id/reply        — send email reply to submitter (auth)
+DELETE /api/forms/:id              — delete submission (auth)</pre>
+
+<div class="callout"><strong>CORS:</strong> The public <code>POST /api/form/:formId</code> endpoint has wide CORS (<code>*</code>) so it can be called from any static site. All other <code>/api/forms/*</code> endpoints require a session cookie.</div>
+
+</DocsLayout>
