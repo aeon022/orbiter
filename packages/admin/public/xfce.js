@@ -17,6 +17,7 @@
   ];
 
   var TOOLS = [
+    { icon: '✉', label: 'Inbox',    href: '/inbox.html',    key: 'inbox'    },
     { icon: '▦', label: 'Schema',   href: '/schema.html',   key: 'schema'   },
     { icon: '◉', label: 'Build',    href: '/build.html',    key: 'build'    },
     { icon: '↓', label: 'Import',   href: '/import.html',   key: 'import'   },
@@ -64,7 +65,7 @@
       '</div>',
       '<div class="xfce-sb-center" id="xfce-sb-title"></div>',
       '<div class="xfce-sb-right">',
-        '<span id="xfce-sb-g-ind" class="xfce-sb-g-ind" style="display:none" title="g mode: d=dashboard m=media s=settings u=users b=build i=import c=schema h=HUD a=account">g ›</span>',
+        '<span id="xfce-sb-g-ind" class="xfce-sb-g-ind" style="display:none" title="g mode: d=dashboard m=media s=settings u=users b=build i=import c=schema h=HUD a=account n=inbox">g ›</span>',
         '<button id="xfce-sb-bell" class="xfce-sb-bell" title="Notifications"><span id="xfce-sb-bell-icon">○</span><span id="xfce-sb-bell-badge" class="xfce-sb-bell-badge" style="display:none"></span></button>',
         '<span class="xfce-sb-div">·</span>',
         '<button id="xfce-sb-cheat" class="xfce-sb-cheat" title="Shortcuts (?)">?</button>',
@@ -1568,7 +1569,7 @@
   var _gPending = false, _gTimer = null;
   var G_MAP = { d: '/dashboard.html', m: '/media.html', s: '/settings.html',
                 u: '/users.html',     b: '/build.html',  i: '/import.html',
-                c: '/schema.html',   a: '/account.html' };
+                c: '/schema.html',   a: '/account.html', n: '/inbox.html' };
 
   function setGMode(on) {
     _gPending = on;
