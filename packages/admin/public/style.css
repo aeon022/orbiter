@@ -1158,8 +1158,8 @@ html[data-style="xfce"] .editor-shell {
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  width: var(--dock-item-base, 50px);
-  padding: 10px 10px 9px;
+  min-width: var(--dock-item-base, 50px);
+  padding: 10px 12px 9px;
   background: transparent;
   border: none;
   border-radius: 12px;
