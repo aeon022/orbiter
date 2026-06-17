@@ -1523,7 +1523,6 @@
           '</div>',
           '<div class="xfce-cheat-col">',
             '<div class="xfce-cheat-section">Panels</div>',
-            cheatRow('⌘⇧D', 'Toggle HUD'),
             cheatRow('⌘⇧F', 'Focus / Zen mode'),
             cheatRow('⌘⇧L', 'Switch to Glass mode'),
             cheatRow('?', 'This cheatsheet'),
@@ -1620,12 +1619,6 @@
         return;
       }
 
-      // ⌘⇧D — toggle HUD
-      if (mod && e.shiftKey && (e.key === 'd' || e.key === 'D')) {
-        e.preventDefault();
-        toggleHUD();
-        return;
-      }
 
       // ⌘⇧F — zen / focus mode
       if (mod && e.shiftKey && (e.key === 'f' || e.key === 'F')) {
