@@ -10,18 +10,18 @@
   <link rel="stylesheet" href="/style.css" />
   <script src="/theme.js"></script>
   <style>
-    .settings-wrap { max-width:1100px; padding-bottom:40px; }
+    .settings-wrap { max-width:1100px; padding-bottom:24px; }
 
     /* Two-column grid for settings groups */
     .settings-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 8px;
       align-items: start;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
     .settings-grid .settings-group { margin-bottom: 0; }
-    .settings-wrap > .settings-group { margin-bottom: 12px; }
+    .settings-wrap > .settings-group { margin-bottom: 8px; }
 
     @media (max-width: 720px) {
       .settings-wrap { max-width: 720px; }
@@ -38,7 +38,7 @@
 
     /* Section label — klein, ruhig, ◆ statt Left-Strip */
     .group-header {
-      padding: 10px 24px;
+      padding: 8px 20px;
       font-size: 10px;
       letter-spacing: 0.18em;
       text-transform: uppercase;
@@ -53,10 +53,10 @@
     /* Setting row — hover, keine alternierenden Hintergründe */
     .setting-row {
       display: grid;
-      grid-template-columns: 1fr 252px;
+      grid-template-columns: 1fr 220px;
       align-items: center;
-      gap: 24px;
-      padding: 18px 24px;
+      gap: 16px;
+      padding: 11px 20px;
       border-bottom: 1px solid var(--line2);
       transition: background 0.1s;
     }
@@ -93,13 +93,13 @@
       display: flex;
       justify-content: flex-end;
       align-items: center;
-      padding: 14px 24px;
+      padding: 10px 20px;
       border-top: 1px solid var(--line);
       gap: 10px;
     }
 
     /* Banners */
-    .banner { padding: 10px 20px; font-size: 11px; display: flex; align-items: center; gap: 8px; border-radius: 8px; margin-bottom: 16px; }
+    .banner { padding: 8px 16px; font-size: 11px; display: flex; align-items: center; gap: 8px; border-radius: 8px; margin-bottom: 8px; }
     .banner-ok  { background: var(--jade-bg); color: var(--jade); border: 1px solid rgba(45,139,106,.2); }
     .banner-ok::before { content: "✓"; font-size: 12px; }
     .banner-err { background: var(--red-bg); color: var(--red); border: 1px solid rgba(240,112,128,.18); }
@@ -157,7 +157,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 13px 24px;
+      padding: 9px 20px;
       border-bottom: 1px solid var(--line2);
     }
     .pod-meta-path {
@@ -184,7 +184,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 11px 24px;
+      padding: 8px 20px;
       border-bottom: 1px solid var(--line2);
       transition: background 0.1s;
     }
@@ -205,8 +205,8 @@
     .support-widget {
       border: 1px solid var(--line);
       border-radius: 10px;
-      padding: 20px 24px;
-      margin-top: 12px;
+      padding: 14px 20px;
+      margin-top: 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -616,16 +616,16 @@
       <!-- Appearance (full width) -->
       <div class="settings-group">
         <div class="group-header">Appearance</div>
-        <div style="padding:16px 28px;border-bottom:1px solid var(--line2)">
-          <div class="setting-label" style="margin-bottom:10px">Color scheme</div>
+        <div style="padding:10px 20px;border-bottom:1px solid var(--line2)">
+          <div class="setting-label" style="margin-bottom:8px">Color scheme</div>
           <div style="display:flex;gap:8px">
             <button class="btn btn-ghost btn-sm scheme-btn ${currentScheme==='auto'?'active':''}" data-s="auto">Auto (system)</button>
             <button class="btn btn-ghost btn-sm scheme-btn ${currentScheme==='dark'?'active':''}" data-s="dark">● Dark</button>
             <button class="btn btn-ghost btn-sm scheme-btn ${currentScheme==='light'?'active':''}" data-s="light">○ Light</button>
           </div>
         </div>
-        <div style="padding:16px 28px">
-          <div class="setting-label" style="margin-bottom:10px">Palette</div>
+        <div style="padding:10px 20px">
+          <div class="setting-label" style="margin-bottom:8px">Palette</div>
           <div class="theme-cards">
             <button class="theme-card ${currentTheme==='space'?'active':''}" data-theme="space">
               <div class="theme-swatch">
@@ -659,8 +659,8 @@
             </button>
           </div>
         </div>
-        <div style="padding:16px 28px;border-top:1px solid var(--line2)">
-          <div class="setting-label" style="margin-bottom:10px">Style</div>
+        <div style="padding:10px 20px;border-top:1px solid var(--line2)">
+          <div class="setting-label" style="margin-bottom:8px">Style</div>
           <div class="style-cards">
             <button class="style-card \${currentStyle==='classic'?'active':''}" data-style="classic">
               <div class="style-preview">
