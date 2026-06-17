@@ -59,7 +59,7 @@ formRoutes.get('/:formId', (c) => {
   const db     = openPod(c.get('podPath'));
   const rows   = db.getFormSubmissions({ formId, status, limit, offset });
   db.close();
-  return c.json(rows);
+  return c.json(rows.map(r => ({ ...r, data: JSON.parse(r.data) })));
 });
 
 // PUT /api/forms/:id/status

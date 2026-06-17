@@ -161,8 +161,10 @@
   </div>
 
   <script type="module">
+    const _wrap = document.getElementById('forms-content');
+    (async () => {
     const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).catch(() => null);
-    if (!me?.user) { location.replace('/login.html'); }
+    if (!me?.user) { location.replace('/login.html'); return; }
     document.getElementById('topbar-user').textContent = me.user.username;
     if (me.user.role === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
     document.getElementById('logout-btn').addEventListener('click', async () => {
@@ -170,7 +172,7 @@
       location.replace('/login.html');
     });
 
-    const wrap = document.getElementById('forms-content');
+    const wrap = _wrap;
 
     // State
     let _stats    = {};
@@ -362,14 +364,15 @@
     }
 
     // Init
-    try {
-      await loadStats();
-      _formId = Object.keys(_stats)[0] ?? null;
-      if (_formId) await loadSubmissions();
-    } catch (e) {
-      console.error('[inbox]', e);
-    }
+    await loadStats();
+    _formId = Object.keys(_stats)[0] ?? null;
+    if (_formId) await loadSubmissions();
     render();
+
+    })().catch(e => {
+      console.error('[inbox]', e);
+      if (_wrap) _wrap.innerHTML = `<div class="empty-state">Failed to load (${e.message}). Please refresh.</div>`;
+    });
   </script>
   <script src="/sidebar.js"></script>
   <script src="/search.js"></script>
