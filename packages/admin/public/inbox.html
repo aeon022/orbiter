@@ -97,10 +97,22 @@
       font-family: var(--mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
       padding: 2px 7px; border-radius: 4px; border: 1px solid;
     }
-    .status-pill.new  { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); background: var(--accent-bg); }
-    .status-pill.read { color: var(--muted);  border-color: var(--line); background: var(--bg3); }
-    .status-pill.done { color: var(--jade);   border-color: color-mix(in srgb, var(--jade) 40%, transparent); background: var(--jade-bg); }
-    .status-pill.spam { color: var(--red);    border-color: color-mix(in srgb, var(--red) 40%, transparent); background: var(--red-bg); }
+    .status-pill.new       { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); background: var(--accent-bg); }
+    .status-pill.read      { color: var(--muted);  border-color: var(--line); background: var(--bg3); }
+    .status-pill.done      { color: var(--jade);   border-color: color-mix(in srgb, var(--jade) 40%, transparent); background: var(--jade-bg); }
+    .status-pill.spam      { color: var(--red);    border-color: color-mix(in srgb, var(--red) 40%, transparent); background: var(--red-bg); }
+    .status-pill.confirmed { color: var(--jade);   border-color: color-mix(in srgb, var(--jade) 40%, transparent); background: var(--jade-bg); }
+    .status-pill.rejected  { color: var(--red);    border-color: color-mix(in srgb, var(--red) 40%, transparent); background: var(--red-bg); }
+
+    .sub-dot.confirmed { background: var(--jade); }
+    .sub-dot.rejected  { background: var(--red); }
+
+    /* Reply panel */
+    .reply-panel { margin-top: 12px; border-top: 1px solid var(--line2); padding-top: 12px; display: none; }
+    .reply-panel.open { display: block; }
+    .reply-panel textarea { width: 100%; box-sizing: border-box; min-height: 80px; background: var(--bg0); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 12px; font-family: var(--mono); color: var(--text); resize: vertical; margin-top: 6px; }
+    .reply-panel input { width: 100%; box-sizing: border-box; background: var(--bg0); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 12px; color: var(--text); margin-top: 6px; }
+    .reply-panel .reply-meta { font-size: 10px; color: var(--muted); font-family: var(--mono); margin-bottom: 4px; }
 
     .empty-state { padding: 40px 24px; text-align: center; color: var(--muted); font-size: 13px; }
 
@@ -157,9 +169,6 @@
       <div class="forms-wrap" id="forms-content">
         <div class="empty"><div class="spinner"></div></div>
       </div>
-    </main>
-  </div>
-
   <script type="module">
     const _wrap = document.getElementById('forms-content');
     (async () => {
@@ -265,18 +274,26 @@
         </button>`;
       }).join('');
 
-      // Status filters
-      const statusFilters = ['all', 'new', 'read', 'done', 'spam'].map(s => {
-        const label = s === 'all' ? 'All' : s;
-        const cnt   = s === 'all' ? (_stats[_formId]?.total ?? 0) : (_stats[_formId]?.[s] ?? 0);
-        return `<button class="sf-btn${_status === (s === 'all' ? null : s) ? ' active' : ''}" data-sf="${s}">
-          ${label} <span style="color:var(--muted)">(${cnt})</span>
-        </button>`;
-      }).join('');
+      // Status filters — show all statuses that have entries + always show 'all'
+      const presentStatuses = new Set(Object.values(_stats[_formId] ?? {})
+        .reduce((acc, v, i, arr) => acc, []));
+      const allStatusKeys = ['all', 'new', 'read', 'confirmed', 'done', 'spam', 'rejected'];
+      const statsForForm  = _stats[_formId] ?? {};
+      const statusFilters = allStatusKeys
+        .filter(s => s === 'all' || (statsForForm[s] ?? 0) > 0 || _status === s)
+        .map(s => {
+          const cnt = s === 'all' ? (statsForForm.total ?? 0) : (statsForForm[s] ?? 0);
+          return `<button class="sf-btn${_status === (s === 'all' ? null : s) ? ' active' : ''}" data-sf="${s}">
+            ${s} <span style="color:var(--muted)">(${cnt})</span>
+          </button>`;
+        }).join('');
 
       // Rows
       const rowsHtml = _rows.length
         ? _rows.map(r => {
+            const emailVal = r.data?.email ?? r.data?.Email ?? r.data?.e_mail ?? null;
+            const hasEmail = !!emailVal;
+
             const fields = Object.entries(r.data).map(([k, v]) =>
               `<div class="sub-field">
                 <div class="sub-field-key">${k}</div>
@@ -284,9 +301,26 @@
               </div>`
             ).join('');
 
-            const actionBtns = ['read', 'done', 'spam'].filter(s => s !== r.status).map(s =>
-              `<button class="btn btn-ghost btn-sm" data-set-status="${r.id}" data-status="${s}">${s}</button>`
-            ).join('');
+            const isFinal = ['confirmed', 'rejected', 'done', 'spam'].includes(r.status);
+            const actionBtns = [
+              r.status !== 'confirmed' ? `<button class="btn btn-ghost btn-sm" style="color:var(--jade)" data-set-status="${r.id}" data-status="confirmed">✓ Confirm</button>` : '',
+              r.status !== 'rejected'  ? `<button class="btn btn-ghost btn-sm" style="color:var(--red)"  data-set-status="${r.id}" data-status="rejected">✕ Reject</button>`  : '',
+              !isFinal && r.status !== 'done' ? `<button class="btn btn-ghost btn-sm" data-set-status="${r.id}" data-status="done">done</button>` : '',
+              r.status !== 'spam' ? `<button class="btn btn-ghost btn-sm" data-set-status="${r.id}" data-status="spam">spam</button>` : '',
+              r.status !== 'new'  ? `<button class="btn btn-ghost btn-sm" data-set-status="${r.id}" data-status="new">↩ reopen</button>` : '',
+            ].filter(Boolean).join('');
+
+            const replyPanel = hasEmail ? `
+              <div class="reply-panel" id="reply-${r.id}">
+                <div class="reply-meta">To: ${emailVal.replace(/</g, '&lt;')}</div>
+                <input placeholder="Subject" id="reply-subj-${r.id}" value="Re: your inquiry" />
+                <textarea placeholder="Your reply…" id="reply-body-${r.id}"></textarea>
+                <div class="sub-action-row" style="margin-top:8px">
+                  <button class="btn btn-primary btn-sm" data-send-reply="${r.id}">Send reply</button>
+                  <button class="btn btn-ghost btn-sm" data-close-reply="${r.id}">Cancel</button>
+                  <span class="reply-status" id="reply-st-${r.id}" style="font-size:10px;color:var(--muted);margin-left:8px"></span>
+                </div>
+              </div>` : '';
 
             return `<div class="sub-row" data-id="${r.id}">
               <div class="sub-row-head">
@@ -301,9 +335,10 @@
                 ${fields}
                 <div class="sub-action-row">
                   ${actionBtns}
-                  ${r.status !== 'new' ? `<button class="btn btn-ghost btn-sm" data-set-status="${r.id}" data-status="new">Mark new</button>` : ''}
-                  <button class="btn btn-ghost btn-sm" style="color:var(--red);margin-left:auto" data-del="${r.id}">Delete</button>
+                  ${hasEmail ? `<button class="btn btn-ghost btn-sm" style="margin-left:auto" data-open-reply="${r.id}">✉ Reply</button>` : '<span style="margin-left:auto"></span>'}
+                  <button class="btn btn-ghost btn-sm" style="color:var(--red)" data-del="${r.id}">Delete</button>
                 </div>
+                ${replyPanel}
                 <div class="sub-meta">
                   <span>id: ${r.id}</span>
                   ${r.ip ? `<span>ip: ${r.ip}</span>` : ''}
@@ -361,6 +396,49 @@
       wrap.querySelectorAll('[data-del]').forEach(btn => {
         btn.addEventListener('click', e => { e.stopPropagation(); deleteRow(btn.dataset.del); });
       });
+
+      // Reply: open panel
+      wrap.querySelectorAll('[data-open-reply]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          document.getElementById(`reply-${btn.dataset.openReply}`)?.classList.toggle('open');
+        });
+      });
+
+      // Reply: close panel
+      wrap.querySelectorAll('[data-close-reply]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          document.getElementById(`reply-${btn.dataset.closeReply}`)?.classList.remove('open');
+        });
+      });
+
+      // Reply: send
+      wrap.querySelectorAll('[data-send-reply]').forEach(btn => {
+        btn.addEventListener('click', async e => {
+          e.stopPropagation();
+          const id      = btn.dataset.sendReply;
+          const subject = document.getElementById(`reply-subj-${id}`)?.value?.trim();
+          const text    = document.getElementById(`reply-body-${id}`)?.value?.trim();
+          const st      = document.getElementById(`reply-st-${id}`);
+          if (!subject || !text) { if (st) st.textContent = 'Subject and message required.'; return; }
+          btn.disabled = true;
+          if (st) st.textContent = 'Sending…';
+          const res = await fetch(`/api/forms/${id}/reply`, {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ subject, text }),
+          });
+          btn.disabled = false;
+          if (res.ok) {
+            if (st) st.textContent = 'Sent ✓';
+            document.getElementById(`reply-${id}`)?.classList.remove('open');
+          } else {
+            const j = await res.json().catch(() => ({}));
+            if (st) st.textContent = j.error ?? 'Error sending';
+          }
+        });
+      });
     }
 
     // Init
@@ -374,6 +452,8 @@
       if (_wrap) _wrap.innerHTML = `<div class="empty-state">Failed to load (${e.message}). Please refresh.</div>`;
     });
   </script>
+    </main>
+  </div>
   <script src="/sidebar.js"></script>
   <script src="/search.js"></script>
 </body>

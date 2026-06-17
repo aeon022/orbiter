@@ -92,3 +92,27 @@ export async function sendFormNotification(podPath, formId, data = {}) {
     db?.close();
   }
 }
+
+/**
+ * Send a reply email from the admin directly to a submitter.
+ * Throws on SMTP error so the caller can return a 502.
+ */
+export async function sendFormReply(podPath, to, subject, text) {
+  const db   = openPod(podPath);
+  const host = db.getMeta('email.smtp_host') ?? '';
+  const port = parseInt(db.getMeta('email.smtp_port') ?? '587', 10);
+  const user = db.getMeta('email.smtp_user') ?? '';
+  const pass = db.getMeta('email.smtp_pass') ?? '';
+  const from = db.getMeta('email.smtp_from') || user;
+  db.close();
+
+  if (!host || !from) throw new Error('SMTP not configured — add credentials in Settings → Email');
+
+  const transport = nodemailer.createTransport({
+    host, port,
+    secure: port === 465,
+    auth: user ? { user, pass } : undefined,
+  });
+
+  await transport.sendMail({ from, to, subject, text });
+}

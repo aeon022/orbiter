@@ -1,11 +1,11 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
-import { sendFormNotification } from '../email.js';
+import { sendFormNotification, sendFormReply } from '../email.js';
 
 export const formPublicRoutes = new Hono();  // mounted without auth
 export const formRoutes       = new Hono();  // mounted with auth
 
-const VALID_STATUSES = new Set(['new', 'read', 'done', 'spam']);
+const VALID_STATUSES = new Set(['new', 'read', 'done', 'spam', 'confirmed', 'rejected']);
 
 // ── Public: POST /api/form/:formId ─────────────────
 // Called from static Astro sites — no auth, wide CORS handled at server level.
@@ -70,6 +70,24 @@ formRoutes.put('/:id/status', async (c) => {
   db.setFormStatus(c.req.param('id'), status);
   db.close();
   return c.json({ ok: true });
+});
+
+// POST /api/forms/:id/reply — send email reply to submitter
+formRoutes.post('/:id/reply', async (c) => {
+  const { subject, text } = await c.req.json();
+  if (!subject?.trim() || !text?.trim()) return c.json({ error: 'subject and text required' }, 400);
+  const db  = openPod(c.get('podPath'));
+  const row = db.getFormSubmission(c.req.param('id'));
+  db.close();
+  if (!row) return c.json({ error: 'Not found' }, 404);
+  const to = row.data?.email ?? row.data?.Email ?? row.data?.e_mail ?? null;
+  if (!to) return c.json({ error: 'No email address in submission' }, 400);
+  try {
+    await sendFormReply(c.get('podPath'), to, subject.trim(), text.trim());
+    return c.json({ ok: true });
+  } catch (e) {
+    return c.json({ error: e.message }, 502);
+  }
 });
 
 // DELETE /api/forms/:id

@@ -84,7 +84,7 @@
     
   <script type="module">
     const me = await fetch('/api/auth/me',{credentials:'include'}).then(r=>r.json()).catch(()=>null);
-    if (!me?.user) { location.replace('/login.html'); }
+    if (!me?.user) { location.replace('/login.html'); throw new Error('unauthenticated'); }
     if (me.user.role !== 'admin') { location.replace('/dashboard.html'); }
     document.getElementById('topbar-user').textContent = me.user.username;
     document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');

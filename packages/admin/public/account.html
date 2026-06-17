@@ -212,7 +212,7 @@
 
   <script type="module">
     const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).catch(() => null);
-    if (!me?.user) { location.replace('/login.html'); }
+    if (!me?.user) { location.replace('/login.html'); throw new Error('unauthenticated'); }
 
     const { username, role } = me.user;
     document.getElementById('topbar-user').textContent = username;

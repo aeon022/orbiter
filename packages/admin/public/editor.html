@@ -493,7 +493,7 @@
   <script type="module">
     // ── Bootstrap ─────────────────────────────────────────────────────
     const me = await fetch('/api/auth/me',{credentials:'include'}).then(r=>r.json()).catch(()=>null);
-    if (!me?.user) { location.replace('/login.html'); }
+    if (!me?.user) { location.replace('/login.html'); throw new Error('unauthenticated'); }
     document.getElementById('topbar-user').textContent = me.user.username;
     document.getElementById('logout-btn').addEventListener('click',async()=>{
       await fetch('/api/auth/logout',{method:'POST',credentials:'include'});
