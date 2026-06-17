@@ -32,7 +32,8 @@
   var _palItems = NAV.concat(TOOLS).map(function (n) {
     return { icon: n.icon, label: n.label, href: n.href, group: n.key in { schema:1, build:1, import:1, settings:1 } ? 'Tools' : 'Nav' };
   });
-  var _termCols = []; // collection metadata for palette commands
+  var _termCols   = []; // collection metadata for palette commands
+  var _palRecents = []; // prefetched recent entries for empty palette
 
   // ── Helpers ───────────────────────────────────────────────────────────
   function el(tag, cls, html) {
@@ -439,9 +440,55 @@
     }
 
     q = q.toLowerCase();
-    var filtered = q
-      ? _palItems.filter(function (it) { return it.label.toLowerCase().includes(q); })
-      : _palItems;
+
+    // Empty input → show recents + nav
+    if (!q) {
+      var html = '';
+      if (_palRecents.length) {
+        html += '<div class="xfce-pal-group">Recent</div>';
+        _palRecents.forEach(function (r) {
+          var href = '/collections/' + encodeURIComponent(r.collection) + '/entries/' + encodeURIComponent(r.slug);
+          html += '<div class="xfce-pal-item" data-href="' + href + '">'
+            + '<span class="xfce-pal-icon xfce-pal-icon-sm">◈</span>'
+            + '<div class="xfce-pal-item-body">'
+            + '<span class="xfce-pal-label">' + escHtml(r.title || r.slug) + '</span>'
+            + '<span class="xfce-pal-snippet">' + escHtml(r.label) + '</span>'
+            + '</div>'
+            + '<span class="xfce-pal-hint-r xfce-pal-status xfce-pal-status-' + r.status + '">' + r.status + '</span>'
+            + '</div>';
+        });
+        html += '<div class="xfce-pal-group">Navigation</div>';
+      }
+      var navGroups = {};
+      _palItems.forEach(function (it) {
+        var g = it.group || 'Nav';
+        if (!navGroups[g]) navGroups[g] = [];
+        navGroups[g].push(it);
+      });
+      Object.keys(navGroups).forEach(function (g) {
+        if (_palRecents.length) html += '<div class="xfce-pal-group-sub">' + g + '</div>';
+        else html += '<div class="xfce-pal-group">' + g + '</div>';
+        navGroups[g].forEach(function (it) {
+          html += '<div class="xfce-pal-item" data-href="' + it.href + '">'
+            + '<span class="xfce-pal-icon">' + it.icon + '</span>'
+            + '<span class="xfce-pal-label">' + escHtml(it.label) + '</span>'
+            + (it.meta ? '<span class="xfce-pal-hint-r">' + escHtml(it.meta) + '</span>' : '')
+            + '</div>';
+        });
+      });
+      paletteResults.innerHTML = html;
+      paletteResults.querySelectorAll('.xfce-pal-item[data-href]').forEach(function (item) {
+        item.addEventListener('click', function () { location.href = item.dataset.href; closePalette(); });
+        item.addEventListener('mouseenter', function () {
+          var items = paletteResults.querySelectorAll('.xfce-pal-item[data-href]');
+          palActive = Array.from(items).indexOf(item);
+          updatePalActive(items);
+        });
+      });
+      return;
+    }
+
+    var filtered = _palItems.filter(function (it) { return it.label.toLowerCase().includes(q); });
 
     if (!filtered.length) {
       paletteResults.innerHTML = '<div class="xfce-pal-empty">No results</div>';
@@ -1332,10 +1379,96 @@
         if (sbUser) sbUser.textContent = d.user.username;
       })
       .catch(function () {});
+
+    // Prefetch recent entries for palette empty state
+    fetch('/api/search/recent?limit=7', { credentials: 'include' })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (rows) { _palRecents = rows; })
+      .catch(function () {});
   }
 
   function hudRow(label, value) {
     return '<div class="xfce-hud-row"><span>' + label + '</span><span>' + value + '</span></div>';
+  }
+
+  // ── Zen / Focus mode ─────────────────────────────────────────────────
+  function toggleZen() {
+    var html = document.documentElement;
+    var on = html.dataset.zen !== '1';
+    html.dataset.zen = on ? '1' : '';
+    localStorage.setItem('orb_zen', on ? '1' : '');
+    if (on) window.xfceToast('Focus mode on  —  ⌘⇧F to exit', 'info');
+  }
+
+  // ── Shortcut cheatsheet ───────────────────────────────────────────────
+  var _cheatEl = null;
+
+  function buildCheatsheet() {
+    _cheatEl = el('div', 'xfce-cheat-overlay');
+    _cheatEl.id = 'xfce-cheat';
+    _cheatEl.innerHTML = [
+      '<div class="xfce-cheat-panel">',
+        '<div class="xfce-cheat-bar">',
+          '<span class="xfce-cheat-title">⌨ Shortcuts</span>',
+          '<button class="xfce-cheat-close" id="xfce-cheat-close">✕</button>',
+        '</div>',
+        '<div class="xfce-cheat-body">',
+          '<div class="xfce-cheat-col">',
+            '<div class="xfce-cheat-section">Navigation</div>',
+            cheatRow('⌘K &nbsp;/&nbsp; /', 'Open command palette'),
+            cheatRow('↑ ↓', 'Move selection in palette'),
+            cheatRow('↵', 'Go to selected item'),
+            cheatRow('Esc', 'Close overlay / panel'),
+            cheatRow('g &nbsp;+&nbsp; d', 'Dashboard'),
+            cheatRow('g &nbsp;+&nbsp; m', 'Media'),
+            cheatRow('g &nbsp;+&nbsp; u', 'Users'),
+            cheatRow('g &nbsp;+&nbsp; s', 'Settings'),
+            cheatRow('g &nbsp;+&nbsp; b', 'Build'),
+            cheatRow('g &nbsp;+&nbsp; i', 'Import'),
+            cheatRow('g &nbsp;+&nbsp; h', 'Schema'),
+            cheatRow('g &nbsp;+&nbsp; a', 'Account'),
+            cheatRow('1 – 9', 'Jump to nth dock item'),
+          '</div>',
+          '<div class="xfce-cheat-col">',
+            '<div class="xfce-cheat-section">Panels</div>',
+            cheatRow('⌘⇧D', 'Toggle HUD'),
+            cheatRow('⌘⇧F', 'Focus / Zen mode'),
+            cheatRow('⌘⇧L', 'Switch to Glass mode'),
+            cheatRow('?', 'This cheatsheet'),
+            '<div class="xfce-cheat-section" style="margin-top:14px">Palette commands</div>',
+            cheatRow('&gt; ls', 'List collections'),
+            cheatRow('&gt; go &lt;page&gt;', 'Navigate to page'),
+            cheatRow('&gt; new &lt;col&gt;', 'New entry in collection'),
+            cheatRow('&gt; search &lt;q&gt;', 'Search entries'),
+            cheatRow('&gt; build', 'Trigger site build'),
+            cheatRow('&gt; export &lt;col&gt;', 'Export collection'),
+            cheatRow('&gt; info', 'Show pod info'),
+            cheatRow('&gt; help', 'Show command help'),
+          '</div>',
+        '</div>',
+      '</div>',
+    ].join('');
+    document.body.appendChild(_cheatEl);
+    document.getElementById('xfce-cheat-close').addEventListener('click', closeCheatsheet);
+    _cheatEl.addEventListener('click', function (e) {
+      if (e.target === _cheatEl) closeCheatsheet();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && _cheatEl && _cheatEl.classList.contains('open')) closeCheatsheet();
+    });
+  }
+
+  function cheatRow(key, desc) {
+    return '<div class="xfce-cheat-row"><kbd class="xfce-cheat-key">' + key + '</kbd><span class="xfce-cheat-desc">' + desc + '</span></div>';
+  }
+
+  function toggleCheatsheet() {
+    if (!_cheatEl) buildCheatsheet();
+    _cheatEl.classList.toggle('open');
+  }
+
+  function closeCheatsheet() {
+    if (_cheatEl) _cheatEl.classList.remove('open');
   }
 
   // ── Keyboard shortcuts ────────────────────────────────────────────────
@@ -1399,11 +1532,25 @@
         return;
       }
 
+      // ⌘⇧F — zen / focus mode
+      if (mod && e.shiftKey && (e.key === 'f' || e.key === 'F')) {
+        e.preventDefault();
+        toggleZen();
+        return;
+      }
+
       // ⌘⇧L — switch back to glass mode
       if (mod && e.shiftKey && (e.key === 'l' || e.key === 'L')) {
         e.preventDefault();
         localStorage.setItem('orb_style', 'glass');
         location.reload();
+        return;
+      }
+
+      // ? — shortcut cheatsheet
+      if (!mod && !e.altKey && e.key === '?' && !isEditing(e.target)) {
+        e.preventDefault();
+        toggleCheatsheet();
         return;
       }
 
@@ -1459,6 +1606,9 @@
     bindKeys();
     initFocusMode();
     observeSavedFlash();
+    if (localStorage.getItem('orb_zen') === '1') {
+      document.documentElement.dataset.zen = '1';
+    }
   }
 
   if (document.readyState === 'loading') {

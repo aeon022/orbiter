@@ -2157,6 +2157,20 @@ html[data-dock-pos="left"] .xfce-col-preview.visible {
 .xfce-pal-item-body  { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .xfce-pal-snippet    { font-size: 10px; color: var(--muted); font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+/* palette — recent entries */
+.xfce-pal-icon-sm  { width: 20px; text-align: center; font-size: 10px; color: var(--muted); flex-shrink: 0; }
+.xfce-pal-group-sub {
+  font-size: 8px; font-family: var(--mono); color: var(--line);
+  letter-spacing: .08em; text-transform: uppercase;
+  padding: 8px 14px 4px; border-top: 1px solid var(--line);
+}
+.xfce-pal-status {
+  font-size: 9px; font-family: var(--mono); border-radius: 4px;
+  padding: 1px 6px; border: 1px solid currentColor; white-space: nowrap;
+}
+.xfce-pal-status-published { color: var(--jade, #5dc97e); }
+.xfce-pal-status-draft     { color: var(--muted); }
+
 /* ── Status bar build indicator ──────────────────────────── */
 .xfce-sb-build { font-size: 9px; font-family: var(--mono); color: var(--muted); white-space: nowrap; }
 .xfce-sb-g-ind {
@@ -2202,6 +2216,71 @@ html[data-style="xfce"][data-dock-pos="left"] .xfce-tools-popup {
 html[data-style="xfce"][data-dock-pos="left"] .xfce-ws-overlay {
   bottom: auto; left: 110px; top: 50%; transform: translateY(-50%);
 }
+
+/* ── Zen / Focus mode ────────────────────────────────────── */
+html[data-zen="1"] .xfce-sb {
+  opacity: 0; pointer-events: none;
+  transform: translateY(-100%);
+  transition: opacity .3s, transform .3s;
+}
+html[data-zen="1"] .xfce-dock {
+  opacity: 0; pointer-events: none;
+  transform: translateY(30px);
+  transition: opacity .3s, transform .3s;
+}
+html[data-zen="1"][data-dock-pos="left"] .xfce-dock {
+  transform: translateX(-30px);
+}
+html[data-zen="1"] .main {
+  padding-top: 8px !important;
+  padding-bottom: 20px !important;
+}
+
+/* ── Shortcut Cheatsheet ─────────────────────────────────── */
+.xfce-cheat-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+  z-index: 100001; align-items: center; justify-content: center;
+}
+.xfce-cheat-overlay.open { display: flex; }
+.xfce-cheat-panel {
+  background: var(--bg1); border: 1px solid var(--line);
+  border-radius: 14px; box-shadow: 0 16px 48px rgba(0,0,0,.55);
+  width: 560px; max-width: calc(100vw - 40px); font-family: var(--mono);
+  overflow: hidden;
+}
+.xfce-cheat-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-bottom: 1px solid var(--line);
+  background: var(--bg2);
+}
+.xfce-cheat-title { color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: .07em; }
+.xfce-cheat-close {
+  background: none; border: none; color: var(--muted); cursor: pointer;
+  font-size: 13px; line-height: 1; padding: 2px 4px;
+}
+.xfce-cheat-close:hover { color: var(--text); }
+.xfce-cheat-body {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+  padding: 16px; gap: 0 24px; max-height: 70vh; overflow-y: auto;
+}
+.xfce-cheat-section {
+  font-size: 9px; letter-spacing: .1em; color: var(--accent);
+  text-transform: uppercase; font-weight: 700;
+  margin-bottom: 8px; margin-top: 4px;
+}
+.xfce-cheat-row {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.xfce-cheat-row:last-child { border-bottom: none; }
+.xfce-cheat-key {
+  background: var(--bg2); border: 1px solid var(--line);
+  border-radius: 4px; padding: 1px 6px; font-size: 10px;
+  color: var(--accent); font-family: var(--mono); white-space: nowrap;
+  flex-shrink: 0; min-width: 80px; text-align: center;
+}
+.xfce-cheat-desc { font-size: 10px; color: var(--text); }
 
 /* ── Bell / Notification Center ─────────────────────────── */
 .xfce-sb-bell {
