@@ -99,6 +99,15 @@ export class OrbiterDB {
         resolved    INTEGER NOT NULL DEFAULT 0,
         created_at  TEXT NOT NULL DEFAULT (datetime('now'))
       );
+
+      CREATE TABLE IF NOT EXISTS _forms (
+        id         TEXT PRIMARY KEY,
+        form_id    TEXT NOT NULL,
+        data       TEXT NOT NULL,  -- JSON of submitted fields
+        status     TEXT NOT NULL DEFAULT 'new',  -- new | read | done | spam
+        ip         TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
     `);
 
     // Migrations: add columns that didn't exist in older pods
@@ -417,6 +426,51 @@ export class OrbiterDB {
 
   deleteComment(id) {
     this.db.prepare('DELETE FROM _comments WHERE id = ?').run(id);
+  }
+
+  // ── Form submissions ───────────────────────────────
+  createFormSubmission(formId, data, ip = null) {
+    const id = randomUUID();
+    this.db.prepare(
+      'INSERT INTO _forms (id, form_id, data, ip) VALUES (?, ?, ?, ?)'
+    ).run(id, formId, JSON.stringify(data), ip);
+    return id;
+  }
+
+  getFormSubmissions({ formId, status, limit = 50, offset = 0 } = {}) {
+    let sql = 'SELECT * FROM _forms WHERE 1=1';
+    const params = [];
+    if (formId) { sql += ' AND form_id = ?'; params.push(formId); }
+    if (status)  { sql += ' AND status = ?';  params.push(status); }
+    sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    params.push(limit, offset);
+    return this.db.prepare(sql).all(...params).map(r => ({ ...r, data: JSON.parse(r.data) }));
+  }
+
+  getFormSubmission(id) {
+    const r = this.db.prepare('SELECT * FROM _forms WHERE id = ?').get(id);
+    return r ? { ...r, data: JSON.parse(r.data) } : null;
+  }
+
+  setFormStatus(id, status) {
+    this.db.prepare('UPDATE _forms SET status = ? WHERE id = ?').run(status, id);
+  }
+
+  deleteFormSubmission(id) {
+    this.db.prepare('DELETE FROM _forms WHERE id = ?').run(id);
+  }
+
+  getFormStats() {
+    const rows = this.db.prepare(
+      `SELECT form_id, status, COUNT(*) as count FROM _forms GROUP BY form_id, status`
+    ).all();
+    const out = {};
+    for (const r of rows) {
+      if (!out[r.form_id]) out[r.form_id] = { new: 0, read: 0, done: 0, spam: 0, total: 0 };
+      out[r.form_id][r.status] = (out[r.form_id][r.status] ?? 0) + r.count;
+      out[r.form_id].total += r.count;
+    }
+    return out;
   }
 
   // ── Audit log ──────────────────────────────────────

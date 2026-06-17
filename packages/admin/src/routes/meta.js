@@ -16,7 +16,7 @@ const ALLOWED_KEYS = [
   'ui.theme',
   'format_version',
   'email.smtp_host', 'email.smtp_port', 'email.smtp_user', 'email.smtp_pass',
-  'email.smtp_from', 'email.notify_publish', 'email.notify_comment', 'email.notify_to',
+  'email.smtp_from', 'email.notify_publish', 'email.notify_comment', 'email.notify_form', 'email.notify_to',
   'ftp.host', 'ftp.port', 'ftp.user', 'ftp.password',
   'ftp.remote_path', 'ftp.local_path', 'ftp.secure', 'ftp.auto_deploy',
 ];

@@ -253,6 +253,7 @@
       <div class="nav-section">Content</div>
       <a class="nav-item" href="/dashboard.html"><span class="nav-icon">◈</span>Dashboard</a>
       <a class="nav-item" href="/collections.html"><span class="nav-icon">⊞</span>Collections</a>
+      <a class="nav-item" href="/forms.html"><span class="nav-icon">◫</span>Forms</a>
       <div class="nav-section">Assets</div>
       <a class="nav-item" href="/media.html"><span class="nav-icon">⊟</span>Media</a>
       <div class="nav-section">System</div>
@@ -511,6 +512,10 @@
           <div class="setting-row">
             <div><div class="setting-label">Notify on comment</div><div class="setting-desc">Send email when a new comment is posted</div></div>
             <input type="checkbox" name="email.notify_comment" value="1" ${get('email.notify_comment')==='1'?'checked':''} style="accent-color:var(--accent);width:14px;height:14px;" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Notify on form submission</div><div class="setting-desc">Send email when a contact form is submitted</div></div>
+            <input type="checkbox" name="email.notify_form" value="1" ${get('email.notify_form')==='1'?'checked':''} style="accent-color:var(--accent);width:14px;height:14px;" />
           </div>
         </div>
 
@@ -805,6 +810,7 @@
         ['email.notify_to',          fd.get('email.notify_to')],
         ['email.notify_publish',     fd.get('email.notify_publish') ? '1' : '0'],
         ['email.notify_comment',     fd.get('email.notify_comment') ? '1' : '0'],
+        ['email.notify_form',        fd.get('email.notify_form') ? '1' : '0'],
         ['ftp.host',        fd.get('ftp.host')],
         ['ftp.port',        fd.get('ftp.port')],
         ['ftp.user',        fd.get('ftp.user')],

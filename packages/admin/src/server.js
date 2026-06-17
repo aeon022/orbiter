@@ -26,6 +26,7 @@ import { commentRoutes }    from './routes/comments.js';
 import { lockRoutes }       from './routes/locks.js';
 import { terminalRoutes }   from './routes/terminal.js';
 import { deployRoutes }     from './routes/deploy.js';
+import { formPublicRoutes, formRoutes } from './routes/forms.js';
 import { requireAuth }      from './middleware/auth.js';
 import { csrfMiddleware }  from './middleware/csrf.js';
 
@@ -62,6 +63,11 @@ export function createApp(podPath) {
   // Public routes (no CSRF needed — login can't be meaningfully CSRF-attacked)
   app.route('/api/auth', authRoutes);
 
+  // Public form submission — wide CORS (called from any static site)
+  app.use('/api/form/*', cors({ origin: '*', allowMethods: ['POST', 'OPTIONS'] }));
+  app.use('/api/form/*', async (c, next) => { c.set('podPath', podPath); await next(); });
+  app.route('/api/form', formPublicRoutes);
+
   // Protected routes — CSRF + auth
   const api = new Hono();
   api.use('*', csrfMiddleware(ALLOWED_ORIGINS));
@@ -82,6 +88,7 @@ export function createApp(podPath) {
   api.route('/locks',        lockRoutes);
   api.route('/terminal',     terminalRoutes);
   api.route('/deploy',       deployRoutes);
+  api.route('/forms',        formRoutes);
 
   app.route('/api', api);
 

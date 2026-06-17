@@ -48,3 +48,47 @@ export async function sendNotification(podPath, event, ctx = {}) {
     db?.close();
   }
 }
+
+/**
+ * Send notification email on new form submission.
+ * @param {string} podPath
+ * @param {string} formId
+ * @param {object} data — submitted fields
+ */
+export async function sendFormNotification(podPath, formId, data = {}) {
+  let db;
+  try {
+    db = openPod(podPath);
+    if (db.getMeta('email.notify_form') !== '1') { db.close(); return; }
+
+    const host = db.getMeta('email.smtp_host') ?? '';
+    const port = parseInt(db.getMeta('email.smtp_port') ?? '587', 10);
+    const user = db.getMeta('email.smtp_user') ?? '';
+    const pass = db.getMeta('email.smtp_pass') ?? '';
+    const from = db.getMeta('email.smtp_from') || user;
+    const to   = db.getMeta('email.notify_to') ?? '';
+    const site = db.getMeta('site.name') ?? 'Orbiter';
+    db.close();
+
+    if (!host || !to) return;
+
+    const transport = nodemailer.createTransport({
+      host, port,
+      secure: port === 465,
+      auth: user ? { user, pass } : undefined,
+    });
+
+    const fields = Object.entries(data)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join('\n');
+
+    await transport.sendMail({
+      from, to,
+      subject: `[${site}] New form submission: ${formId}`,
+      text: `New submission from the "${formId}" form:\n\n${fields}`,
+    });
+  } catch (e) {
+    console.warn('[email]', e.message);
+    db?.close();
+  }
+}

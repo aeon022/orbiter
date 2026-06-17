@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbiter Admin — Forms</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@300;400;500;600&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+  <script src="/theme.js"></script>
+  <style>
+    .forms-wrap { max-width: 860px; }
+
+    /* Tabs */
+    .form-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+    .form-tab {
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: var(--bg2);
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .form-tab:hover { border-color: var(--mid); color: var(--text); }
+    .form-tab.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+    .form-tab .badge {
+      display: inline-block;
+      background: var(--accent);
+      color: var(--bg0);
+      border-radius: 10px;
+      padding: 0 5px;
+      font-size: 9px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    /* Status filter */
+    .status-filter { display: flex; gap: 6px; margin-bottom: 14px; }
+    .sf-btn {
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--line);
+      background: var(--bg2);
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .sf-btn:hover { border-color: var(--mid); color: var(--text); }
+    .sf-btn.active { background: var(--bg3); border-color: var(--mid); color: var(--text); }
+
+    /* Submission rows */
+    .sub-list { background: var(--bg2); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+    .sub-row {
+      border-bottom: 1px solid var(--line2);
+      transition: background .1s;
+      cursor: pointer;
+    }
+    .sub-row:last-child { border-bottom: none; }
+    .sub-row:hover { background: var(--hover-bg); }
+    .sub-row-head {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      align-items: center;
+      gap: 14px;
+      padding: 11px 18px;
+    }
+    .sub-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .sub-dot.new  { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+    .sub-dot.read { background: var(--muted); }
+    .sub-dot.done { background: var(--jade); }
+    .sub-dot.spam { background: var(--red); }
+    .sub-preview { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    .sub-preview em { font-style: normal; color: var(--muted); font-size: 11px; margin-right: 8px; }
+    .sub-time { font-family: var(--mono); font-size: 10px; color: var(--muted); white-space: nowrap; }
+    .sub-actions { display: flex; gap: 6px; opacity: 0; transition: opacity .15s; }
+    .sub-row:hover .sub-actions { opacity: 1; }
+
+    /* Expanded body */
+    .sub-body { display: none; padding: 14px 18px 16px; border-top: 1px solid var(--line2); background: var(--bg1); }
+    .sub-body.open { display: block; }
+    .sub-field { display: flex; gap: 12px; margin-bottom: 8px; align-items: flex-start; }
+    .sub-field:last-child { margin-bottom: 0; }
+    .sub-field-key { font-family: var(--mono); font-size: 10px; color: var(--muted); min-width: 100px; padding-top: 1px; flex-shrink: 0; }
+    .sub-field-val { font-size: 12px; color: var(--text); line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+    .sub-meta { font-family: var(--mono); font-size: 9px; color: var(--muted); margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line2); display: flex; gap: 16px; }
+
+    .sub-action-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+    /* Status badge */
+    .status-pill {
+      font-family: var(--mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
+      padding: 2px 7px; border-radius: 4px; border: 1px solid;
+    }
+    .status-pill.new  { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); background: var(--accent-bg); }
+    .status-pill.read { color: var(--muted);  border-color: var(--line); background: var(--bg3); }
+    .status-pill.done { color: var(--jade);   border-color: color-mix(in srgb, var(--jade) 40%, transparent); background: var(--jade-bg); }
+    .status-pill.spam { color: var(--red);    border-color: color-mix(in srgb, var(--red) 40%, transparent); background: var(--red-bg); }
+
+    .empty-state { padding: 40px 24px; text-align: center; color: var(--muted); font-size: 13px; }
+
+    /* Snippet card */
+    .snippet-card {
+      background: var(--bg2); border: 1px solid var(--line); border-radius: 10px;
+      padding: 18px 20px; margin-bottom: 14px;
+    }
+    .snippet-card summary { cursor: pointer; font-size: 11px; color: var(--muted); letter-spacing: .05em; list-style: none; display: flex; align-items: center; gap: 6px; }
+    .snippet-card summary::before { content: "▶"; font-size: 8px; transition: transform .15s; }
+    .snippet-card[open] summary::before { transform: rotate(90deg); }
+    .snippet-card pre { margin-top: 12px; background: var(--bg0); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; font-size: 11px; font-family: var(--mono); overflow-x: auto; color: var(--text); line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="logo" href="/dashboard.html"><div class="logo-mark">OR</div>Orbiter</a>
+      <div class="topbar-right">
+        <button class="search-trigger" id="search-btn" title="Search (⌘K)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Search <kbd>⌘K</kbd>
+        </button>
+        <button class="scheme-toggle" id="scheme-toggle" title="Toggle scheme">◐</button>
+        <span class="user" id="topbar-user"></span>
+        <span class="logout" id="logout-btn">Sign out</span>
+      </div>
+    </header>
+    <nav class="sidebar">
+      <div class="nav-section">Content</div>
+      <a class="nav-item" href="/dashboard.html"><span class="nav-icon">◈</span>Dashboard</a>
+      <a class="nav-item" href="/collections.html"><span class="nav-icon">⊞</span>Collections</a>
+      <a class="nav-item active" href="/forms.html"><span class="nav-icon">◫</span>Forms</a>
+      <div class="nav-section">Assets</div>
+      <a class="nav-item" href="/media.html"><span class="nav-icon">⊟</span>Media</a>
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="/schema.html"><span class="nav-icon">◈</span>Schema</a>
+      <a class="nav-item" href="/build.html"><span class="nav-icon">▲</span>Build</a>
+      <a class="nav-item" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
+      <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
+      <div class="sidebar-footer">
+        <div class="pod-name" id="pod-name">content.pod</div>
+        <div class="pod-info" id="pod-info"></div>
+        <div class="pod-version" id="pod-version"></div>
+        <div class="pod-status"><span class="pod-dot"></span>pod synced</div>
+      </div>
+    </nav>
+    <main class="main">
+      <div class="page-header glass-card">
+        <h1 class="page-title">Forms</h1>
+        <p class="page-sub" id="forms-sub"></p>
+      </div>
+      <div class="forms-wrap" id="forms-content">
+        <div class="empty"><div class="spinner"></div></div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).catch(() => null);
+    if (!me?.user) { location.replace('/login.html'); }
+    document.getElementById('topbar-user').textContent = me.user.username;
+    if (me.user.role === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      location.replace('/login.html');
+    });
+
+    const wrap = document.getElementById('forms-content');
+
+    // State
+    let _stats    = {};
+    let _formId   = null;
+    let _status   = null;
+    let _rows     = [];
+
+    function fmtTime(ts) {
+      const d = new Date(ts);
+      return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function previewText(data) {
+      const vals = Object.values(data).filter(v => typeof v === 'string' && v.trim());
+      return vals.slice(0, 3).join(' · ').slice(0, 120);
+    }
+
+    function statusPill(s) {
+      return `<span class="status-pill ${s}">${s}</span>`;
+    }
+
+    async function loadStats() {
+      _stats = await fetch('/api/forms', { credentials: 'include' }).then(r => r.json()).catch(() => ({}));
+    }
+
+    async function loadSubmissions() {
+      if (!_formId) return;
+      const url = `/api/forms/${_formId}` + (_status ? `?status=${_status}` : '');
+      _rows = await fetch(url, { credentials: 'include' }).then(r => r.json()).catch(() => []);
+    }
+
+    async function setStatus(id, status) {
+      await fetch(`/api/forms/${id}/status`, {
+        method: 'PUT', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      await loadStats();
+      await loadSubmissions();
+      render();
+    }
+
+    async function deleteRow(id) {
+      if (!confirm('Delete this submission?')) return;
+      await fetch(`/api/forms/${id}`, { method: 'DELETE', credentials: 'include' });
+      await loadStats();
+      await loadSubmissions();
+      render();
+    }
+
+    function render() {
+      const formIds = Object.keys(_stats);
+      const totalNew = Object.values(_stats).reduce((n, s) => n + (s.new ?? 0), 0);
+      document.getElementById('forms-sub').textContent =
+        formIds.length ? `${formIds.length} form${formIds.length > 1 ? 's' : ''} · ${totalNew} new` : '';
+
+      const snippet = `<details class="snippet-card">
+  <summary>How to connect a form from your Astro site</summary>
+  <pre>&lt;form id="my-form"&gt;
+  &lt;input name="name" required /&gt;
+  &lt;input name="email" type="email" required /&gt;
+  &lt;textarea name="message" required&gt;&lt;/textarea&gt;
+  &lt;!-- Honeypot (hidden, blocks bots) --&gt;
+  &lt;input name="_honeypot" style="display:none" tabindex="-1" autocomplete="off" /&gt;
+  &lt;button type="submit"&gt;Send&lt;/button&gt;
+&lt;/form&gt;
+&lt;script&gt;
+  document.getElementById('my-form').addEventListener('submit', async e =&gt; {
+    e.preventDefault();
+    const res = await fetch('https://your-admin.example.com/api/form/contact', {
+      method: 'POST',
+      body: new FormData(e.target),
+    });
+    if (res.ok) alert('Sent!');
+  });
+&lt;/script&gt;</pre>
+</details>`;
+
+      if (!formIds.length) {
+        wrap.innerHTML = snippet + `<div class="empty-state">No form submissions yet.<br>Connect a form from your Astro site using the snippet above.</div>`;
+        return;
+      }
+
+      // Tabs
+      const tabs = formIds.map(fid => {
+        const s = _stats[fid] ?? {};
+        const newCount = s.new ?? 0;
+        return `<button class="form-tab${_formId === fid ? ' active' : ''}" data-fid="${fid}">
+          ${fid}${newCount ? `<span class="badge">${newCount}</span>` : ''}
+        </button>`;
+      }).join('');
+
+      // Status filters
+      const statusFilters = ['all', 'new', 'read', 'done', 'spam'].map(s => {
+        const label = s === 'all' ? 'All' : s;
+        const cnt   = s === 'all' ? (_stats[_formId]?.total ?? 0) : (_stats[_formId]?.[s] ?? 0);
+        return `<button class="sf-btn${_status === (s === 'all' ? null : s) ? ' active' : ''}" data-sf="${s}">
+          ${label} <span style="color:var(--muted)">(${cnt})</span>
+        </button>`;
+      }).join('');
+
+      // Rows
+      const rowsHtml = _rows.length
+        ? _rows.map(r => {
+            const fields = Object.entries(r.data).map(([k, v]) =>
+              `<div class="sub-field">
+                <div class="sub-field-key">${k}</div>
+                <div class="sub-field-val">${String(v).replace(/</g, '&lt;')}</div>
+              </div>`
+            ).join('');
+
+            const actionBtns = ['read', 'done', 'spam'].filter(s => s !== r.status).map(s =>
+              `<button class="btn btn-ghost btn-sm" data-set-status="${r.id}" data-status="${s}">${s}</button>`
+            ).join('');
+
+            return `<div class="sub-row" data-id="${r.id}">
+              <div class="sub-row-head">
+                <div class="sub-dot ${r.status}"></div>
+                <div class="sub-preview"><em>${statusPill(r.status)}</em>${previewText(r.data).replace(/</g, '&lt;')}</div>
+                <div class="sub-time">${fmtTime(r.created_at)}</div>
+                <div class="sub-actions">
+                  ${r.status === 'new' ? `<button class="btn btn-ghost btn-sm" data-set-status="${r.id}" data-status="read">Mark read</button>` : ''}
+                </div>
+              </div>
+              <div class="sub-body" id="body-${r.id}">
+                ${fields}
+                <div class="sub-action-row">
+                  ${actionBtns}
+                  ${r.status !== 'new' ? `<button class="btn btn-ghost btn-sm" data-set-status="${r.id}" data-status="new">Mark new</button>` : ''}
+                  <button class="btn btn-ghost btn-sm" style="color:var(--red);margin-left:auto" data-del="${r.id}">Delete</button>
+                </div>
+                <div class="sub-meta">
+                  <span>id: ${r.id}</span>
+                  ${r.ip ? `<span>ip: ${r.ip}</span>` : ''}
+                  <span>${r.created_at}</span>
+                </div>
+              </div>
+            </div>`;
+          }).join('')
+        : `<div class="empty-state">No submissions${_status ? ` with status "${_status}"` : ''}.</div>`;
+
+      wrap.innerHTML = `
+        ${snippet}
+        <div class="form-tabs">${tabs}</div>
+        <div class="status-filter">${statusFilters}</div>
+        <div class="sub-list">${rowsHtml}</div>
+      `;
+
+      // Tab clicks
+      wrap.querySelectorAll('.form-tab').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          _formId = btn.dataset.fid;
+          _status = null;
+          await loadSubmissions();
+          render();
+        });
+      });
+
+      // Status filter clicks
+      wrap.querySelectorAll('.sf-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          _status = btn.dataset.sf === 'all' ? null : btn.dataset.sf;
+          await loadSubmissions();
+          render();
+        });
+      });
+
+      // Row expand
+      wrap.querySelectorAll('.sub-row').forEach(row => {
+        row.querySelector('.sub-row-head').addEventListener('click', async () => {
+          const id   = row.dataset.id;
+          const body = document.getElementById(`body-${id}`);
+          const open = body.classList.toggle('open');
+          // mark as read when opened
+          const r = _rows.find(x => x.id === id);
+          if (open && r?.status === 'new') await setStatus(id, 'read');
+        });
+      });
+
+      // Status buttons
+      wrap.querySelectorAll('[data-set-status]').forEach(btn => {
+        btn.addEventListener('click', e => { e.stopPropagation(); setStatus(btn.dataset.setStatus, btn.dataset.status); });
+      });
+
+      // Delete buttons
+      wrap.querySelectorAll('[data-del]').forEach(btn => {
+        btn.addEventListener('click', e => { e.stopPropagation(); deleteRow(btn.dataset.del); });
+      });
+    }
+
+    // Init
+    await loadStats();
+    _formId = Object.keys(_stats)[0] ?? null;
+    if (_formId) await loadSubmissions();
+    render();
+  </script>
+  <script src="/sidebar.js"></script>
+  <script src="/search.js"></script>
+  <script src="/xfce.js" type="module"></script>
+</body>
+</html>
