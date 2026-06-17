@@ -1196,21 +1196,25 @@ html[data-style="xfce"] .editor-shell {
 }
 .xfce-dock-item.active {
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent),
+    0 0 14px color-mix(in srgb, var(--accent) 22%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 18%, transparent);
 }
-.xfce-dock-item.active::before { opacity: .5; }
-/* active indicator: glowing scan-line instead of dot */
+.xfce-dock-item.active::before { opacity: .65; }
+/* active indicator: glowing dot at bottom */
 .xfce-dock-item.active::after {
   content: '';
   position: absolute;
-  bottom: 0;
+  bottom: 4px;
   left: 50%;
   transform: translateX(-50%);
-  width: 60%;
-  height: 2px;
-  border-radius: 1px;
-  background: linear-gradient(90deg, transparent, var(--accent) 30%, var(--accent) 70%, transparent);
-  box-shadow: 0 0 8px 1px color-mix(in srgb, var(--accent) 70%, transparent);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px 2px color-mix(in srgb, var(--accent) 80%, transparent);
 }
 
 .xfce-dock-icon {
@@ -1227,9 +1231,10 @@ html[data-style="xfce"] .editor-shell {
   transform: scale(1.14);
 }
 .xfce-dock-item.active .xfce-dock-icon {
-  opacity: .95;
+  opacity: 1;
   color: var(--accent);
-  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 65%, transparent));
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 80%, transparent));
+  transform: scale(1.08);
 }
 .xfce-dock-lbl {
   font-family: var(--mono);
@@ -1246,8 +1251,10 @@ html[data-style="xfce"] .editor-shell {
   color: color-mix(in srgb, var(--accent) 80%, var(--heading));
 }
 .xfce-dock-item.active .xfce-dock-lbl {
-  opacity: .85;
+  opacity: 1;
   color: var(--accent);
+  font-weight: 700;
+  letter-spacing: .08em;
 }
 
 /* ── HUD Panel ────────────────────────────────────────────── */
