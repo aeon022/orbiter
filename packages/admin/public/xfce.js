@@ -82,10 +82,18 @@
     ].join('');
     document.body.insertBefore(sb, document.body.firstChild);
 
-    // Page title from document.title
-    var title  = document.title.replace(/\s*—\s*Orbiter.*$/, '').trim();
+    // Breadcrumb / page title
     var titleEl = document.getElementById('xfce-sb-title');
-    if (titleEl && title) titleEl.textContent = title;
+    if (titleEl) {
+      if (activeCol && (page === 'entries' || page === 'editor')) {
+        // will be filled in by loadInfo once we know the collection label
+        titleEl.dataset.col = activeCol;
+        titleEl.dataset.page = page;
+      } else {
+        var title = document.title.replace(/\s*—\s*Orbiter.*$/, '').trim();
+        if (title) titleEl.textContent = title;
+      }
+    }
 
     // Clock
     function tick() {
@@ -139,6 +147,8 @@
         '<div id="xfce-hud-cols" class="xfce-hud-rows"></div>',
         '<div class="xfce-hud-section-label" style="margin-top:16px">Drafts</div>',
         '<div id="xfce-hud-drafts" class="xfce-hud-rows xfce-hud-drafts"></div>',
+        '<div class="xfce-hud-section-label" style="margin-top:16px">Activity</div>',
+        '<div id="xfce-hud-activity" class="xfce-hud-rows xfce-hud-activity"></div>',
         '<div class="xfce-hud-section-label" style="margin-top:16px">Navigation</div>',
         '<div class="xfce-hud-nav-links" id="xfce-hud-nav"></div>',
       '</div>',
@@ -163,6 +173,7 @@
   function toggleHUD() {
     if (!metaPanel) return;
     metaPanel.classList.toggle('open');
+    if (metaPanel.classList.contains('open')) refreshHUDActivity();
   }
 
   // ── Tools popup ───────────────────────────────────────────────────────
@@ -569,6 +580,8 @@
       case 'search': palSearch(args.join(' ')); break;
       case 'build':  palBuild();                break;
       case 'export': palExport(args);           break;
+      case 'random': palRandom();               break;
+      case '=':      palMath(args.join(' '));   break;
       default: palPrint('unknown: <b>' + escHtml(cmd) + '</b> &mdash; try <b>&gt; help</b>', 'err');
     }
   }
@@ -582,6 +595,8 @@
       '<code>info</code> &mdash; pod &amp; version info',
       '<code>build</code> &mdash; trigger deploy',
       '<code>export &lt;col&gt; [--md] [--drafts]</code> &mdash; download',
+      '<code>random</code> &mdash; jump to a random entry',
+      '<code>= &lt;expr&gt;</code> &mdash; evaluate math expression',
     ].join('<br>'), 'dim');
   }
 
@@ -698,11 +713,49 @@
       .then(function (r) { return r.json(); })
       .then(function (d) {
         paletteResults.innerHTML = '';
-        if (d.ok || d.message) { palPrint('✓ ' + (d.message || 'build triggered'), 'ok'); setTimeout(closePalette, 900); }
-        else palPrint('build error: ' + escHtml(d.error || JSON.stringify(d)), 'err');
+        if (d.ok || d.message) {
+          palPrint('✓ ' + (d.message || 'build triggered'), 'ok');
+          startBuildPoll();
+          setTimeout(closePalette, 900);
+        } else palPrint('build error: ' + escHtml(d.error || JSON.stringify(d)), 'err');
       })
       .catch(function () { paletteResults.innerHTML = ''; palPrint('build request failed', 'err'); });
   }
+
+  function palMath(expr) {
+    if (!expr) { palPrint('usage: <code>= 2 * 450 + 12</code>', 'dim'); return; }
+    try {
+      // only allow safe math chars
+      if (!/^[\d\s\+\-\*\/\.\(\)%,^]+$/.test(expr)) throw new Error('unsafe');
+      // replace ^ with ** for exponentiation
+      var safe = expr.replace(/\^/g, '**');
+      // eslint-disable-next-line no-new-func
+      var result = Function('"use strict"; return (' + safe + ')')();
+      if (typeof result !== 'number' || !isFinite(result)) throw new Error('not a number');
+      palPrint('<span style="font-size:15px;color:var(--accent)">' + result + '</span>'
+        + ' <span style="color:var(--muted);font-size:10px">= ' + escHtml(expr) + '</span>', '');
+    } catch (e) {
+      palPrint('invalid expression', 'err');
+    }
+  }
+
+  function palRandom() {
+    palPrint('picking a random entry…', 'muted');
+    fetch('/api/search/recent?limit=50', { credentials: 'include' })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (rows) {
+        var published = rows.filter(function (r) { return r.status === 'published'; });
+        if (!published.length) { paletteResults.innerHTML = ''; palPrint('no published entries found', 'muted'); return; }
+        var pick = published[Math.floor(Math.random() * published.length)];
+        var href = '/collections/' + encodeURIComponent(pick.collection) + '/entries/' + encodeURIComponent(pick.slug);
+        paletteResults.innerHTML = '';
+        palPrint('✦ <a href="' + href + '" style="color:var(--accent)">' + escHtml(pick.title || pick.slug) + '</a>'
+          + ' <span style="color:var(--muted)">in ' + escHtml(pick.label) + '</span>', '');
+        setTimeout(function () { location.href = href; closePalette(); }, 1200);
+      })
+      .catch(function () { paletteResults.innerHTML = ''; palPrint('error fetching entries', 'err'); });
+  }
+
 
   function palExport(args) {
     if (!args.length) { palPrint('usage: export &lt;collection&gt; [--md] [--drafts]', 'err'); return; }
@@ -797,6 +850,7 @@
     if (badge) { badge.textContent = _notifUnread > 9 ? '9+' : _notifUnread; badge.style.display = ''; }
     if (icon)  { icon.textContent = '●'; }
     if (_notifPanel && _notifPanel.classList.contains('open')) renderNotifList();
+    refreshHUDActivity();
   }
 
   function buildNotifPanel() {
@@ -837,6 +891,24 @@
       return '<div class="xfce-notif-item xfce-notif-' + cls + '">'
         + '<span class="xfce-notif-msg">' + escHtml(n.msg) + '</span>'
         + '<span class="xfce-notif-time">' + t + '</span>'
+        + '</div>';
+    }).join('');
+  }
+
+  function refreshHUDActivity() {
+    var el2 = document.getElementById('xfce-hud-activity');
+    if (!el2) return;
+    if (!_notifications.length) {
+      el2.innerHTML = '<div class="xfce-hud-empty">No activity yet</div>';
+      return;
+    }
+    el2.innerHTML = _notifications.slice(0, 8).map(function (n) {
+      var ago = Math.floor((Date.now() - n.time) / 1000);
+      var t = ago < 60 ? ago + 's' : ago < 3600 ? Math.floor(ago / 60) + 'm' : Math.floor(ago / 3600) + 'h';
+      var cls = n.type === 'success' ? 'xfce-hud-act-ok' : n.type === 'error' ? 'xfce-hud-act-err' : '';
+      return '<div class="xfce-hud-act-row' + (cls ? ' ' + cls : '') + '">'
+        + '<span class="xfce-hud-act-msg">' + escHtml(n.msg) + '</span>'
+        + '<span class="xfce-hud-act-time">' + t + '</span>'
         + '</div>';
     }).join('');
   }
@@ -1343,6 +1415,17 @@
             return hudRow(col.label, col.total + ' published' + draftTxt);
           }).join('');
         }
+
+        // Breadcrumb in status bar center
+        var titleEl = document.getElementById('xfce-sb-title');
+        if (titleEl && titleEl.dataset.col) {
+          var colMeta = (info.collections || []).find(function (c) { return c.id === titleEl.dataset.col; });
+          var colLabel = colMeta ? colMeta.label : titleEl.dataset.col;
+          var crumbPage = titleEl.dataset.page === 'editor' ? 'Editor' : 'Entries';
+          titleEl.innerHTML = '<a href="/entries.html?col=' + encodeURIComponent(titleEl.dataset.col) + '" class="xfce-sb-crumb-link">' + escHtml(colLabel) + '</a>'
+            + '<span class="xfce-sb-crumb-sep"> › </span>'
+            + '<span class="xfce-sb-crumb-page">' + crumbPage + '</span>';
+        }
       })
       .catch(function () {});
 
@@ -1450,6 +1533,8 @@
             cheatRow('&gt; search &lt;q&gt;', 'Search entries'),
             cheatRow('&gt; build', 'Trigger site build'),
             cheatRow('&gt; export &lt;col&gt;', 'Export collection'),
+            cheatRow('&gt; random', 'Jump to random entry'),
+            cheatRow('&gt; = &lt;expr&gt;', 'Evaluate math'),
             cheatRow('&gt; info', 'Show pod info'),
             cheatRow('&gt; help', 'Show command help'),
           '</div>',
@@ -1581,25 +1666,58 @@
   }
 
   // ── Build status in status bar ────────────────────────────────────────
+  var _buildPolling = false;
+
   function loadBuildStatus() {
     fetch('/api/build/status', { credentials: 'include' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
-        if (!d || !d.lastTriggered) return;
+        if (!d) return;
         var el2 = document.getElementById('xfce-sb-build');
         var sep = document.getElementById('xfce-sb-build-sep');
         if (!el2) return;
-        var dt = new Date(d.lastTriggered.replace(' ', 'T'));
-        var now = new Date();
-        var diffM = Math.floor((now - dt) / 60000);
+
+        var running = d.running === true;
+        el2.classList.toggle('xfce-sb-build--running', running);
+
+        if (running) {
+          el2.textContent = '◉ building…';
+          el2.title = 'Build in progress';
+          if (sep) sep.style.display = '';
+          if (!_buildPolling) {
+            _buildPolling = true;
+            setTimeout(function poll() {
+              loadBuildStatus();
+              if (_buildPolling) setTimeout(poll, 4000);
+            }, 4000);
+          }
+          return;
+        }
+
+        _buildPolling = false;
+        if (!d.lastTriggered) return;
+        var dt    = new Date(d.lastTriggered.replace(' ', 'T'));
+        var diffM = Math.floor((Date.now() - dt) / 60000);
         var label = diffM < 1 ? 'built now'
-          : diffM < 60 ? 'built ' + diffM + 'm ago'
+          : diffM < 60   ? 'built ' + diffM + 'm ago'
           : diffM < 1440 ? 'built ' + Math.floor(diffM / 60) + 'h ago'
           : 'built ' + dt.toLocaleDateString([], { month: 'short', day: 'numeric' });
         el2.textContent = '◉ ' + label;
         el2.title = 'Last build: ' + d.lastTriggered;
         if (sep) sep.style.display = '';
       });
+  }
+
+  function startBuildPoll() {
+    _buildPolling = true;
+    var el2 = document.getElementById('xfce-sb-build');
+    var sep = document.getElementById('xfce-sb-build-sep');
+    if (el2) { el2.textContent = '◉ building…'; el2.classList.add('xfce-sb-build--running'); }
+    if (sep) sep.style.display = '';
+    setTimeout(function poll() {
+      loadBuildStatus();
+      if (_buildPolling) setTimeout(poll, 4000);
+    }, 3000);
   }
 
 
