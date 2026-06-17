@@ -2196,6 +2196,74 @@ html[data-style="xfce"][data-dock-pos="left"] .xfce-ws-overlay {
   bottom: auto; left: 110px; top: 50%; transform: translateY(-50%);
 }
 
+/* ── Bell / Notification Center ─────────────────────────── */
+.xfce-sb-bell {
+  background: none; border: none; cursor: pointer; padding: 0 2px;
+  color: var(--muted); font-size: 12px; line-height: 1;
+  position: relative; display: flex; align-items: center; gap: 2px;
+  transition: color .15s;
+}
+.xfce-sb-bell:hover { color: var(--accent); }
+.xfce-sb-bell-badge {
+  position: absolute; top: -3px; right: -4px;
+  background: var(--accent); color: var(--bg1);
+  font-size: 8px; font-family: var(--mono); font-weight: 700;
+  border-radius: 6px; padding: 0 3px; min-width: 12px; text-align: center;
+  line-height: 13px; pointer-events: none;
+}
+.xfce-notif-panel {
+  position: fixed; top: calc(var(--sb-h) + 6px); right: 12px;
+  width: 300px; max-height: 340px;
+  background: var(--bg1); border: 1px solid var(--line);
+  border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,.45);
+  z-index: 100000; display: none; flex-direction: column; overflow: hidden;
+  font-family: var(--mono); font-size: 11px;
+}
+.xfce-notif-panel.open { display: flex; }
+.xfce-notif-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; border-bottom: 1px solid var(--line);
+  background: var(--bg2); flex-shrink: 0;
+}
+.xfce-notif-title { color: var(--accent); font-weight: 700; font-size: 10px; letter-spacing: .06em; }
+.xfce-notif-clear {
+  background: none; border: 1px solid var(--line); border-radius: 4px;
+  color: var(--muted); font-size: 9px; font-family: var(--mono);
+  padding: 1px 7px; cursor: pointer; transition: color .15s, border-color .15s;
+}
+.xfce-notif-clear:hover { color: var(--accent); border-color: var(--accent); }
+.xfce-notif-list {
+  overflow-y: auto; flex: 1; padding: 4px 0;
+}
+.xfce-notif-list::-webkit-scrollbar { width: 4px; }
+.xfce-notif-list::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
+.xfce-notif-item {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 8px; padding: 6px 12px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.xfce-notif-item:last-child { border-bottom: none; }
+.xfce-notif-msg { flex: 1; color: var(--text); font-size: 10px; line-height: 1.4; }
+.xfce-notif-time { color: var(--muted); font-size: 9px; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+.xfce-notif-ok   .xfce-notif-msg { color: var(--jade); }
+.xfce-notif-err  .xfce-notif-msg { color: var(--red); }
+.xfce-notif-empty { padding: 20px 12px; color: var(--muted); font-size: 10px; text-align: center; }
+
+/* ── HUD Drafts section ──────────────────────────────────── */
+.xfce-hud-draft-row {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 8px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.xfce-hud-draft-row:last-child { border-bottom: none; }
+.xfce-hud-draft-link {
+  color: var(--accent); text-decoration: none; font-size: 10px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;
+  max-width: 160px;
+}
+.xfce-hud-draft-link:hover { text-decoration: underline; }
+.xfce-hud-draft-meta { color: var(--muted); font-size: 9px; white-space: nowrap; flex-shrink: 0; }
+.xfce-hud-empty { color: var(--muted); font-size: 10px; padding: 4px 0; }
+
 /* ── Toast host (above dock) ─────────────────────────────── */
 .xfce-toast-host {
   position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);

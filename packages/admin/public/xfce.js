@@ -64,6 +64,8 @@
       '<div class="xfce-sb-center" id="xfce-sb-title"></div>',
       '<div class="xfce-sb-right">',
         '<span id="xfce-sb-g-ind" class="xfce-sb-g-ind" style="display:none" title="g mode: d=dashboard m=media s=settings u=users b=build i=import h=schema a=account">g ›</span>',
+        '<button id="xfce-sb-bell" class="xfce-sb-bell" title="Notifications"><span id="xfce-sb-bell-icon">○</span><span id="xfce-sb-bell-badge" class="xfce-sb-bell-badge" style="display:none"></span></button>',
+        '<span class="xfce-sb-div">·</span>',
         '<button id="xfce-sb-palette-btn" class="xfce-sb-palette-btn" title="Command palette (⌘K)">⌘</button>',
         '<span class="xfce-sb-div">·</span>',
         '<span id="xfce-sb-build" class="xfce-sb-build" title="Last build"></span>',
@@ -102,6 +104,12 @@
       e.stopPropagation();
       openPalette();
     });
+
+    // Bell / notification center
+    document.getElementById('xfce-sb-bell').addEventListener('click', function (e) {
+      e.stopPropagation();
+      toggleNotifPanel();
+    });
   }
 
   // ── HUD Meta Panel ────────────────────────────────────────────────────
@@ -120,6 +128,8 @@
         '<div id="xfce-hud-pod" class="xfce-hud-rows"></div>',
         '<div class="xfce-hud-section-label" style="margin-top:16px">Collections</div>',
         '<div id="xfce-hud-cols" class="xfce-hud-rows"></div>',
+        '<div class="xfce-hud-section-label" style="margin-top:16px">Drafts</div>',
+        '<div id="xfce-hud-drafts" class="xfce-hud-rows xfce-hud-drafts"></div>',
         '<div class="xfce-hud-section-label" style="margin-top:16px">Navigation</div>',
         '<div class="xfce-hud-nav-links" id="xfce-hud-nav"></div>',
       '</div>',
@@ -714,6 +724,7 @@
       t.classList.remove('show');
       setTimeout(function () { t.remove(); }, 300);
     }, 2500);
+    pushNotif(msg, type);
   };
 
   function observeSavedFlash() {
@@ -724,6 +735,77 @@
         window.xfceToast(flash.textContent.trim(), 'success');
       }
     }).observe(flash, { attributes: true, attributeFilter: ['style'] });
+  }
+
+  // ── Notification Center ───────────────────────────────────────────────
+  var _notifications = [], _notifUnread = 0, _notifPanel = null;
+
+  function pushNotif(msg, type) {
+    _notifications.unshift({ msg: msg, type: type || 'info', time: Date.now() });
+    if (_notifications.length > 40) _notifications.pop();
+    _notifUnread++;
+    var badge = document.getElementById('xfce-sb-bell-badge');
+    var icon  = document.getElementById('xfce-sb-bell-icon');
+    if (badge) { badge.textContent = _notifUnread > 9 ? '9+' : _notifUnread; badge.style.display = ''; }
+    if (icon)  { icon.textContent = '●'; }
+    if (_notifPanel && _notifPanel.classList.contains('open')) renderNotifList();
+  }
+
+  function buildNotifPanel() {
+    _notifPanel = el('div', 'xfce-notif-panel');
+    _notifPanel.id = 'xfce-notif-panel';
+    _notifPanel.innerHTML = '<div class="xfce-notif-bar">'
+      + '<span class="xfce-notif-title">Notifications</span>'
+      + '<button id="xfce-notif-clear" class="xfce-notif-clear">Clear all</button>'
+      + '</div>'
+      + '<div id="xfce-notif-list" class="xfce-notif-list"></div>';
+    document.body.appendChild(_notifPanel);
+    document.getElementById('xfce-notif-clear').addEventListener('click', function () {
+      _notifications = []; _notifUnread = 0;
+      renderNotifList();
+      var badge = document.getElementById('xfce-sb-bell-badge');
+      var icon  = document.getElementById('xfce-sb-bell-icon');
+      if (badge) badge.style.display = 'none';
+      if (icon)  icon.textContent = '○';
+    });
+    document.addEventListener('click', function (e) {
+      if (_notifPanel && _notifPanel.classList.contains('open')
+          && !_notifPanel.contains(e.target)
+          && e.target.id !== 'xfce-sb-bell') closeNotifPanel();
+    });
+  }
+
+  function renderNotifList() {
+    var list = document.getElementById('xfce-notif-list');
+    if (!list) return;
+    if (!_notifications.length) {
+      list.innerHTML = '<div class="xfce-notif-empty">No notifications yet</div>';
+      return;
+    }
+    list.innerHTML = _notifications.map(function (n) {
+      var ago = Math.floor((Date.now() - n.time) / 1000);
+      var t = ago < 60 ? ago + 's' : ago < 3600 ? Math.floor(ago/60) + 'm' : Math.floor(ago/3600) + 'h';
+      var cls = n.type === 'success' ? 'ok' : n.type === 'error' ? 'err' : 'info';
+      return '<div class="xfce-notif-item xfce-notif-' + cls + '">'
+        + '<span class="xfce-notif-msg">' + escHtml(n.msg) + '</span>'
+        + '<span class="xfce-notif-time">' + t + '</span>'
+        + '</div>';
+    }).join('');
+  }
+
+  function toggleNotifPanel() {
+    if (!_notifPanel) buildNotifPanel();
+    var isOpen = _notifPanel.classList.toggle('open');
+    if (isOpen) {
+      _notifUnread = 0;
+      var badge = document.getElementById('xfce-sb-bell-badge');
+      if (badge) badge.style.display = 'none';
+      renderNotifList();
+    }
+  }
+
+  function closeNotifPanel() {
+    if (_notifPanel) _notifPanel.classList.remove('open');
   }
 
   // ── Workspace overlay (Notes + To-do) ────────────────────────────────
@@ -1210,6 +1292,28 @@
             return hudRow(col.label, col.total + ' published' + draftTxt);
           }).join('');
         }
+      })
+      .catch(function () {});
+
+    // HUD Drafts
+    fetch('/api/search/recent?status=draft&limit=10', { credentials: 'include' })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (drafts) {
+        var hudDrafts = document.getElementById('xfce-hud-drafts');
+        if (!hudDrafts) return;
+        if (!drafts.length) {
+          hudDrafts.innerHTML = '<div class="xfce-hud-empty">No drafts</div>';
+          return;
+        }
+        hudDrafts.innerHTML = drafts.map(function (d) {
+          var href = '/collections/' + encodeURIComponent(d.collection) + '/entries/' + encodeURIComponent(d.slug);
+          var ago = Math.floor((Date.now() - new Date(d.updated_at).getTime()) / 60000);
+          var t = ago < 60 ? ago + 'm' : Math.floor(ago / 60) + 'h';
+          return '<div class="xfce-hud-draft-row">'
+            + '<a class="xfce-hud-draft-link" href="' + href + '">' + escHtml(d.title || d.slug) + '</a>'
+            + '<span class="xfce-hud-draft-meta">' + escHtml(d.label) + ' · ' + t + '</span>'
+            + '</div>';
+        }).join('');
       })
       .catch(function () {});
 

@@ -5,17 +5,19 @@ export const searchRoutes = new Hono();
 
 // GET /api/search/recent — last N entries across all collections
 searchRoutes.get('/recent', (c) => {
-  const limit = Math.min(parseInt(c.req.query('limit') ?? '10', 10), 50);
-  const db    = openPod(c.get('podPath'));
-  const cols  = db.getCollections();
+  const limit  = Math.min(parseInt(c.req.query('limit') ?? '10', 10), 50);
+  const status = c.req.query('status') ?? null;
+  const db     = openPod(c.get('podPath'));
+  const cols   = db.getCollections();
   const colMap = Object.fromEntries(cols.map(c => [c.id, c.label]));
 
-  const rows = db.db
-    .prepare(`SELECT e.*, e.collection_id as collection FROM _entries e ORDER BY e.updated_at DESC LIMIT ?`)
-    .all(limit);
+  const rows = status
+    ? db.db.prepare(`SELECT * FROM _entries WHERE status = ? ORDER BY updated_at DESC LIMIT ?`).all(status, limit)
+    : db.db.prepare(`SELECT * FROM _entries ORDER BY updated_at DESC LIMIT ?`).all(limit);
 
   const results = rows.map(r => {
-    const data = JSON.parse(r.data);
+    let data = {};
+    try { data = JSON.parse(r.data); } catch {}
     return {
       collection: r.collection_id,
       label:      colMap[r.collection_id] ?? r.collection_id,
