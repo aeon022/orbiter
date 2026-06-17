@@ -1,0 +1,10 @@
+name = "orbiter-ping"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+
+[[kv_namespaces]]
+binding = "PINGS"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+# Optional: set STATS_SECRET via `wrangler secret put STATS_SECRET`
+# to protect the /stats endpoint.

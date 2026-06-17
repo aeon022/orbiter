@@ -32,3 +32,17 @@ if (process.env.ORBITER_POD) {
 }
 
 await import('./server.js');
+
+// Startup ping — counts active installs. Opt out: ORBITER_NO_TELEMETRY=1
+if (!process.env.ORBITER_NO_TELEMETRY) {
+  const { version } = JSON.parse(
+    (await import('node:fs')).readFileSync(
+      new URL('../package.json', import.meta.url), 'utf8'
+    )
+  );
+  fetch('https://ping.orbiter.sh/ping', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ version, node: process.version, platform: process.platform }),
+  }).catch(() => {});
+}

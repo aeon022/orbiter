@@ -76,9 +76,10 @@ Login: `admin` / `admin`
 
 | Variable        | Required | Default | Description |
 |-----------------|----------|---------|-------------|
-| `ORBITER_POD`   | **yes**  | —       | Absolute path to the `.pod` file |
-| `PORT`          | no       | `4322`  | HTTP port |
-| `ADMIN_ORIGIN`  | no       | `*`     | Allowed CORS origins (comma-separated) |
+| `ORBITER_POD`          | **yes**  | —       | Absolute path to the `.pod` file |
+| `PORT`                 | no       | `4322`  | HTTP port |
+| `ADMIN_ORIGIN`         | no       | `*`     | Allowed CORS origins (comma-separated) |
+| `ORBITER_NO_TELEMETRY` | no       | —       | Set to `1` to disable the anonymous startup ping (version + node + platform, no personal data) |
 
 ---
 
