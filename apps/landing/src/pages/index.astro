@@ -24,7 +24,7 @@ const features = [
   { icon: '⌘', title: 'Command palette',              body: '<code>⌘K</code> fuzzy search across all content and navigation. Installable as a PWA on mobile and desktop.' },
   { icon: '👥', title: 'Multi-user & roles',           body: 'Admin and editor roles. Entry locking warns when two editors open the same entry simultaneously. Manage users in the UI.' },
   { icon: '⌾', title: 'Multilingual (i18n)',           body: 'Per-entry locale variants — same slug, separate locale columns. Configure locales in Settings, translate entries via locale tabs in the editor. <code>getLocaleCollection()</code> and <code>getLocaleEntry()</code> with automatic fallback.' },
-  { icon: '◉', title: 'Space Station mode',           body: 'A distinct layout with a floating magnification dock, HUD status panel, notes sidebar, and a full mobile tab-bar. Three themes × two colour schemes, switchable in one click.' },
+  { icon: '◉', title: 'Space Station mode',           body: 'A distinct layout with a floating magnification dock, command palette (<code>⌘K</code>), vim keyboard navigation, HUD panel, notification center, zen mode, and a full mobile tab-bar. Three themes × two colour schemes.' },
   { icon: '⊡', title: 'Trash & restore',              body: 'Deleted entries move to a recoverable Trash tab. Restore to draft or permanently delete. Bulk restore and bulk purge. Activity log records every action with actor and timestamp.' },
   { icon: '◎', title: 'Draft preview',                body: 'Generate a preview token in Settings → API. Attach it to your preview URL — <code>getPreviewEntry()</code> reads any draft directly from the pod, bypassing the published snapshot.' },
 ];
@@ -131,7 +131,7 @@ const faqs = [
   },
   {
     q: 'Is it production-ready?',
-    a: 'Orbiter is at v0.3.20 — published to npm, actively maintained, and used in real projects. The API may evolve before v1.0. It\'s suitable for personal sites, client projects, and small teams. Check the GitHub issues for anything relevant to your use case.',
+    a: 'Orbiter is at v0.3.47 — published to npm, actively maintained, and used in real projects. The API may evolve before v1.0. It\'s suitable for personal sites, client projects, and small teams. Check the GitHub issues for anything relevant to your use case.',
   },
   {
     q: 'What\'s the license?',
@@ -276,7 +276,7 @@ const faqs = [
     </div>
 
     <div class="hero-inner">
-      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">v0.3.20 — i18n, Space Station mode, settings overhaul · Changelog →</a>
+      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">v0.3.47 — Station dock: command palette, zen mode, keyboard nav · Changelog →</a>
       <h1>Your entire CMS<br />in <span>one file.</span></h1>
       <p class="hero-sub">
         Content, media, schema, users — all in a single <code>.pod</code> file.
@@ -470,7 +470,28 @@ const faqs = [
         <div class="update-date">Jun<br />2026</div>
         <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">v0.3.20 — New</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">v0.3.47 — New</div>
+          <div class="update-title">Station dock overhaul — command palette, keyboard nav, notification center & more</div>
+          <ul class="update-items">
+            <li><strong>Command palette</strong> — <code>⌘K</code> or <code>/</code> opens a full-screen palette. Opens with recent entries pre-loaded. Type <code>&gt;</code> to enter command mode: <code>&gt; ls</code>, <code>&gt; go</code>, <code>&gt; new</code>, <code>&gt; search</code>, <code>&gt; build</code>, <code>&gt; export</code>, <code>&gt; random</code>, <code>&gt; = expr</code> (math evaluator). Command history with ↑/↓.</li>
+            <li><strong>Vim keyboard navigation</strong> — press <code>g</code> then a letter to jump to any page: <code>g d</code> dashboard, <code>g m</code> media, <code>g h</code> HUD, <code>g s</code> settings, <code>g b</code> build, and more. Animated <code>g ›</code> indicator in the status bar while waiting for the second key.</li>
+            <li><strong>Notification center</strong> — bell icon in the status bar. Every save, build trigger, and export is logged automatically. Dropdown panel with unread badge, relative timestamps, and clear-all.</li>
+            <li><strong>HUD panel expanded</strong> — Drafts section (last 10 drafts, clickable to editor) and Activity feed (last 8 events as a live timeline). Opens with <code>g h</code> or the dock button.</li>
+            <li><strong>Zen / focus mode</strong> — <code>⌘⇧F</code> hides the dock and status bar for distraction-free writing. Persists across reloads. Toast hint on enter.</li>
+            <li><strong>Shortcut cheatsheet</strong> — <code>?</code> key or <code>?</code> button in the status bar opens a two-column modal with every shortcut and palette command.</li>
+            <li><strong>Live build status</strong> — status bar shows <em>◉ building…</em> with a pulse animation while a build is running, polling every 4 seconds until done.</li>
+            <li><strong>Breadcrumb in status bar</strong> — when inside a collection, the center shows <em>Collection › Entries</em> with a clickable link back.</li>
+            <li><strong>Left dock mode</strong> — toggle dock position between bottom and left side. All popups, overlays, and magnification axis adapt automatically.</li>
+            <li><strong>Hover preview cards</strong> — hovering a collection in the dock shows a card with the 3 most recent entries and quick-action buttons (new entry, view all, export).</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="update-card reveal" style="border-color:color-mix(in srgb,var(--accent) 20%,var(--line))">
+        <div class="update-date">Jun<br />2026</div>
+        <div class="update-dot" style="background:color-mix(in srgb,var(--accent) 60%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 25%,transparent)">v0.3.20</div>
           <div class="update-title">Space Station mode, multilingual i18n & settings overhaul</div>
           <ul class="update-items">
             <li><strong>Space Station mode</strong> — a distinct admin layout: floating magnification dock (macOS-style), HUD status-bar panel with stats and notes, frosted glass page headers with contextual action buttons. Toggle in Settings → Interface → Layout.</li>
@@ -1139,7 +1160,7 @@ ORBITER_POD=$(pwd)/content.pod npm start</code></pre>
   <!-- STATION MODE -->
   <section class="coming-section" id="station-mode">
     <h2 class="reveal">Space Station mode.</h2>
-    <p class="section-lead reveal reveal-delay-1">A distinct layout for the admin — dark glassmorphism, floating magnification dock, HUD status bar, notes &amp; to-do sidebar, and a full mobile tab-bar layout. Switch themes in one click from Settings.</p>
+    <p class="section-lead reveal reveal-delay-1">A distinct layout for the admin — dark glassmorphism, floating magnification dock, command palette, vim keyboard navigation, notification center, HUD panel, zen mode, and a full mobile tab-bar. Switch in one click from Settings.</p>
 
     <div class="coming-layout reveal reveal-delay-2">
       <div class="coming-main">
@@ -1175,8 +1196,13 @@ ORBITER_POD=$(pwd)/content.pod npm start</code></pre>
         <p>The dock becomes a native-feeling bottom tab bar. Stats stack to a 2×2 grid. Cards resize to fit. Same content, any screen.</p>
         <div class="coming-chips">
           <span class="coming-chip">Floating dock</span>
+          <span class="coming-chip">⌘K command palette</span>
+          <span class="coming-chip">Vim navigation</span>
+          <span class="coming-chip">Notification center</span>
+          <span class="coming-chip">HUD panel + drafts</span>
+          <span class="coming-chip">Zen mode</span>
+          <span class="coming-chip">Live build status</span>
           <span class="coming-chip">3 themes · 2 schemes</span>
-          <span class="coming-chip">HUD status panel</span>
           <span class="coming-chip">Mobile tab bar</span>
           <span class="coming-chip">Notes &amp; to-do</span>
         </div>

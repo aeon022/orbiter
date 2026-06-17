@@ -165,9 +165,95 @@ For **External links**, use the External link tab in the image picker. Orbiter m
 
 ---
 
-## Themes
+## Space Station mode
 
-Three themes × two schemes (dark/light) × two layouts (classic/glass). Switchable live — preference saved to `localStorage`.
+A distinct admin layout — dark glassmorphism, floating magnification dock, and a full keyboard-driven interface. Enable in **Settings → Interface → Layout → Space Station**.
+
+### Command palette  `⌘K` or `/`
+
+Opens full-screen over any page. Shows the 7 most recent entries on open (no typing required). Type to fuzzy-search pages and collections.
+
+**Command mode** — prefix with `>`:
+
+| Command | Action |
+|---------|--------|
+| `> ls` | List all collections |
+| `> go <page\|collection>` | Navigate |
+| `> new <collection>` | Create new entry |
+| `> search <term>` | Full-text search |
+| `> build` | Trigger site build |
+| `> export <col> [--md] [--drafts]` | Download collection |
+| `> random` | Jump to a random published entry |
+| `> = <expr>` | Evaluate a math expression (`2^10 * 3`) |
+| `> info` | Pod & version info |
+| `> help` | Show all commands |
+
+Command history with ↑/↓. Output rendered inline in the palette.
+
+### Keyboard shortcuts
+
+| Key | Action |
+|-----|--------|
+| `⌘K` / `/` | Open command palette |
+| `?` | Shortcut cheatsheet |
+| `⌘⇧F` | Zen / focus mode (hides dock + status bar) |
+| `⌘⇧L` | Switch back to Glass mode |
+| `1`–`9` | Jump to nth dock item |
+| `g` + `d` | Dashboard |
+| `g` + `m` | Media |
+| `g` + `u` | Users |
+| `g` + `s` | Settings |
+| `g` + `b` | Build |
+| `g` + `i` | Import |
+| `g` + `c` | Schema |
+| `g` + `h` | Toggle HUD panel |
+| `g` + `a` | Account |
+
+A `g ›` badge pulses in the status bar while waiting for the second key.
+
+### Status bar
+
+- **Left** — Orbiter logo, site name
+- **Center** — page title; breadcrumb (`Collection › Entries`) when inside a collection
+- **Right** — vim `g ›` indicator · bell (notification center) · `?` cheatsheet · `⌘` palette · last build time · username · logout · clock
+
+Build indicator shows `◉ building…` with a pulse animation while a build runs, polling `/api/build/status` every 4 seconds.
+
+### Notification center
+
+Every save, build trigger, and export is logged automatically. Click the bell `○` in the status bar to open the dropdown. Unread count badge clears on open. "Clear all" resets the log.
+
+### HUD panel  `g h`
+
+Side panel with:
+- **Pod** — file name, versions, collection count
+- **Collections** — published/draft counts per collection
+- **Drafts** — last 10 draft entries, clickable to editor
+- **Activity** — last 8 events (saves, builds, exports) as a live timeline
+- **Navigation** — all pages
+
+### Dock
+
+Floating bottom bar (or left sidebar — toggle in the Tools popup). Magnification effect on hover. Items:
+
+- **Nav group** — Dashboard, Media, Users
+- **Collections group** — one item per collection; draft count badge; hover shows preview card with 3 recent entries and quick-action buttons
+- **Workspace** — Notes scratchpad, To-do list
+- **Tools** — Schema, Build, Import (popup)
+- **Settings** — direct link
+- **HUD** — toggle button
+
+### Hover preview cards
+
+Hovering a collection dock item after 280 ms shows a card with the 3 most recent entries (title + date) and an action row: `+ new entry · ◫ view all · ↓ export`.
+
+### Zen mode  `⌘⇧F`
+
+Hides the dock and status bar entirely. Smooth CSS transition. Persists across reloads (stored in `localStorage`). A toast hint shows "Focus mode on — ⌘⇧F to exit" on enter.
+
+---
+
+## Themes
 
 | Theme | Dark | Light |
 |-------|------|-------|

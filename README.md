@@ -865,6 +865,34 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 
 ## Changelog
 
+### June 2026 · v0.3.47 — Station dock overhaul
+
+**Command palette** — `⌘K` or `/` opens full-screen. Opens pre-loaded with the 7 most recent entries. Type to fuzzy-search. Type `>` to enter command mode: `ls`, `go`, `new`, `search`, `build`, `export`, `random`, `= <math>`. Command history (↑/↓). Output rendered inline.
+
+**Vim keyboard navigation** — press `g` then a letter: `g d` dashboard, `g m` media, `g h` HUD, `g s` settings, `g b` build, `g c` schema, `g a` account, `1`–`9` jump to nth dock item. Animated `g ›` badge in status bar.
+
+**Notification center** — bell in status bar. All saves, builds, and exports logged automatically. Dropdown with unread badge, timestamps, clear-all.
+
+**HUD panel expanded** — Drafts section (last 10 drafts, editor links) and Activity feed (last 8 events, live on open). Toggle with `g h` or dock button.
+
+**Zen / focus mode** (`⌘⇧F`) — hides dock and status bar for distraction-free writing. Persists in `localStorage`.
+
+**Shortcut cheatsheet** (`?`) — two-column modal listing all shortcuts and palette commands. Also accessible via `?` button in status bar.
+
+**Live build status** — status bar shows `◉ building…` with pulse while running, polls every 4 s until done.
+
+**Breadcrumb** — status bar center shows `Collection › Entries` when inside a collection; clickable back.
+
+**Left dock mode** — toggle dock to left sidebar. Magnification axis, popups, workspace overlay all adapt.
+
+**Hover preview cards** — hovering a collection dock item shows a card (280 ms delay) with 3 recent entries + action row (new / view all / export).
+
+**Polish** — active dock item ring + glow dot, Settings in dock next to Tools, `min-width` on dock items so labels never clip the border ring.
+
+Packages: `@a83/orbiter-admin@0.3.47`.
+
+---
+
 ### June 2026 · v0.3.20 — Multilingual (i18n) & Space Station mode
 
 **Multilingual content (i18n)**
@@ -986,7 +1014,7 @@ The block editor gains full rich-media embedding:
 | 04 | Orbit | ✅ Done — multi-user, CLI, PWA, npm publish |
 | 05 | Station | ✅ Done — S3 backend, external media, docs site, auto-publish webhook |
 | 06 | Horizon | ✅ Done — scheduled publishing, comments, RSS/sitemap, locking, email notifications |
-| 07 | Cosmos  | ✅ Done — Space Station mode, multilingual i18n (locale column), settings overhaul |
+| 07 | Cosmos  | ✅ Done — Space Station mode, multilingual i18n, settings overhaul, station dock overhaul (v0.3.47) |
 | 08 | Frontier | 🔄 In progress — CLI improvements, runtime adapter, CSRF protection |
 
 ### Next up (v0.4.x)
@@ -995,6 +1023,10 @@ The block editor gains full rich-media embedding:
 - **CSRF protection** — CSRF tokens on all state-mutating admin routes
 - **SSR / runtime adapter** — `orbiter:collections` currently snapshots at build time; a runtime adapter for live content without rebuilding
 - **SvelteKit / Next.js integration** — the virtual module concept is framework-agnostic; Astro is first, others follow
+
+### v0.3.47 — released
+
+**Station dock overhaul** — command palette with `>` command mode and recent entries, vim keyboard nav (`g`+letter), notification center, HUD drafts + activity feed, zen mode (`⌘⇧F`), cheatsheet (`?`), live build polling, breadcrumb, left dock, hover preview cards, math eval (`> = expr`), `> random`.
 
 ### v0.3.20 — released
 
