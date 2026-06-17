@@ -13,14 +13,14 @@
   var NAV = [
     { icon: '⬡', label: 'Dashboard', href: '/dashboard.html', key: 'dashboard' },
     { icon: '◫', label: 'Media',     href: '/media.html',     key: 'media' },
-    { icon: '⚙', label: 'Settings',  href: '/settings.html',  key: 'settings' },
     { icon: '⊛', label: 'Users',     href: '/users.html',     key: 'users' },
   ];
 
   var TOOLS = [
-    { icon: '▦', label: 'Schema', href: '/schema.html', key: 'schema' },
-    { icon: '◉', label: 'Build',  href: '/build.html',  key: 'build'  },
-    { icon: '↓', label: 'Import', href: '/import.html', key: 'import' },
+    { icon: '▦', label: 'Schema',   href: '/schema.html',   key: 'schema'   },
+    { icon: '◉', label: 'Build',    href: '/build.html',    key: 'build'    },
+    { icon: '↓', label: 'Import',   href: '/import.html',   key: 'import'   },
+    { icon: '⚙', label: 'Settings', href: '/settings.html', key: 'settings' },
   ];
 
   var WORKSPACE = [
@@ -30,7 +30,7 @@
 
   // palette items — nav + tools pre-seeded; collections appended after /api/info
   var _palItems = NAV.concat(TOOLS).map(function (n) {
-    return { icon: n.icon, label: n.label, href: n.href, group: n.key in { schema:1, build:1, import:1 } ? 'Tools' : 'Nav' };
+    return { icon: n.icon, label: n.label, href: n.href, group: n.key in { schema:1, build:1, import:1, settings:1 } ? 'Tools' : 'Nav' };
   });
   var _termCols = []; // collection metadata for palette commands
 
@@ -162,7 +162,7 @@
   function buildToolsPopup() {
     toolsPopup = el('div', 'xfce-tools-popup');
     toolsPopup.id = 'xfce-tools-popup';
-    TOOLS.forEach(function (t) {
+    TOOLS.filter(function (t) { return t.key !== 'settings'; }).forEach(function (t) {
       var a = el('a', 'xfce-tools-item' + (page === t.key ? ' active' : ''));
       a.href = t.href;
       a.innerHTML = '<span class="xfce-tools-icon">' + t.icon + '</span><span>' + t.label + '</span>';
