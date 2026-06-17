@@ -502,6 +502,46 @@
           </div>
         </div>
 
+        <div class="settings-group" style="grid-column:1/-1">
+          <div class="group-header">FTP / FTPS Deploy</div>
+          <div class="setting-row">
+            <div><div class="setting-label">FTP host</div><div class="setting-desc">e.g. ftp.world4you.com or ftp.strato.de</div></div>
+            <input class="input" name="ftp.host" value="${get('ftp.host')||''}" placeholder="ftp.example.com" autocomplete="off" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Port</div><div class="setting-desc">21 for FTP (default), 990 for implicit FTPS</div></div>
+            <input class="input" name="ftp.port" type="number" value="${get('ftp.port')||'21'}" placeholder="21" style="max-width:100px" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Username</div></div>
+            <input class="input" name="ftp.user" value="${get('ftp.user')||''}" placeholder="u12345678" autocomplete="off" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Password</div></div>
+            <input class="input" type="password" name="ftp.password" value="${get('ftp.password')||''}" autocomplete="off" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Use FTPS</div><div class="setting-desc">Secure FTP over TLS (explicit mode)</div></div>
+            <input type="checkbox" name="ftp.secure" value="1" ${get('ftp.secure')==='1'?'checked':''} style="accent-color:var(--accent);width:14px;height:14px;" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Remote path</div><div class="setting-desc">Target folder on the server</div></div>
+            <input class="input" name="ftp.remote_path" value="${get('ftp.remote_path')||''}" placeholder="/public_html" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Local dist path</div><div class="setting-desc">Absolute path to your Astro <code style="font-family:var(--mono);font-size:10px;background:var(--bg3);padding:1px 5px;border-radius:3px">dist/</code> folder on this machine</div></div>
+            <input class="input" name="ftp.local_path" value="${get('ftp.local_path')||''}" placeholder="/Users/me/my-site/dist" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Auto-deploy after build</div><div class="setting-desc">Upload via FTP automatically after a successful build webhook</div></div>
+            <input type="checkbox" name="ftp.auto_deploy" value="1" ${get('ftp.auto_deploy')==='1'?'checked':''} style="accent-color:var(--accent);width:14px;height:14px;" />
+          </div>
+          <div class="save-row" style="justify-content:flex-start;gap:14px">
+            <button type="button" class="btn btn-ghost" id="ftp-test-btn">Test connection</button>
+            <span id="ftp-test-result" style="font-size:11px;color:var(--muted)"></span>
+          </div>
+        </div>
+
         </div><!-- /settings-grid -->
       </form>
 
@@ -759,6 +799,14 @@
         ['email.notify_to',          fd.get('email.notify_to')],
         ['email.notify_publish',     fd.get('email.notify_publish') ? '1' : '0'],
         ['email.notify_comment',     fd.get('email.notify_comment') ? '1' : '0'],
+        ['ftp.host',        fd.get('ftp.host')],
+        ['ftp.port',        fd.get('ftp.port')],
+        ['ftp.user',        fd.get('ftp.user')],
+        ['ftp.password',    fd.get('ftp.password')],
+        ['ftp.secure',      fd.get('ftp.secure') ? '1' : '0'],
+        ['ftp.remote_path', fd.get('ftp.remote_path')],
+        ['ftp.local_path',  fd.get('ftp.local_path')],
+        ['ftp.auto_deploy', fd.get('ftp.auto_deploy') ? '1' : '0'],
       ]);
       showBanner('site-banner','banner-ok','Settings saved');
     });
@@ -829,6 +877,18 @@
           location.reload();
         }
       });
+    });
+
+    // FTP test connection
+    document.getElementById('ftp-test-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('ftp-test-btn');
+      const res = document.getElementById('ftp-test-result');
+      btn.disabled = true; btn.textContent = 'Testing…'; res.textContent = '';
+      const r = await fetch('/api/deploy/ftp/test', { method: 'POST', credentials: 'include' });
+      const j = await r.json();
+      btn.disabled = false; btn.textContent = 'Test connection';
+      if (r.ok) { res.style.color = 'var(--jade)'; res.textContent = `✓ Connected — ${j.files} files in ${j.path}`; }
+      else       { res.style.color = 'var(--red)';  res.textContent = `✕ ${j.error}`; }
     });
 
     // Password form (with confirm validation)

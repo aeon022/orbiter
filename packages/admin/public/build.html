@@ -10,20 +10,25 @@
   <link rel="stylesheet" href="/style.css" />
   <script src="/theme.js"></script>
   <style>
-    .build-card { background:var(--bg2); border:1px solid var(--line); border-radius:var(--radius); padding:28px 32px; max-width:520px; }
-    .build-status { display:flex; align-items:center; gap:10px; margin-bottom:20px; }
+    .build-cards { display:flex; flex-direction:column; gap:16px; max-width:560px; }
+    .build-card { background:var(--bg2); border:1px solid var(--line); border-radius:var(--radius); padding:24px 28px; }
+    .build-card-header { font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:16px; display:flex; align-items:center; gap:7px; }
+    .build-card-header::before { content:"◆"; color:var(--gold); font-size:5px; }
+    .build-status { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
     .build-dot { width:8px; height:8px; border-radius:50%; background:var(--line); flex-shrink:0; }
-    .build-dot.configured { background:var(--jade); }
-    .build-dot.unconfigured { background:var(--muted); }
+    .build-dot.ok  { background:var(--jade); }
+    .build-dot.err { background:var(--red); }
+    .build-dot.off { background:var(--muted); }
     .build-label { font-size:12px; color:var(--text); }
-    .build-meta { font-size:10px; color:var(--muted); margin-bottom:24px; }
-    .build-last { font-size:10px; color:var(--muted); margin-top:12px; }
-    .banner { padding:8px 16px; font-size:10px; display:flex; align-items:center; gap:6px; border-radius:var(--radius); margin-bottom:14px; max-width:520px; }
+    .build-meta { font-size:10px; color:var(--muted); margin-bottom:20px; }
+    .build-last { font-size:10px; color:var(--muted); margin-top:10px; }
+    .build-err  { font-size:10px; color:var(--red); margin-top:6px; font-family:var(--mono); white-space:pre-wrap; word-break:break-all; }
+    .banner { padding:8px 16px; font-size:10px; display:flex; align-items:center; gap:6px; border-radius:var(--radius); margin-bottom:14px; max-width:560px; }
     .banner-ok  { background:var(--jade-bg); color:var(--jade); border:1px solid rgba(45,139,106,.2); }
     .banner-ok::before { content:"✓"; }
     .banner-err { background:rgba(139,38,53,.07); color:var(--red); border:1px solid rgba(139,38,53,.15); }
     .banner-err::before { content:"✕"; }
-    .config-hint { font-size:11px; color:var(--muted); margin-top:12px; line-height:1.7; }
+    .config-hint { font-size:11px; color:var(--muted); margin-top:10px; line-height:1.7; }
     .config-hint a { color:var(--accent); text-decoration:none; }
     .config-hint a:hover { text-decoration:underline; }
   </style>
@@ -86,39 +91,75 @@
       setTimeout(()=>el.style.display='none', 4000);
     }
 
-    const status = await fetch('/api/build/status',{credentials:'include'}).then(r=>r.json()).catch(()=>({configured:false,lastTriggered:null}));
+    const [status, ftp] = await Promise.all([
+      fetch('/api/build/status',       {credentials:'include'}).then(r=>r.json()).catch(()=>({configured:false,lastTriggered:null})),
+      fetch('/api/deploy/ftp/status',  {credentials:'include'}).then(r=>r.json()).catch(()=>({configured:false})),
+    ]);
+
     const lastEl = document.getElementById('last-triggered');
-    lastEl.textContent = status.lastTriggered ? `Last: ${new Date(status.lastTriggered).toLocaleString()}` : 'Never triggered';
+    lastEl.textContent = status.lastTriggered ? `Last build: ${new Date(status.lastTriggered).toLocaleString()}` : '';
 
     const wrap = document.getElementById('content');
     wrap.innerHTML = `
-      <div class="build-card">
-        <div class="build-status">
-          <div class="build-dot ${status.configured?'configured':'unconfigured'}"></div>
-          <div class="build-label">${status.configured ? 'Webhook configured' : 'No webhook configured'}</div>
+      <div class="build-cards">
+
+        <!-- Build webhook card -->
+        <div class="build-card">
+          <div class="build-card-header">Build webhook</div>
+          <div class="build-status">
+            <div class="build-dot ${status.configured?'ok':'off'}"></div>
+            <div class="build-label">${status.configured ? 'Webhook configured' : 'No webhook configured'}</div>
+          </div>
+          ${status.configured
+            ? `<div class="build-meta">POSTs to the webhook URL to trigger a build on Netlify, Vercel, or GitHub Actions.</div>
+               <button class="btn btn-primary" id="trigger-btn" style="min-width:160px;">▲ Trigger build</button>
+               ${status.lastTriggered ? `<div class="build-last">Last triggered: ${new Date(status.lastTriggered).toLocaleString()}</div>` : ''}`
+            : `<div class="config-hint">No webhook URL configured. Add one in <a href="/settings.html">Settings → Build</a>.</div>`
+          }
         </div>
-        ${status.configured
-          ? `<div class="build-meta">Triggering a build will POST to the configured webhook URL.</div>
-             <button class="btn btn-primary" id="trigger-btn" style="min-width:160px;">▲ Trigger build</button>
-             ${status.lastTriggered ? `<div class="build-last">Last triggered: ${new Date(status.lastTriggered).toLocaleString()}</div>` : ''}`
-          : `<div class="config-hint">
-               No webhook URL is configured. To enable build triggers, add a webhook URL in
-               <a href="/settings.html">Settings → Build</a>.
-             </div>`
-        }
+
+        <!-- FTP deploy card -->
+        <div class="build-card">
+          <div class="build-card-header">FTP / FTPS Deploy</div>
+          <div class="build-status">
+            <div class="build-dot ${ftp.configured ? (ftp.lastStatus==='error'?'err':'ok') : 'off'}"></div>
+            <div class="build-label">${ftp.configured
+              ? (ftp.lastStatus==='error' ? 'Last deploy failed' : ftp.lastDeploy ? 'Configured' : 'Configured — never deployed')
+              : 'Not configured'}</div>
+          </div>
+          ${ftp.configured
+            ? `<div class="build-meta">Uploads your Astro <code style="font-family:var(--mono);font-size:10px;background:var(--bg3);padding:1px 5px;border-radius:3px">dist/</code> folder directly to your FTP server (World4You, Strato, etc.).</div>
+               <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                 <button class="btn btn-primary" id="ftp-deploy-btn" style="min-width:160px;">↑ Deploy via FTP</button>
+                 ${ftp.autoDeploy ? '<span style="font-size:10px;color:var(--muted)">Auto-deploy after build: on</span>' : ''}
+               </div>
+               ${ftp.lastDeploy ? `<div class="build-last">Last deploy: ${new Date(ftp.lastDeploy).toLocaleString()}</div>` : ''}
+               ${ftp.lastStatus==='error' && ftp.lastError ? `<div class="build-err">${ftp.lastError}</div>` : ''}`
+            : `<div class="config-hint">Configure FTP credentials in <a href="/settings.html">Settings → FTP / FTPS Deploy</a> to upload directly to shared hosting.</div>`
+          }
+        </div>
+
       </div>
     `;
 
-    document.getElementById('trigger-btn')?.addEventListener('click', async btn=>{
-      btn = document.getElementById('trigger-btn');
-      btn.disabled = true;
-      btn.textContent = 'Triggering…';
-      const res = await fetch('/api/build/trigger',{method:'POST',credentials:'include'});
+    document.getElementById('trigger-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('trigger-btn');
+      btn.disabled = true; btn.textContent = 'Triggering…';
+      const res  = await fetch('/api/build/trigger', {method:'POST', credentials:'include'});
       const json = await res.json();
-      btn.disabled = false;
-      btn.textContent = '▲ Trigger build';
-      if (res.ok) showBanner('banner-ok','Build triggered');
+      btn.disabled = false; btn.textContent = '▲ Trigger build';
+      if (res.ok) showBanner('banner-ok', 'Build triggered');
       else showBanner('banner-err', json.error ?? 'Webhook error');
+    });
+
+    document.getElementById('ftp-deploy-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('ftp-deploy-btn');
+      btn.disabled = true; btn.textContent = '↑ Uploading…';
+      const res  = await fetch('/api/deploy/ftp', {method:'POST', credentials:'include'});
+      const json = await res.json();
+      btn.disabled = false; btn.textContent = '↑ Deploy via FTP';
+      if (res.ok) showBanner('banner-ok', 'FTP deploy complete');
+      else showBanner('banner-err', json.error ?? 'FTP error');
     });
   </script>
 </main>
