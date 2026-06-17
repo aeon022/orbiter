@@ -67,6 +67,8 @@
         '<span id="xfce-sb-g-ind" class="xfce-sb-g-ind" style="display:none" title="g mode: d=dashboard m=media s=settings u=users b=build i=import h=schema a=account">g ›</span>',
         '<button id="xfce-sb-bell" class="xfce-sb-bell" title="Notifications"><span id="xfce-sb-bell-icon">○</span><span id="xfce-sb-bell-badge" class="xfce-sb-bell-badge" style="display:none"></span></button>',
         '<span class="xfce-sb-div">·</span>',
+        '<button id="xfce-sb-cheat" class="xfce-sb-cheat" title="Shortcuts (?)">?</button>',
+        '<span class="xfce-sb-div">·</span>',
         '<button id="xfce-sb-palette-btn" class="xfce-sb-palette-btn" title="Command palette (⌘K)">⌘</button>',
         '<span class="xfce-sb-div">·</span>',
         '<span id="xfce-sb-build" class="xfce-sb-build" title="Last build"></span>',
@@ -110,6 +112,12 @@
     document.getElementById('xfce-sb-bell').addEventListener('click', function (e) {
       e.stopPropagation();
       toggleNotifPanel();
+    });
+
+    // Cheatsheet
+    document.getElementById('xfce-sb-cheat').addEventListener('click', function (e) {
+      e.stopPropagation();
+      toggleCheatsheet();
     });
   }
 

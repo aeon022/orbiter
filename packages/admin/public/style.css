@@ -2023,6 +2023,12 @@ a.xfce-sb-logo:hover     { opacity: .8; }
   font-family: var(--mono); transition: background .15s;
 }
 .xfce-sb-palette-btn:hover { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.xfce-sb-cheat {
+  background: none; border: none; cursor: pointer; padding: 0 3px;
+  font-size: 13px; color: var(--muted); font-family: var(--mono); line-height: 1;
+  transition: color .15s;
+}
+.xfce-sb-cheat:hover { color: var(--accent); }
 
 /* Draft badge on dock items */
 .xfce-dock-badge {
