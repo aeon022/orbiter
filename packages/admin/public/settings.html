@@ -201,6 +201,9 @@
       padding: 2px 8px;
     }
 
+    /* Pod stats strip */
+    .pod-stat-label { font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:3px; }
+
     /* Support */
     .support-widget {
       border: 1px solid var(--line);
@@ -342,12 +345,24 @@
           </div>
         </div>
 
+        <div style="display:flex;flex-direction:column;gap:8px">
         <div class="settings-group">
           <div class="group-header">Build</div>
           <div class="setting-row">
             <div><div class="setting-label">Webhook URL</div><div class="setting-desc">POST to this URL to trigger a build</div></div>
             <input class="input" name="build.webhook_url" value="${get('build.webhook_url')}" placeholder="https://api.netlify.com/build/hook/…" />
           </div>
+        </div>
+        <div class="settings-group">
+          <div class="group-header">Interface language</div>
+          <div class="setting-row">
+            <div><div class="setting-label">Admin language</div><div class="setting-desc">Language for the admin interface labels</div></div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-ghost btn-sm lang-btn ${(localStorage.getItem('orb_lang')||'en')==='en'?'active':''}" data-lang="en">EN</button>
+              <button class="btn btn-ghost btn-sm lang-btn ${localStorage.getItem('orb_lang')==='de'?'active':''}" data-lang="de">DE</button>
+            </div>
+          </div>
+        </div>
         </div>
 
         <div class="settings-group">
@@ -500,6 +515,17 @@
         </div>
 
         <div class="settings-group" style="grid-column:1/-1">
+          <div class="group-header">Import</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:24px;padding:14px 20px">
+            <div>
+              <div class="setting-label" style="margin-bottom:5px">Import content</div>
+              <div class="setting-desc">Supports <strong style="color:var(--text);font-weight:500">WordPress WXR</strong> (.xml export), <strong style="color:var(--text);font-weight:500">JSON</strong>, and <strong style="color:var(--text);font-weight:500">CSV</strong>. Entries are matched to existing collections by field name. Images and media are imported automatically.</div>
+            </div>
+            <a class="btn btn-primary" href="/import.html" style="white-space:nowrap;flex-shrink:0">⬆ Open importer</a>
+          </div>
+        </div>
+
+        <div class="settings-group" style="grid-column:1/-1">
           <div class="group-header">FTP / FTPS Deploy</div>
           <div class="setting-row">
             <div><div class="setting-label">FTP host</div><div class="setting-desc">e.g. ftp.world4you.com or ftp.strato.de</div></div>
@@ -560,55 +586,7 @@
       </div>
       ` : ''}
 
-      <!-- Account + Interface language (two-column) -->
-      <div id="account-banner" class="banner" style="display:none"></div>
-      <div class="settings-grid">
-      <div class="settings-group">
-        <div class="group-header">Account — ${me.user.username}</div>
-        <form id="pw-form">
-          <div class="setting-row">
-            <div><div class="setting-label">Current password</div></div>
-            <input class="input" type="password" name="current_password" autocomplete="current-password" required />
-          </div>
-          <div class="setting-row">
-            <div><div class="setting-label">New password</div><div class="setting-desc">Minimum 8 characters</div></div>
-            <input class="input" type="password" name="new_password" autocomplete="new-password" required minlength="8" />
-          </div>
-          <div class="setting-row">
-            <div><div class="setting-label">Confirm new password</div></div>
-            <input class="input" type="password" name="confirm_password" autocomplete="new-password" required />
-          </div>
-          <div class="save-row">
-            <button type="submit" class="btn-save">Change password</button>
-          </div>
-        </form>
-        <form id="un-form" style="border-top:1px solid var(--line);">
-          <div class="setting-row">
-            <div><div class="setting-label">New username</div><div class="setting-desc">Current: <strong>${me.user.username}</strong></div></div>
-            <input class="input" type="text" name="new_username" autocomplete="username" required placeholder="${me.user.username}" />
-          </div>
-          <div class="setting-row">
-            <div><div class="setting-label">Confirm with password</div></div>
-            <input class="input" type="password" name="current_password" autocomplete="current-password" required />
-          </div>
-          <div class="save-row">
-            <button type="submit" class="btn-save">Change username</button>
-          </div>
-        </form>
-      </div>
-
-      <!-- Admin Language -->
-      <div class="settings-group">
-        <div class="group-header">Interface language</div>
-        <div class="setting-row">
-          <div><div class="setting-label">Admin language</div><div class="setting-desc">Language for the admin interface labels</div></div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-ghost btn-sm lang-btn ${(localStorage.getItem('orb_lang')||'en')==='en'?'active':''}" data-lang="en">EN</button>
-            <button class="btn btn-ghost btn-sm lang-btn ${localStorage.getItem('orb_lang')==='de'?'active':''}" data-lang="de">DE</button>
-          </div>
-        </div>
-      </div>
-      </div><!-- /settings-grid account+lang -->
+      <!-- placeholder — Account moved to bottom -->
 
       <!-- Appearance (full width) -->
       <div class="settings-group">
@@ -708,30 +686,61 @@
         </div>
       </div>
 
-      <!-- Data + Pod (two-column) -->
-      <div class="settings-grid">
+      <!-- Account (bottom) -->
+      <div id="account-banner" class="banner" style="display:none"></div>
+      <div class="settings-grid" style="margin-bottom:8px">
       <div class="settings-group">
-        <div class="group-header">Data</div>
-        <div class="setting-row">
-          <div>
-            <div class="setting-label">Import content</div>
-            <div class="setting-desc">Import entries from a JSON or CSV file</div>
+        <div class="group-header">Account — ${me.user.username}</div>
+        <form id="pw-form">
+          <div class="setting-row">
+            <div><div class="setting-label">Current password</div></div>
+            <input class="input" type="password" name="current_password" autocomplete="current-password" required />
           </div>
-          <a class="btn btn-ghost" href="/import.html">Open importer</a>
-        </div>
+          <div class="setting-row">
+            <div><div class="setting-label">New password</div><div class="setting-desc">Minimum 8 characters</div></div>
+            <input class="input" type="password" name="new_password" autocomplete="new-password" required minlength="8" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Confirm new password</div></div>
+            <input class="input" type="password" name="confirm_password" autocomplete="new-password" required />
+          </div>
+          <div class="save-row">
+            <button type="submit" class="btn-save">Change password</button>
+          </div>
+        </form>
+        <form id="un-form" style="border-top:1px solid var(--line);">
+          <div class="setting-row">
+            <div><div class="setting-label">New username</div><div class="setting-desc">Current: <strong>${me.user.username}</strong></div></div>
+            <input class="input" type="text" name="new_username" autocomplete="username" required placeholder="${me.user.username}" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Confirm with password</div></div>
+            <input class="input" type="password" name="current_password" autocomplete="current-password" required />
+          </div>
+          <div class="save-row">
+            <button type="submit" class="btn-save">Change username</button>
+          </div>
+        </form>
       </div>
+      </div><!-- /settings-grid account -->
 
+      <!-- Pod — full width, detailed -->
       <div class="settings-group" id="pod-info-group">
         <div class="group-header">Pod</div>
-        <div class="pod-meta">
-          <div class="pod-meta-path" id="pod-path-field">…</div>
-          <span class="pod-meta-ver" id="pod-version-field">v1</span>
+        <div id="pod-stats-strip" style="display:flex;gap:32px;padding:10px 20px;border-bottom:1px solid var(--line2);flex-wrap:wrap;align-items:flex-start">
+          <div><div class="pod-stat-label">Path</div><div class="pod-meta-path" id="pod-path-field">…</div></div>
+          <div><div class="pod-stat-label">Pod version</div><span class="pod-meta-ver" id="pod-version-field">—</span></div>
+          <div><div class="pod-stat-label">Admin version</div><span class="pod-meta-ver" id="pod-admin-ver">—</span></div>
+          <div><div class="pod-stat-label">Uptime</div><span class="pod-meta-ver" id="pod-uptime">—</span></div>
         </div>
         <div id="pod-collections-list">
           <div class="pod-col-row"><span class="pod-col-name" style="color:var(--muted)">Loading…</span></div>
         </div>
+        <div style="padding:8px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:20px">
+          <span style="font-family:var(--mono);font-size:10px;color:var(--muted)"><span id="pod-col-count">—</span> collections</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--muted)"><span id="pod-total-entries">—</span> entries total</span>
+        </div>
       </div>
-      </div><!-- /settings-grid data+pod -->
 
       <div class="save-row">
         <button type="submit" form="site-form" class="btn-save">Save settings</button>
@@ -927,25 +936,42 @@
       });
     });
 
-    // Pod info
-    fetch('/api/info', { credentials:'include' }).then(r => r.json()).then(info => {
-      const pf = document.getElementById('pod-path-field');
-      const vf = document.getElementById('pod-version-field');
-      const cl = document.getElementById('pod-collections-list');
-      if (pf) pf.textContent = info.podPath ?? '—';
-      if (vf) vf.textContent = `v${info.formatVersion ?? 1}`;
-      if (cl) {
-        const cols = info.collections ?? [];
-        cl.innerHTML = cols.length
-          ? cols.map(c =>
-              `<div class="pod-col-row">
-                <span class="pod-col-name">${c.label}</span>
-                <span class="pod-col-count">${c.total}</span>
-              </div>`
-            ).join('')
-          : '<div class="pod-col-row"><span class="pod-col-name" style="color:var(--muted)">No collections</span></div>';
-      }
-    }).catch(() => {});
+    // Pod info + health
+    const [info, health] = await Promise.all([
+      fetch('/api/info',  { credentials:'include' }).then(r => r.json()).catch(() => ({})),
+      fetch('/health',    { credentials:'include' }).then(r => r.json()).catch(() => ({})),
+    ]);
+
+    const pf = document.getElementById('pod-path-field');
+    const vf = document.getElementById('pod-version-field');
+    const av = document.getElementById('pod-admin-ver');
+    const up = document.getElementById('pod-uptime');
+    const cl = document.getElementById('pod-collections-list');
+    const tc = document.getElementById('pod-total-entries');
+    const cc = document.getElementById('pod-col-count');
+
+    if (pf) pf.textContent = info.podPath ?? health.pod ?? '—';
+    if (vf) vf.textContent = `v${info.formatVersion ?? 1}`;
+    if (av) av.textContent = health.version ? `v${health.version}` : '—';
+    if (up && health.uptime != null) {
+      const s = health.uptime, h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
+      up.textContent = h > 0 ? `${h}h ${m}m` : `${m}m`;
+    }
+
+    if (cl) {
+      const cols = info.collections ?? [];
+      const total = cols.reduce((n, c) => n + (c.total ?? 0), 0);
+      if (tc) tc.textContent = total;
+      if (cc) cc.textContent = cols.length;
+      cl.innerHTML = cols.length
+        ? cols.map(c =>
+            `<div class="pod-col-row">
+              <span class="pod-col-name">${c.label}</span>
+              <span class="pod-col-count">${c.total ?? 0}</span>
+            </div>`
+          ).join('')
+        : '<div class="pod-col-row"><span class="pod-col-name" style="color:var(--muted)">No collections</span></div>';
+    }
   </script>
 </main>
   </div>
