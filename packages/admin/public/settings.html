@@ -389,7 +389,7 @@
         </div>
 
         <div class="settings-group">
-          <div class="group-header">Media storage</div>
+          <div class="group-header">Media</div>
           <div class="setting-row">
             <div><div class="setting-label">Backend</div><div class="setting-desc">Where uploaded files are stored</div></div>
             <select class="input" name="media.backend" id="media-backend-select">
@@ -452,10 +452,7 @@
               <input class="input" name="media.github_dir" value="${get('media.github_dir')||'media'}" placeholder="media" />
             </div>
           </div>
-        </div>
-
-        <div class="settings-group">
-          <div class="group-header">Image optimization</div>
+          <div style="padding:6px 20px;border-top:1px solid var(--line);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px;"><span style="font-size:4px;color:var(--gold)">◆</span>Image optimization</div>
           <div class="setting-row">
             <div><div class="setting-label">Max width</div><div class="setting-desc">Images wider than this are resized on upload (px). Leave blank to disable.</div></div>
             <input class="input" name="media.img_max_width" type="number" min="400" max="8000" step="100" value="${get('media.img_max_width')||'2400'}" placeholder="2400" />
