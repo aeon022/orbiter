@@ -362,13 +362,16 @@
     }
 
     // Init
-    await loadStats();
-    _formId = Object.keys(_stats)[0] ?? null;
-    if (_formId) await loadSubmissions();
+    try {
+      await loadStats();
+      _formId = Object.keys(_stats)[0] ?? null;
+      if (_formId) await loadSubmissions();
+    } catch (e) {
+      console.error('[inbox]', e);
+    }
     render();
   </script>
   <script src="/sidebar.js"></script>
   <script src="/search.js"></script>
-  <script src="/xfce.js" type="module"></script>
 </body>
 </html>
