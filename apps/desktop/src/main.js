@@ -73,6 +73,9 @@ async function seedPod(podPath, templateId) {
   db.insertUser(randomUUID(), 'admin', pw, 'admin');
 
   if (templateId === 'blog') {
+    db.createCollection('categories', 'Kategorien', {
+      title: { type: 'string', required: true, label: 'Name' },
+    });
     db.createCollection('posts', 'Posts', {
       title:      { type: 'string',   required: true,  label: 'Titel' },
       excerpt:    { type: 'string',   required: false, label: 'Teaser' },
@@ -81,11 +84,27 @@ async function seedPod(podPath, templateId) {
       tags:       { type: 'array',    required: false, label: 'Tags' },
       categories: { type: 'relation', collection: 'categories', multiple: true, required: false, label: 'Kategorien' },
     });
+
+    const catId = db.createEntry('categories', 'allgemein', { title: 'Allgemein' }, 'published');
+    db.createEntry('posts', 'herzlich-willkommen', {
+      title:      'Herzlich willkommen',
+      excerpt:    'Das ist mein erster Beitrag — schön, dass du da bist.',
+      body:       '## Herzlich willkommen\n\nDas ist ein Beispiel-Beitrag, der zeigt wie Posts in Orbiter aussehen. Du kannst diesen Eintrag bearbeiten oder löschen und mit eigenen Inhalten loslegen.\n\n### Was du hier findest\n\n- Artikel und Beiträge mit Richtext-Editor\n- Kategorien zur Übersicht\n- Medien-Upload für Bilder\n- Versionsverlauf für jeden Eintrag\n\nViel Spaß beim Schreiben!',
+      tags:       ['willkommen', 'start'],
+      categories: [catId],
+    }, 'published');
+    db.createEntry('posts', 'mein-zweiter-beitrag', {
+      title:      'Mein zweiter Beitrag',
+      excerpt:    'Hier kommt bald mehr — dieser Entwurf wartet noch auf seinen großen Auftritt.',
+      body:       '## Noch in Arbeit\n\nDieser Beitrag ist ein Entwurf. Er wird erst veröffentlicht, wenn du ihn auf *Veröffentlicht* setzt.\n\nDu kannst im Editor mit `⌘S` speichern und den Status oben rechts ändern.',
+      tags:       ['entwurf'],
+      categories: [catId],
+    }, 'draft');
+
+  } else if (templateId === 'portfolio') {
     db.createCollection('categories', 'Kategorien', {
       title: { type: 'string', required: true, label: 'Name' },
     });
-
-  } else if (templateId === 'portfolio') {
     db.createCollection('projects', 'Projekte', {
       title:      { type: 'string',   required: true,  label: 'Titel' },
       body:       { type: 'richtext', required: false, label: 'Beschreibung' },
@@ -94,9 +113,22 @@ async function seedPod(podPath, templateId) {
       tags:       { type: 'array',    required: false, label: 'Tags' },
       categories: { type: 'relation', collection: 'categories', multiple: true, required: false, label: 'Kategorien' },
     });
-    db.createCollection('categories', 'Kategorien', {
-      title: { type: 'string', required: true, label: 'Name' },
-    });
+
+    const webId  = db.createEntry('categories', 'webdesign',  { title: 'Webdesign' },  'published');
+    const brandId = db.createEntry('categories', 'branding',  { title: 'Branding' },   'published');
+    db.createEntry('projects', 'website-muster-gmbh', {
+      title:      'Website Muster GmbH',
+      body:       '## Aufgabe\n\nNeue Unternehmenswebsite mit modernem Design, klarer Struktur und schnellen Ladezeiten.\n\n## Umsetzung\n\nAstro als Framework, Orbiter als CMS. Der Kunde pflegt Inhalte selbst über den Admin — keine technischen Kenntnisse nötig.\n\n## Ergebnis\n\nPerformance Score 98/100, vollständig responsiv, SEO-optimiert.',
+      url:        'https://beispiel.at',
+      tags:       ['astro', 'cms', 'responsive'],
+      categories: [webId],
+    }, 'published');
+    db.createEntry('projects', 'logo-corporate-identity', {
+      title:      'Logo & Corporate Identity',
+      body:       '## Aufgabe\n\nEntwicklung einer neuen visuellen Identität für ein lokales Unternehmen.\n\n## Ergebnis\n\nLogo, Farbpalette, Typografie und Anwendungsbeispiele als Styleguide-Dokument.',
+      tags:       ['logo', 'design', 'branding'],
+      categories: [brandId],
+    }, 'published');
 
   } else if (templateId === 'business') {
     db.createCollection('pages', 'Seiten', {
@@ -115,7 +147,34 @@ async function seedPod(podPath, templateId) {
       image: { type: 'media',    required: false, label: 'Foto' },
     });
 
+    db.createEntry('pages', 'ueber-uns', {
+      title: 'Über uns',
+      body:  '## Wer wir sind\n\nWir sind ein kleines Team mit großer Leidenschaft für gute Arbeit. Seit Jahren begleiten wir Kunden von der ersten Idee bis zum fertigen Ergebnis.\n\n## Unsere Werte\n\n- **Qualität** — Wir liefern sorgfältige Arbeit, keine schnellen Lösungen.\n- **Verlässlichkeit** — Termine werden eingehalten, Kommunikation ist klar.\n- **Partnerschaft** — Wir denken mit, nicht nur mit.',
+    }, 'published');
+    db.createEntry('pages', 'kontakt', {
+      title: 'Kontakt',
+      body:  '## Kontakt aufnehmen\n\nDu erreichst uns per E-Mail oder telefonisch. Wir antworten in der Regel innerhalb eines Werktags.\n\n**E-Mail:** hallo@beispiel.at\n**Telefon:** +43 1 234 567 89\n**Adresse:** Musterstraße 1, 1010 Wien',
+    }, 'published');
+    db.createEntry('services', 'beratung', {
+      title:       'Beratung',
+      description: 'Wir analysieren deine Situation und zeigen dir den richtigen Weg — klar, verständlich, ohne Fachchinesisch.',
+      price:       'ab € 120 / Stunde',
+    }, 'published');
+    db.createEntry('services', 'umsetzung', {
+      title:       'Umsetzung',
+      description: 'Von der Konzeption bis zum fertigen Ergebnis. Wir übernehmen Planung, Design und technische Realisierung.',
+      price:       'auf Anfrage',
+    }, 'published');
+    db.createEntry('team', 'max-mustermann', {
+      name: 'Max Mustermann',
+      role: 'Gründer & Geschäftsführer',
+      bio:  '## Max Mustermann\n\nMax gründete das Unternehmen 2018 mit dem Ziel, kleinen Betrieben zu helfen, professionell im Web aufzutreten. Davor war er zehn Jahre in der Agenturwelt tätig.',
+    }, 'published');
+
   } else if (templateId === 'events') {
+    db.createCollection('categories', 'Kategorien', {
+      title: { type: 'string', required: true, label: 'Name' },
+    });
     db.createCollection('events', 'Events', {
       title:      { type: 'string',   required: true,  label: 'Titel' },
       date:       { type: 'date',     required: true,  label: 'Datum' },
@@ -125,9 +184,24 @@ async function seedPod(podPath, templateId) {
       ticket_url: { type: 'string',   required: false, label: 'Ticket-Link' },
       categories: { type: 'relation', collection: 'categories', multiple: true, required: false, label: 'Kategorien' },
     });
-    db.createCollection('categories', 'Kategorien', {
-      title: { type: 'string', required: true, label: 'Name' },
-    });
+
+    const workshopId = db.createEntry('categories', 'workshop', { title: 'Workshop' }, 'published');
+    const konzertId  = db.createEntry('categories', 'konzert',  { title: 'Konzert' },  'published');
+    db.createEntry('events', 'orbiter-einfuehrung', {
+      title:      'Orbiter Einführungs-Workshop',
+      date:       '2026-09-15',
+      location:   'Wien, Musterstraße 1',
+      body:       '## Workshop: Orbiter kennenlernen\n\nIn diesem halbtägigen Workshop lernst du, wie du Orbiter als CMS für deine Astro-Website einrichtest und verwendest.\n\n### Inhalte\n\n- Installation und erster POD\n- Collections und Felder anlegen\n- Inhalte pflegen\n- Astro-Integration\n\n### Zielgruppe\n\nWebentwickler:innen und Designer:innen mit Grundkenntnissen in HTML/CSS.',
+      ticket_url: 'https://tickets.beispiel.at',
+      categories: [workshopId],
+    }, 'published');
+    db.createEntry('events', 'sommerkonzert-2026', {
+      title:      'Sommerkonzert 2026',
+      date:       '2026-07-20',
+      location:   'Stadtpark Wien',
+      body:       '## Sommerkonzert im Stadtpark\n\nEin Abend unter freiem Himmel mit Live-Musik, Getränken und gutem Gespräch.\n\nEintritt frei — Spende willkommen.',
+      categories: [konzertId],
+    }, 'published');
   }
   // 'blank': nur Admin-User, keine Collections
 
