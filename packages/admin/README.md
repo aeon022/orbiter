@@ -89,18 +89,34 @@ Login: `admin` / `admin`
 Entry counts per collection, recently updated entries, persistent scratchpad + to-do list, build webhook status and manual trigger.
 
 ### Entry editor
-All schema fields rendered as inputs. Autosave, version history with restore, draft/published toggle.
+All schema fields rendered as inputs. Autosave, version history with restore, draft/published toggle, scheduled publish/unpublish.
 
-**Rich-media block editor:**
-- **Inline image blocks** — float left, right, center, or full width; text wraps naturally
-- **Video blocks** — paste a YouTube, Vimeo, Wistia, or direct `.mp4`/`.webm` URL; renders as responsive 16:9 embed
-- **`/` block picker** — type `/img` or `/vid` to insert
-- **Relation picker** — pick entries from another collection
+**Rich-media block editor — toolbar buttons:**
+- **Image** — inline image; float left / right / center / full width
+- **Video** — YouTube, Vimeo, Wistia, or direct `.mp4`/`.webm` URL; responsive 16:9 embed
+- **File / PDF** — 📎 inserts a download block (`::file[uuid|filename]`); opens Files tab in media picker
+- **`/` block picker** — type `/` to open block type menu (heading, quote, code, table, image, video, file, hr, …)
+
+**Block types in richtext:**
+
+| Block | Syntax | Insert via |
+|-------|--------|------------|
+| Heading H1–H3 | `# text` | `/h1` … `/h3` |
+| Paragraph | plain text | default |
+| Blockquote | `> text` | `/quote` |
+| Code block | ` ``` ``` ` | `/code` |
+| Table | visual grid | `/table` |
+| Horizontal rule | `---` | `/hr` |
+| Image | media UUID | toolbar or `/img` |
+| Video | embed URL | toolbar or `/vid` |
+| File / PDF download | media UUID | 📎 toolbar |
+| Callout | highlighted box | `/callout` |
 
 **Media picker — three tabs:**
-- **Library** — browse all uploaded files
+- **Library** — browse all uploaded files; filter by type
 - **From URL** — paste a Dropbox, Google Drive, OneDrive, or any public URL; Orbiter fetches and stores the file server-side (bypasses CORS)
 - **External link** — paste a URL to store a reference without downloading; great for Cloudinary, hosted assets, or large files you don't want to copy
+- **Files** (📎 picker) — same as Library but filtered to non-image/video files
 
 ### Media library
 Upload, browse, and manage files. Images, video, PDF, any file type. Folder categories, type filter, inline preview, copy URL, alt text. Configurable backend (see below).
@@ -108,17 +124,22 @@ Upload, browse, and manage files. Images, video, PDF, any file type. Folder cate
 ### Schema editor
 Add, reorder, and remove fields on any collection. Changes take effect immediately — no migration or restart needed.
 
-| Field type | Input |
-|------------|-------|
-| `string` | Single-line text |
-| `richtext` | Block editor |
-| `number` | Numeric |
-| `url` / `email` | With validation |
-| `date` / `datetime` | Date picker |
-| `select` | Dropdown |
-| `array` | Tag input |
-| `media` | Media library picker |
-| `relation` | Entry picker (cross-collection) |
+| Field type | Input | Notes |
+|------------|-------|-------|
+| `string` | Single-line text | |
+| `richtext` | Block editor | |
+| `boolean` | On/Off toggle | |
+| `number` | Numeric | |
+| `url` / `email` | With validation | |
+| `date` / `datetime` | Date picker | |
+| `select` | Dropdown | Define `options` array in field config |
+| `array` | Tag input (comma-separated) | Stored as JSON array |
+| `weekdays` | Weekday multi-select | |
+| `image` | Image picker | Upload or pick from media library |
+| `file` | File picker — PDF, document, download | Upload or pick from library; no image preview |
+| `table` | Mini-spreadsheet | First row = header; Tab navigates cells; + Row / + Col buttons |
+| `media` | Media library picker (any file) | |
+| `relation` | Entry picker (cross-collection) | Set `collection` in field config |
 
 ### Settings
 Site name, URL, locale, build webhook URL, media backend, GitHub sync, public API token, theme.

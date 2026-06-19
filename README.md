@@ -222,6 +222,16 @@ Every template sets up an `admin / admin` user so you can log in immediately. Ch
 
 Both options are also available via the menu-bar / system tray icon (right-click).
 
+### Backup
+
+**File → POD sichern… (`⌘⇧S`)** — saves a timestamped copy of the active pod next to the original (e.g. `content-backup-2026-06-19.pod`). A confirmation dialog offers to reveal the file in Finder/Explorer.
+
+### Auto-update
+
+When a new version is released on GitHub, the desktop app downloads it automatically in the background. A dialog appears: "Update downloaded — restart to apply?" with a **Restart now** button. Updates are delivered via [GitHub Releases](https://github.com/aeon022/orbiter/releases) using `electron-updater`.
+
+Check for updates manually: **Hilfe → Nach Updates suchen…**
+
 ### Build (from source)
 
 ```bash
@@ -229,11 +239,11 @@ cd apps/desktop
 npm install
 npm run dev          # run in Electron without packaging
 
-# Build DMG (use the globally installed electron-builder)
+# Build universal DMG (arm64 + x64)
 cd apps/desktop && electron-builder --mac
 ```
 
-> Built with Electron 42. The admin server runs inside a `utilityProcess.fork()` — no system Node.js needed. ASAR packaging bundles all dependencies.
+> Built with Electron 42. The admin server runs inside a `utilityProcess.fork()` — no system Node.js needed. ASAR packaging bundles all dependencies. The macOS build is a universal binary that runs natively on both Apple Silicon and Intel Macs.
 
 ---
 
@@ -457,20 +467,24 @@ Relation fields are resolved at build time — the raw UUID array is replaced wi
 
 ## Schema Field Types
 
-| Type | Input | Stored as |
-|------|-------|-----------|
-| `string` | Single-line text | `TEXT` |
-| `richtext` | Block editor (Markdown) | `TEXT` |
-| `number` | Numeric | `TEXT` |
-| `url` | URL with validation | `TEXT` |
-| `email` | Email with validation | `TEXT` |
-| `date` | Date picker | `TEXT` (ISO date) |
-| `datetime` | Date + time picker | `TEXT` (ISO datetime) |
-| `select` | Dropdown | `TEXT` (option key) |
-| `array` | Tag input | `TEXT` (JSON array) |
-| `weekdays` | Weekday multi-select | `TEXT` (JSON array) |
-| `media` | Media library picker | `TEXT` (media UUID) |
-| `relation` | Entry picker | `TEXT` (JSON array of UUIDs) |
+| Type | Input | Stored as | TypeScript type |
+|------|-------|-----------|-----------------|
+| `string` | Single-line text | `TEXT` | `string` |
+| `richtext` | Block editor (Markdown) | `TEXT` | `string` |
+| `boolean` | On/Off toggle | `TEXT` | `boolean` |
+| `number` | Numeric | `TEXT` | `number` |
+| `url` | URL with validation | `TEXT` | `string` |
+| `email` | Email with validation | `TEXT` | `string` |
+| `date` | Date picker | `TEXT` (ISO date) | `string` |
+| `datetime` | Date + time picker | `TEXT` (ISO datetime) | `string` |
+| `select` | Dropdown | `TEXT` (option key) | union of option values |
+| `array` | Tag input | `TEXT` (JSON array) | `string[]` |
+| `weekdays` | Weekday multi-select | `TEXT` (JSON array) | `string[]` |
+| `image` | Image picker (upload or library) | `TEXT` (media UUID) | `string` |
+| `file` | File picker — PDF, document, download | `TEXT` (media UUID) | `string` |
+| `table` | Mini-spreadsheet — rows & columns | `TEXT` (JSON 2D array) | `string[][]` |
+| `media` | Media library picker (any type) | `TEXT` (media UUID) | `string` |
+| `relation` | Entry picker (cross-collection) | `TEXT` (JSON array of UUIDs) | `EntryType[]` |
 
 ### Field definition
 
@@ -491,6 +505,43 @@ Relation fields are resolved at build time — the raw UUID array is replaced wi
   // conditional visibility:
   showWhen: 'category:event',   // show only when `category` equals `event`
 }
+```
+
+### Field notes
+
+**`image` / `file` / `media`** — all store a media UUID. Resolve to a URL in Astro:
+
+```astro
+---
+const imgUrl  = `/api/media/${entry.data.cover}/raw`;
+const fileUrl = `/api/media/${entry.data.brochure}/raw`;
+---
+<img src={imgUrl} alt="" />
+<a href={fileUrl}>Download PDF</a>
+```
+
+**`table`** — stored as `string[][]`. First row is the header:
+
+```astro
+---
+const rows = entry.data.prices; // string[][]
+const [header, ...body] = rows;
+---
+<table>
+  <thead><tr>{header.map(h => <th>{h}</th>)}</tr></thead>
+  <tbody>{body.map(r => <tr>{r.map(c => <td>{c}</td>)}</tr>)}</tbody>
+</table>
+```
+
+**`relation`** — returns an array of entry IDs by default. Use `getEntry()` to resolve:
+
+```astro
+---
+import { getCollection, getEntry } from 'orbiter:collections';
+const posts = await getCollection('posts');
+// Resolve relation:
+const author = await getEntry('authors', post.data.author[0]);
+---
 ```
 
 ---
@@ -1001,6 +1052,23 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 
 ## Changelog
 
+### June 2026 · Desktop App v0.2.0 — Auto-update, universal DMG, backup
+
+- **Auto-update** — `electron-updater` downloads new releases from GitHub in the background; restart dialog appears when download completes. Check manually via Hilfe → Nach Updates suchen…
+- **Universal macOS DMG** — single `Orbiter-universal.dmg` runs natively on both Apple Silicon and Intel Macs (no "Intel Mac support ending" warning)
+- **Backup** — File → POD sichern… (`⌘⇧S`) creates a timestamped `.pod` copy; dialog offers to reveal in Finder/Explorer
+
+---
+
+### June 2026 · admin@0.3.62 — File upload field, table field, image picker modal, dock stats
+
+- **File upload field** (`file`) — new schema field type for PDFs and documents. Drop zone in the editor sidebar, browse from the media library, `entry.data.myFile` returns a media UUID. In the richtext block editor: 📎 toolbar button opens a Files tab; inserts a download block (`::file[uuid|filename]`).
+- **Table field** (`table`) — standalone spreadsheet field in the entry sidebar. First row = header (`<th>`), body rows = data. Toolbar: + Row / + Col / − Row / − Col. Tab/Shift-Tab navigates between cells; Tab past the last cell adds a new row. Stored as `string[][]` directly in the entry JSON — no extra `JSON.parse` needed in Astro.
+- **Image/file picker → centered modal** — the media picker was a bottom sheet that could be hidden by the macOS Dock. Replaced with a centered modal (max-width 720 px, max-height 72 vh) — always visible regardless of Dock position or screen size.
+- **Dock hover card stats** — draft count bubble removed from the dock icon. The hover preview card now shows colored chips: published (green) · drafts (amber) · scheduled (blue).
+
+---
+
 ### June 2026 · Desktop App v0.1.0 — macOS + Windows installer
 
 Native desktop app — no terminal, no npm, no Node.js required.
@@ -1009,7 +1077,7 @@ Native desktop app — no terminal, no npm, no Node.js required.
 - **Pod picker on first launch** — open an existing `.pod` or create a new one; choice is remembered
 - **Templates on first launch** — choose Blog, Portfolio, Business, or Events; each creates collections + demo entries so the admin is immediately populated
 - **Pod switching** — File → POD wechseln… (`⌘O`) or via the tray / system tray context menu
-- **macOS** — DMG with drag-to-Applications layout; arm64 + x64 builds
+- **macOS** — DMG with drag-to-Applications layout
 - **Windows** — NSIS installer (x64); wizard with optional install directory
 - **Stays alive when closed** — lives in the macOS menu bar tray / Windows system tray
 - **Standard app menu** — macOS: Datei / Bearbeiten / Fenster menus, `⌘Q` to quit
@@ -1184,19 +1252,16 @@ The block editor gains full rich-media embedding:
 | 09 | Ground Control | ✅ Done — macOS desktop app, DMG installer, no terminal needed |
 | 10 | Outpost | ✅ Done — Windows desktop app (NSIS installer, x64) |
 | 11 | Transit | ✅ Done — runtime adapter (auto-enabled for `output: 'server'` / `'hybrid'`) |
+| 12 | Launch Pad | ✅ Done — file upload field, table field, desktop auto-update, universal macOS DMG |
 
 ### Next up
 
 | Priority | Feature | Notes |
 |----------|---------|-------|
-| 1 | **File upload field** | PDFs, documents — `file` field type, no resize/compress, `entry.doc.url` in collections |
-| 2 | **Table field** | Structured data in the editor — price lists, opening hours, comparison tables |
-| 3 | **Desktop auto-update** | `electron-updater` via GitHub Releases — no manual re-download |
-| 4 | **Desktop backup button** | File → Back up POD… creates a timestamped copy next to the active pod |
-| 5 | **Windows app menu** | Test and fix menu behavior on Windows |
-| 6 | **Scheduled entries calendar** | Visual calendar view of planned publish/unpublish dates |
-| 7 | **Cross-pod entry copy** | Export an entry as JSON, import into a different pod |
-| 8 | **SvelteKit integration** | `@a83/orbiter-sveltekit` — same virtual module API as the Astro integration |
+| 1 | **Windows app menu** | Test and fix menu behavior on Windows (builds work, untested on real Windows) |
+| 2 | **Scheduled entries calendar** | Visual calendar view of planned publish/unpublish dates |
+| 3 | **Cross-pod entry copy** | Export an entry as JSON, import into a different pod |
+| 4 | **SvelteKit integration** | `@a83/orbiter-sveltekit` — same virtual module API as the Astro integration |
 
 ### v0.3.47 — released
 
