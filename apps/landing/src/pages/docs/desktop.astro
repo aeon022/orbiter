@@ -1,0 +1,88 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Desktop App" current="/docs/desktop" prev={{ href: '/docs/quick-start', title: 'Quick start' }} next={{ href: '/docs/collections', title: 'Collections & fields' }}>
+
+<h1>Desktop App</h1>
+<p class="lead">A native macOS and Windows app that wraps the Orbiter admin server — no terminal, no npm, no Node.js required. Double-click to launch, manage content, and update automatically.</p>
+
+<h2>Install</h2>
+
+<h3>macOS</h3>
+<p>Download <strong>Orbiter-universal.dmg</strong> from <a href="https://github.com/aeon022/orbiter/releases">GitHub Releases</a>. The universal binary runs natively on both Apple Silicon (M1/M2/M3) and Intel Macs.</p>
+<ol>
+  <li>Open the <code>.dmg</code></li>
+  <li>Drag <strong>Orbiter.app</strong> to the Applications folder</li>
+  <li>Double-click to launch</li>
+</ol>
+
+<div class="callout">
+  <strong>Gatekeeper warning</strong> — Orbiter is not signed with an Apple Developer ID. macOS may show "App is damaged" or ask for confirmation on first launch. Workarounds:
+  <ul>
+    <li><strong>Right-click → Open</strong> in Finder, then click "Open anyway"</li>
+    <li><strong>System Settings → Privacy &amp; Security → Open anyway</strong></li>
+    <li>If you see "damaged": remove the quarantine flag in Terminal:<br><code>xattr -cr /Applications/Orbiter.app</code></li>
+  </ul>
+</div>
+
+<h3>Windows</h3>
+<p>Download the <strong>.exe installer</strong> from <a href="https://github.com/aeon022/orbiter/releases">GitHub Releases</a>, run it, and launch Orbiter from the Start menu. The NSIS installer wizard lets you choose the install directory.</p>
+
+<h2>First launch — choose a pod</h2>
+<p>On first launch, Orbiter asks what to open:</p>
+<ul>
+  <li><strong>Open existing pod</strong> — browse to an existing <code>.pod</code> file</li>
+  <li><strong>Create new pod</strong> — choose a location, then pick a template</li>
+</ul>
+
+<table>
+  <thead><tr><th>Template</th><th>Collections</th><th>Demo content</th></tr></thead>
+  <tbody>
+    <tr><td>Blank</td><td>—</td><td>—</td></tr>
+    <tr><td>Blog</td><td>Posts, Categories</td><td>2 posts (1 published, 1 draft)</td></tr>
+    <tr><td>Portfolio</td><td>Projects, Categories</td><td>2 projects + 2 categories</td></tr>
+    <tr><td>Business</td><td>Pages, Services, Team</td><td>2 pages, 2 services, 1 team member</td></tr>
+    <tr><td>Events</td><td>Events, Categories</td><td>2 events + 2 categories</td></tr>
+  </tbody>
+</table>
+
+<p>Every template creates an <code>admin / admin</code> user. Change the password in <strong>Account settings</strong> after logging in.</p>
+
+<h2>Switching pods</h2>
+<p>You can have multiple <code>.pod</code> files and switch between them at any time:</p>
+<ul>
+  <li><strong>File → POD wechseln… <kbd>⌘O</kbd></strong> — open any existing <code>.pod</code> file; the app restarts with the new pod</li>
+  <li><strong>File → Neuen POD erstellen…</strong> — file picker + template chooser</li>
+</ul>
+<p>Both options are also available in the <strong>menu-bar tray</strong> (macOS) and <strong>system tray</strong> (Windows) — the app stays alive when you close the window.</p>
+
+<h2>Backup</h2>
+<p><strong>File → POD sichern… <kbd>⌘⇧S</kbd></strong> — saves a timestamped copy of the active pod file. The default filename is <code>name-backup-YYYY-MM-DD.pod</code> next to the original. After saving, a confirmation dialog offers to reveal the backup in Finder or Explorer.</p>
+<p>Since a <code>.pod</code> file is a standard SQLite database, you can also back it up with any file backup tool — Time Machine, rsync, Dropbox, etc.</p>
+
+<h2>Auto-update</h2>
+<p>When a new version is published to <a href="https://github.com/aeon022/orbiter/releases">GitHub Releases</a>, the desktop app downloads it silently in the background. When the download is complete, a dialog appears:</p>
+<blockquote>Update downloaded — restart to apply?</blockquote>
+<p>Click <strong>Restart now</strong> to apply the update, or dismiss to update on the next launch.</p>
+<p>To check for updates manually: <strong>Hilfe → Nach Updates suchen…</strong></p>
+
+<h2>How it works</h2>
+<p>The desktop app is built with <strong>Electron 42</strong>. The Orbiter admin server runs inside a <code>utilityProcess.fork()</code> — a sandboxed Node.js process bundled inside the ASAR archive. No system Node.js is required.</p>
+<p>The pod file is the same standard SQLite database used by the npm package — fully interchangeable. You can open a pod created by the desktop app with <code>@a83/orbiter-admin</code>, and vice versa.</p>
+
+<h2>Build from source</h2>
+<pre>git clone https://github.com/aeon022/orbiter.git
+cd orbiter && npm install
+
+# Run in development (no packaging)
+cd apps/desktop && npm run dev
+
+# Build macOS universal DMG
+cd apps/desktop && npx electron-builder --mac
+
+# Build Windows NSIS installer
+cd apps/desktop && npx electron-builder --win</pre>
+
+<p>Packaged releases are built automatically via <a href="https://github.com/aeon022/orbiter/blob/main/.github/workflows/release-desktop.yml">GitHub Actions</a> on every <code>desktop-v*</code> tag.</p>
+
+</DocsLayout>
