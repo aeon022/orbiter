@@ -983,15 +983,17 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 
 ## Changelog
 
-### June 2026 · Desktop App v0.1.0 — macOS installer
+### June 2026 · Desktop App v0.1.0 — macOS + Windows installer
 
-Native macOS desktop app — drag `Orbiter.app` from the DMG to Applications and double-click. No terminal, no npm, no Node.js required.
+Native desktop app — no terminal, no npm, no Node.js required.
 
 - **Self-contained** — Electron 42 bundles the admin server via `utilityProcess.fork()`, ASAR archive
 - **Pod picker on first launch** — open an existing `.pod` or create a new one; choice is remembered
-- **Pod switching** — File → POD wechseln… (`⌘O`) or via the tray icon context menu
-- **Stays alive when closed** — lives in the menu bar tray, window hides instead of quitting
-- **Standard macOS app menu** — Datei / Bearbeiten / Fenster menus, `⌘Q` to quit
+- **Pod switching** — File → POD wechseln… (`⌘O`) or via the tray / system tray context menu
+- **macOS** — DMG with drag-to-Applications layout; arm64 + x64 builds
+- **Windows** — NSIS installer (x64); wizard with optional install directory
+- **Stays alive when closed** — lives in the macOS menu bar tray / Windows system tray
+- **Standard app menu** — macOS: Datei / Bearbeiten / Fenster menus, `⌘Q` to quit
 
 ---
 
@@ -1159,13 +1161,13 @@ The block editor gains full rich-media embedding:
 | 05 | Station | ✅ Done — S3 backend, external media, docs site, auto-publish webhook |
 | 06 | Horizon | ✅ Done — scheduled publishing, comments, RSS/sitemap, locking, email notifications |
 | 07 | Cosmos  | ✅ Done — Space Station mode, multilingual i18n, settings overhaul, station dock overhaul (v0.3.47) |
-| 08 | Frontier | 🔄 In progress — CLI improvements, runtime adapter, CSRF protection |
+| 08 | Frontier | ✅ Done — CSRF protection (Origin/Referer validation + sameSite cookie) |
 | 09 | Ground Control | ✅ Done — macOS desktop app, DMG installer, no terminal needed |
+| 10 | Outpost | ✅ Done — Windows desktop app (NSIS installer, x64) |
 
-### Next up (v0.4.x)
+### Next up
 
-- **CLI improvements** — `orbiter init` full scaffolding with Astro template, `orbiter add-user` interactive prompt, `orbiter export` to Markdown/JSON files
-- **CSRF protection** — CSRF tokens on all state-mutating admin routes
+- **Auto-update** — `electron-updater` so users get new versions without re-downloading the installer
 - **SSR / runtime adapter** — `orbiter:collections` currently snapshots at build time; a runtime adapter for live content without rebuilding
 - **SvelteKit / Next.js integration** — the virtual module concept is framework-agnostic; Astro is first, others follow
 
