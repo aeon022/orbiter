@@ -185,24 +185,34 @@ npm install -g @a83/orbiter-cli    # orbiter init, add-user, export, pack, unpac
 
 ## Desktop App
 
-The Orbiter desktop app wraps the admin server in a native macOS application — no terminal, no npm, no Node.js required.
+The Orbiter desktop app wraps the admin server in a native macOS and Windows application — no terminal, no npm, no Node.js required.
 
-### Install (macOS)
+### Install
 
-1. Download the `.dmg` from [GitHub Releases](https://github.com/aeon022/orbiter/releases)
-2. Drag **Orbiter.app** to the Applications folder
-3. Double-click to launch
+**macOS** — Download the `.dmg` from [GitHub Releases](https://github.com/aeon022/orbiter/releases), drag **Orbiter.app** to Applications, double-click to launch.
 
-### First launch
+**Windows** — Download the `.exe` installer, run it, launch Orbiter from the Start menu.
 
-Orbiter asks whether to open an existing `.pod` file or create a new one. Your choice is saved and loaded automatically on the next launch.
+### First launch — templates
+
+On first launch, Orbiter asks whether to open an existing `.pod` or create a new one. When creating a new pod, you choose a **template**:
+
+| Template | Collections | Demo content |
+|----------|-------------|--------------|
+| Blank | — | — |
+| Blog | Posts, Categories | 2 posts (1 published, 1 draft) |
+| Portfolio | Projects, Categories | 2 projects + 2 categories |
+| Business | Pages, Services, Team | 2 pages, 2 services, 1 team member |
+| Events | Events, Categories | 2 events + 2 categories |
+
+Every template sets up an `admin / admin` user so you can log in immediately. Change the password in Account settings.
 
 ### Switching pods
 
 **File → POD wechseln… (`⌘O`)** — opens a `.pod` file picker, restarts with the new pod.  
-**File → Neuen POD erstellen…** — creates a blank pod, restarts.
+**File → Neuen POD erstellen…** — file picker + template chooser, then restart.
 
-Both options are also available via the menu-bar tray icon (right-click).
+Both options are also available via the menu-bar / system tray icon (right-click).
 
 ### Build (from source)
 
@@ -989,6 +999,7 @@ Native desktop app — no terminal, no npm, no Node.js required.
 
 - **Self-contained** — Electron 42 bundles the admin server via `utilityProcess.fork()`, ASAR archive
 - **Pod picker on first launch** — open an existing `.pod` or create a new one; choice is remembered
+- **Templates on first launch** — choose Blog, Portfolio, Business, or Events; each creates collections + demo entries so the admin is immediately populated
 - **Pod switching** — File → POD wechseln… (`⌘O`) or via the tray / system tray context menu
 - **macOS** — DMG with drag-to-Applications layout; arm64 + x64 builds
 - **Windows** — NSIS installer (x64); wizard with optional install directory

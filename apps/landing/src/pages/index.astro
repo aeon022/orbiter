@@ -31,7 +31,7 @@ const features = [
   { icon: '◉', title: 'Built-in SEO',                 body: 'Every entry has a built-in SEO panel — meta title, description, and OG image. No schema changes needed. Access via <code>entry.seo.title</code>, <code>entry.seo.description</code>, and <code>entry.seo.ogImage</code>.' },
   { icon: '↑', title: 'FTP / FTPS deploy',            body: 'Upload your Astro <code>dist/</code> directly to any shared hosting via FTP or FTPS. Configure host, port, credentials, and remote path in Settings. One click to deploy — or trigger automatically after a build webhook.' },
   { icon: '⌗', title: 'Code snippets',               body: 'Built-in snippet library under Tools → Snippets. Copy-paste Astro code for contact forms, booking forms, SEO <code>&lt;head&gt;</code>, image rendering, getCollection, ticket buttons, RSS, and sitemap — dynamically adapted to your collection names.' },
-  { icon: '⬛', title: 'Desktop App — Mac &amp; Windows',  body: 'Download the installer, double-click to launch. The full admin — bundled, no terminal required, no Node.js required. macOS DMG (arm64 + x64) and Windows NSIS installer (x64). Manage multiple sites via File → Switch POD.' },
+  { icon: '⬛', title: 'Desktop App — Mac &amp; Windows',  body: 'Download the installer, double-click to launch. Pick a template (Blog, Portfolio, Business, Events) — the app creates collections and demo content automatically. No terminal, no Node.js, no npm.' },
 ];
 
 const tradeoffs = [
@@ -283,7 +283,7 @@ const faqs = [
     </div>
 
     <div class="hero-inner">
-      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">Desktop App v0.1.0 — macOS + Windows installer, no terminal needed · Changelog →</a>
+      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">Desktop App v0.1.0 — Mac + Windows, pick a template, start editing · Changelog →</a>
       <h1>Your entire CMS<br />in <span>one file.</span></h1>
       <p class="hero-sub">
         Content, media, schema, users — all in a single <code>.pod</code> file.
@@ -478,14 +478,14 @@ const faqs = [
         <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
         <div class="update-body">
           <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">Desktop v0.1.0 — New</div>
-          <div class="update-title">Desktop App for macOS &amp; Windows — no terminal, no Node.js, no npm.</div>
+          <div class="update-title">Desktop App for macOS &amp; Windows — pick a template, start editing.</div>
           <ul class="update-items">
-            <li><strong>macOS</strong> — DMG installer with drag-to-Applications layout. arm64 (Apple Silicon) and x64 (Intel).</li>
+            <li><strong>Templates on first launch</strong> — choose Blog, Portfolio, Business, or Events. The app creates all collections and fills them with demo content so you can see how everything works right away.</li>
+            <li><strong>macOS</strong> — DMG installer, drag to Applications, double-click. Apple Silicon (arm64) and Intel (x64).</li>
             <li><strong>Windows</strong> — NSIS installer wizard, optional install directory. x64.</li>
-            <li><strong>Self-contained</strong> — Electron bundles the full admin server. Everything runs locally, no internet required after install.</li>
-            <li><strong>Pod picker on first launch</strong> — open an existing <code>.pod</code> file or create a new one. Choice is saved and loaded automatically.</li>
+            <li><strong>Self-contained</strong> — Electron bundles the full admin server. Runs locally, no internet required after install.</li>
             <li><strong>Multi-site switching</strong> — File → Switch POD (<code>⌘O</code>) switches to a different content database and restarts instantly.</li>
-            <li><strong>Lives in the tray</strong> — closing the window hides it; the app keeps running in the macOS menu bar or Windows system tray.</li>
+            <li><strong>Lives in the tray</strong> — closing the window hides the app; it keeps running in the macOS menu bar or Windows system tray.</li>
           </ul>
         </div>
       </div>
