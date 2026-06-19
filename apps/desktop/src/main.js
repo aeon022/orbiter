@@ -61,6 +61,94 @@ function waitForServer(port, timeout = 10000) {
   });
 }
 
+// ── Templates ─────────────────────────────────────────────────────────────────
+const TEMPLATE_IDS = ['blank', 'blog', 'portfolio', 'business', 'events'];
+
+async function seedPod(podPath, templateId) {
+  const { createPod, hashPassword } = await import('@a83/orbiter-core');
+  const { randomUUID } = require('node:crypto');
+
+  const db = createPod(podPath);
+  const pw = await hashPassword('admin');
+  db.insertUser(randomUUID(), 'admin', pw, 'admin');
+
+  if (templateId === 'blog') {
+    db.createCollection('posts', 'Posts', {
+      title:      { type: 'string',   required: true,  label: 'Titel' },
+      excerpt:    { type: 'string',   required: false, label: 'Teaser' },
+      body:       { type: 'richtext', required: false, label: 'Text' },
+      image:      { type: 'media',    required: false, label: 'Bild' },
+      tags:       { type: 'array',    required: false, label: 'Tags' },
+      categories: { type: 'relation', collection: 'categories', multiple: true, required: false, label: 'Kategorien' },
+    });
+    db.createCollection('categories', 'Kategorien', {
+      title: { type: 'string', required: true, label: 'Name' },
+    });
+
+  } else if (templateId === 'portfolio') {
+    db.createCollection('projects', 'Projekte', {
+      title:      { type: 'string',   required: true,  label: 'Titel' },
+      body:       { type: 'richtext', required: false, label: 'Beschreibung' },
+      image:      { type: 'media',    required: false, label: 'Vorschau' },
+      url:        { type: 'string',   required: false, label: 'Website' },
+      tags:       { type: 'array',    required: false, label: 'Tags' },
+      categories: { type: 'relation', collection: 'categories', multiple: true, required: false, label: 'Kategorien' },
+    });
+    db.createCollection('categories', 'Kategorien', {
+      title: { type: 'string', required: true, label: 'Name' },
+    });
+
+  } else if (templateId === 'business') {
+    db.createCollection('pages', 'Seiten', {
+      title: { type: 'string',   required: true,  label: 'Titel' },
+      body:  { type: 'richtext', required: false, label: 'Text' },
+    });
+    db.createCollection('services', 'Leistungen', {
+      title:       { type: 'string', required: true,  label: 'Titel' },
+      description: { type: 'string', required: false, label: 'Beschreibung' },
+      price:       { type: 'string', required: false, label: 'Preis' },
+    });
+    db.createCollection('team', 'Team', {
+      name:  { type: 'string',   required: true,  label: 'Name' },
+      role:  { type: 'string',   required: false, label: 'Rolle' },
+      bio:   { type: 'richtext', required: false, label: 'Bio' },
+      image: { type: 'media',    required: false, label: 'Foto' },
+    });
+
+  } else if (templateId === 'events') {
+    db.createCollection('events', 'Events', {
+      title:      { type: 'string',   required: true,  label: 'Titel' },
+      date:       { type: 'date',     required: true,  label: 'Datum' },
+      location:   { type: 'string',   required: false, label: 'Ort' },
+      body:       { type: 'richtext', required: false, label: 'Beschreibung' },
+      image:      { type: 'media',    required: false, label: 'Bild' },
+      ticket_url: { type: 'string',   required: false, label: 'Ticket-Link' },
+      categories: { type: 'relation', collection: 'categories', multiple: true, required: false, label: 'Kategorien' },
+    });
+    db.createCollection('categories', 'Kategorien', {
+      title: { type: 'string', required: true, label: 'Name' },
+    });
+  }
+  // 'blank': nur Admin-User, keine Collections
+
+  db.close();
+}
+
+async function pickTemplateAndSeed(filePath) {
+  const { response } = await dialog.showMessageBox({
+    type:      'question',
+    title:     'Template wählen',
+    message:   'Welches Template soll verwendet werden?',
+    detail:    `Datei: ${path.basename(filePath)}\n\nLogin nach dem Start: admin / admin\n(Passwort bitte danach ändern)`,
+    buttons:   ['Leer', 'Blog', 'Portfolio', 'Business', 'Events', 'Abbrechen'],
+    defaultId: 0,
+    cancelId:  5,
+  });
+  if (response === 5) return false;
+  await seedPod(filePath, TEMPLATE_IDS[response]);
+  return true;
+}
+
 // ── Pod switch helper ─────────────────────────────────────────────────────────
 async function switchPod() {
   const { filePaths, canceled } = await dialog.showOpenDialog({
@@ -82,6 +170,8 @@ async function createNewPod() {
     filters:     [{ name: 'Orbiter POD (SQLite)', extensions: ['pod'] }],
   });
   if (canceled || !filePath) return;
+  const ok = await pickTemplateAndSeed(filePath);
+  if (!ok) return;
   saveConfig({ podPath: filePath });
   app.relaunch();
   app.isQuitting = true;
@@ -123,6 +213,8 @@ async function pickPod() {
     filters:     [{ name: 'Orbiter POD (SQLite)', extensions: ['pod'] }],
   });
   if (canceled || !filePath) { app.quit(); return null; }
+  const ok = await pickTemplateAndSeed(filePath);
+  if (!ok) { app.quit(); return null; }
   saveConfig({ ...cfg, podPath: filePath });
   return filePath;
 }
