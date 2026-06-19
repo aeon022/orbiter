@@ -60,10 +60,18 @@
           a.href = isSingleton
             ? '/editor.html?collection=' + encodeURIComponent(col.id) + '&singleton=1'
             : '/entries.html?col=' + encodeURIComponent(col.id) + '&label=' + encodeURIComponent(col.label);
+          var ttRows = '';
+          if (!isSingleton) {
+            ttRows +=
+              '<div class="nav-tooltip-row"><span class="nav-tooltip-num">' + col.total + '</span> published</div>' +
+              (col.drafts > 0 ? '<div class="nav-tooltip-row nav-tooltip-draft"><span class="nav-tooltip-num">' + col.drafts + '</span> draft' + (col.drafts !== 1 ? 's' : '') + '</div>' : '') +
+              ((col.scheduled||0) > 0 ? '<div class="nav-tooltip-row nav-tooltip-sched"><span class="nav-tooltip-num">' + col.scheduled + '</span> scheduled</div>' : '');
+          }
           a.innerHTML =
             '<span class="nav-icon">' + (isSingleton ? '◈' : '▤') + '</span>' +
             '<span class="nav-label">' + col.label + '</span>' +
-            (isSingleton ? '' : '<span class="nav-badge">' + col.total + '</span>');
+            (isSingleton ? '' : (col.drafts > 0 ? '<span class="nav-badge" style="background:color-mix(in srgb,var(--gold,#e6a817) 15%,transparent);border-color:color-mix(in srgb,var(--gold,#e6a817) 40%,transparent);color:var(--gold,#e6a817)">' + col.drafts + '</span>' : '')) +
+            (isSingleton ? '' : '<div class="nav-tooltip"><div class="nav-tooltip-title">' + col.label + '</div>' + ttRows + '</div>');
           frag.appendChild(a);
 
           // Children
@@ -76,10 +84,15 @@
               var ka = document.createElement('a');
               ka.className = 'nav-item nav-child' + (isKidActive ? ' active' : '');
               ka.href = '/entries.html?col=' + encodeURIComponent(kid.id) + '&label=' + encodeURIComponent(kid.label);
+              var kidTtRows =
+                '<div class="nav-tooltip-row"><span class="nav-tooltip-num">' + kid.total + '</span> published</div>' +
+                (kid.drafts > 0 ? '<div class="nav-tooltip-row nav-tooltip-draft"><span class="nav-tooltip-num">' + kid.drafts + '</span> draft' + (kid.drafts !== 1 ? 's' : '') + '</div>' : '') +
+                ((kid.scheduled||0) > 0 ? '<div class="nav-tooltip-row nav-tooltip-sched"><span class="nav-tooltip-num">' + kid.scheduled + '</span> scheduled</div>' : '');
               ka.innerHTML =
                 '<span class="nav-icon">◦</span>' +
                 '<span class="nav-label">' + kid.label + '</span>' +
-                '<span class="nav-badge">' + kid.total + '</span>';
+                (kid.drafts > 0 ? '<span class="nav-badge" style="background:color-mix(in srgb,var(--gold,#e6a817) 15%,transparent);border-color:color-mix(in srgb,var(--gold,#e6a817) 40%,transparent);color:var(--gold,#e6a817)">' + kid.drafts + '</span>' : '') +
+                '<div class="nav-tooltip"><div class="nav-tooltip-title">' + kid.label + '</div>' + kidTtRows + '</div>';
               children.appendChild(ka);
             });
             frag.appendChild(children);

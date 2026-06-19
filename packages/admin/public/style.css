@@ -899,6 +899,18 @@ a:hover { color: var(--heading); }
 .nav-item.active::before { display: none; }
 .nav-icon { width: 14px; text-align: center; font-size: 11px; opacity: 0.45; flex-shrink: 0; }
 .nav-badge { margin-left: 4px; flex-shrink: 0; font-size: 10px; color: var(--muted); background: var(--bg3); border: 1px solid var(--line); padding: 1px 7px; border-radius: 3px; }
+.nav-tooltip {
+  display: none; position: absolute; left: calc(100% + 6px); top: 50%; transform: translateY(-50%);
+  background: var(--bg2); border: 1px solid var(--line2); border-radius: 8px; padding: 10px 14px;
+  min-width: 150px; z-index: 2000; pointer-events: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,.25); white-space: nowrap;
+}
+.nav-item:hover .nav-tooltip { display: block; }
+.nav-tooltip-title { font-size: 11px; font-weight: 600; color: var(--heading); margin-bottom: 7px; }
+.nav-tooltip-row { font-size: 10px; color: var(--muted); display: flex; align-items: center; gap: 6px; line-height: 1.8; }
+.nav-tooltip-num { color: var(--text); font-weight: 600; min-width: 18px; text-align: right; }
+.nav-tooltip-draft .nav-tooltip-num { color: var(--gold, #e6a817); }
+.nav-tooltip-sched .nav-tooltip-num { color: var(--accent); }
 .nav-children { border-left: 1px solid var(--line); margin-left: 26px; margin-bottom: 4px; }
 .nav-child { padding-left: 20px; font-size: 12px; }
 .nav-child .nav-icon { font-size: 7px; opacity: 0.3; }

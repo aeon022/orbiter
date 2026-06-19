@@ -46,7 +46,7 @@ if (!POD_PATH) {
 const PORT        = parseInt(process.env.PORT ?? '4322', 10);
 const ALLOWED_ORIGINS = process.env.ADMIN_ORIGIN
   ? process.env.ADMIN_ORIGIN.split(',').map(s => s.trim())
-  : ['http://localhost:4321', 'http://localhost:4322'];
+  : [...new Set([`http://localhost:${PORT}`, 'http://localhost:4321', 'http://localhost:4322'])];
 
 export function createApp(podPath) {
   const app = new Hono();
