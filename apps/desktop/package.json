@@ -64,6 +64,7 @@
     "mac": {
       "category": "public.app-category.productivity",
       "icon": "assets/icon.icns",
+      "x64ArchFiles": "**/node_modules/@img/**",
       "target": [
         {
           "target": "dmg",
