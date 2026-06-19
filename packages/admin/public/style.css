@@ -2077,6 +2077,11 @@ html[data-dock-pos="left"] .xfce-col-preview.visible {
 .xfce-preview-head { padding: 7px 12px; border-bottom: 1px solid var(--line); }
 .xfce-preview-head a { font-size: 10px; font-weight: 600; color: var(--accent); text-decoration: none; text-transform: uppercase; letter-spacing: .06em; }
 .xfce-preview-head a:hover { text-decoration: underline; }
+.xfce-preview-stats { display: flex; gap: 5px; padding: 5px 12px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+.xfce-stat { font-size: 9px; font-family: var(--mono); padding: 2px 7px; border-radius: 3px; border: 1px solid var(--line); color: var(--muted); background: var(--bg3); }
+.xfce-stat-pub { color: var(--accent); border-color: color-mix(in srgb,var(--accent) 30%,transparent); background: color-mix(in srgb,var(--accent) 8%,transparent); }
+.xfce-stat-draft { color: var(--gold,#e6a817); border-color: color-mix(in srgb,var(--gold,#e6a817) 30%,transparent); background: color-mix(in srgb,var(--gold,#e6a817) 8%,transparent); }
+.xfce-stat-sched { color: var(--muted); }
 .xfce-preview-entries { padding: 4px 0; }
 .xfce-preview-row {
   display: flex; align-items: center; justify-content: space-between;

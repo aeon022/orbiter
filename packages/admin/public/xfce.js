@@ -310,8 +310,17 @@
               + '</a>';
           }).join('')
         : '<div class="xfce-preview-empty">no entries yet</div>';
+      var statsHtml = '';
+      if (!col.singleton) {
+        var statParts = [];
+        if (col.total > 0) statParts.push('<span class="xfce-stat xfce-stat-pub">' + col.total + ' published</span>');
+        if (col.drafts > 0) statParts.push('<span class="xfce-stat xfce-stat-draft">' + col.drafts + ' draft' + (col.drafts !== 1 ? 's' : '') + '</span>');
+        if ((col.scheduled||0) > 0) statParts.push('<span class="xfce-stat xfce-stat-sched">' + col.scheduled + ' scheduled</span>');
+        if (statParts.length) statsHtml = '<div class="xfce-preview-stats">' + statParts.join('') + '</div>';
+      }
       _previewEl.innerHTML =
         '<div class="xfce-preview-head"><a href="' + entriesHref + '">' + escHtml(col.label) + '</a></div>'
+        + statsHtml
         + '<div class="xfce-preview-entries">' + rows + '</div>'
         + '<div class="xfce-preview-actions">'
         +   '<a class="xfce-preview-action" href="' + newHref + '">+ new entry</a>'
@@ -1375,14 +1384,6 @@
             var item = makeDockItem(abbr, col.label, href, isActive, false);
             item.querySelector('.xfce-dock-icon').style.cssText = 'font-size:14px;font-weight:700;font-family:var(--mono);letter-spacing:-.03em;line-height:1;opacity:1;';
             item.dataset.dockIdx = idx + 1;
-
-            // Draft badge
-            if (col.drafts > 0) {
-              var badge = el('span', 'xfce-dock-badge');
-              badge.textContent = col.drafts;
-              badge.title = col.drafts + ' draft' + (col.drafts === 1 ? '' : 's');
-              item.appendChild(badge);
-            }
 
             // Hover shows preview card with recent entries
             item.addEventListener('mouseenter', function () { showColPreview(col, item); });
