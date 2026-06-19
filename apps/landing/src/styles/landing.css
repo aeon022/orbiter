@@ -2339,6 +2339,28 @@ html.is-leaving body {
 .hosting-note a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
 .hosting-note a:hover { color: var(--text); }
 
+.hosting-flow-arrow {
+  text-align: center;
+  margin: 32px 0 28px;
+  font-size: 0.7rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  font-family: 'SF Mono', ui-monospace, monospace;
+  color: color-mix(in srgb, var(--accent) 60%, transparent);
+  position: relative;
+}
+.hosting-flow-arrow::before,
+.hosting-flow-arrow::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 18%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, color-mix(in srgb, var(--accent) 25%, transparent));
+}
+.hosting-flow-arrow::before { right: calc(50% + 10em); transform: scaleX(-1); }
+.hosting-flow-arrow::after  { left:  calc(50% + 10em); }
+
 
 /* ===== DEPLOY OPTIONS ===== */
 
