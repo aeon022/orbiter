@@ -247,13 +247,13 @@
     /* ── Image picker sheet ──────────────────────────────────────── */
     .img-pick-overlay {
       position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px);
-      z-index:8000; display:none; align-items:flex-end;
+      z-index:8000; display:none; align-items:center; justify-content:center; padding:20px;
     }
     .img-pick-overlay.open { display:flex; }
     .img-pick-sheet {
-      width:100%; max-height:64vh;
-      background:var(--bg1); border-top:1px solid var(--mid);
-      border-radius:12px 12px 0 0; display:flex; flex-direction:column; overflow:hidden;
+      width:100%; max-width:720px; max-height:72vh;
+      background:var(--bg1); border:1px solid var(--mid);
+      border-radius:12px; display:flex; flex-direction:column; overflow:hidden;
     }
     .img-pick-head {
       display:flex; align-items:center; gap:8px; padding:10px 16px;
@@ -337,6 +337,18 @@
     }
     .be-vid-url:focus { border-color:var(--line); color:var(--text); }
     .be-block[data-type="video"].vid-sel .be-vid-url { border-color:var(--line2); }
+    /* File download block */
+    .be-block[data-type="file"] { padding:4px 0; }
+    .be-file-block { display:inline-flex; align-items:center; gap:8px; background:var(--bg2); border:1px solid var(--line); border-radius:6px; padding:7px 12px; cursor:default; max-width:100%; }
+    .be-file-icon { font-size:14px; flex-shrink:0; }
+    .be-file-name { font-size:11px; font-family:var(--mono); color:var(--text); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:320px; }
+    .be-file-del { background:none; border:none; color:var(--muted); cursor:pointer; font-size:11px; padding:0 4px; flex-shrink:0; line-height:1; }
+    .be-file-del:hover { color:#e05; }
+    /* File picker list (inside img-pick-sheet Files tab) */
+    .file-pick-item { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:5px; cursor:pointer; transition:background .12s; }
+    .file-pick-item:hover { background:var(--gold-bg); }
+    .file-pick-name { font-size:11px; font-family:var(--mono); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text); }
+    .file-pick-size { font-size:9px; color:var(--muted); flex-shrink:0; }
 
     /* Video URL input modal */
     .vid-url-overlay {
@@ -451,6 +463,9 @@
             </button>
             <button type="button" class="tool-btn" onclick="openVideoPicker()" title="Insert video (YouTube, Vimeo, mp4)">
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="display:block"><rect x=".75" y="2.25" width="11.5" height="8.5" rx="1.5" stroke="currentColor" stroke-width="1.1"/><path d="M5.25 4.75l3.5 1.75-3.5 1.75V4.75z" fill="currentColor"/></svg>
+            </button>
+            <button type="button" class="tool-btn" onclick="openFilePicker()" title="Insert file / PDF download link">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="display:block"><path d="M3.5 1.5h4l3 3V11a.5.5 0 01-.5.5h-6.5a.5.5 0 01-.5-.5V2a.5.5 0 01.5-.5z" stroke="currentColor" stroke-width="1.1"/><path d="M7.5 1.5V4.5H10.5" stroke="currentColor" stroke-width="1.1"/><line x1="5" y1="7" x2="8.5" y2="7" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><line x1="5" y1="9" x2="8.5" y2="9" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>
             </button>
           </div>
         </div>
@@ -697,12 +712,16 @@
           const hasVal = !!(existingFile);
           const fileLabel = hasVal ? `${escHtml(existingFile.filename)} <small style="color:var(--muted)">${fmtBytes(existingFile.size)}</small>` : '↑ drop or click file';
           fieldsHtml += `<div>
+            <select class="field-select file-lib-sel" id="file-lib-${key}">
+              <option value="">📂 aus Mediathek wählen…</option>
+              ${mediaData.map(m=>`<option value="${m.id}" data-name="${escHtml(m.filename)}" data-size="${m.size}"${val===m.id?' selected':''}>${escHtml(m.filename)}</option>`).join('')}
+            </select>
             <div class="file-drop-zone${hasVal?' has-file':''}" id="file-drop-${key}">
               <span class="file-drop-icon">📎</span>
               <div class="file-drop-info" id="file-info-${key}">${fileLabel}</div>
             </div>
             <input type="hidden" name="${key}" id="file-val-${key}" value="${escHtml(val??'')}" />
-            <div style="margin-top:4px;display:flex;align-items:center;gap:8px;"><span class="field-readonly" id="file-status-${key}"></span>${hasVal?`<a href="/api/media/${val}/raw" target="_blank" style="font-size:9px;color:var(--muted);">↓ download</a>`:''}</div>
+            <div style="margin-top:4px;display:flex;align-items:center;gap:8px;"><span class="field-readonly" id="file-status-${key}"></span><span id="file-dl-${key}">${hasVal?`<a href="/api/media/${val}/raw" target="_blank" style="font-size:9px;color:var(--muted);">↓ download</a>`:''}</span></div>
           </div>`;
         } else if (field.type==='array') {
           const arrVal = Array.isArray(val) ? val.join(', ') : (val??'');
@@ -901,6 +920,24 @@
         zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over');});
         zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
         zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag-over');if(e.dataTransfer.files.length){const fi={files:e.dataTransfer.files};uploadFileField(key,fi);}});
+      });
+
+      // File library picker
+      panel.querySelectorAll('.file-lib-sel').forEach(sel=>{
+        sel.addEventListener('change',()=>{
+          const opt = sel.options[sel.selectedIndex];
+          if (!opt.value) return;
+          const key    = sel.id.replace('file-lib-','');
+          const hidden = document.getElementById('file-val-'+key);
+          const info   = document.getElementById('file-info-'+key);
+          const zone   = document.getElementById('file-drop-'+key);
+          const dlWrap = document.getElementById('file-dl-'+key);
+          hidden.value = opt.value;
+          info.innerHTML = `${opt.dataset.name} <small style="color:var(--muted)">${fmtBytes(opt.dataset.size)}</small>`;
+          zone.classList.add('has-file');
+          if (dlWrap) dlWrap.innerHTML = `<a href="/api/media/${opt.value}/raw" target="_blank" style="font-size:9px;color:var(--muted);">↓ download</a>`;
+          markDirty();
+        });
       });
 
       // Boolean toggle — live label + dirty
@@ -1358,6 +1395,10 @@
           lines.push(`::video[${b.dataset.videoUrl ?? ''}]`);
           return;
         }
+        if (type==='file') {
+          lines.push(`::file[${b.dataset.mediaId}|${b.dataset.filename}]`);
+          return;
+        }
         if (type==='callout') {
           lines.push(`::callout[${b.innerHTML.replace(/\n+/g,' ')}]`);
           return;
@@ -1425,6 +1466,29 @@
       return el;
     }
 
+    function createFileBlock(mediaId, filename) {
+      const el = document.createElement('div');
+      el.className='be-block'; el.dataset.type='file';
+      el.dataset.mediaId=mediaId; el.dataset.filename=filename;
+      el.contentEditable='false';
+      el.innerHTML=`<div class="be-file-block">
+        <span class="be-file-icon">📎</span>
+        <span class="be-file-name">${escHtml(filename)}</span>
+        <button class="be-file-del" onclick="fileBlockDelete(this)" title="Remove">✕</button>
+      </div>`;
+      return el;
+    }
+
+    window.fileBlockDelete = function(btn) {
+      const block=btn.closest('.be-block[data-type="file"]'); if(!block) return;
+      const prev=block.previousElementSibling, next=block.nextElementSibling;
+      block.remove();
+      if (next&&next.contentEditable!=='false') focusStart(next);
+      else if (prev&&prev.contentEditable!=='false') focusEnd(prev);
+      else { const p=createBlock('p',''); beEditor.appendChild(p); focusStart(p); }
+      syncToHidden(); scheduleAutosave(); updatePreview();
+    };
+
     function parseMd(md) {
       beEditor.innerHTML='';
       if (!md) { beEditor.appendChild(createBlock('p','')); return; }
@@ -1454,6 +1518,9 @@
           }
           return;
         }
+        // File block: ::file[mediaId|filename]
+        const fileM = chunk.match(/^::file\[([^|]+)\|(.+)\]$/);
+        if (fileM) { beEditor.appendChild(createFileBlock(fileM[1], fileM[2])); return; }
         // Image block: ![alt](mediaId) or ![alt](mediaId){.align}
         const imgM = chunk.match(/^!\[([^\]]*)\]\(([^)]+)\)(?:\{\.(\w+)\})?$/);
         if (imgM) { beEditor.appendChild(createImgBlock(imgM[2], imgM[1], imgM[3]||'center')); return; }
@@ -1821,6 +1888,41 @@
       document.getElementById('img-pick-overlay').classList.remove('open');
     };
 
+    window.openFilePicker = function() {
+      pickerAnchor = getFocusedBlock();
+      document.getElementById('img-pick-overlay').classList.add('open');
+      document.getElementById('img-pick-tab-files').click();
+    };
+
+    function renderFilesList() {
+      const list = document.getElementById('img-pick-file-list');
+      const files = mediaData.filter(m=>!m.mime_type?.startsWith('image/')&&!m.mime_type?.startsWith('video/'));
+      if (!files.length) {
+        list.innerHTML='<div class="img-pick-empty">Noch keine Dateien.<br>PDF oder Dokument hochladen.</div>'; return;
+      }
+      list.innerHTML=files.map(m=>`
+        <div class="file-pick-item" onclick="pickFileInsert('${m.id}','${escHtml(m.filename)}')">
+          <span class="file-pick-icon">📎</span>
+          <span class="file-pick-name">${escHtml(m.filename)}</span>
+          <span class="file-pick-size">${fmtBytes(m.size)}</span>
+        </div>`).join('');
+    }
+
+    window.pickFileInsert = function(mediaId, filename) {
+      closeImgPicker();
+      const block = createFileBlock(mediaId, filename);
+      const anchor = pickerAnchor;
+      if (anchor) {
+        anchor.after(block);
+        if (!block.nextElementSibling || block.nextElementSibling.dataset.type==='file')
+          block.after(createBlock('p',''));
+      } else {
+        beEditor.appendChild(block);
+        beEditor.appendChild(createBlock('p',''));
+      }
+      syncToHidden(); scheduleAutosave(); updatePreview();
+    };
+
     function renderPickerGrid() {
       const grid=document.getElementById('img-pick-grid');
       const images=mediaData.filter(m=>m.mime_type?.startsWith('image/'));
@@ -1872,13 +1974,32 @@
       finally { btn.textContent=orig; btn.disabled=false; }
     });
 
+    document.getElementById('file-file-inp').addEventListener('change', async function() {
+      const file=this.files[0]; if (!file) return;
+      this.value='';
+      const btn=document.getElementById('file-pick-upload-btn');
+      const orig=btn.textContent; btn.textContent='Uploading…'; btn.disabled=true;
+      const fd=new FormData(); fd.append('file',file); fd.append('alt',''); fd.append('folder','');
+      try {
+        const res=await fetch('/api/media',{method:'POST',credentials:'include',body:fd});
+        if (res.ok) {
+          const media=await res.json();
+          mediaData.unshift(media);
+          closeImgPicker();
+          pickFileInsert(media.id, media.filename);
+        } else { alert('Upload failed'); }
+      } catch { alert('Upload error'); }
+      finally { btn.textContent=orig; btn.disabled=false; }
+    });
+
     window.imgPickTab = function(tab, btn) {
       document.querySelectorAll('.img-pick-tab').forEach(b=>b.classList.remove('active'));
       document.querySelectorAll('.img-pick-pane').forEach(p=>p.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById('img-pick-pane-'+tab).classList.add('active');
-      if (tab==='url')  setTimeout(()=>document.getElementById('img-url-inp').focus(),  40);
-      if (tab==='link') setTimeout(()=>document.getElementById('img-link-inp').focus(), 40);
+      if (tab==='url')   setTimeout(()=>document.getElementById('img-url-inp').focus(),  40);
+      if (tab==='link')  setTimeout(()=>document.getElementById('img-link-inp').focus(), 40);
+      if (tab==='files') renderFilesList();
     };
 
     window.importFromUrl = async function() {
@@ -2097,6 +2218,7 @@
         <button class="img-pick-tab active" onclick="imgPickTab('library',this)">Library</button>
         <button class="img-pick-tab" onclick="imgPickTab('url',this)">From URL</button>
         <button class="img-pick-tab" onclick="imgPickTab('link',this)">External link</button>
+        <button class="img-pick-tab" id="img-pick-tab-files" onclick="imgPickTab('files',this)">📎 Files</button>
       </div>
       <div id="img-pick-pane-library" class="img-pick-pane active">
         <div class="img-pick-body">
@@ -2128,9 +2250,16 @@
           <button id="img-link-btn" class="img-url-btn" onclick="addExternalLink()">Verknüpfen</button>
         </div>
       </div>
+      <div id="img-pick-pane-files" class="img-pick-pane">
+        <div style="padding:10px 16px 4px;display:flex;justify-content:flex-end;">
+          <button id="file-pick-upload-btn" class="img-pick-upload" onclick="document.getElementById('file-file-inp').click()">↑ Upload</button>
+        </div>
+        <div class="img-pick-body" id="img-pick-file-list"></div>
+      </div>
     </div>
   </div>
   <input type="file" id="img-file-inp" accept="image/*" style="display:none">
+  <input type="file" id="file-file-inp" accept="*/*" style="display:none">
 
   <script src="/sidebar.js"></script>
   <script src="/search.js"></script>
