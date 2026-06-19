@@ -1,0 +1,42 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Code snippets" current="/docs/snippets" prev={{ href: '/docs/seo', title: 'Built-in SEO' }} next={{ href: '/docs/collections-api', title: 'orbiter:collections' }}>
+
+<h1>Code snippets</h1>
+<p class="lead">Tools → Snippets is a built-in library of copy-paste Astro code. Snippets are generated dynamically — form URLs use your admin origin, collection examples use the real names from your pod, and the ticket-button snippet only appears when an <code>events</code> collection exists.</p>
+
+<h2>Where to find it</h2>
+<p>Go to <strong>Tools → Snippets</strong> in the admin sidebar (or press <code>g p</code> in Space Station mode). Click any card to expand it, then hit <strong>Copy</strong> to copy the code to clipboard.</p>
+
+<h2>Available snippets</h2>
+
+<table>
+  <thead><tr><th>Category</th><th>Snippet</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td>Setup</td><td>Integration — astro.config.mjs</td><td>Add orbiter-integration to your Astro project</td></tr>
+    <tr><td>Content</td><td>getCollection</td><td>Fetch all published entries from a collection at build time</td></tr>
+    <tr><td>Content</td><td>Dynamic page — [slug].astro</td><td>Generate one static page per entry</td></tr>
+    <tr><td>Content</td><td>Image from media library</td><td>Render a media-library image field</td></tr>
+    <tr><td>SEO</td><td>SEO &lt;head&gt; — meta + OG</td><td>Full head block with meta title, description, and Open Graph</td></tr>
+    <tr><td>Forms</td><td>Contact form</td><td>HTML + JS for a contact form with honeypot</td></tr>
+    <tr><td>Forms</td><td>Booking / Terminanfrage</td><td>Booking form with date, time, persons fields</td></tr>
+    <tr><td>Events</td><td>Ticket-Button</td><td>Pretix / Eventbrite / Eventim ticket link with price display (only shown when an <code>events</code> collection exists)</td></tr>
+    <tr><td>Integration</td><td>RSS Feed link</td><td><code>&lt;link rel="alternate"&gt;</code> for the auto-generated feed</td></tr>
+    <tr><td>Integration</td><td>Sitemap</td><td>robots.txt Sitemap directive for Google Search Console</td></tr>
+    <tr><td>Integration</td><td>JSON API fetch</td><td>Client-side runtime fetch without a build step</td></tr>
+  </tbody>
+</table>
+
+<h2>Dynamic values</h2>
+<p>The following are substituted automatically when the page loads:</p>
+<ul>
+  <li><strong>Collection name</strong> — uses the first content collection found in the pod (blog, posts, articles, news — or the first one defined)</li>
+  <li><strong>Admin origin</strong> — form action URLs use <code>window.location.origin</code>, so they point to your actual admin host</li>
+  <li><strong>Events collection</strong> — the ticket-button snippet only renders if your pod has a collection with ID <code>events</code></li>
+</ul>
+
+<h2>Filter by category</h2>
+<p>Use the filter bar at the top (All / Setup / Content / SEO / Forms / Events / Integration) to show only the snippets relevant to your current task.</p>
+
+</DocsLayout>

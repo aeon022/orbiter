@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbiter Admin — Snippets</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@300;400;500;600&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+  <script src="/theme.js"></script>
+  <style>
+    .snip-wrap { max-width: 820px; }
+
+    .snip-filters { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+    .snip-filter {
+      padding: 4px 12px; border-radius: 20px; border: 1px solid var(--line);
+      background: var(--bg2); font-size: 10px; font-family: var(--mono);
+      color: var(--muted); cursor: pointer; transition: all .15s;
+    }
+    .snip-filter:hover { border-color: var(--mid); color: var(--text); }
+    .snip-filter.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+
+    .snip-card {
+      background: var(--bg2); border: 1px solid var(--line); border-radius: 10px;
+      margin-bottom: 10px; overflow: hidden;
+    }
+    .snip-head {
+      display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+      cursor: pointer; user-select: none;
+    }
+    .snip-head:hover { background: var(--hover-bg); }
+    .snip-arrow { font-size: 8px; color: var(--muted); transition: transform .15s; flex-shrink: 0; }
+    .snip-card.open .snip-arrow { transform: rotate(90deg); }
+    .snip-title { font-size: 12px; font-weight: 500; color: var(--text); flex: 1; }
+    .snip-tag {
+      font-family: var(--mono); font-size: 9px; letter-spacing: .06em; text-transform: uppercase;
+      padding: 2px 7px; border-radius: 4px; border: 1px solid var(--line); color: var(--muted);
+      background: var(--bg3);
+    }
+    .snip-copy {
+      padding: 3px 10px; border-radius: 4px; border: 1px solid var(--line);
+      background: var(--bg3); font-size: 10px; font-family: var(--mono);
+      color: var(--muted); cursor: pointer; transition: all .15s; flex-shrink: 0;
+    }
+    .snip-copy:hover { border-color: var(--accent); color: var(--accent); }
+    .snip-copy.copied { border-color: var(--jade); color: var(--jade); }
+
+    .snip-body { display: none; border-top: 1px solid var(--line); }
+    .snip-card.open .snip-body { display: block; }
+    .snip-desc { padding: 10px 16px 0; font-size: 11px; color: var(--muted); line-height: 1.6; }
+    .snip-pre {
+      margin: 10px 16px 14px; padding: 12px 14px;
+      background: var(--bg0); border: 1px solid var(--line); border-radius: 6px;
+      font-size: 11px; font-family: var(--mono); color: var(--text);
+      line-height: 1.65; overflow-x: auto; white-space: pre;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="logo" href="/dashboard.html"><div class="logo-mark">OR</div>Orbiter</a>
+      <div class="topbar-right">
+        <button class="search-trigger" id="search-btn" title="Search (⌘K)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Search <kbd>⌘K</kbd>
+        </button>
+        <button class="scheme-toggle" id="scheme-toggle" title="Toggle scheme">◐</button>
+        <span class="user" id="topbar-user"></span>
+        <span class="logout" id="logout-btn">Sign out</span>
+      </div>
+    </header>
+    <nav class="sidebar">
+      <div class="nav-section">Content</div>
+      <a class="nav-item" href="/dashboard.html"><span class="nav-icon">◈</span>Dashboard</a>
+      <a class="nav-item" href="/collections.html"><span class="nav-icon">⊞</span>Collections</a>
+      <div class="nav-section">Assets</div>
+      <a class="nav-item" href="/media.html"><span class="nav-icon">⊟</span>Media</a>
+      <div class="nav-section">Tools</div>
+      <a class="nav-item" href="/inbox.html"><span class="nav-icon">✉</span>Inbox</a>
+      <a class="nav-item active" href="/snippets.html"><span class="nav-icon">⌗</span>Snippets</a>
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="/schema.html"><span class="nav-icon">◈</span>Schema</a>
+      <a class="nav-item" href="/build.html"><span class="nav-icon">▲</span>Build</a>
+      <a class="nav-item" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
+      <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
+      <div class="sidebar-footer">
+        <div class="pod-name" id="pod-name">content.pod</div>
+        <div class="pod-info" id="pod-info"></div>
+        <div class="pod-version" id="pod-version"></div>
+        <div class="pod-status"><span class="pod-dot"></span>pod synced</div>
+      </div>
+    </nav>
+    <main class="main">
+      <div class="page-header glass-card">
+        <h1 class="page-title">Snippets</h1>
+        <p class="page-sub" id="snip-sub">Copy-paste Astro code for your project</p>
+      </div>
+      <div class="snip-wrap" id="snip-wrap">
+        <div class="empty"><div class="spinner"></div></div>
+      </div>
+  <script type="module">
+    const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).catch(() => null);
+    if (!me?.user) { location.replace('/login.html'); throw new Error('unauthenticated'); }
+    document.getElementById('topbar-user').textContent = me.user.username;
+    if (me.user.role === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      location.replace('/login.html');
+    });
+
+    const [cols, info] = await Promise.all([
+      fetch('/api/collections', { credentials: 'include' }).then(r => r.json()).catch(() => []),
+      fetch('/api/info',        { credentials: 'include' }).then(r => r.json()).catch(() => ({})),
+    ]);
+
+    const adminOrigin = location.origin;
+    const podName     = info.pod ?? 'content.pod';
+    document.getElementById('pod-name').textContent = podName;
+
+    // Pick a "main" content collection for generic examples
+    const contentCol  = cols.find(c => ['posts','blog','articles','news'].includes(c.id)) ?? cols[0];
+    const colId       = contentCol?.id ?? 'posts';
+    const colLabel    = contentCol?.label ?? 'Posts';
+    const hasEvents   = cols.some(c => c.id === 'events');
+    const hasForms    = true; // always available
+
+    // ── Snippet definitions ───────────────────────────────────────────
+    const SNIPPETS = [
+
+      // ── Setup ──────────────────────────────────────────────────────
+      {
+        tag: 'Setup', title: 'Integration — astro.config.mjs',
+        desc: 'Add the Orbiter integration to your Astro project.',
+        code: `import { defineConfig } from 'astro/config';
+import orbiter from '@a83/orbiter-integration';
+
+export default defineConfig({
+  integrations: [
+    orbiter({ pod: './content.pod' }),
+  ],
+});`,
+      },
+
+      // ── Content ────────────────────────────────────────────────────
+      {
+        tag: 'Content', title: `getCollection — ${colLabel}`,
+        desc: `Fetch all published entries from the "${colId}" collection at build time.`,
+        code: `---
+// src/pages/${colId}/index.astro
+import { getCollection } from 'orbiter:collections';
+
+const entries = await getCollection('${colId}');
+---
+
+<ul>
+  {entries.map(e => (
+    <li><a href={\`/${colId}/\${e.slug}\`}>{e.data.title}</a></li>
+  ))}
+</ul>`,
+      },
+
+      {
+        tag: 'Content', title: `Dynamic page — [slug].astro`,
+        desc: `Generate one static page per entry in "${colId}".`,
+        code: `---
+// src/pages/${colId}/[slug].astro
+import { getCollection, getEntry } from 'orbiter:collections';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('${colId}');
+  return entries.map(e => ({ params: { slug: e.slug } }));
+}
+
+const entry = await getEntry('${colId}', Astro.params.slug);
+const { title, body } = entry.data;
+---
+
+<h1>{title}</h1>
+<div set:html={body} />`,
+      },
+
+      {
+        tag: 'Content', title: 'Image from media library',
+        desc: 'Render an image field stored in the media library.',
+        code: `---
+// entry.data.image is the media ID
+const { image, title } = entry.data;
+---
+
+{image && (
+  <img
+    src={\`/orbiter/media/\${image}\`}
+    alt={title}
+    loading="lazy"
+  />
+)}`,
+      },
+
+      // ── SEO ────────────────────────────────────────────────────────
+      {
+        tag: 'SEO', title: 'SEO <head> — meta + OG',
+        desc: 'Use entry.seo for meta title, description and Open Graph image. Falls back to entry.data.title if seo.title is empty.',
+        code: `---
+import { getEntry } from 'orbiter:collections';
+const entry  = await getEntry('${colId}', Astro.params.slug);
+const title  = entry.seo.title       || entry.data.title;
+const desc   = entry.seo.description || '';
+const ogImg  = entry.seo.ogImage
+  ? \`/orbiter/media/\${entry.seo.ogImage}\`
+  : '/og-default.png';
+---
+<head>
+  <title>{title}</title>
+  <meta name="description"          content={desc} />
+  <meta property="og:title"         content={title} />
+  <meta property="og:description"   content={desc} />
+  <meta property="og:image"         content={ogImg} />
+  <meta name="twitter:card"         content="summary_large_image" />
+</head>`,
+      },
+
+      // ── Forms ──────────────────────────────────────────────────────
+      {
+        tag: 'Forms', title: 'Contact form',
+        desc: `Sends submissions to your Orbiter admin. They appear in Tools → Inbox under the "contact" tab.`,
+        code: `<form id="contact-form">
+  <input  name="name"    placeholder="Name"    required />
+  <input  name="email"   placeholder="E-Mail"  type="email" required />
+  <textarea name="message" placeholder="Nachricht" required></textarea>
+  <!-- honeypot: bots fill it, humans don't -->
+  <input name="_honeypot" style="display:none" tabindex="-1" autocomplete="off" />
+  <button type="submit">Senden</button>
+</form>
+
+<script>
+  document.getElementById('contact-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const res = await fetch('${adminOrigin}/api/form/contact', {
+      method: 'POST',
+      body: new FormData(e.target),
+    });
+    if (res.ok) alert('Nachricht gesendet!');
+    else        alert('Fehler — bitte erneut versuchen.');
+  });
+<\/script>`,
+      },
+
+      {
+        tag: 'Forms', title: 'Booking / Terminanfrage',
+        desc: `Sends booking requests to your admin inbox under the "booking" tab. Use Confirm / Reject buttons to manage them.`,
+        code: `<form id="booking-form">
+  <input  name="name"    placeholder="Name"    required />
+  <input  name="email"   placeholder="E-Mail"  type="email" required />
+  <input  name="phone"   placeholder="Telefon (optional)" />
+  <input  name="date"    type="date"   required />
+  <input  name="time"    type="time" />
+  <input  name="persons" type="number" min="1" placeholder="Personenanzahl" />
+  <textarea name="message" placeholder="Nachricht (optional)"></textarea>
+  <input name="_honeypot" style="display:none" tabindex="-1" autocomplete="off" />
+  <button type="submit">Anfrage senden</button>
+</form>
+
+<script>
+  document.getElementById('booking-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const res = await fetch('${adminOrigin}/api/form/booking', {
+      method: 'POST',
+      body: new FormData(e.target),
+    });
+    if (res.ok) alert('Anfrage gesendet!');
+    else        alert('Fehler — bitte erneut versuchen.');
+  });
+<\/script>`,
+      },
+
+      // ── Events ─────────────────────────────────────────────────────
+      ...(hasEvents ? [{
+        tag: 'Events', title: 'Ticket-Button (Pretix / Eventbrite / …)',
+        desc: 'Renders a "Buy tickets" button using the ticket_url and ticket_provider fields from the events collection.',
+        code: `---
+const { ticket_url, ticket_provider, price, price_notes } = entry.data;
+
+const providerLabel = {
+  pretix:       'Tickets via Pretix',
+  eventbrite:   'Tickets via Eventbrite',
+  eventim:      'Tickets via Eventim',
+  ticketmaster: 'Tickets via Ticketmaster',
+  tixfox:       'Tickets via Tixfox',
+  reservix:     'Tickets via Reservix',
+  custom:       'Tickets kaufen',
+};
+const btnLabel = providerLabel[ticket_provider] ?? 'Tickets kaufen';
+---
+
+{ticket_url && (
+  <div class="ticket-box">
+    {price && (
+      <div class="ticket-price">
+        <span>{price}</span>
+        {price_notes && <span class="ticket-notes">{price_notes}</span>}
+      </div>
+    )}
+    <a href={ticket_url} target="_blank" rel="noopener noreferrer" class="ticket-btn">
+      {btnLabel} →
+    </a>
+  </div>
+)}
+
+<style>
+  .ticket-box  { display:flex; align-items:center; gap:1rem; padding:1rem 1.25rem; border:1px solid #e2e8f0; border-radius:.75rem; background:#f8fafc; }
+  .ticket-price{ display:flex; flex-direction:column; font-weight:600; }
+  .ticket-notes{ font-size:.75rem; color:#64748b; font-weight:400; }
+  .ticket-btn  { margin-left:auto; padding:.6rem 1.25rem; background:#7c3aed; color:#fff; border-radius:.5rem; text-decoration:none; font-weight:500; white-space:nowrap; transition:background .15s; }
+  .ticket-btn:hover { background:#6d28d9; }
+</style>`,
+      }] : []),
+
+      // ── Integration ────────────────────────────────────────────────
+      {
+        tag: 'Integration', title: 'RSS Feed link',
+        desc: 'Link to the auto-generated RSS 2.0 feed injected by orbiter-integration.',
+        code: `<link rel="alternate" type="application/rss+xml"
+  title="RSS Feed" href="/orbiter/rss.xml" />`,
+      },
+
+      {
+        tag: 'Integration', title: 'Sitemap',
+        desc: 'The sitemap is injected automatically at /orbiter/sitemap.xml — submit this URL to Google Search Console.',
+        code: `<!-- robots.txt -->
+User-agent: *
+Allow: /
+Sitemap: https://your-domain.com/orbiter/sitemap.xml`,
+      },
+
+      {
+        tag: 'Integration', title: 'JSON API fetch (client-side)',
+        desc: `Fetch published entries at runtime without a build — useful for live filtering or SvelteKit / Next.js. Requires a Bearer token set in Settings → API.`,
+        code: `const res = await fetch('/orbiter/api/${colId}', {
+  headers: { Authorization: 'Bearer YOUR_TOKEN' },
+});
+const { entries } = await res.json();`,
+      },
+
+    ];
+
+    // ── Tags ─────────────────────────────────────────────────────────
+    const tags = ['All', ...new Set(SNIPPETS.map(s => s.tag))];
+    let activeTag = 'All';
+
+    function render() {
+      const visible = activeTag === 'All' ? SNIPPETS : SNIPPETS.filter(s => s.tag === activeTag);
+      const wrap = document.getElementById('snip-wrap');
+
+      const filterHtml = tags.map(t =>
+        `<button class="snip-filter${t === activeTag ? ' active' : ''}" data-tag="${t}">${t}</button>`
+      ).join('');
+
+      const cardsHtml = visible.map((s, i) => `
+        <div class="snip-card" id="snip-${i}">
+          <div class="snip-head" data-idx="${i}">
+            <span class="snip-arrow">▶</span>
+            <span class="snip-title">${s.title}</span>
+            <span class="snip-tag">${s.tag}</span>
+            <button class="snip-copy" data-idx="${i}">Copy</button>
+          </div>
+          <div class="snip-body">
+            ${s.desc ? `<div class="snip-desc">${s.desc}</div>` : ''}
+            <pre class="snip-pre">${escHtml(s.code)}</pre>
+          </div>
+        </div>
+      `).join('');
+
+      wrap.innerHTML = `
+        <div class="snip-filters">${filterHtml}</div>
+        ${cardsHtml}
+      `;
+      document.getElementById('snip-sub').textContent =
+        `${SNIPPETS.length} snippets · ${cols.length} collection${cols.length !== 1 ? 's' : ''} in pod`;
+
+      // Filter clicks
+      wrap.querySelectorAll('.snip-filter').forEach(btn => {
+        btn.addEventListener('click', () => { activeTag = btn.dataset.tag; render(); });
+      });
+
+      // Expand/collapse
+      wrap.querySelectorAll('.snip-head').forEach(head => {
+        head.addEventListener('click', e => {
+          if (e.target.closest('.snip-copy')) return;
+          document.getElementById('snip-' + head.dataset.idx)?.classList.toggle('open');
+        });
+      });
+
+      // Copy buttons
+      wrap.querySelectorAll('.snip-copy').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const idx  = parseInt(btn.dataset.idx);
+          const code = visible[idx]?.code ?? '';
+          navigator.clipboard.writeText(code).then(() => {
+            btn.textContent = 'Copied!';
+            btn.classList.add('copied');
+            setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1800);
+          });
+        });
+      });
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    render();
+  </script>
+    </main>
+  </div>
+  <script src="/sidebar.js"></script>
+  <script src="/search.js"></script>
+</body>
+</html>

@@ -655,6 +655,12 @@ Add, edit, delete, and reorder fields on any collection. Changes take effect imm
 ### Entries list
 Trash (soft delete + restore + permanent delete), activity log, bulk actions (publish/draft/delete/restore), drag-to-sort, scheduled status tab. **CSV export and import** per collection for bulk content management. When locales are configured, locale filter tabs appear in the filter bar.
 
+### Form inbox
+**Tools → Inbox** — receives contact and booking form submissions from your Astro site via `POST /api/form/:formId`. Each form ID is a separate tab. Actions per submission: mark as read / done / confirmed / rejected / spam, reply by email (inline compose panel), delete. SMTP config in Settings → Email.
+
+### Snippets
+**Tools → Snippets** — built-in Astro code library. Snippets are generated from your live pod state: collection names, admin origin, and available schemas. Categories: Setup, Content, SEO, Forms, Events, Integration. Each card has a copy button. Press `g p` in Space Station mode.
+
 ### Command palette
 `⌘ K` / `Ctrl K` — fuzzy search across all content and navigation from any admin page.
 
@@ -940,6 +946,20 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 ---
 
 ## Changelog
+
+### June 2026 · v0.3.58 — Form inbox, Built-in SEO, FTP deploy & Code snippets
+
+**Form inbox** — `POST /api/form/:formId` accepts contact and booking submissions from any Astro site. New admin page under Tools → Inbox: read, reply by email, mark as confirmed/rejected/done/spam. Honeypot spam filter. SMTP reply panel.
+
+**Built-in SEO** — permanent SEO section in the entry editor (meta title, description, OG image). No schema changes needed. Live SERP preview with character counter. Available as `entry.seo.title`, `entry.seo.description`, `entry.seo.ogImage` in `orbiter:collections`.
+
+**FTP / FTPS deploy** — upload Astro `dist/` to shared hosting directly from the admin. Configure in Settings. Test connection button. Trigger manually or automatically after a build webhook.
+
+**Code snippets** — new Tools → Snippets page with 11 copy-paste Astro snippets. Dynamically populated from your pod: collection names, admin URL, and schema. Categories: Setup, Content, SEO, Forms, Events, Integration. Keyboard shortcut `g p` in Space Station mode.
+
+Packages: `@a83/orbiter-admin@0.3.58`.
+
+---
 
 ### June 2026 · v0.3.47 — Station dock overhaul
 
