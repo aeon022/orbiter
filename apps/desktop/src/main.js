@@ -1,6 +1,7 @@
 'use strict';
 
 const { app, BrowserWindow, Tray, Menu, dialog, nativeImage, shell, utilityProcess } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path  = require('path');
 const net   = require('net');
 const fs    = require('fs');
@@ -251,6 +252,55 @@ async function backupPod() {
   if (response === 1) shell.showItemInFolder(filePath);
 }
 
+// ── Auto-update ───────────────────────────────────────────────────────────────
+function initAutoUpdater() {
+  if (!app.isPackaged) return; // dev mode: skip
+
+  autoUpdater.autoDownload        = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.logger              = null; // quiet
+
+  autoUpdater.on('update-downloaded', async (info) => {
+    const { response } = await dialog.showMessageBox({
+      type:      'info',
+      title:     'Update bereit',
+      message:   `Orbiter ${info.version} ist installationsbereit`,
+      detail:    'Jetzt neu starten, um das Update zu installieren?',
+      buttons:   ['Jetzt neu starten', 'Beim nächsten Start'],
+      defaultId: 0,
+    });
+    if (response === 0) {
+      app.isQuitting = true;
+      autoUpdater.quitAndInstall();
+    }
+  });
+
+  autoUpdater.on('error', err => console.error('[updater]', err.message));
+
+  // Check shortly after launch — don't block startup
+  setTimeout(() => autoUpdater.checkForUpdates().catch(() => {}), 5000);
+}
+
+async function checkForUpdatesManually() {
+  if (!app.isPackaged) {
+    shell.openExternal('https://github.com/aeon022/orbiter/releases');
+    return;
+  }
+  try {
+    const result = await autoUpdater.checkForUpdates();
+    if (!result?.updateInfo || result.updateInfo.version === app.getVersion()) {
+      dialog.showMessageBox({
+        type:    'info',
+        title:   'Kein Update',
+        message: `Orbiter ${app.getVersion()} ist aktuell.`,
+        buttons: ['OK'],
+      });
+    }
+  } catch {
+    shell.openExternal('https://github.com/aeon022/orbiter/releases');
+  }
+}
+
 // ── Pod switch helper ─────────────────────────────────────────────────────────
 async function switchPod() {
   const { filePaths, canceled } = await dialog.showOpenDialog({
@@ -415,6 +465,20 @@ function buildAppMenu() {
         { role: 'front', label: 'Alle nach vorne' },
       ],
     },
+    {
+      label: 'Hilfe',
+      submenu: [
+        {
+          label: 'Nach Updates suchen…',
+          click: checkForUpdatesManually,
+        },
+        { type: 'separator' },
+        {
+          label: 'GitHub — Releases',
+          click: () => shell.openExternal('https://github.com/aeon022/orbiter/releases'),
+        },
+      ],
+    },
   ];
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
@@ -498,6 +562,7 @@ app.whenReady().then(async () => {
 
     createWindow(serverPort, podPath);
     createTray(serverPort, podPath);
+    initAutoUpdater();
 
   } catch (err) {
     dialog.showErrorBox('Startfehler', err.message);

@@ -32,6 +32,7 @@ jobs:
           files: |
             apps/desktop/dist/*.dmg
             apps/desktop/dist/*.dmg.blockmap
+            apps/desktop/dist/latest-mac.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -59,5 +60,6 @@ jobs:
           files: |
             apps/desktop/dist/*.exe
             apps/desktop/dist/*.exe.blockmap
+            apps/desktop/dist/latest.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

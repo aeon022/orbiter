@@ -17,6 +17,7 @@
     "@hono/node-server": "^1.14.4",
     "basic-ftp": "^5.0.5",
     "better-sqlite3": "^12.11.1",
+    "electron-updater": "^6.8.9",
     "hono": "^4.7.11",
     "nodemailer": "^8.0.10",
     "sharp": "^0.34.5",
@@ -30,6 +31,11 @@
     "appId": "sh.orbiter.desktop",
     "productName": "Orbiter",
     "electronVersion": "42.4.1",
+    "publish": {
+      "provider": "github",
+      "owner": "aeon022",
+      "repo": "orbiter"
+    },
     "asar": true,
     "asarUnpack": [
       "**/node_modules/better-sqlite3/**/*",
@@ -50,7 +56,9 @@
       {
         "from": "../../packages/admin",
         "to": "admin",
-        "filter": ["package.json"]
+        "filter": [
+          "package.json"
+        ]
       }
     ],
     "mac": {
