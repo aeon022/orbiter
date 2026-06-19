@@ -137,6 +137,12 @@
     .media-drop-zone img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
     .media-drop-label { font-size:9px; color:var(--muted); letter-spacing:.08em; position:relative; z-index:1; }
     .media-drop-zone.has-image .media-drop-label { display:none; }
+    .file-drop-zone { border:1px dashed var(--line); background:var(--bg0); height:52px; cursor:pointer; transition:border-color .12s,background .12s; display:flex; align-items:center; gap:8px; padding:0 12px; border-radius:var(--radius); margin-top:5px; }
+    .file-drop-zone:hover,.file-drop-zone.drag-over { border-color:var(--gold); background:var(--gold-bg); }
+    .file-drop-zone.has-file { border-style:solid; border-color:var(--accent); }
+    .file-drop-icon { font-size:15px; flex-shrink:0; opacity:.6; }
+    .file-drop-info { font-size:10px; color:var(--muted); letter-spacing:.04em; }
+    .file-drop-zone.has-file .file-drop-info { color:var(--fg); }
     /* Comments */
     .comment-item { padding:8px 0; border-bottom:1px solid var(--line2); }
     .comment-item:last-child { border-bottom:none; }
@@ -686,6 +692,18 @@
             </div>
             <div style="margin-top:4px;"><span class="field-readonly" id="media-status-${key}"></span></div>
           </div>`;
+        } else if (field.type==='file') {
+          const existingFile = val ? mediaData.find(m=>m.id===val) : null;
+          const hasVal = !!(existingFile);
+          const fileLabel = hasVal ? `${escHtml(existingFile.filename)} <small style="color:var(--muted)">${fmtBytes(existingFile.size)}</small>` : '↑ drop or click file';
+          fieldsHtml += `<div>
+            <div class="file-drop-zone${hasVal?' has-file':''}" id="file-drop-${key}">
+              <span class="file-drop-icon">📎</span>
+              <div class="file-drop-info" id="file-info-${key}">${fileLabel}</div>
+            </div>
+            <input type="hidden" name="${key}" id="file-val-${key}" value="${escHtml(val??'')}" />
+            <div style="margin-top:4px;display:flex;align-items:center;gap:8px;"><span class="field-readonly" id="file-status-${key}"></span>${hasVal?`<a href="/api/media/${val}/raw" target="_blank" style="font-size:9px;color:var(--muted);">↓ download</a>`:''}</div>
+          </div>`;
         } else if (field.type==='array') {
           const arrVal = Array.isArray(val) ? val.join(', ') : (val??'');
           fieldsHtml += `<div>
@@ -874,6 +892,15 @@
         zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over');});
         zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
         zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag-over');if(e.dataTransfer.files.length){const fi={files:e.dataTransfer.files};uploadMediaField(key,fi);}});
+      });
+
+      // Wire up file drop zones
+      panel.querySelectorAll('.file-drop-zone').forEach(zone=>{
+        const key = zone.id.replace('file-drop-','');
+        zone.addEventListener('click',()=>{ const fi=document.createElement('input');fi.type='file';fi.accept='*/*';fi.onchange=()=>uploadFileField(key,fi);fi.click(); });
+        zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over');});
+        zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
+        zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag-over');if(e.dataTransfer.files.length){const fi={files:e.dataTransfer.files};uploadFileField(key,fi);}});
       });
 
       // Boolean toggle — live label + dirty
@@ -1081,6 +1108,32 @@
           statusEl.textContent='✓ '+data.filename;
           setTimeout(()=>{statusEl.textContent='';},3000);
         }
+      } catch(e) { statusEl.textContent='✗ '+e.message; }
+    }
+
+    function fmtBytes(b){if(!b)return'';b=parseInt(b);if(b<1024)return b+'B';if(b<1048576)return(b/1024).toFixed(0)+'KB';return(b/1048576).toFixed(1)+'MB';}
+
+    async function uploadFileField(key, input) {
+      if (!input.files?.length) return;
+      const file = input.files[0];
+      const statusEl = document.getElementById('file-status-'+key);
+      const zone     = document.getElementById('file-drop-'+key);
+      const info     = document.getElementById('file-info-'+key);
+      const hidden   = document.getElementById('file-val-'+key);
+      statusEl.textContent = '↑ uploading…';
+      const fd = new FormData();
+      fd.append('file',file); fd.append('alt',''); fd.append('folder','');
+      try {
+        const res  = await fetch('/api/media',{method:'POST',credentials:'include',body:fd});
+        const data = await res.json();
+        if (data.id) {
+          hidden.value = data.id;
+          info.innerHTML = `${escHtml(data.filename)} <small style="color:var(--muted)">${fmtBytes(file.size)}</small>`;
+          zone.classList.add('has-file');
+          statusEl.textContent = '✓ uploaded';
+          setTimeout(()=>{statusEl.textContent='';},3000);
+          markDirty();
+        } else { statusEl.textContent = '✗ upload failed'; }
       } catch(e) { statusEl.textContent='✗ '+e.message; }
     }
 

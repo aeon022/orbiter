@@ -24,7 +24,7 @@ function toPascal(str) {
 function fieldToTs(field, allCols) {
   switch (field.type) {
     case 'string': case 'richtext': case 'url': case 'email':
-    case 'date': case 'datetime': case 'image': case 'media':
+    case 'date': case 'datetime': case 'image': case 'media': case 'file':
       return 'string';
     case 'number':   return 'number';
     case 'boolean':  return 'boolean';
