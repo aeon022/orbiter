@@ -394,6 +394,10 @@
     .table-toolbar button { background:none; border:1px solid var(--line); color:var(--text); padding:2px 8px; border-radius:var(--radius); cursor:pointer; font-size:10px; font-family:var(--mono); }
     .table-toolbar button:hover { border-color:var(--accent); color:var(--accent); }
 
+    /* ── Table field ────────────────────────────────────────────── */
+    .tbl-field-wrap { border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
+    .tbl-field-scroll { overflow:auto; }
+
     /* SERP preview */
     .serp-preview { background:var(--bg0); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px; margin-top:12px; }
     .serp-url { font-size:9px; color:var(--jade); margin-bottom:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -723,6 +727,24 @@
             <input type="hidden" name="${key}" id="file-val-${key}" value="${escHtml(val??'')}" />
             <div style="margin-top:4px;display:flex;align-items:center;gap:8px;"><span class="field-readonly" id="file-status-${key}"></span><span id="file-dl-${key}">${hasVal?`<a href="/api/media/${val}/raw" target="_blank" style="font-size:9px;color:var(--muted);">↓ download</a>`:''}</span></div>
           </div>`;
+        } else if (field.type==='table') {
+          let tblRows;
+          if (Array.isArray(val)) { tblRows = val; }
+          else { try { tblRows = JSON.parse(val||'null'); } catch(e) { tblRows = null; } }
+          if (!Array.isArray(tblRows) || !tblRows.length) tblRows = [['',''],['',''],['','']];
+          const tblCols = tblRows[0].length || 2;
+          const theadHtml = `<thead><tr>${tblRows[0].map(c=>`<th contenteditable="true">${escHtml(String(c??''))}</th>`).join('')}</tr></thead>`;
+          const tbodyHtml = `<tbody>${tblRows.slice(1).map(r=>`<tr>${Array.from({length:tblCols},(_,i)=>`<td contenteditable="true">${escHtml(String(r[i]??''))}</td>`).join('')}</tr>`).join('')}</tbody>`;
+          fieldsHtml += `<div class="tbl-field-wrap" id="tbl-wrap-${key}">
+            <div class="table-toolbar">
+              <button type="button" onclick="tblAddRow('${key}')">+ Row</button>
+              <button type="button" onclick="tblAddCol('${key}')">+ Col</button>
+              <button type="button" onclick="tblDelRow('${key}')">− Row</button>
+              <button type="button" onclick="tblDelCol('${key}')">− Col</button>
+            </div>
+            <div class="tbl-field-scroll"><table class="be-table" id="tbl-${key}">${theadHtml}${tbodyHtml}</table></div>
+          </div>
+          <input type="hidden" name="${key}" id="tbl-val-${key}" value="${escHtml(Array.isArray(val)?JSON.stringify(val):(val??''))}">`;
         } else if (field.type==='array') {
           const arrVal = Array.isArray(val) ? val.join(', ') : (val??'');
           fieldsHtml += `<div>
@@ -946,6 +968,22 @@
           const lbl = cb.closest('.bool-toggle')?.querySelector('.bool-label');
           if (lbl) lbl.textContent = cb.checked ? 'An' : 'Aus';
           markDirty();
+        });
+      });
+
+      // Table field — Tab navigation + sync on input
+      panel.querySelectorAll('.tbl-field-wrap').forEach(wrap=>{
+        const key = wrap.id.replace('tbl-wrap-','');
+        wrap.addEventListener('input', ()=>tblSync(key));
+        wrap.addEventListener('keydown', e=>{
+          if (e.key!=='Tab') return;
+          const cell = e.target.closest('.be-table th,.be-table td');
+          if (!cell) return;
+          e.preventDefault();
+          const cells = Array.from(cell.closest('table').querySelectorAll('th[contenteditable],td[contenteditable]'));
+          const idx = cells.indexOf(cell);
+          const next = e.shiftKey ? cells[idx-1] : cells[idx+1];
+          if (next) { next.focus(); } else if (!e.shiftKey) { tblAddRow(key); }
         });
       });
 
@@ -1223,6 +1261,9 @@
       for (const [key, field] of extraFields) {
         if (field.type==='boolean') {
           data[key] = !!(document.querySelector(`[name="${key}"]`)?.checked);
+        } else if (field.type==='table') {
+          const raw = document.getElementById('tbl-val-'+key)?.value || '';
+          try { data[key] = raw ? JSON.parse(raw) : []; } catch(e) { data[key] = []; }
         } else if (field.type==='array'||field.type==='weekdays') {
           const raw = document.getElementById('wd-val-'+key)?.value || document.querySelector(`[name="${key}"]`)?.value || '';
           data[key] = raw ? raw.split(',').map(s=>s.trim()).filter(Boolean) : [];
@@ -2183,6 +2224,42 @@
       const table = btn.closest('.be-block').querySelector('table');
       if (table.rows[0].cells.length > 1) Array.from(table.rows).forEach(row => row.deleteCell(-1));
       syncToHidden(); scheduleAutosave();
+    };
+
+    // ── Table field helpers ───────────────────────────────────────────
+    window.tblSync = function(key) {
+      const tbl = document.getElementById('tbl-'+key);
+      if (!tbl) return;
+      const rows = Array.from(tbl.rows).map(tr=>Array.from(tr.cells).map(c=>c.innerText.replace(/\n/g,' ')));
+      document.getElementById('tbl-val-'+key).value = JSON.stringify(rows);
+      markDirty();
+    };
+    window.tblAddRow = function(key) {
+      const tbl = document.getElementById('tbl-'+key);
+      const cols = tbl.rows[0] ? tbl.rows[0].cells.length : 2;
+      const tr = document.createElement('tr');
+      for (let i=0;i<cols;i++){const td=document.createElement('td');td.contentEditable='true';tr.appendChild(td);}
+      (tbl.tBodies[0]||tbl).appendChild(tr);
+      tr.cells[0].focus();
+      tblSync(key);
+    };
+    window.tblAddCol = function(key) {
+      const tbl = document.getElementById('tbl-'+key);
+      Array.from(tbl.rows).forEach((tr,i)=>{
+        const cell = i===0 ? document.createElement('th') : document.createElement('td');
+        cell.contentEditable='true'; tr.appendChild(cell);
+      });
+      tblSync(key);
+    };
+    window.tblDelRow = function(key) {
+      const tbl = document.getElementById('tbl-'+key);
+      if (tbl.tBodies[0] && tbl.tBodies[0].rows.length > 0) tbl.tBodies[0].deleteRow(-1);
+      tblSync(key);
+    };
+    window.tblDelCol = function(key) {
+      const tbl = document.getElementById('tbl-'+key);
+      if (tbl.rows[0] && tbl.rows[0].cells.length > 1) Array.from(tbl.rows).forEach(tr=>tr.deleteCell(-1));
+      tblSync(key);
     };
 
     // ── Init ──────────────────────────────────────────────────────────

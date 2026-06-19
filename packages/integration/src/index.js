@@ -26,6 +26,7 @@ function fieldToTs(field, allCols) {
     case 'string': case 'richtext': case 'url': case 'email':
     case 'date': case 'datetime': case 'image': case 'media': case 'file':
       return 'string';
+    case 'table': return 'string[][]';
     case 'number':   return 'number';
     case 'boolean':  return 'boolean';
     case 'array': case 'weekdays': return 'string[]';
