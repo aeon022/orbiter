@@ -183,6 +183,42 @@ npm install -g @a83/orbiter-cli    # orbiter init, add-user, export, pack, unpac
 
 ---
 
+## Desktop App
+
+The Orbiter desktop app wraps the admin server in a native macOS application — no terminal, no npm, no Node.js required.
+
+### Install (macOS)
+
+1. Download the `.dmg` from [GitHub Releases](https://github.com/aeon022/orbiter/releases)
+2. Drag **Orbiter.app** to the Applications folder
+3. Double-click to launch
+
+### First launch
+
+Orbiter asks whether to open an existing `.pod` file or create a new one. Your choice is saved and loaded automatically on the next launch.
+
+### Switching pods
+
+**File → POD wechseln… (`⌘O`)** — opens a `.pod` file picker, restarts with the new pod.  
+**File → Neuen POD erstellen…** — creates a blank pod, restarts.
+
+Both options are also available via the menu-bar tray icon (right-click).
+
+### Build (from source)
+
+```bash
+cd apps/desktop
+npm install
+npm run dev          # run in Electron without packaging
+
+# Build DMG (use the globally installed electron-builder)
+cd apps/desktop && electron-builder --mac
+```
+
+> Built with Electron 42. The admin server runs inside a `utilityProcess.fork()` — no system Node.js needed. ASAR packaging bundles all dependencies.
+
+---
+
 ## Setup
 
 ### 1. Configure Astro
@@ -947,6 +983,18 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 
 ## Changelog
 
+### June 2026 · Desktop App v0.1.0 — macOS installer
+
+Native macOS desktop app — drag `Orbiter.app` from the DMG to Applications and double-click. No terminal, no npm, no Node.js required.
+
+- **Self-contained** — Electron 42 bundles the admin server via `utilityProcess.fork()`, ASAR archive
+- **Pod picker on first launch** — open an existing `.pod` or create a new one; choice is remembered
+- **Pod switching** — File → POD wechseln… (`⌘O`) or via the tray icon context menu
+- **Stays alive when closed** — lives in the menu bar tray, window hides instead of quitting
+- **Standard macOS app menu** — Datei / Bearbeiten / Fenster menus, `⌘Q` to quit
+
+---
+
 ### June 2026 · v0.3.58 — Form inbox, Built-in SEO, FTP deploy & Code snippets
 
 **Form inbox** — `POST /api/form/:formId` accepts contact and booking submissions from any Astro site. New admin page under Tools → Inbox: read, reply by email, mark as confirmed/rejected/done/spam. Honeypot spam filter. SMTP reply panel.
@@ -1112,6 +1160,7 @@ The block editor gains full rich-media embedding:
 | 06 | Horizon | ✅ Done — scheduled publishing, comments, RSS/sitemap, locking, email notifications |
 | 07 | Cosmos  | ✅ Done — Space Station mode, multilingual i18n, settings overhaul, station dock overhaul (v0.3.47) |
 | 08 | Frontier | 🔄 In progress — CLI improvements, runtime adapter, CSRF protection |
+| 09 | Ground Control | ✅ Done — macOS desktop app, DMG installer, no terminal needed |
 
 ### Next up (v0.4.x)
 

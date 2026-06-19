@@ -31,6 +31,7 @@ const features = [
   { icon: '◉', title: 'Built-in SEO',                 body: 'Every entry has a built-in SEO panel — meta title, description, and OG image. No schema changes needed. Access via <code>entry.seo.title</code>, <code>entry.seo.description</code>, and <code>entry.seo.ogImage</code>.' },
   { icon: '↑', title: 'FTP / FTPS deploy',            body: 'Upload your Astro <code>dist/</code> directly to any shared hosting via FTP or FTPS. Configure host, port, credentials, and remote path in Settings. One click to deploy — or trigger automatically after a build webhook.' },
   { icon: '⌗', title: 'Code snippets',               body: 'Built-in snippet library under Tools → Snippets. Copy-paste Astro code for contact forms, booking forms, SEO <code>&lt;head&gt;</code>, image rendering, getCollection, ticket buttons, RSS, and sitemap — dynamically adapted to your collection names.' },
+  { icon: '⬛', title: 'macOS Desktop App',           body: 'Download the DMG, drag to Applications, double-click to launch. The full admin — bundled, no terminal required, no Node.js required. Manage multiple sites via File → Switch POD.' },
 ];
 
 const tradeoffs = [
@@ -282,7 +283,7 @@ const faqs = [
     </div>
 
     <div class="hero-inner">
-      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">v0.3.47 — Station dock: command palette, zen mode, keyboard nav · Changelog →</a>
+      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">Desktop App v0.1.0 — macOS DMG installer, no terminal needed · Changelog →</a>
       <h1>Your entire CMS<br />in <span>one file.</span></h1>
       <p class="hero-sub">
         Content, media, schema, users — all in a single <code>.pod</code> file.
@@ -471,6 +472,22 @@ const faqs = [
     <p class="section-lead reveal reveal-delay-1">Recent updates and improvements to Orbiter.</p>
 
     <div class="updates-feed">
+
+      <div class="update-card reveal" style="border-color:color-mix(in srgb,var(--accent) 40%,var(--line))">
+        <div class="update-date">Jun<br />2026</div>
+        <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">Desktop v0.1.0 — New</div>
+          <div class="update-title">macOS Desktop App — drag, drop, done. No terminal required.</div>
+          <ul class="update-items">
+            <li><strong>DMG installer</strong> — drag <code>Orbiter.app</code> to Applications, double-click to launch. No Node.js, no npm, no terminal.</li>
+            <li><strong>Self-contained</strong> — Electron bundles the full admin server. Everything runs locally, offline-capable.</li>
+            <li><strong>Pod picker on first launch</strong> — open an existing <code>.pod</code> file or create a new one. Choice is saved and loaded automatically.</li>
+            <li><strong>Multi-site switching</strong> — File → Switch POD (<code>⌘O</code>) switches to a different content database and restarts instantly.</li>
+            <li><strong>Lives in the menu bar</strong> — closing the window hides it; the app keeps running in the tray. <code>⌘Q</code> to fully quit.</li>
+          </ul>
+        </div>
+      </div>
 
       <div class="update-card reveal" style="border-color:color-mix(in srgb,var(--accent) 40%,var(--line))">
         <div class="update-date">Jun<br />2026</div>
