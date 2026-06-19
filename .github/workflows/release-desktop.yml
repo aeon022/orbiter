@@ -23,7 +23,7 @@ jobs:
 
       - name: Build macOS DMG (arm64 + x64)
         working-directory: apps/desktop
-        run: npx electron-builder --mac
+        run: npx electron-builder --mac --publish never
 
       - name: Attach to GitHub Release
         uses: softprops/action-gh-release@v2
@@ -51,7 +51,7 @@ jobs:
       - name: Build Windows NSIS installer (x64)
         working-directory: apps/desktop
         shell: bash
-        run: npx electron-builder --win
+        run: npx electron-builder --win --publish never
 
       - name: Attach to GitHub Release
         uses: softprops/action-gh-release@v2
