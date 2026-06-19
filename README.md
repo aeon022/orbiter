@@ -189,7 +189,7 @@ The Orbiter desktop app wraps the admin server in a native macOS and Windows app
 
 ### Install
 
-**macOS** — Download the `.dmg` from [GitHub Releases](https://github.com/aeon022/orbiter/releases), drag **Orbiter.app** to Applications, double-click to launch.
+**macOS** — Download `Orbiter-universal.dmg` from [GitHub Releases](https://github.com/aeon022/orbiter/releases) (läuft nativ auf Apple Silicon und Intel). Drag **Orbiter.app** to Applications, double-click to launch.
 
 > **Gatekeeper-Hinweis:** Da Orbiter nicht mit einer Apple Developer ID signiert ist, zeigt macOS beim ersten Start eine Warnung oder meldet „App ist beschädigt". Workarounds:
 > - **Rechtsklicken → Öffnen** im Finder (dann erscheint „Trotzdem öffnen")

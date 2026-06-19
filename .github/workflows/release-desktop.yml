@@ -21,7 +21,7 @@ jobs:
 
       - run: npm ci
 
-      - name: Build macOS DMG (arm64 + x64)
+      - name: Build macOS DMG (universal)
         working-directory: apps/desktop
         run: npx electron-builder --mac --publish never
 
