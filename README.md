@@ -1175,6 +1175,7 @@ The block editor gains full rich-media embedding:
 | 08 | Frontier | ✅ Done — CSRF protection (Origin/Referer validation + sameSite cookie) |
 | 09 | Ground Control | ✅ Done — macOS desktop app, DMG installer, no terminal needed |
 | 10 | Outpost | ✅ Done — Windows desktop app (NSIS installer, x64) |
+| 11 | Transit | ✅ Done — runtime adapter (auto-enabled for `output: 'server'` / `'hybrid'`) |
 
 ### Next up
 
@@ -1184,11 +1185,10 @@ The block editor gains full rich-media embedding:
 | 2 | **Table field** | Structured data in the editor — price lists, opening hours, comparison tables |
 | 3 | **Desktop auto-update** | `electron-updater` via GitHub Releases — no manual re-download |
 | 4 | **Desktop backup button** | File → Back up POD… creates a timestamped copy next to the active pod |
-| 5 | **Runtime adapter** | `orbiter:collections` at runtime for SSR sites — live content without rebuild |
-| 6 | **Windows app menu** | Review and fix menu behavior on Windows (no macOS menu bar) |
-| 7 | **Scheduled entries calendar** | Visual calendar view of planned publish/unpublish dates |
-| 8 | **Cross-pod entry copy** | Export an entry as JSON, import into a different pod |
-| 9 | **SvelteKit integration** | `@a83/orbiter-sveltekit` — same virtual module API as the Astro integration |
+| 5 | **Windows app menu** | Test and fix menu behavior on Windows |
+| 6 | **Scheduled entries calendar** | Visual calendar view of planned publish/unpublish dates |
+| 7 | **Cross-pod entry copy** | Export an entry as JSON, import into a different pod |
+| 8 | **SvelteKit integration** | `@a83/orbiter-sveltekit` — same virtual module API as the Astro integration |
 
 ### v0.3.47 — released
 
