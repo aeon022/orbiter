@@ -191,7 +191,13 @@ The Orbiter desktop app wraps the admin server in a native macOS and Windows app
 
 **macOS** — Download the `.dmg` from [GitHub Releases](https://github.com/aeon022/orbiter/releases), drag **Orbiter.app** to Applications, double-click to launch.
 
-> **Gatekeeper-Hinweis:** Da Orbiter nicht mit einer Apple Developer ID signiert ist, zeigt macOS beim ersten Start eine Warnung. Workaround: App im Finder **rechtsklicken → Öffnen** — dann erscheint ein "Trotzdem öffnen"-Button. Alternativ: **Systemeinstellungen → Datenschutz & Sicherheit → Trotzdem öffnen**.
+> **Gatekeeper-Hinweis:** Da Orbiter nicht mit einer Apple Developer ID signiert ist, zeigt macOS beim ersten Start eine Warnung oder meldet „App ist beschädigt". Workarounds:
+> - **Rechtsklicken → Öffnen** im Finder (dann erscheint „Trotzdem öffnen")
+> - **Systemeinstellungen → Datenschutz & Sicherheit → Trotzdem öffnen**
+> - Bei „beschädigt"-Meldung: Quarantäne-Flag im Terminal entfernen:
+>   ```bash
+>   xattr -cr /Applications/Orbiter.app
+>   ```
 
 **Windows** — Download the `.exe` installer, run it, launch Orbiter from the Start menu.
 
