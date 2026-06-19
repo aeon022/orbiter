@@ -74,8 +74,8 @@ async function pickPod() {
     type:      'question',
     title:     'Orbiter',
     message:   'Willkommen bei Orbiter!',
-    detail:    'Wähle eine vorhandene .pod-Datei oder erstelle eine neue.',
-    buttons:   ['Pod öffnen…', 'Neues Pod erstellen…', 'Beenden'],
+    detail:    'Wähle deinen POD aus oder erstelle einen neuen. Ein POD ist eine SQLite-Datenbank mit der Endung .pod — sie enthält deinen gesamten Content.',
+    buttons:   ['POD auswählen…', 'Neuen POD erstellen…', 'Beenden'],
     defaultId: 0,
     cancelId:  2,
     icon:      fs.existsSync(ICON_PNG) ? ICON_PNG : undefined,
@@ -85,8 +85,8 @@ async function pickPod() {
 
   if (response === 0) {
     const { filePaths, canceled } = await dialog.showOpenDialog({
-      title:      'Pod öffnen',
-      filters:    [{ name: 'Orbiter Pod', extensions: ['pod'] }],
+      title:      'Wähle deinen POD aus',
+      filters:    [{ name: 'Orbiter POD (SQLite)', extensions: ['pod'] }],
       properties: ['openFile'],
     });
     if (canceled || !filePaths.length) { app.quit(); return null; }
@@ -96,9 +96,9 @@ async function pickPod() {
 
   // Create new pod
   const { filePath, canceled } = await dialog.showSaveDialog({
-    title:       'Neues Pod erstellen',
+    title:       'Neuen POD erstellen',
     defaultPath: 'content.pod',
-    filters:     [{ name: 'Orbiter Pod', extensions: ['pod'] }],
+    filters:     [{ name: 'Orbiter POD (SQLite)', extensions: ['pod'] }],
   });
   if (canceled || !filePath) { app.quit(); return null; }
   saveConfig({ ...cfg, podPath: filePath });
@@ -195,11 +195,11 @@ function createTray(port, podPath) {
     { label: 'Im Browser öffnen',  click: () => shell.openExternal(`http://localhost:${port}`) },
     { type: 'separator' },
     {
-      label: 'Pod wechseln…',
+      label: 'POD wechseln…',
       click: async () => {
         const { filePaths, canceled } = await dialog.showOpenDialog({
-          title:      'Pod öffnen',
-          filters:    [{ name: 'Orbiter Pod', extensions: ['pod'] }],
+          title:      'Wähle deinen POD aus',
+          filters:    [{ name: 'Orbiter POD (SQLite)', extensions: ['pod'] }],
           properties: ['openFile'],
         });
         if (canceled || !filePaths.length) return;
