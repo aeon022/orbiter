@@ -1178,9 +1178,17 @@ The block editor gains full rich-media embedding:
 
 ### Next up
 
-- **Auto-update** — `electron-updater` so users get new versions without re-downloading the installer
-- **SSR / runtime adapter** — `orbiter:collections` currently snapshots at build time; a runtime adapter for live content without rebuilding
-- **SvelteKit / Next.js integration** — the virtual module concept is framework-agnostic; Astro is first, others follow
+| Priority | Feature | Notes |
+|----------|---------|-------|
+| 1 | **File upload field** | PDFs, documents — `file` field type, no resize/compress, `entry.doc.url` in collections |
+| 2 | **Table field** | Structured data in the editor — price lists, opening hours, comparison tables |
+| 3 | **Desktop auto-update** | `electron-updater` via GitHub Releases — no manual re-download |
+| 4 | **Desktop backup button** | File → Back up POD… creates a timestamped copy next to the active pod |
+| 5 | **Runtime adapter** | `orbiter:collections` at runtime for SSR sites — live content without rebuild |
+| 6 | **Windows app menu** | Review and fix menu behavior on Windows (no macOS menu bar) |
+| 7 | **Scheduled entries calendar** | Visual calendar view of planned publish/unpublish dates |
+| 8 | **Cross-pod entry copy** | Export an entry as JSON, import into a different pod |
+| 9 | **SvelteKit integration** | `@a83/orbiter-sveltekit` — same virtual module API as the Astro integration |
 
 ### v0.3.47 — released
 
