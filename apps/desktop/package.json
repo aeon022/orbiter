@@ -2,41 +2,80 @@
   "name": "@a83/orbiter-desktop",
   "version": "0.1.0",
   "description": "Orbiter CMS — Desktop App",
+  "author": "Gerwin Weiher <gerwin.weiher@gmail.com>",
   "private": true,
   "main": "src/main.js",
   "scripts": {
-    "dev":       "electron .",
+    "dev": "electron .",
     "build:mac": "electron-builder --mac",
     "build:win": "electron-builder --win",
-    "build":     "electron-builder --mac --win"
+    "build": "electron-builder --mac --win"
+  },
+  "dependencies": {
+    "@a83/orbiter-core": "*",
+    "@aws-sdk/client-s3": "^3.1048.0",
+    "@hono/node-server": "^1.14.4",
+    "basic-ftp": "^5.0.5",
+    "better-sqlite3": "^12.11.1",
+    "hono": "^4.7.11",
+    "nodemailer": "^8.0.10",
+    "sharp": "^0.34.5",
+    "turndown": "^7.2.0"
   },
   "devDependencies": {
-    "electron":         "^42.0.0",
+    "electron": "42.4.1",
     "electron-builder": "^25.1.8"
   },
   "build": {
     "appId": "sh.orbiter.desktop",
     "productName": "Orbiter",
+    "electronVersion": "42.4.1",
     "asar": true,
+    "asarUnpack": [
+      "**/node_modules/better-sqlite3/**/*",
+      "**/node_modules/sharp/**/*",
+      "**/node_modules/@img/**/*"
+    ],
     "files": [
       "src/**/*",
-      "assets/**/*"
-    ],
-    "extraResources": [
+      "assets/**/*",
+      {
+        "from": "../../packages/admin/src",
+        "to": "admin/src"
+      },
+      {
+        "from": "../../packages/admin/public",
+        "to": "admin/public"
+      },
       {
         "from": "../../packages/admin",
-        "to":   "admin",
-        "filter": ["src/**/*", "public/**/*", "package.json", "node_modules/**/*"]
+        "to": "admin",
+        "filter": ["package.json"]
       }
     ],
     "mac": {
       "category": "public.app-category.productivity",
       "icon": "assets/icon.icns",
-      "target": [{ "target": "dmg", "arch": ["arm64", "x64"] }]
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ]
     },
     "win": {
       "icon": "assets/icon.ico",
-      "target": [{ "target": "nsis", "arch": ["x64"] }]
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -46,7 +85,26 @@
     },
     "dmg": {
       "title": "Orbiter ${version}",
-      "background": "assets/dmg-background.png"
+      "background": "assets/dmg-background.png",
+      "iconSize": 80,
+      "iconTextSize": 12,
+      "window": {
+        "width": 540,
+        "height": 380
+      },
+      "contents": [
+        {
+          "x": 150,
+          "y": 160,
+          "type": "file"
+        },
+        {
+          "x": 390,
+          "y": 160,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
     }
   }
 }

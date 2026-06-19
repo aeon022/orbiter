@@ -5,9 +5,11 @@ import { serve } from '@hono/node-server';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-// Ensure CWD is the package root so serveStatic finds ./public
 const __dirname = dirname(fileURLToPath(import.meta.url));
-process.chdir(join(__dirname, '..'));
+const ADMIN_ROOT = join(__dirname, '..');
+// In standalone mode chdir so other relative-path tooling works.
+// In Electron the asar is not a real directory, so we skip it.
+if (!process.env.ELECTRON) process.chdir(ADMIN_ROOT);;
 import { readFileSync } from 'node:fs';
 import { openPod }          from '@a83/orbiter-core';
 import { authRoutes }       from './routes/auth.js';
@@ -102,7 +104,7 @@ export function createApp(podPath) {
   app.get('/', (c) => c.redirect('/login.html'));
 
   // Serve static frontend files from public/
-  app.use('/*', serveStatic({ root: './public' }));
+  app.use('/*', serveStatic({ root: join(ADMIN_ROOT, 'public') }));
 
   return app;
 }

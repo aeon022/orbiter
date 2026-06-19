@@ -1,12 +1,11 @@
 'use strict';
 
-const { app, BrowserWindow, Tray, Menu, dialog, nativeImage, shell } = require('electron');
-const { spawn } = require('child_process');
+const { app, BrowserWindow, Tray, Menu, dialog, nativeImage, shell, utilityProcess } = require('electron');
 const path  = require('path');
 const net   = require('net');
 const fs    = require('fs');
 
-// ── Config (userData/config.json — no external dep) ──────────────────────────
+// ── Config ────────────────────────────────────────────────────────────────────
 const CONFIG_PATH = () => path.join(app.getPath('userData'), 'orbiter-config.json');
 
 function loadConfig() {
@@ -20,10 +19,8 @@ function saveConfig(data) {
 }
 
 // ── Paths ─────────────────────────────────────────────────────────────────────
-// Phase 1 (dev): resolve relative to this file.
-// Phase 2 (packaged): use process.resourcesPath/admin/src/server.js
 const SERVER_ENTRY = app.isPackaged
-  ? path.join(process.resourcesPath, 'admin', 'src', 'server.js')
+  ? path.join(app.getAppPath(), 'admin', 'src', 'server.js')
   : path.join(__dirname, '../../../packages/admin/src/server.js');
 
 const ICON_PNG = path.join(__dirname, '../assets/icon.png');
@@ -64,18 +61,44 @@ function waitForServer(port, timeout = 10000) {
   });
 }
 
-// ── Pod picker ────────────────────────────────────────────────────────────────
+// ── Pod switch helper ─────────────────────────────────────────────────────────
+async function switchPod() {
+  const { filePaths, canceled } = await dialog.showOpenDialog({
+    title:      'POD auswählen',
+    filters:    [{ name: 'Orbiter POD (SQLite)', extensions: ['pod'] }],
+    properties: ['openFile'],
+  });
+  if (canceled || !filePaths.length) return;
+  saveConfig({ podPath: filePaths[0] });
+  app.relaunch();
+  app.isQuitting = true;
+  app.quit();
+}
+
+async function createNewPod() {
+  const { filePath, canceled } = await dialog.showSaveDialog({
+    title:       'Neuen POD erstellen',
+    defaultPath: 'content.pod',
+    filters:     [{ name: 'Orbiter POD (SQLite)', extensions: ['pod'] }],
+  });
+  if (canceled || !filePath) return;
+  saveConfig({ podPath: filePath });
+  app.relaunch();
+  app.isQuitting = true;
+  app.quit();
+}
+
+// ── Pod picker (first launch) ─────────────────────────────────────────────────
 async function pickPod() {
   const cfg = loadConfig();
-
   if (cfg.podPath && fs.existsSync(cfg.podPath)) return cfg.podPath;
 
   const { response } = await dialog.showMessageBox({
     type:      'question',
     title:     'Orbiter',
     message:   'Willkommen bei Orbiter!',
-    detail:    'Wähle deinen POD aus oder erstelle einen neuen. Ein POD ist eine SQLite-Datenbank mit der Endung .pod — sie enthält deinen gesamten Content.',
-    buttons:   ['POD auswählen…', 'Neuen POD erstellen…', 'Beenden'],
+    detail:    'Wähle einen vorhandenen POD (SQLite-Datenbank, .pod) oder erstelle einen neuen.',
+    buttons:   ['POD öffnen…', 'Neuen POD erstellen…', 'Beenden'],
     defaultId: 0,
     cancelId:  2,
     icon:      fs.existsSync(ICON_PNG) ? ICON_PNG : undefined,
@@ -85,7 +108,7 @@ async function pickPod() {
 
   if (response === 0) {
     const { filePaths, canceled } = await dialog.showOpenDialog({
-      title:      'Wähle deinen POD aus',
+      title:      'POD öffnen',
       filters:    [{ name: 'Orbiter POD (SQLite)', extensions: ['pod'] }],
       properties: ['openFile'],
     });
@@ -94,7 +117,6 @@ async function pickPod() {
     return filePaths[0];
   }
 
-  // Create new pod
   const { filePath, canceled } = await dialog.showSaveDialog({
     title:       'Neuen POD erstellen',
     defaultPath: 'content.pod',
@@ -107,37 +129,96 @@ async function pickPod() {
 
 // ── Server ────────────────────────────────────────────────────────────────────
 function startServer(podPath, port) {
-  // Phase 1: use system node. Phase 2: use utilityProcess.fork() or bundled node.
-  const nodeExec = process.env.ORBITER_NODE ?? 'node';
-
-  const proc = spawn(nodeExec, [SERVER_ENTRY], {
+  const proc = utilityProcess.fork(SERVER_ENTRY, [], {
+    serviceName: 'orbiter-server',
     env: {
       ...process.env,
-      PORT:           String(port),
-      ORBITER_POD:    podPath,
-      ADMIN_ORIGIN:   `http://localhost:${port}`,
-      ELECTRON:       '1',
+      PORT:         String(port),
+      ORBITER_POD:  podPath,
+      ADMIN_ORIGIN: `http://localhost:${port}`,
+      ELECTRON:     '1',
     },
-    stdio: ['ignore', 'pipe', 'pipe'],
+    stdio: 'pipe',
   });
 
-  proc.stdout.on('data', d => process.stdout.write('[server] ' + d));
-  proc.stderr.on('data', d => process.stderr.write('[server] ' + d));
+  proc.stdout?.on('data', d => process.stdout.write('[server] ' + d));
+  proc.stderr?.on('data', d => process.stderr.write('[server] ' + d));
 
-  proc.on('error', err => {
-    dialog.showErrorBox('Serverfehler', `Orbiter-Server konnte nicht gestartet werden:\n${err.message}`);
-  });
-
-  proc.on('exit', (code, signal) => {
+  proc.on('exit', code => {
     if (!app.isQuitting && code !== 0) {
-      dialog.showErrorBox(
-        'Server beendet',
-        `Der Server wurde unerwartet beendet (Code ${code ?? signal}).\n\nNeu starten?`,
-      );
+      dialog.showErrorBox('Server beendet', `Der Server wurde unerwartet beendet (Code ${code}).`);
     }
   });
 
   return proc;
+}
+
+// ── macOS application menu ────────────────────────────────────────────────────
+function buildAppMenu() {
+  const template = [
+    {
+      label: app.name,
+      submenu: [
+        { role: 'about', label: `Über ${app.name}` },
+        { type: 'separator' },
+        { role: 'services', label: 'Dienste' },
+        { type: 'separator' },
+        { role: 'hide', label: `${app.name} ausblenden` },
+        { role: 'hideOthers', label: 'Andere ausblenden' },
+        { role: 'unhide', label: 'Alle einblenden' },
+        { type: 'separator' },
+        {
+          label: 'Beenden',
+          accelerator: 'Cmd+Q',
+          click: () => { app.isQuitting = true; app.quit(); },
+        },
+      ],
+    },
+    {
+      label: 'Datei',
+      submenu: [
+        {
+          label: 'POD wechseln…',
+          accelerator: 'Cmd+O',
+          click: switchPod,
+        },
+        {
+          label: 'Neuen POD erstellen…',
+          click: createNewPod,
+        },
+        { type: 'separator' },
+        {
+          label: 'Im Browser öffnen',
+          click: () => serverPort && shell.openExternal(`http://localhost:${serverPort}`),
+        },
+        { type: 'separator' },
+        { role: 'close', label: 'Fenster schließen' },
+      ],
+    },
+    {
+      label: 'Bearbeiten',
+      submenu: [
+        { role: 'undo', label: 'Widerrufen' },
+        { role: 'redo', label: 'Wiederholen' },
+        { type: 'separator' },
+        { role: 'cut', label: 'Ausschneiden' },
+        { role: 'copy', label: 'Kopieren' },
+        { role: 'paste', label: 'Einsetzen' },
+        { role: 'selectAll', label: 'Alles auswählen' },
+      ],
+    },
+    {
+      label: 'Fenster',
+      submenu: [
+        { role: 'minimize', label: 'Im Dock ablegen' },
+        { role: 'zoom', label: 'Zoomen' },
+        { type: 'separator' },
+        { role: 'front', label: 'Alle nach vorne' },
+      ],
+    },
+  ];
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
 // ── Browser window ────────────────────────────────────────────────────────────
@@ -156,20 +237,17 @@ function createWindow(port, podPath) {
       contextIsolation: true,
       nodeIntegration:  false,
     },
-    // Frameless on macOS gives a polished native feel (optional, can be removed)
-    // titleBarStyle: 'hiddenInset',
   });
 
   mainWindow.loadURL(`http://localhost:${port}/dashboard.html`);
 
-  // Clicking X hides instead of quitting (stays in tray)
+  // X hides window; app stays alive in tray + dock
   mainWindow.on('close', e => {
     if (!app.isQuitting) { e.preventDefault(); mainWindow.hide(); }
   });
 
   mainWindow.on('closed', () => { mainWindow = null; });
 
-  // Open external links in system browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: 'deny' };
@@ -178,61 +256,44 @@ function createWindow(port, podPath) {
 
 // ── Tray ──────────────────────────────────────────────────────────────────────
 function createTray(port, podPath) {
-  const icon = fs.existsSync(ICON_PNG)
-    ? nativeImage.createFromPath(ICON_PNG).resize({ width: 16, height: 16 })
-    : nativeImage.createEmpty();
+  // Template image: macOS renders it correctly in both light + dark menu bar
+  let icon;
+  if (fs.existsSync(ICON_PNG)) {
+    icon = nativeImage.createFromPath(ICON_PNG).resize({ width: 16, height: 16 });
+    icon.setTemplateImage(true);
+  } else {
+    icon = nativeImage.createEmpty();
+  }
 
   tray = new Tray(icon);
   tray.setToolTip(`Orbiter — ${path.basename(podPath)}`);
 
-  const rebuildMenu = (pod) => Menu.buildFromTemplate([
-    {
-      label:   `Orbiter — ${path.basename(pod)}`,
-      enabled: false,
-    },
+  const buildMenu = () => Menu.buildFromTemplate([
+    { label: `Orbiter — ${path.basename(podPath)}`, enabled: false },
     { type: 'separator' },
-    { label: 'Öffnen',             click: () => { mainWindow?.show(); mainWindow?.focus(); } },
-    { label: 'Im Browser öffnen',  click: () => shell.openExternal(`http://localhost:${port}`) },
+    { label: 'Fenster öffnen',    click: () => { mainWindow?.show(); mainWindow?.focus(); } },
+    { label: 'Im Browser öffnen', click: () => shell.openExternal(`http://localhost:${port}`) },
     { type: 'separator' },
-    {
-      label: 'POD wechseln…',
-      click: async () => {
-        const { filePaths, canceled } = await dialog.showOpenDialog({
-          title:      'Wähle deinen POD aus',
-          filters:    [{ name: 'Orbiter POD (SQLite)', extensions: ['pod'] }],
-          properties: ['openFile'],
-        });
-        if (canceled || !filePaths.length) return;
-        saveConfig({ podPath: filePaths[0] });
-        app.relaunch();
-        app.isQuitting = true;
-        app.quit();
-      },
-    },
+    { label: 'POD wechseln…',     click: switchPod },
+    { label: 'Neuen POD erstellen…', click: createNewPod },
     { type: 'separator' },
-    {
-      label: 'Beenden',
-      click: () => { app.isQuitting = true; app.quit(); },
-    },
+    { label: 'Beenden', click: () => { app.isQuitting = true; app.quit(); } },
   ]);
 
-  tray.setContextMenu(rebuildMenu(podPath));
-  tray.on('double-click', () => { mainWindow?.show(); mainWindow?.focus(); });
-
-  // Rebuild menu so the pod name updates on pod switch
-  tray.rebuildMenu = (pod) => tray.setContextMenu(rebuildMenu(pod));
+  tray.setContextMenu(buildMenu());
+  tray.on('click', () => { mainWindow?.show(); mainWindow?.focus(); });
 }
 
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 app.whenReady().then(async () => {
   try {
+    buildAppMenu();
+
     const podPath = await pickPod();
     if (!podPath) return;
 
     serverPort = await findFreePort();
     serverProc = startServer(podPath, serverPort);
-
-    // Wait up to 10s for server to accept connections
     await waitForServer(serverPort, 10000);
 
     createWindow(serverPort, podPath);
@@ -244,12 +305,8 @@ app.whenReady().then(async () => {
   }
 });
 
-// macOS: clicking dock icon re-shows the window
-app.on('activate', () => {
-  if (mainWindow) { mainWindow.show(); }
-});
+app.on('activate', () => { if (mainWindow) { mainWindow.show(); } });
 
-// Keep process alive on macOS when all windows are closed (lives in tray)
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
