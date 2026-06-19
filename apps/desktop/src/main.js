@@ -223,6 +223,34 @@ async function pickTemplateAndSeed(filePath) {
   return true;
 }
 
+// ── Backup ───────────────────────────────────────────────────────────────────
+async function backupPod() {
+  const cfg = loadConfig();
+  const source = cfg.podPath;
+  if (!source || !fs.existsSync(source)) {
+    dialog.showErrorBox('Fehler', 'Kein aktiver POD gefunden.');
+    return;
+  }
+  const basename = path.basename(source, '.pod');
+  const date = new Date().toISOString().slice(0, 10);
+  const { filePath, canceled } = await dialog.showSaveDialog({
+    title:       'POD sichern',
+    defaultPath: path.join(path.dirname(source), `${basename}-backup-${date}.pod`),
+    filters:     [{ name: 'Orbiter POD (SQLite)', extensions: ['pod'] }],
+  });
+  if (canceled || !filePath) return;
+  fs.copyFileSync(source, filePath);
+  const { response } = await dialog.showMessageBox({
+    type:      'info',
+    title:     'Backup gespeichert',
+    message:   'POD erfolgreich gesichert.',
+    detail:    path.basename(filePath),
+    buttons:   ['OK', 'Im Finder zeigen'],
+    defaultId: 0,
+  });
+  if (response === 1) shell.showItemInFolder(filePath);
+}
+
 // ── Pod switch helper ─────────────────────────────────────────────────────────
 async function switchPod() {
   const { filePaths, canceled } = await dialog.showOpenDialog({
@@ -352,6 +380,11 @@ function buildAppMenu() {
           label: 'Neuen POD erstellen…',
           click: createNewPod,
         },
+        {
+          label:        'POD sichern…',
+          accelerator:  'Cmd+Shift+S',
+          click:        backupPod,
+        },
         { type: 'separator' },
         {
           label: 'Im Browser öffnen',
@@ -440,8 +473,9 @@ function createTray(port, podPath) {
     { label: 'Fenster öffnen',    click: () => { mainWindow?.show(); mainWindow?.focus(); } },
     { label: 'Im Browser öffnen', click: () => shell.openExternal(`http://localhost:${port}`) },
     { type: 'separator' },
-    { label: 'POD wechseln…',     click: switchPod },
+    { label: 'POD wechseln…',        click: switchPod },
     { label: 'Neuen POD erstellen…', click: createNewPod },
+    { label: 'POD sichern…',         click: backupPod },
     { type: 'separator' },
     { label: 'Beenden', click: () => { app.isQuitting = true; app.quit(); } },
   ]);
