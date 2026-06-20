@@ -1,7 +1,7 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
 ---
-<DocsLayout title="Scheduled Publishing & Content Expiry" current="/docs/scheduled-publishing" prev={{ href: '/docs/draft-preview', title: 'Draft preview' }} next={{ href: '/docs/comments', title: 'Content comments' }}>
+<DocsLayout title="Scheduled Publishing & Content Expiry" current="/docs/scheduled-publishing" prev={{ href: '/docs/draft-preview', title: 'Draft preview' }} next={{ href: '/docs/calendar', title: 'Calendar' }}>
 
 <h1>Scheduled Publishing &amp; Content Expiry</h1>
 <p class="lead">Set a future date for an entry to go live automatically, and optionally set an unpublish time so content disappears just as cleanly as it appeared.</p>
@@ -54,5 +54,8 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 &#123; "publish_at": null, "unpublish_at": null, "status": "draft" &#125;</pre>
 
 <p>The response always includes the current values of both fields alongside the resolved <code>status</code>.</p>
+
+<h2>Calendar view</h2>
+<p>Scheduled and expiring entries are visualized on a month grid in the <a href="/docs/calendar">Calendar</a> — blue chips for upcoming publishes, gold chips for upcoming expiries. The dashboard also shows a mini calendar widget with upcoming dates at a glance.</p>
 
 </DocsLayout>

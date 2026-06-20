@@ -1,0 +1,55 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Calendar" current="/docs/calendar" prev={{ href: '/docs/scheduled-publishing', title: 'Scheduled publishing' }} next={{ href: '/docs/comments', title: 'Comments' }}>
+
+<h1>Calendar</h1>
+<p class="lead">A visual month-grid view of all your entries — see at a glance what's scheduled, expiring, published, or in draft.</p>
+
+<h2>Full calendar page</h2>
+<p>Open <strong>Calendar</strong> from the sidebar (or the Station dock). The page shows a month grid with entry chips on the days they were last edited or are scheduled to appear:</p>
+
+<table>
+  <thead><tr><th>Color</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td style="color:var(--accent,#6366f1)">Blue</td><td>Scheduled — entry will be published at <code>publish_at</code></td></tr>
+    <tr><td style="color:var(--gold,#e6a817)">Gold</td><td>Expiring — published entry will unpublish at <code>unpublish_at</code></td></tr>
+    <tr><td style="color:var(--jade,#22c55e)">Green</td><td>Published</td></tr>
+    <tr><td style="color:var(--muted,#888)">Grey</td><td>Draft</td></tr>
+  </tbody>
+</table>
+
+<p>Click any day to see the entries for that date in the <strong>detail sidebar</strong> on the right. Use the filter buttons (All / Scheduled / Published / Draft) to narrow the list. Clicking an entry opens it directly in the editor.</p>
+
+<h3>Navigation</h3>
+<ul>
+  <li><strong>← Prev</strong> / <strong>Next →</strong> — change month</li>
+  <li><strong>Today</strong> — jump back to the current month and highlight today</li>
+  <li>Keyboard: <kbd>←</kbd> / <kbd>→</kbd> to change month, <kbd>T</kbd> for today</li>
+</ul>
+
+<h2>Dashboard widget</h2>
+<p>The dashboard includes a compact calendar strip below the hero section:</p>
+<ul>
+  <li><strong>Mini calendar</strong> — current month with colored dots on days that have entries</li>
+  <li><strong>Upcoming</strong> — next 5 entries sorted by date, with scheduled and expiring entries shown first</li>
+  <li><strong>Full calendar →</strong> — link to the full calendar page</li>
+</ul>
+
+<h2>API</h2>
+<pre>GET /api/search/calendar</pre>
+<p>Returns all non-deleted entries with their date fields:</p>
+<pre>&#123;
+  "id":           "550e8400-…",
+  "collection":   "posts",
+  "label":        "Posts",
+  "slug":         "my-post",
+  "title":        "My Post",
+  "status":       "scheduled",
+  "publish_at":   "2026-07-01 09:00:00",
+  "unpublish_at": null,
+  "created_at":   "2026-06-15 12:00:00",
+  "updated_at":   "2026-06-20 10:30:00"
+&#125;</pre>
+
+</DocsLayout>

@@ -1,10 +1,10 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
 ---
-<DocsLayout title="Schema Export & Import" current="/docs/schema-tools" prev={{ href: '/docs/rss-sitemap', title: 'RSS feeds & sitemap' }} next={{ href: '/docs/cli', title: 'CLI' }}>
+<DocsLayout title="Schema, CSV & pod export" current="/docs/schema-tools" prev={{ href: '/docs/rss-sitemap', title: 'RSS feeds & sitemap' }} next={{ href: '/docs/cli', title: 'CLI' }}>
 
-<h1>Schema Export &amp; Import</h1>
-<p class="lead">Back up a collection's field definitions as JSON, restore them on any pod, and move entry data in bulk with CSV export and import — all from the admin UI.</p>
+<h1>Schema, CSV &amp; pod export</h1>
+<p class="lead">Back up field definitions, move entry data with CSV, or copy entire pods between projects — all from the admin UI.</p>
 
 <h2>Schema export</h2>
 <p>Open the <strong>Schema</strong> section in the admin and select a collection. Click the <strong>Export schema</strong> button in the edit panel. The browser downloads a file named <code>&#123;collection&#125;-schema.json</code> containing the full field definition for that collection:</p>
@@ -48,12 +48,43 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 
 <p>After import, a summary shows the number of entries created, updated, and skipped, along with any row-level errors.</p>
 
-<h2>Typical workflow</h2>
+<h2>Pod export &amp; import (cross-pod copy)</h2>
+<p>The <strong>Import</strong> page has a <strong>Pod / JSON</strong> tab for copying entire pods between projects.</p>
+
+<h3>Export</h3>
+<p>Click <strong>↓ Export as JSON</strong> to download all collections and their entries as a single JSON file. The file includes collection schemas, so the receiving pod can recreate missing collections automatically.</p>
+<pre>GET /api/import/export-pod</pre>
+
+<h3>Import</h3>
+<p>Drop a <code>.json</code> export file or a raw <code>.pod</code> SQLite file onto the import zone. Orbiter reads all collections and entries from the source and merges them into the current pod:</p>
+<ul>
+  <li><strong>New collections</strong> are created with the source schema.</li>
+  <li><strong>Existing collections</strong> are left untouched (schema is not overwritten).</li>
+  <li><strong>Entries</strong> are matched by slug — choose <em>Skip</em> to keep existing entries or <em>Overwrite</em> to replace them.</li>
+</ul>
+<pre>POST /api/import/pod
+Content-Type: multipart/form-data
+
+pod_file:       (file)          .pod or .json file
+on_duplicate:   skip | overwrite</pre>
+
+<h2>Typical workflows</h2>
+<h3>Migrate field definitions</h3>
 <ol>
   <li>Export the schema from a staging pod.</li>
   <li>Import the schema on the production pod to synchronise field definitions.</li>
+</ol>
+
+<h3>Migrate entry data</h3>
+<ol>
   <li>Export entry data as CSV from staging.</li>
-  <li>Import the CSV on production to migrate content.</li>
+  <li>Import the CSV on production.</li>
+</ol>
+
+<h3>Clone a pod</h3>
+<ol>
+  <li>On the source pod, go to Import → Pod / JSON → <strong>↓ Export as JSON</strong>.</li>
+  <li>On the target pod, go to Import → Pod / JSON → drop the JSON file → <strong>Import Pod</strong>.</li>
 </ol>
 
 </DocsLayout>
