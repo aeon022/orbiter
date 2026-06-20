@@ -76,12 +76,12 @@ export default async function PostPage(&#123; params &#125;) &#123;
 &#125;
 </pre>
 
-<div class="callout">In Next.js, the pod file must be on the same machine as the Node.js server. For static export (<code>next export</code>), use <code>createClient</code> inside <code>generateStaticParams</code> and page components — Next.js runs these at build time.</div>
+<div class="callout">In Next.js, the POD must be on the same machine as the Node.js server. For static export (<code>next export</code>), use <code>createClient</code> inside <code>generateStaticParams</code> and page components — Next.js runs these at build time.</div>
 
 <h2>API</h2>
 
 <h3>createClient(podPath)</h3>
-<p>Opens the pod file and returns a client. <code>podPath</code> is resolved relative to <code>process.cwd()</code>.</p>
+<p>Opens the POD and returns a client. <code>podPath</code> is resolved relative to <code>process.cwd()</code>.</p>
 
 <h3>orb.getCollection(name)</h3>
 <p>Returns all published entries (default locale) sorted by <code>sort_order</code>, then <code>updated_at</code>.</p>

@@ -11,7 +11,7 @@ const _aiMatch = _aiMdRaw.match(/^```\n([\s\S]+)\n```\s*$/m);
 const aiPromptText = _aiMatch ? _aiMatch[1] : _aiMdRaw;
 
 const features = [
-  { icon: '◈', title: 'One file. Everything.',        body: 'Content, media, schema, users, sessions — all in a single <code>.pod</code> file. Copy it anywhere. Back it up with <code>cp</code>.' },
+  { icon: '◈', title: 'One file. Everything.',        body: 'Content, media, schema, users, sessions — all in a single POD (a SQLite database with a <code>.pod</code> extension). Copy it anywhere. Back it up with <code>cp</code>.' },
   { icon: '⬡', title: 'Astro-native',                 body: 'One line in <code>astro.config.mjs</code> gives you <code>orbiter:collections</code> — a Vite virtual module that snapshots your published content at build time. Zero runtime fetch.' },
   { icon: '⌗', title: 'Familiar content API',         body: 'Read content with <code>getCollection</code> and <code>getEntry</code> — same shape as Astro\'s built-in content collections.' },
   { icon: '▦', title: 'Schema editor',                body: 'Add or change fields without migrations. Export and import schemas as JSON to copy them between collections or pods.' },
@@ -102,8 +102,8 @@ try {
 
 const faqs = [
   {
-    q: 'What is a .pod file?',
-    a: 'A <code>.pod</code> file is a standard SQLite database — just with a custom extension. You can open it with any SQLite GUI (TablePlus, DB Browser for SQLite, DBeaver) and inspect or query your content directly. The extension makes it easy to identify in your project.',
+    q: 'What is a POD?',
+    a: 'A POD is a standard SQLite database with a <code>.pod</code> extension. It contains all your content, media, users, and settings in one file. You can open it with any SQLite tool (TablePlus, DB Browser for SQLite, DBeaver) and inspect or query your content directly.',
   },
   {
     q: 'Do I need a database server?',
@@ -160,10 +160,10 @@ const faqs = [
   <!-- Open Graph -->
   <meta property="og:type"        content="website" />
   <meta property="og:title"       content="Orbiter — CMS in one file" />
-  <meta property="og:description" content="Content, media, schema, users — all in a single .pod file. Copy it anywhere. Built for Astro." />
+  <meta property="og:description" content="Content, media, schema, users — all in a single POD. One SQLite file. Copy it anywhere. Built for Astro." />
   <meta property="og:url"         content="https://orbiter.sh/" />
   <meta property="og:image"        content="https://orbiter.sh/og-card.png" />
-  <meta property="og:image:alt"    content="Orbiter CMS — content, media, schema, users in one .pod file" />
+  <meta property="og:image:alt"    content="Orbiter CMS — content, media, schema, users in one POD" />
   <meta property="og:image:width"  content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:site_name"   content="Orbiter" />
@@ -171,7 +171,7 @@ const faqs = [
   <!-- Twitter / X -->
   <meta name="twitter:card"        content="summary_large_image" />
   <meta name="twitter:title"       content="Orbiter — CMS in one file" />
-  <meta name="twitter:description" content="Content, media, schema, users — all in a single .pod file. Copy it anywhere. Built for Astro." />
+  <meta name="twitter:description" content="Content, media, schema, users — all in a single POD. One SQLite file. Copy it anywhere. Built for Astro." />
   <meta name="twitter:image"       content="https://orbiter.sh/og-card.png" />
   <meta name="twitter:site"        content="@gerwinweiher" />
 
@@ -289,8 +289,8 @@ const faqs = [
       <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">Desktop App v0.1.0 — Mac + Windows, pick a template, start editing · Changelog →</a>
       <h1>Your entire CMS<br />in <span>one file.</span></h1>
       <p class="hero-sub">
-        Content, media, schema, users — all in a single <code>.pod</code> file.
-        Copy it anywhere. No database server. No cloud account.
+        Content, media, schema, users — all in a single POD.
+        One SQLite file. Copy it anywhere. No database server. No cloud account.
         Built for Astro.
       </p>
       <div class="hero-actions">
@@ -721,7 +721,7 @@ ORBITER_POD=$(pwd)/content.pod npm start</code></pre>
         <h2 class="manifesto-headline reveal reveal-delay-1">Your data.<br />No strings attached.</h2>
         <p class="manifesto-body reveal reveal-delay-2">
           Every other CMS gives your content to a cloud. Orbiter gives it to you.
-          A single <code>.pod</code> file — on your disk, in your repo, on your server.
+          A single POD — one SQLite file on your disk, in your repo, on your server.
           Copy it, encrypt it, email it. No account required. No monthly invoice.
           No vendor who can change pricing, shut down, or hold your data hostage.
         </p>
@@ -1144,7 +1144,7 @@ ORBITER_POD=$(pwd)/content.pod npm start</code></pre>
       </div>
       <div class="ai-prompt-preview"><span class="hi">You are scaffolding a new Astro blog site using Orbiter CMS (https://orbiter.sh).</span>
 <span class="hi">Orbiter is a self-hosted CMS where all content, media, schema, and users live in a</span>
-<span class="hi">single SQLite file called a .pod file. No database server. No cloud dependency.</span>
+<span class="hi">single SQLite database called a POD (.pod extension). No database server. No cloud dependency.</span>
 
 <span class="hi">Your task: set up a complete, working project from scratch — including a seed script</span>
 <span class="hi">that creates collections and example content, and Astro pages that consume the data.</span>

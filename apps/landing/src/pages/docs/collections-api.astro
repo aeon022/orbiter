@@ -18,7 +18,7 @@ export default defineConfig(&#123;
 &#125;);</pre>
 
 <h3>SSR / hybrid output</h3>
-<p>When <code>output</code> is <code>'server'</code> or <code>'hybrid'</code>, <code>getCollection</code> and friends query the pod file at <strong>request time</strong>. Content changes are reflected immediately — no rebuild needed.</p>
+<p>When <code>output</code> is <code>'server'</code> or <code>'hybrid'</code>, <code>getCollection</code> and friends query the POD at <strong>request time</strong>. Content changes are reflected immediately — no rebuild needed.</p>
 <pre>import node from '@astrojs/node';
 import orbiter from '@a83/orbiter-integration';
 export default defineConfig(&#123;
@@ -26,7 +26,7 @@ export default defineConfig(&#123;
   adapter: node(&#123; mode: 'standalone' &#125;),
   integrations: [orbiter(&#123; pod: './content.pod' &#125;)],
 &#125;);</pre>
-<div class="callout">In SSR mode the pod file must be readable at runtime (i.e. on the server). The API surface is identical — only when queries run changes.</div>
+<div class="callout">In SSR mode the POD must be readable at runtime (i.e. on the server). The API surface is identical — only when queries run changes.</div>
 
 <h2>API</h2>
 

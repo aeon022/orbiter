@@ -57,7 +57,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <p>Both options are also available in the <strong>menu-bar tray</strong> (macOS) and <strong>system tray</strong> (Windows) — the app stays alive when you close the window.</p>
 
 <h2>Backup</h2>
-<p><strong>File → POD sichern… <kbd>⌘⇧S</kbd></strong> — saves a timestamped copy of the active pod file. The default filename is <code>name-backup-YYYY-MM-DD.pod</code> next to the original. After saving, a confirmation dialog offers to reveal the backup in Finder or Explorer.</p>
+<p><strong>File → POD sichern… <kbd>⌘⇧S</kbd></strong> — saves a timestamped copy of the active POD. The default filename is <code>name-backup-YYYY-MM-DD.pod</code> next to the original. After saving, a confirmation dialog offers to reveal the backup in Finder or Explorer.</p>
 <p>Since a <code>.pod</code> file is a standard SQLite database, you can also back it up with any file backup tool — Time Machine, rsync, Dropbox, etc.</p>
 
 <h2>Auto-update</h2>
@@ -68,7 +68,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 
 <h2>How it works</h2>
 <p>The desktop app is built with <strong>Electron 42</strong>. The Orbiter admin server runs inside a <code>utilityProcess.fork()</code> — a sandboxed Node.js process bundled inside the ASAR archive. No system Node.js is required.</p>
-<p>The pod file is the same standard SQLite database used by the npm package — fully interchangeable. You can open a pod created by the desktop app with <code>@a83/orbiter-admin</code>, and vice versa.</p>
+<p>The POD is the same standard SQLite database used by the npm package — fully interchangeable. You can open a pod created by the desktop app with <code>@a83/orbiter-admin</code>, and vice versa.</p>
 
 <h2>Build from source</h2>
 <pre>git clone https://github.com/aeon022/orbiter.git

@@ -4,12 +4,12 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <DocsLayout title="Overview" description="Orbiter CMS documentation" current="/docs/" next={{ href: '/docs/quick-start', title: 'Quick start' }}>
 
 <h1>Orbiter Documentation</h1>
-<p class="lead">A single-file CMS for Astro. Everything in one <code>.pod</code> file — content, media, schema, users, config.</p>
+<p class="lead">A single-file CMS for Astro. Everything in one POD — a SQLite database containing content, media, schema, users, and config.</p>
 
 <h2>What is Orbiter?</h2>
-<p>Orbiter is a headless CMS built around a single SQLite database. The database has a <code>.pod</code> extension and contains everything your CMS needs. Copy the file and your entire site moves with it. Back it up with <code>cp</code>. Move it between servers with <code>rsync</code>.</p>
+<p>Orbiter is a headless CMS built around a single SQLite database called a <strong>POD</strong> (file extension <code>.pod</code>). One file contains everything your CMS needs. Copy it and your entire site moves with it. Back it up with <code>cp</code>. Move it between servers with <code>rsync</code>.</p>
 
-<p>Two packages share the pod file:</p>
+<p>Two packages share the POD:</p>
 
 <ul>
   <li><strong>@a83/orbiter-admin</strong> — a standalone Hono server that runs the admin UI on port 4322. Reads and writes the pod. Runs independently from your Astro site.</li>
