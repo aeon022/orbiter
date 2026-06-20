@@ -189,7 +189,7 @@ nav {
   left: 50%;
   transform: translateX(-50%);
   width: calc(100vw - 48px);
-  max-width: 1060px;
+  max-width: 1220px;
   z-index: 200;
   background: rgba(7,7,15,.6);
   backdrop-filter: blur(22px);
@@ -252,6 +252,8 @@ nav {
   align-items: center;
   gap: 4px;
   font-size: 0.875rem;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .nav-links a {
   color: var(--muted);
