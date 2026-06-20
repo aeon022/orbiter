@@ -31,6 +31,36 @@ searchRoutes.get('/recent', (c) => {
   return c.json(results);
 });
 
+// GET /api/search/calendar — all entries with date info for calendar views
+searchRoutes.get('/calendar', (c) => {
+  const db   = openPod(c.get('podPath'));
+  const cols = db.getCollections();
+  const colMap = Object.fromEntries(cols.map(c => [c.id, c.label]));
+
+  const rows = db.db.prepare(
+    "SELECT id, collection_id, slug, status, data, publish_at, unpublish_at, created_at, updated_at FROM _entries WHERE deleted_at IS NULL ORDER BY updated_at DESC"
+  ).all();
+
+  const results = rows.map(r => {
+    let data = {};
+    try { data = JSON.parse(r.data); } catch {}
+    return {
+      id:            r.id,
+      collection:    r.collection_id,
+      label:         colMap[r.collection_id] ?? r.collection_id,
+      slug:          r.slug,
+      title:         data.title ?? r.slug,
+      status:        r.status,
+      publish_at:    r.publish_at ?? null,
+      unpublish_at:  r.unpublish_at ?? null,
+      created_at:    r.created_at,
+      updated_at:    r.updated_at,
+    };
+  });
+  db.close();
+  return c.json(results);
+});
+
 function makeSnippet(body, q, maxLen) {
   if (!body) return '';
   const lower = body.toLowerCase();

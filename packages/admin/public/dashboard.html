@@ -42,7 +42,6 @@
     .dash-content { display:grid; grid-template-columns:1fr 300px; }
     .content-main { padding:28px 32px; border-right:1px solid var(--line); }
     .content-side { padding:24px 0; }
-
     /* Section headers */
     .section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
     .section-title { font-size:9px; letter-spacing:0.26em; text-transform:uppercase; color:var(--text); display:flex; align-items:center; gap:8px; }
@@ -59,6 +58,34 @@
     .pill { font-size:9px; padding:2px 7px; letter-spacing:0.06em; text-align:center; border-radius:2px; }
     .pill.published { color:var(--jade); background:var(--jade-bg); }
     .pill.draft { color:var(--gold); background:var(--gold-bg); }
+    .pill.scheduled { color:var(--accent); background:var(--accent-bg); }
+
+    /* Calendar mini */
+    .cal-strip { display:grid; grid-template-columns:1fr 1fr; gap:0; border-bottom:1px solid var(--line); }
+    .cal-strip-panel { padding:20px 24px; }
+    .cal-strip-panel + .cal-strip-panel { border-left:1px solid var(--line); }
+    .cal-mini { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; margin-top:10px; }
+    .cal-mini-hdr { font-size:8px; color:var(--muted); text-align:center; letter-spacing:0.08em; padding:2px 0 4px; }
+    .cal-mini-day { aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--muted); position:relative; border-radius:2px; cursor:default; }
+    .cal-mini-day.today { color:var(--heading); font-weight:600; background:var(--line2); }
+    .cal-mini-day.other-month { opacity:0.3; }
+    .cal-mini-day .cal-dot { position:absolute; bottom:1px; width:4px; height:4px; border-radius:50%; }
+    .cal-mini-day .cal-dot.sched { background:var(--accent); }
+    .cal-mini-day .cal-dot.pub { background:var(--jade); }
+    .cal-mini-day .cal-dot.draft { background:var(--muted); }
+    .cal-mini-day .cal-dot.expire { background:var(--gold); }
+    .cal-upcoming { margin-top:8px; }
+    .cal-upcoming-row { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; }
+    .cal-upcoming-row:last-child { border-bottom:none; }
+    .cal-upcoming-row:hover { background:var(--line2); margin:0 -8px; padding-left:8px; padding-right:8px; border-radius:var(--radius); }
+    .cal-up-date { font-size:10px; color:var(--accent); font-family:var(--mono); min-width:58px; flex-shrink:0; }
+    .cal-up-date.expire { color:var(--gold); }
+    .cal-up-date.pub { color:var(--jade); }
+    .cal-up-date.draft { color:var(--muted); }
+    .cal-up-title { font-size:11px; color:var(--text); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .cal-up-coll { font-size:9px; color:var(--muted); flex-shrink:0; }
+    .cal-link { font-size:9px; color:var(--accent); text-decoration:none; letter-spacing:0.06em; }
+    .cal-link:hover { text-decoration:underline; }
 
     /* Collection cards */
     .side-section { padding:0 20px 24px; }
@@ -186,6 +213,23 @@
           <div class="stat-num" id="stat-media">—</div>
           <div class="stat-sub">files</div>
           <div class="stat-bar"><div class="stat-bar-fill accent" style="width:60%"></div></div>
+        </div>
+      </div>
+
+      <!-- Calendar strip -->
+      <div class="cal-strip glass-card" id="cal-strip" style="display:none">
+        <div class="cal-strip-panel">
+          <div class="section-head">
+            <div class="section-title">This month</div>
+          </div>
+          <div class="cal-mini" id="cal-mini-grid"></div>
+        </div>
+        <div class="cal-strip-panel">
+          <div class="section-head">
+            <div class="section-title">Upcoming</div>
+            <a href="/calendar.html" class="cal-link">Full calendar →</a>
+          </div>
+          <div id="cal-upcoming"></div>
         </div>
       </div>
 
@@ -383,6 +427,85 @@
           </div>
         </div>`;
       }).join('');
+    }
+
+    // ── Calendar strip ────────────────────────────────────────────────
+    {
+      const calEntries = await fetch('/api/search/calendar', { credentials: 'include' }).then(r => r.json()).catch(() => []);
+
+      // Build events: scheduled, expiring, and recently edited
+      const events = [];
+      for (const e of calEntries) {
+        if (e.status === 'scheduled' && e.publish_at) {
+          events.push({ ...e, date: e.publish_at.split(' ')[0], type: 'sched' });
+        } else if (e.status === 'published' && e.unpublish_at) {
+          events.push({ ...e, date: (e.updated_at || e.created_at).split(' ')[0], type: 'pub' });
+          events.push({ ...e, date: e.unpublish_at.split(' ')[0], type: 'expire' });
+        } else {
+          const d = (e.updated_at || e.created_at || '').split(' ')[0];
+          if (d) events.push({ ...e, date: d, type: e.status === 'published' ? 'pub' : 'draft' });
+        }
+      }
+      events.sort((a, b) => a.date.localeCompare(b.date));
+
+      document.getElementById('cal-strip').style.display = '';
+
+      // Mini calendar
+      const now   = new Date();
+      const year  = now.getFullYear();
+      const month = now.getMonth();
+      const today = now.toISOString().slice(0, 10);
+      const first = new Date(year, month, 1);
+      const last  = new Date(year, month + 1, 0);
+      const startDay = first.getDay() || 7;
+      const grid  = document.getElementById('cal-mini-grid');
+
+      const dayNames = ['Mo','Tu','We','Th','Fr','Sa','Su'];
+      grid.innerHTML = dayNames.map(d => `<div class="cal-mini-hdr">${d}</div>`).join('');
+
+      // Collect dots per date — priority: sched > expire > pub > draft
+      const dotMap = {};
+      const prio = { sched: 4, expire: 3, pub: 2, draft: 1 };
+      for (const e of events) {
+        if (!dotMap[e.date] || prio[e.type] > prio[dotMap[e.date]]) dotMap[e.date] = e.type;
+      }
+
+      const startOffset = startDay - 1;
+      const prevLast = new Date(year, month, 0).getDate();
+      for (let i = startOffset - 1; i >= 0; i--) {
+        grid.innerHTML += `<div class="cal-mini-day other-month">${prevLast - i}</div>`;
+      }
+      for (let d = 1; d <= last.getDate(); d++) {
+        const iso = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const cls = iso === today ? 'cal-mini-day today' : 'cal-mini-day';
+        const dot = dotMap[iso] ? `<span class="cal-dot ${dotMap[iso]}"></span>` : '';
+        grid.innerHTML += `<div class="${cls}">${d}${dot}</div>`;
+      }
+      const remaining = 7 - ((startOffset + last.getDate()) % 7);
+      if (remaining < 7) {
+        for (let i = 1; i <= remaining; i++) {
+          grid.innerHTML += `<div class="cal-mini-day other-month">${i}</div>`;
+        }
+      }
+
+      // Upcoming list — scheduled/expiring first, then recent edits
+      const scheduled = events.filter(e => e.date >= today && (e.type === 'sched' || e.type === 'expire'));
+      const recentEdits = events.filter(e => e.date >= today && e.type !== 'sched' && e.type !== 'expire');
+      const upcoming = [...scheduled, ...recentEdits].slice(0, 5);
+      const upEl = document.getElementById('cal-upcoming');
+      if (!upcoming.length) {
+        upEl.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:8px 0;font-family:var(--mono)">No entries this month</div>';
+      } else {
+        upEl.innerHTML = '<div class="cal-upcoming">' + upcoming.map(e => {
+          const prefix = e.type === 'sched' ? '↑' : e.type === 'expire' ? '↓' : '·';
+          const dateLabel = prefix + ' ' + e.date.slice(5);
+          return `<a class="cal-upcoming-row" href="/editor.html?collection=${e.collection}&slug=${e.slug}">
+            <span class="cal-up-date ${e.type}">${dateLabel}</span>
+            <span class="cal-up-title">${e.title}</span>
+            <span class="cal-up-coll">${e.label}</span>
+          </a>`;
+        }).join('') + '</div>';
+      }
     }
 
     // ── Notes ───────────────────────────────────────────────────────────

@@ -1506,13 +1506,14 @@ html[data-style="xfce"] .hero.glass-card {
     color-mix(in srgb, var(--accent) 22%, var(--glass-bg-side)),
     var(--glass-bg-side) 68%
   ) !important;
-  padding: 30px 36px 26px !important;
+  padding: 16px 28px 14px !important;
   align-items: center !important;
 }
 html[data-style="xfce"] .hero-site {
-  font-size: 28px !important;
+  font-size: 20px !important;
   font-weight: 400 !important;
   letter-spacing: 0.06em !important;
+  margin-bottom: 2px !important;
   background: linear-gradient(
     90deg,
     var(--heading) 50%,
@@ -1521,7 +1522,6 @@ html[data-style="xfce"] .hero-site {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 8px !important;
 }
 html[data-style="xfce"] .hero-date {
   font-family: var(--mono) !important;
@@ -1554,19 +1554,38 @@ html[data-style="xfce"] .hero.glass-card::before {
 /* Dashboard: 2-column grid — stats panel on the right */
 html[data-style="xfce"] .main:has(.stats-row) {
   display: grid !important;
-  grid-template-columns: 1fr 190px;
-  grid-template-rows: auto auto auto;
+  grid-template-columns: 1fr 160px;
+  grid-template-rows: auto auto 1fr;
   grid-template-areas:
     "hero  stats"
-    "dash  stats"
-    "ws    ws";
+    "cal   stats"
+    "dash  dash";
 }
-html[data-style="xfce"] .hero.glass-card      { grid-area: hero; }
-html[data-style="xfce"] .stats-row.glass-card  { grid-area: stats; }
+html[data-style="xfce"] .hero.glass-card       { grid-area: hero; }
+html[data-style="xfce"] .stats-row.glass-card   { grid-area: stats; align-self: stretch; }
+html[data-style="xfce"] .cal-strip.glass-card   { grid-area: cal; }
 html[data-style="xfce"] .dash-content.glass-card { grid-area: dash; }
-html[data-style="xfce"] .workspace.glass-card  { grid-area: ws; }
+html[data-style="xfce"] .workspace.glass-card   { display: none !important; }
 
-/* Stats: vertical compact list */
+/* Calendar strip: prominent in xfce */
+html[data-style="xfce"] .cal-strip.glass-card {
+  border: 1px solid var(--glass-border);
+}
+html[data-style="xfce"] .cal-strip-panel { padding: 20px 28px; }
+html[data-style="xfce"] .cal-mini-day { font-size: 12px; }
+html[data-style="xfce"] .cal-mini-hdr { font-size: 9px; }
+html[data-style="xfce"] .cal-mini-day .cal-dot { width: 5px; height: 5px; }
+html[data-style="xfce"] .cal-upcoming-row { padding: 9px 0; }
+html[data-style="xfce"] .cal-up-title { font-size: 12px; }
+
+/* Dashboard compact entries in xfce */
+html[data-style="xfce"] .entry-row { padding: 7px 12px; gap: 10px; }
+html[data-style="xfce"] .entry-name { font-size: 11px; }
+html[data-style="xfce"] .entry-coll { font-size: 8px; }
+html[data-style="xfce"] .entry-date { font-size: 9px; }
+html[data-style="xfce"] .pill { font-size: 8px; padding: 1px 5px; }
+
+/* Stats: compact vertical list */
 html[data-style="xfce"] .stats-row.glass-card {
   display: flex !important;
   flex-direction: column !important;
@@ -1577,27 +1596,23 @@ html[data-style="xfce"] .stat-cell {
   flex: 1;
   border-right: none !important;
   border-bottom: 1px solid var(--glass-border);
-  padding: 14px 16px !important;
-  transition: background .15s;
+  padding: 10px 14px !important;
 }
 html[data-style="xfce"] .stat-cell:last-child { border-bottom: none; }
-html[data-style="xfce"] .stat-cell:hover {
-  background: color-mix(in srgb, var(--accent) 5%, transparent);
-}
 html[data-style="xfce"] .stat-num {
-  font-size: 22px !important;
-  margin-bottom: 2px !important;
+  font-size: 18px !important;
+  margin-bottom: 0 !important;
 }
 html[data-style="xfce"] .stat-label {
-  font-size: 8px !important;
-  letter-spacing: 0.22em !important;
-  margin-bottom: 6px !important;
+  font-size: 7px !important;
+  letter-spacing: 0.2em !important;
+  margin-bottom: 4px !important;
 }
 html[data-style="xfce"] .stat-sub {
-  font-size: 9px !important;
+  font-size: 8px !important;
 }
 html[data-style="xfce"] .stat-bar {
-  margin-top: 8px !important;
+  display: none !important;
 }
 
 html[data-style="xfce"] .dash-content.glass-card {
@@ -1606,11 +1621,9 @@ html[data-style="xfce"] .dash-content.glass-card {
 }
 html[data-style="xfce"] .content-main {
   overflow-y: auto;
-  max-height: 380px;
 }
 html[data-style="xfce"] .content-side {
   overflow-y: auto;
-  max-height: 380px;
 }
 
 html[data-style="xfce"] .workspace.glass-card {
@@ -2485,8 +2498,8 @@ html[data-zen="1"] .main {
     grid-template-areas:
       "hero"
       "stats"
-      "dash"
-      "ws" !important;
+      "cal"
+      "dash" !important;
   }
   /* Prevent grid children expanding beyond track width */
   html[data-style="xfce"] .main > * {

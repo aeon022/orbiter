@@ -164,14 +164,15 @@
     function renderUpload() {
       root.innerHTML = `
         <div class="import-head">
-          <div class="import-sub">Import content from WordPress (WXR) or Markdown files into your pod.</div>
+          <div class="import-sub">Import content from WordPress, Markdown, or another pod.</div>
         </div>
 
         ${renderError(errorMsg)}
 
         <div class="import-tabs">
-          <button class="import-tab ${activeTab === 'wp' ? 'active' : ''}" id="tab-wp">Import WordPress</button>
-          <button class="import-tab ${activeTab === 'md' ? 'active' : ''}" id="tab-md">Import Markdown</button>
+          <button class="import-tab ${activeTab === 'wp' ? 'active' : ''}" id="tab-wp">WordPress</button>
+          <button class="import-tab ${activeTab === 'md' ? 'active' : ''}" id="tab-md">Markdown</button>
+          <button class="import-tab ${activeTab === 'pod' ? 'active' : ''}" id="tab-pod">Pod / JSON</button>
         </div>
 
         <div id="pane-wp" style="${activeTab !== 'wp' ? 'display:none' : ''}">
@@ -223,6 +224,42 @@
           </div>
           <div class="import-actions">
             <button class="btn-save" id="btn-import-md">Import Markdown</button>
+          </div>
+        </div>
+
+        <div id="pane-pod" style="${activeTab !== 'pod' ? 'display:none' : ''}">
+          <div class="section">
+            <div class="section-head">Export current pod</div>
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px;">
+              <a href="/api/import/export-pod" class="btn-save" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">↓ Export as JSON</a>
+              <span style="font-size:10px;color:var(--muted)">Download all collections and entries as a JSON file</span>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-head">Import from pod or JSON</div>
+            <div class="drop-zone" id="drop-zone-pod">
+              <input type="file" id="pod-file" accept=".pod,.json,application/json" />
+              <div class="drop-icon">⊕</div>
+              <div class="drop-label">Drop .pod or .json file here</div>
+              <div class="drop-sub">Import collections and entries from another Orbiter pod or a previously exported JSON file.</div>
+              <div class="drop-chosen" id="drop-chosen-pod"></div>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-head">On duplicate slug</div>
+            <div class="radio-group" id="pod-dup-group">
+              <div class="radio-pill">
+                <input type="radio" name="pod_dup" id="pod-dup-skip" value="skip" checked />
+                <label for="pod-dup-skip">Skip</label>
+              </div>
+              <div class="radio-pill">
+                <input type="radio" name="pod_dup" id="pod-dup-overwrite" value="overwrite" />
+                <label for="pod-dup-overwrite">Overwrite</label>
+              </div>
+            </div>
+          </div>
+          <div class="import-actions">
+            <button class="btn-save" id="btn-import-pod">Import Pod</button>
           </div>
         </div>
       `;
@@ -306,7 +343,18 @@
     // ── Phase: Done ───────────────────────────────────────────────────────────
     function renderDone() {
       let rows = '';
-      if (results.type === 'markdown') {
+      if (results.type === 'pod') {
+        if (results.collections?.created > 0)
+          rows += `<div class="result-row"><span class="result-num result-ok">${results.collections.created}</span><span>collections created</span></div>`;
+        if (results.collections?.skipped > 0)
+          rows += `<div class="result-row"><span class="result-num" style="color:var(--muted)">${results.collections.skipped}</span><span style="color:var(--muted)">collections already existed</span></div>`;
+        if (results.entries?.created > 0)
+          rows += `<div class="result-row"><span class="result-num result-ok">${results.entries.created}</span><span>entries imported</span></div>`;
+        if (results.entries?.updated > 0)
+          rows += `<div class="result-row"><span class="result-num result-warn">${results.entries.updated}</span><span style="color:var(--gold)">entries overwritten</span></div>`;
+        if (results.entries?.skipped > 0)
+          rows += `<div class="result-row"><span class="result-num" style="color:var(--muted)">${results.entries.skipped}</span><span style="color:var(--muted)">entries skipped (duplicate)</span></div>`;
+      } else if (results.type === 'markdown') {
         rows += `<div class="result-row"><span class="result-num result-ok">${results.imported}</span><span>entries imported</span></div>`;
         if (results.skipped > 0)
           rows += `<div class="result-row"><span class="result-num" style="color:var(--muted)">${results.skipped}</span><span style="color:var(--muted)">skipped (duplicate slug)</span></div>`;
@@ -358,6 +406,52 @@
       // Tab switching
       document.getElementById('tab-wp').addEventListener('click', () => { activeTab = 'wp'; render(); });
       document.getElementById('tab-md').addEventListener('click', () => { activeTab = 'md'; render(); });
+      document.getElementById('tab-pod').addEventListener('click', () => { activeTab = 'pod'; render(); });
+
+      // Pod drop zone
+      const dzPod  = document.getElementById('drop-zone-pod');
+      const inpPod = document.getElementById('pod-file');
+      const lblPod = document.getElementById('drop-chosen-pod');
+      if (inpPod && lblPod) {
+        inpPod.addEventListener('change', () => {
+          if (inpPod.files?.[0]) { lblPod.textContent = inpPod.files[0].name; lblPod.style.display = 'block'; }
+        });
+        dzPod.addEventListener('dragover', e => { e.preventDefault(); dzPod.classList.add('drag'); });
+        dzPod.addEventListener('dragleave', () => dzPod.classList.remove('drag'));
+        dzPod.addEventListener('drop', e => {
+          e.preventDefault(); dzPod.classList.remove('drag');
+          const f = e.dataTransfer?.files[0];
+          if (f && inpPod) {
+            const dt = new DataTransfer(); dt.items.add(f); inpPod.files = dt.files;
+            lblPod.textContent = f.name; lblPod.style.display = 'block';
+          }
+        });
+      }
+
+      // Import Pod
+      document.getElementById('btn-import-pod')?.addEventListener('click', async () => {
+        const f   = document.getElementById('pod-file')?.files?.[0];
+        const dup = document.querySelector('input[name="pod_dup"]:checked')?.value ?? 'skip';
+
+        if (!f) { errorMsg = 'Please select a .pod or .json file.'; render(); return; }
+
+        const btn = document.getElementById('btn-import-pod');
+        btn.disabled = true; btn.textContent = 'Importing…';
+
+        const fd = new FormData();
+        fd.append('pod_file', f);
+        fd.append('on_duplicate', dup);
+
+        const res  = await fetch('/api/import/pod', { method: 'POST', credentials: 'include', body: fd });
+        const data = await res.json();
+
+        if (!res.ok) { errorMsg = data.error ?? 'Import failed'; render(); return; }
+
+        results  = data;
+        errorMsg = '';
+        phase    = 'done';
+        render();
+      });
 
       // WP drop zone
       const dzWp  = document.getElementById('drop-zone-wp');

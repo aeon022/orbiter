@@ -27,6 +27,16 @@
         var sidebar = document.querySelector('.sidebar');
         if (!sidebar) return;
 
+        // Inject Calendar link after Dashboard if not already present
+        var dashLink = sidebar.querySelector('a[href="/dashboard.html"]');
+        if (dashLink && !sidebar.querySelector('a[href="/calendar.html"]')) {
+          var calLink = document.createElement('a');
+          calLink.className = 'nav-item' + (page === 'calendar' ? ' active' : '');
+          calLink.href = '/calendar.html';
+          calLink.innerHTML = '<span class="nav-icon">▤</span>Calendar';
+          dashLink.parentNode.insertBefore(calLink, dashLink.nextSibling);
+        }
+
         // Find "Assets" nav-section to insert before it
         var sections = sidebar.querySelectorAll('.nav-section');
         var assetsSection = null;

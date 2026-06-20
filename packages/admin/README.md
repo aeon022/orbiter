@@ -156,7 +156,20 @@ Create and manage admin/editor accounts (admin role only). Roles:
 | Manage users | ❌ | ✅ |
 
 ### Import
-WordPress WXR importer — upload the `.xml` export from WordPress Tools → Export; Orbiter converts posts, pages, categories, tags, and featured images.
+Three import sources available on the Import page:
+
+| Tab | Format | What it does |
+|-----|--------|------|
+| WordPress | `.xml` (WXR) | Converts posts, pages, categories, tags, and featured images |
+| Markdown | `.md` files | Parses YAML frontmatter, maps fields to a target collection |
+| Pod / JSON | `.pod` or `.json` | Imports collections + entries from another Orbiter pod or a JSON export. Creates missing collections automatically. Skip or overwrite duplicates. |
+
+Export the current pod as JSON via the **↓ Export as JSON** button on the Pod / JSON tab, or `GET /api/import/export-pod`.
+
+### Calendar
+Full-page calendar view (`calendar.html`) showing all entries on a month grid. Entries are color-coded by status: blue = scheduled, gold = expiring, green = published, grey = draft. Click a day to see entries in the sidebar; filter by All / Scheduled / Published / Draft. Keyboard: ← → months, T = today.
+
+The dashboard also shows a compact calendar widget with a mini month grid and upcoming scheduled/expiring entries.
 
 ---
 
@@ -258,7 +271,7 @@ Side panel with:
 
 Floating bottom bar (or left sidebar — toggle in the Tools popup). Magnification effect on hover. Items:
 
-- **Nav group** — Dashboard, Media, Users
+- **Nav group** — Dashboard, Calendar, Media, Users
 - **Collections group** — one item per collection; draft count badge; hover shows preview card with 3 recent entries and quick-action buttons
 - **Workspace** — Notes scratchpad, To-do list
 - **Tools** — Schema, Build, Import (popup)

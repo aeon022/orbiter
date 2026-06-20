@@ -1,6 +1,6 @@
 {
   "name": "@a83/orbiter-admin",
-  "version": "0.3.63",
+  "version": "0.3.64",
   "description": "Standalone admin server for Orbiter CMS",
   "type": "module",
   "main": "./src/server.js",
@@ -33,7 +33,7 @@
     "basic-ftp": "^5.0.5",
     "@hono/node-server": "^1.14.4",
     "hono": "^4.7.11",
-    "nodemailer": "^8.0.10",
+    "nodemailer": "^9.0.1",
     "sharp": "^0.34.5",
     "turndown": "^7.2.0"
   }

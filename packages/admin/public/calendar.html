@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbiter Admin — Calendar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@300;400;500;600&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+  <script src="/theme.js"></script>
+  <style>
+    .cal-header { display:flex; align-items:center; justify-content:space-between; padding:20px 28px; border-bottom:1px solid var(--line); }
+    .cal-nav { display:flex; align-items:center; gap:12px; }
+    .cal-nav-btn { background:none; border:1px solid var(--line); color:var(--text); font-family:var(--mono); font-size:11px; padding:5px 12px; cursor:pointer; border-radius:var(--radius); transition:all 0.12s; }
+    .cal-nav-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .cal-month-label { font-family:var(--display); font-size:20px; font-weight:500; color:var(--heading); letter-spacing:0.02em; min-width:200px; text-align:center; }
+    .cal-today-btn { font-size:10px; padding:4px 10px; }
+    .cal-legend { display:flex; align-items:center; gap:14px; font-size:9px; color:var(--muted); letter-spacing:0.04em; }
+    .cal-legend-dot { width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:4px; }
+    .cal-legend-dot.sched { background:var(--accent); }
+    .cal-legend-dot.expire { background:var(--gold); }
+    .cal-legend-dot.pub { background:var(--jade); }
+    .cal-legend-dot.draft-dot { background:var(--muted); }
+
+    .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); }
+    .cal-weekday { font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); text-align:center; padding:12px 0; border-bottom:1px solid var(--line); }
+    .cal-cell { min-height:110px; border-bottom:1px solid var(--line); border-right:1px solid var(--line); padding:6px 8px; position:relative; transition:background 0.1s; }
+    .cal-cell:nth-child(7n) { border-right:none; }
+    .cal-cell:hover { background:var(--line2); }
+    .cal-cell.other { opacity:0.35; }
+    .cal-cell.today { background:color-mix(in srgb, var(--accent) 6%, transparent); }
+    .cal-day-num { font-size:11px; color:var(--muted); margin-bottom:4px; font-family:var(--mono); }
+    .cal-cell.today .cal-day-num { color:var(--accent); font-weight:600; }
+
+    .cal-event { display:block; font-size:9px; padding:2px 5px; margin-bottom:2px; border-radius:2px; text-decoration:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:all 0.1s; cursor:pointer; line-height:1.5; }
+    .cal-event:hover { filter:brightness(1.2); }
+    .cal-event.sched { background:var(--accent-bg); color:var(--accent); border-left:2px solid var(--accent); }
+    .cal-event.expire { background:var(--gold-bg); color:var(--gold); border-left:2px solid var(--gold); }
+    .cal-event.pub { background:var(--jade-bg); color:var(--jade); border-left:2px solid var(--jade); }
+    .cal-event.draft-ev { background:color-mix(in srgb, var(--muted) 12%, transparent); color:var(--muted); border-left:2px solid var(--muted); }
+    .cal-event-more { font-size:8px; color:var(--muted); padding:1px 5px; cursor:pointer; }
+    .cal-event-more:hover { color:var(--accent); }
+
+    /* Detail sidebar */
+    .cal-layout { display:grid; grid-template-columns:1fr 280px; min-height:calc(100vh - 60px); }
+    .cal-main { overflow-y:auto; }
+    .cal-side { border-left:1px solid var(--line); padding:20px; overflow-y:auto; }
+    .cal-side-title { font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
+    .cal-side-entry { padding:10px 0; border-bottom:1px solid var(--line2); }
+    .cal-side-entry:last-child { border-bottom:none; }
+    .cal-side-entry a { text-decoration:none; display:block; }
+    .cal-side-entry-title { font-size:12px; color:var(--text); margin-bottom:3px; }
+    .cal-side-entry-title:hover { color:var(--accent); }
+    .cal-side-entry-meta { font-size:9px; color:var(--muted); display:flex; gap:8px; align-items:center; }
+    .cal-side-empty { font-size:11px; color:var(--muted); padding:20px 0; font-family:var(--mono); }
+
+    .cal-filter-row { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+    .cal-filter-btn { font-size:9px; padding:3px 8px; border:1px solid var(--line); background:transparent; color:var(--muted); font-family:var(--mono); cursor:pointer; border-radius:var(--radius); letter-spacing:0.04em; transition:all 0.12s; }
+    .cal-filter-btn:hover { border-color:var(--text); color:var(--text); }
+    .cal-filter-btn.active { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <a class="logo" href="/dashboard.html"><div class="logo-mark">OR</div>Orbiter</a>
+      <div class="topbar-right">
+        <button class="search-trigger" id="search-btn" title="Search (⌘K)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Search <kbd>⌘K</kbd>
+        </button>
+        <button class="scheme-toggle" id="scheme-toggle" title="Toggle scheme">◐</button>
+        <span class="user" id="topbar-user"></span>
+        <span class="logout" id="logout-btn">Sign out</span>
+      </div>
+    </header>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="nav-section">Content</div>
+      <a class="nav-item" href="/dashboard.html"><span class="nav-icon">◈</span>Dashboard</a>
+      <a class="nav-item active" href="/calendar.html"><span class="nav-icon">▤</span>Calendar</a>
+      <a class="nav-item" href="/collections.html"><span class="nav-icon">⊞</span>Collections</a>
+      <div class="nav-section">Assets</div>
+      <a class="nav-item" href="/media.html"><span class="nav-icon">⊟</span>Media</a>
+      <div class="nav-section">Tools</div>
+      <a class="nav-item" href="/inbox.html"><span class="nav-icon">✉</span>Inbox</a>
+      <a class="nav-item" href="/snippets.html"><span class="nav-icon">⌗</span>Snippets</a>
+
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="/schema.html"><span class="nav-icon">◈</span>Schema</a>
+      <a class="nav-item" href="/build.html"><span class="nav-icon">▲</span>Build</a>
+      <a class="nav-item" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
+      <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
+
+      <div class="sidebar-footer">
+        <div class="pod-name" id="pod-name">content.pod</div>
+        <div class="pod-info" id="pod-info"></div>
+        <div class="pod-version" id="pod-version"></div>
+        <div class="pod-status"><span class="pod-dot"></span>pod synced</div>
+      </div>
+    </nav>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="cal-layout">
+        <div class="cal-main">
+          <div class="cal-header">
+            <div class="cal-nav">
+              <button class="cal-nav-btn" id="cal-prev">← Prev</button>
+              <div class="cal-month-label" id="cal-month-label"></div>
+              <button class="cal-nav-btn" id="cal-next">Next →</button>
+              <button class="cal-nav-btn cal-today-btn" id="cal-today">Today</button>
+            </div>
+            <div class="cal-legend">
+              <span><span class="cal-legend-dot sched"></span>Scheduled</span>
+              <span><span class="cal-legend-dot expire"></span>Expiring</span>
+              <span><span class="cal-legend-dot pub"></span>Published</span>
+              <span><span class="cal-legend-dot draft-dot"></span>Draft</span>
+            </div>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+        <div class="cal-side">
+          <div class="cal-side-title" id="cal-side-title">Select a day</div>
+          <div class="cal-filter-row">
+            <button class="cal-filter-btn active" data-filter="all">All</button>
+            <button class="cal-filter-btn" data-filter="scheduled">Scheduled</button>
+            <button class="cal-filter-btn" data-filter="published">Published</button>
+            <button class="cal-filter-btn" data-filter="draft">Draft</button>
+          </div>
+          <div id="cal-side-body"><div class="cal-side-empty">Click a day to see entries</div></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).catch(() => null);
+    if (!me?.user) { location.replace('/login.html'); throw new Error('unauthenticated'); }
+    document.getElementById('topbar-user').textContent = me.user.username;
+    if (me.user.role === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      location.replace('/login.html');
+    });
+
+    const allEntries = await fetch('/api/search/calendar', { credentials: 'include' }).then(r => r.json()).catch(() => []);
+
+    let viewYear  = new Date().getFullYear();
+    let viewMonth = new Date().getMonth();
+    let activeFilter = 'all';
+    let selectedDate = null;
+    const todayISO = new Date().toISOString().slice(0, 10);
+
+    const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const DAYS   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+    function entryDate(e) {
+      if (e.status === 'scheduled' && e.publish_at) return e.publish_at.split(' ')[0];
+      return (e.updated_at || e.created_at || '').split(' ')[0];
+    }
+
+    function entryEventType(e) {
+      if (e.status === 'scheduled') return 'sched';
+      if (e.status === 'published' && e.unpublish_at) return 'expire';
+      if (e.status === 'published') return 'pub';
+      return 'draft-ev';
+    }
+
+    function buildCalendarEvents() {
+      const events = [];
+      for (const e of allEntries) {
+        const mainDate = entryDate(e);
+        if (mainDate) {
+          events.push({ ...e, calDate: mainDate, eventType: entryEventType(e) });
+        }
+        if (e.unpublish_at && e.status === 'published') {
+          const expDate = e.unpublish_at.split(' ')[0];
+          if (expDate !== mainDate) {
+            events.push({ ...e, calDate: expDate, eventType: 'expire' });
+          }
+        }
+      }
+      return events;
+    }
+
+    const calEvents = buildCalendarEvents();
+
+    function eventsForDate(dateISO) {
+      return calEvents.filter(e => e.calDate === dateISO);
+    }
+
+    function renderGrid() {
+      const grid  = document.getElementById('cal-grid');
+      const label = document.getElementById('cal-month-label');
+      label.textContent = `${MONTHS[viewMonth]} ${viewYear}`;
+
+      const first    = new Date(viewYear, viewMonth, 1);
+      const last     = new Date(viewYear, viewMonth + 1, 0);
+      const startDay = first.getDay() || 7;
+      const prevLast = new Date(viewYear, viewMonth, 0).getDate();
+
+      let html = DAYS.map(d => `<div class="cal-weekday">${d}</div>`).join('');
+
+      const startOffset = startDay - 1;
+      for (let i = startOffset - 1; i >= 0; i--) {
+        const d = prevLast - i;
+        const pm = viewMonth === 0 ? 11 : viewMonth - 1;
+        const py = viewMonth === 0 ? viewYear - 1 : viewYear;
+        const iso = `${py}-${String(pm+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        html += renderCell(d, iso, true);
+      }
+      for (let d = 1; d <= last.getDate(); d++) {
+        const iso = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        html += renderCell(d, iso, false);
+      }
+      const totalCells = startOffset + last.getDate();
+      const remaining = (7 - (totalCells % 7)) % 7;
+      for (let i = 1; i <= remaining; i++) {
+        const nm = viewMonth === 11 ? 0 : viewMonth + 1;
+        const ny = viewMonth === 11 ? viewYear + 1 : viewYear;
+        const iso = `${ny}-${String(nm+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+        html += renderCell(i, iso, true);
+      }
+
+      grid.innerHTML = html;
+
+      grid.querySelectorAll('.cal-cell').forEach(cell => {
+        cell.addEventListener('click', () => {
+          selectedDate = cell.dataset.date;
+          grid.querySelectorAll('.cal-cell').forEach(c => c.style.outline = '');
+          cell.style.outline = '2px solid var(--accent)';
+          renderSidebar();
+        });
+      });
+    }
+
+    function renderCell(dayNum, iso, isOther) {
+      const isToday = iso === todayISO;
+      const cls = ['cal-cell'];
+      if (isOther) cls.push('other');
+      if (isToday) cls.push('today');
+
+      const dayEvents = eventsForDate(iso);
+      const maxShow = 3;
+      let evHtml = '';
+      const shown = dayEvents.slice(0, maxShow);
+      for (const ev of shown) {
+        evHtml += `<a class="cal-event ${ev.eventType}" href="/editor.html?collection=${ev.collection}&slug=${ev.slug}" title="${ev.title} (${ev.label})">${ev.title}</a>`;
+      }
+      if (dayEvents.length > maxShow) {
+        evHtml += `<div class="cal-event-more">+${dayEvents.length - maxShow} more</div>`;
+      }
+
+      return `<div class="${cls.join(' ')}" data-date="${iso}">
+        <div class="cal-day-num">${dayNum}</div>
+        ${evHtml}
+      </div>`;
+    }
+
+    function renderSidebar() {
+      const titleEl = document.getElementById('cal-side-title');
+      const bodyEl  = document.getElementById('cal-side-body');
+
+      if (!selectedDate) {
+        titleEl.textContent = 'Select a day';
+        bodyEl.innerHTML = '<div class="cal-side-empty">Click a day to see entries</div>';
+        return;
+      }
+
+      const d = new Date(selectedDate + 'T00:00:00');
+      titleEl.textContent = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+      let entries = eventsForDate(selectedDate);
+      if (activeFilter !== 'all') {
+        entries = entries.filter(e => e.status === activeFilter);
+      }
+
+      if (!entries.length) {
+        bodyEl.innerHTML = '<div class="cal-side-empty">No entries for this day</div>';
+        return;
+      }
+
+      bodyEl.innerHTML = entries.map(e => {
+        const time = (e.publish_at || e.updated_at || '').split(' ')[1] || '';
+        const typeLabel = e.eventType === 'sched' ? '↑ publish' : e.eventType === 'expire' ? '↓ expire' : e.status;
+        return `<div class="cal-side-entry">
+          <a href="/editor.html?collection=${e.collection}&slug=${e.slug}">
+            <div class="cal-side-entry-title">${e.title}</div>
+            <div class="cal-side-entry-meta">
+              <span class="pill ${e.status}">${typeLabel}</span>
+              <span>${e.label}</span>
+              ${time ? `<span>${time}</span>` : ''}
+            </div>
+          </a>
+        </div>`;
+      }).join('');
+    }
+
+    // Navigation
+    document.getElementById('cal-prev').addEventListener('click', () => {
+      viewMonth--;
+      if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+      selectedDate = null;
+      renderGrid();
+    });
+    document.getElementById('cal-next').addEventListener('click', () => {
+      viewMonth++;
+      if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+      selectedDate = null;
+      renderGrid();
+    });
+    document.getElementById('cal-today').addEventListener('click', () => {
+      const now = new Date();
+      viewYear = now.getFullYear();
+      viewMonth = now.getMonth();
+      selectedDate = todayISO;
+      renderGrid();
+      const todayCell = document.querySelector(`.cal-cell[data-date="${todayISO}"]`);
+      if (todayCell) todayCell.style.outline = '2px solid var(--accent)';
+      renderSidebar();
+    });
+
+    // Filters
+    document.querySelectorAll('.cal-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.cal-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = btn.dataset.filter;
+        renderSidebar();
+      });
+    });
+
+    // Keyboard nav
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'ArrowLeft')  document.getElementById('cal-prev').click();
+      if (e.key === 'ArrowRight') document.getElementById('cal-next').click();
+      if (e.key === 't' || e.key === 'T') document.getElementById('cal-today').click();
+    });
+
+    renderGrid();
+  </script>
+
+  <script src="/search.js"></script>
+  <script src="/sidebar.js"></script>
+  <script src="/router.js"></script>
+</body>
+</html>

@@ -12,6 +12,7 @@
 
   var NAV = [
     { icon: '⬡', label: 'Dashboard', href: '/dashboard.html', key: 'dashboard' },
+    { icon: '▤', label: 'Calendar',  href: '/calendar.html',  key: 'calendar' },
     { icon: '◫', label: 'Media',     href: '/media.html',     key: 'media' },
     { icon: '⊛', label: 'Users',     href: '/users.html',     key: 'users' },
   ];

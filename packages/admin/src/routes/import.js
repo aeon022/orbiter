@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { parseWXR, buildImportPlan, executeImport } from '../wp-importer.js';
 
 export const importRoutes = new Hono();
@@ -117,4 +118,143 @@ importRoutes.post('/markdown', async (c) => {
 
   db.close();
   return c.json({ type: 'markdown', imported, skipped });
+});
+
+// GET /api/import/export-pod — export all collections + entries as JSON
+importRoutes.get('/export-pod', (c) => {
+  const db = openPod(c.get('podPath'));
+  const collections = db.getCollections();
+  const result = { version: 1, exported_at: new Date().toISOString(), collections: [] };
+  for (const col of collections) {
+    const entries = db.getEntries(col.id);
+    result.collections.push({
+      id: col.id,
+      label: col.label,
+      schema: col.schema ? JSON.parse(col.schema) : {},
+      singleton: !!col.singleton,
+      parent: col.parent || null,
+      entries: entries.map(e => ({
+        slug: e.slug,
+        status: e.status,
+        locale: e.locale || '',
+        data: e.data,
+        publish_at: e.publish_at || null,
+        unpublish_at: e.unpublish_at || null,
+      })),
+    });
+  }
+  db.close();
+  return new Response(JSON.stringify(result, null, 2), {
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Content-Disposition': 'attachment; filename="pod-export.json"',
+    },
+  });
+});
+
+// POST /api/import/pod — import collections + entries from JSON (or from another .pod file)
+importRoutes.post('/pod', async (c) => {
+  const form = await c.req.formData();
+  const file = form.get('pod_file');
+  const onDup = form.get('on_duplicate')?.toString() ?? 'skip';
+  if (!file || typeof file === 'string' || file.size === 0)
+    return c.json({ error: 'No file provided' }, 400);
+
+  const db = openPod(c.get('podPath'));
+  let exportData;
+
+  const fileName = file.name ?? '';
+  if (fileName.endsWith('.pod')) {
+    const buf = Buffer.from(await file.arrayBuffer());
+    const tmpPath = `/tmp/orbiter-import-${Date.now()}.pod`;
+    const { writeFileSync, unlinkSync } = await import('node:fs');
+    writeFileSync(tmpPath, buf);
+    try {
+      const srcDb = openPod(tmpPath);
+      const collections = srcDb.getCollections();
+      exportData = { version: 1, collections: [] };
+      for (const col of collections) {
+        const entries = srcDb.getEntries(col.id);
+        exportData.collections.push({
+          id: col.id,
+          label: col.label,
+          schema: col.schema ? JSON.parse(col.schema) : {},
+          singleton: !!col.singleton,
+          parent: col.parent || null,
+          entries: entries.map(e => ({
+            slug: e.slug,
+            status: e.status,
+            locale: e.locale || '',
+            data: e.data,
+            publish_at: e.publish_at || null,
+            unpublish_at: e.unpublish_at || null,
+          })),
+        });
+      }
+      srcDb.close();
+    } finally {
+      try { unlinkSync(tmpPath); } catch {}
+    }
+  } else {
+    try { exportData = JSON.parse(await file.text()); }
+    catch { db.close(); return c.json({ error: 'Invalid JSON file' }, 422); }
+  }
+
+  if (!exportData?.collections || !Array.isArray(exportData.collections)) {
+    db.close();
+    return c.json({ error: 'Invalid export format — expected { collections: [...] }' }, 422);
+  }
+
+  const selectedCols = form.get('collections')?.toString();
+  const filterCols = selectedCols ? new Set(selectedCols.split(',')) : null;
+  let colsCreated = 0, colsSkipped = 0, entriesCreated = 0, entriesUpdated = 0, entriesSkipped = 0;
+
+  for (const col of exportData.collections) {
+    if (filterCols && !filterCols.has(col.id)) continue;
+
+    let existing = db.getCollection(col.id);
+    if (!existing) {
+      db.createCollection(col.id, col.label, col.schema ?? {}, !!col.singleton);
+      colsCreated++;
+    } else {
+      colsSkipped++;
+    }
+
+    for (const entry of (col.entries ?? [])) {
+      const ex = db.getEntry(col.id, entry.slug, entry.locale || '');
+      if (ex && onDup === 'skip') { entriesSkipped++; continue; }
+
+      if (ex) {
+        db.updateEntry(col.id, entry.slug, {
+          slug: entry.slug,
+          data: entry.data,
+          status: entry.status || 'draft',
+          publish_at: entry.publish_at,
+          unpublish_at: entry.unpublish_at,
+          locale: entry.locale || '',
+        });
+        entriesUpdated++;
+      } else {
+        db.createEntry(col.id, entry.slug, entry.data, entry.status || 'draft', entry.locale || '');
+        if (entry.publish_at || entry.unpublish_at) {
+          db.updateEntry(col.id, entry.slug, {
+            slug: entry.slug,
+            data: entry.data,
+            status: entry.status || 'draft',
+            publish_at: entry.publish_at,
+            unpublish_at: entry.unpublish_at,
+            locale: entry.locale || '',
+          });
+        }
+        entriesCreated++;
+      }
+    }
+  }
+
+  db.close();
+  return c.json({
+    type: 'pod',
+    collections: { created: colsCreated, skipped: colsSkipped },
+    entries: { created: entriesCreated, updated: entriesUpdated, skipped: entriesSkipped },
+  });
 });

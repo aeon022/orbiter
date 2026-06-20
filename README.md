@@ -1052,6 +1052,14 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 
 ## Changelog
 
+### June 2026 · admin@0.3.64 — Calendar view, cross-pod copy, nodemailer security fix
+
+- **Calendar view** — new `calendar.html` page with full month grid. Entries are color-coded: blue = scheduled, gold = expiring, green = published, grey = draft. Click a day to see entries in the detail sidebar; filter by status. Keyboard navigation: ← → to change month, T for today. Dashboard widget shows a mini calendar + upcoming scheduled/expiring entries with a "Full calendar →" link.
+- **Cross-pod import/export** — new "Pod / JSON" tab on the Import page. Export all collections + entries as a JSON file (`GET /api/import/export-pod`). Import from a `.pod` file or previously exported JSON (`POST /api/import/pod`). Creates missing collections automatically. Skip or overwrite duplicate entries.
+- **Nodemailer security fix** — updated `nodemailer` from `^8.0.10` to `^9.0.1` to address [GHSA-p6gq-j5cr-w38f](https://github.com/advisories/GHSA-p6gq-j5cr-w38f) (message-level raw option bypass).
+
+---
+
 ### June 2026 · Desktop App v0.2.0 — Auto-update, universal DMG, backup
 
 - **Auto-update** — `electron-updater` downloads new releases from GitHub in the background; restart dialog appears when download completes. Check manually via Hilfe → Nach Updates suchen…
@@ -1253,15 +1261,14 @@ The block editor gains full rich-media embedding:
 | 10 | Outpost | ✅ Done — Windows desktop app (NSIS installer, x64) |
 | 11 | Transit | ✅ Done — runtime adapter (auto-enabled for `output: 'server'` / `'hybrid'`) |
 | 12 | Launch Pad | ✅ Done — file upload field, table field, desktop auto-update, universal macOS DMG |
+| 13 | Observatory | ✅ Done — calendar view, cross-pod import/export, nodemailer security fix |
 
 ### Next up
 
 | Priority | Feature | Notes |
 |----------|---------|-------|
 | 1 | **Windows app menu** | Test and fix menu behavior on Windows (builds work, untested on real Windows) |
-| 2 | **Scheduled entries calendar** | Visual calendar view of planned publish/unpublish dates |
-| 3 | **Cross-pod entry copy** | Export an entry as JSON, import into a different pod |
-| 4 | **SvelteKit integration** | `@a83/orbiter-sveltekit` — same virtual module API as the Astro integration |
+| 2 | **SvelteKit integration** | `@a83/orbiter-sveltekit` — same virtual module API as the Astro integration |
 
 ### v0.3.47 — released
 
