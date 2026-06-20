@@ -1,6 +1,6 @@
 # Orbiter
 
-<img src="https://orbiter.sh/og-card.png" alt="Orbiter — CMS in one file for Astro" width="100%" />
+<img src="og-card.png" alt="Orbiter — CMS in one POD, built for Astro" width="100%" />
 
 <br />
 
