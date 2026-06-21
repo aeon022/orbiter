@@ -113,15 +113,16 @@ This plan covers the release of Orbiter admin@0.3.64 and Desktop v0.2.0 features
 
 ## Asset Checklist
 
-- [ ] Screenshot: Calendar page (month view with entries)
-- [ ] Screenshot: Dashboard with calendar widget
-- [ ] Screenshot: Cross-pod import/export UI
-- [ ] Screenshot: Station dock mode
-- [ ] Screenshot: Dual Render diagram from orbiter.sh/vision
-- [ ] Screenshot: Vision page hero (planet eclipse)
+- [x] `screenshots/01-dashboard.png` — Dashboard with calendar widget, Station mode
+- [x] `screenshots/02-calendar.png` — Calendar page, month grid with color-coded entries
+- [x] `screenshots/03-import-pod.png` — Import page, Pod/JSON tab
+- [x] `screenshots/04-station-dock-hud-tools.png` — Station mode with HUD + Tools open
+- [x] `screenshots/05-vision-hero.png` — Vision page hero with planet eclipse
+- [x] `screenshots/06-vision-diagram.png` — Dual Render diagram (Human/POD/Agent)
+- [x] `screenshots/vision-page.png` — Full vision page
 - [ ] GIF/Video: Calendar navigation (prev/next/click day)
 - [ ] GIF/Video: Vision page scroll effect
-- [ ] Repo link: https://github.com/aeon022/orbiter
-- [ ] Docs link: https://orbiter.sh/docs/
-- [ ] Vision link: https://orbiter.sh/vision
-- [ ] Dual Render link: https://a83tech.com
+- [x] Repo link: https://github.com/aeon022/orbiter
+- [x] Docs link: https://orbiter.sh/docs/
+- [x] Vision link: https://orbiter.sh/vision
+- [x] Dual Render link: https://a83tech.com
