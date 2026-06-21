@@ -1,22 +1,25 @@
-# Twitter/X Thread — Deutsch
+# Twitter/X Thread — Deutsch (optimiert für Reichweite)
+
+**Thread ohne Links posten. Links als Self-Reply nach dem letzten Tweet.**
 
 ---
 
-## Tweet 1 (Hook)
+## Tweet 1 (Hook — KEINE Links, KEINE Hashtags)
 
 Dein CMS ist eine einzige Datei.
 
 Kein Datenbank-Server. Kein Docker. Kein Cloud-Konto.
 
-Orbiter speichert Content, Medien, User und Settings in einer `.pod`-Datei (SQLite). Kopieren. Sichern. Per rsync deployen.
+Eine SQLite-Datei. Kopieren. Sichern. Deployen.
 
-Gerade v0.3.64 veröffentlicht — was ist neu 🧵
+Gerade v0.3.65 veröffentlicht — was ist neu 🧵
 
-## Tweet 2 (Kalender)
+## Tweet 2 (Kalender — `02-calendar.png` anhängen)
 
-📅 Kalenderansicht
+Kalenderansicht
 
 Monatsraster mit farbcodierten Einträgen:
+
 → Blau = geplant
 → Gold = läuft ab
 → Grün = veröffentlicht
@@ -24,35 +27,29 @@ Monatsraster mit farbcodierten Einträgen:
 
 Klick auf einen Tag → Einträge in der Sidebar → direkt zum Editor. Tastatur-Nav mit Pfeiltasten.
 
-Dashboard hat jetzt auch ein Mini-Kalender-Widget.
-
-[TODO: Screenshot Kalenderseite]
-
 ## Tweet 3 (Cross-Pod)
 
-🔄 Cross-Pod Copy
+Cross-Pod Copy
 
-Ganzen Pod als JSON exportieren. In einen anderen Pod importieren.
+Ganzes CMS als JSON exportieren. In ein anderes Projekt importieren.
 
 → Collections werden automatisch erstellt
 → Einträge: überspringen oder überschreiben
-→ Funktioniert auch mit rohen PODen
+→ Funktioniert auch mit rohen SQLite PODs
 
 Staging → Produktion in 2 Klicks.
 
-## Tweet 4 (Desktop)
+## Tweet 4 (Desktop — `01-dashboard.png` anhängen)
 
-🖥️ Desktop App v0.2.0
+Desktop App v0.2.1
 
 → Universal macOS DMG (M1 + Intel, eine Datei)
 → Auto-Update über GitHub Releases
-→ Ein-Klick-Backup (⌘⇧S)
+→ Ein-Klick-Backup
 
 Kein Terminal. Kein npm. Doppelklick zum Starten.
 
-[TODO: Screenshot Desktop App]
-
-## Tweet 5 (CTA)
+## Tweet 5 (CTA — KEIN Link hier)
 
 Orbiter ist MIT-lizenziert. Gebaut für Leute, die ein CMS ohne Infrastruktur-Overhead wollen.
 
@@ -63,5 +60,12 @@ Orbiter ist MIT-lizenziert. Gebaut für Leute, die ein CMS ohne Infrastruktur-Ov
 → FTP-Deploy auf Shared Hosting
 → Station Dock Mode
 
-⭐ github.com/aeon022/orbiter
-📖 orbiter.sh/docs
+Star auf GitHub — Link im Reply ↓
+
+## Reply auf Tweet 5 (Links hierher)
+
+GitHub: github.com/aeon022/orbiter
+Docs: orbiter.sh/docs
+Vision: orbiter.sh/vision
+
+#opensource #webdev #cms #astro #sqlite
