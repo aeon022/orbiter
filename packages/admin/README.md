@@ -173,6 +173,11 @@ The dashboard also shows a compact calendar widget with a mini month grid and up
 
 ---
 
+### Analytics
+Privacy-friendly pageview tracking stored in the POD. Add `<script src="YOUR-ADMIN/t.js" data-api="YOUR-ADMIN/api/hit" defer></script>` to your site. Under 500 bytes, no cookies, no fingerprinting, respects Do-Not-Track. Bot detection for GPTBot, ClaudeBot, etc. Dashboard shows daily chart, top pages, referrers, and human vs. agent traffic split. Keyboard: `g+y`.
+
+---
+
 ## Build webhook
 
 Configure a webhook URL in **Settings → Build**. Orbiter fires a `POST` to it:

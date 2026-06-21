@@ -1052,6 +1052,15 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 
 ## Changelog
 
+### June 2026 · admin@0.3.66 · Desktop v0.2.2 — Simple Analytics, OG image picker, dashboard toggles
+
+- **Simple Analytics** — privacy-friendly pageview tracking stored in the POD. No cookies, no fingerprinting, <500 bytes tracking script. Bot detection for GPTBot, ClaudeBot, Perplexity, etc. Admin page with daily chart, top pages, referrers, and human vs. agent traffic split. `POST/GET /api/hit` (public) + `GET /api/analytics` (auth). Period filter: 7d/30d/90d.
+- **OG Image picker** — media picker modal in the SEO panel replaces the dropdown. Image preview + clear button. Reuses the existing media library modal.
+- **Dashboard widget toggles** — enable/disable Calendar, Recently Edited, Collections, Notes & To-Do in Settings → Dashboard widgets. Stored in `_meta`.
+- **Keyboard navigation** — added `g+k` (Calendar), `g+n` (Inbox), `g+y` (Analytics), `g+p` (Snippets). Cheatsheet updated.
+
+---
+
 ### June 2026 · admin@0.3.64 — Calendar view, cross-pod copy, nodemailer security fix
 
 - **Calendar view** — new `calendar.html` page with full month grid. Entries are color-coded: blue = scheduled, gold = expiring, green = published, grey = draft. Click a day to see entries in the detail sidebar; filter by status. Keyboard navigation: ← → to change month, T for today. Dashboard widget shows a mini calendar + upcoming scheduled/expiring entries with a "Full calendar →" link.
@@ -1262,13 +1271,18 @@ The block editor gains full rich-media embedding:
 | 11 | Transit | ✅ Done — runtime adapter (auto-enabled for `output: 'server'` / `'hybrid'`) |
 | 12 | Launch Pad | ✅ Done — file upload field, table field, desktop auto-update, universal macOS DMG |
 | 13 | Observatory | ✅ Done — calendar view, cross-pod import/export, nodemailer security fix |
+| 14 | Signal | ✅ Done — Simple Analytics, OG image picker, dashboard widget toggles, keyboard nav |
 
 ### Next up
 
 | Priority | Feature | Notes |
 |----------|---------|-------|
 | 1 | **Windows app menu** | Test and fix menu behavior on Windows (builds work, untested on real Windows) |
-| 2 | **SvelteKit integration** | `@a83/orbiter-sveltekit` — same virtual module API as the Astro integration |
+| 2 | **Form Builder UI** | Visual form builder — drag fields, set validation, generate HTML snippet |
+| 3 | **Multi-POD Dashboard** | Manage multiple PODs from one desktop window |
+| 4 | **AI Content Assistant** | `/ai` slash command — summarize, translate, SEO text (Ollama or API key) |
+| 5 | **Dashboard Drag & Drop** | Reorder widgets, custom layouts stored in POD |
+| 6 | **SvelteKit integration** | `@a83/orbiter-sveltekit` — same virtual module API as the Astro integration |
 
 ### v0.3.47 — released
 
