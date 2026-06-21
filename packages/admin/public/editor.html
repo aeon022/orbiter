@@ -827,10 +827,14 @@
           </div>
           <div class="meta-field">
             <div class="field-label">OG Image</div>
-            <select class="field-select" id="seo-inp-_ogimage">
-              <option value="">— none —</option>
-              ${mediaData.map(m=>`<option value="${m.id}"${_seoOg===m.id?' selected':''}>${escHtml(m.filename)}${m.alt?` (${m.alt})`:''}</option>`).join('')}
-            </select>
+            <input type="hidden" id="seo-inp-_ogimage" value="${escHtml(_seoOg)}" />
+            <div id="seo-og-preview" style="margin-bottom:6px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);${_seoOg?'':'display:none'}">
+              <img id="seo-og-img" src="${_seoOg?`/api/media/${_seoOg}/raw`:''}" alt="" style="width:100%;height:auto;display:block;max-height:120px;object-fit:cover;" />
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button type="button" class="btn-draft" style="flex:1;font-size:10px;padding:5px 8px;" onclick="openSeoOgPicker()">Choose image</button>
+              <button type="button" class="btn-draft" style="font-size:10px;padding:5px 8px;${_seoOg?'':'display:none'}" id="seo-og-clear" onclick="clearSeoOg()">✕</button>
+            </div>
           </div>
         </div>
         <div class="meta-section">
@@ -1919,10 +1923,22 @@
     });
 
     // ── Image picker ──────────────────────────────────────────────────
+    var _seoOgMode = false;
     window.openImgPicker = function() {
+      _seoOgMode = false;
       pickerAnchor = getFocusedBlock();
       document.getElementById('img-pick-overlay').classList.add('open');
       renderPickerGrid();
+    };
+    window.openSeoOgPicker = function() {
+      _seoOgMode = true;
+      document.getElementById('img-pick-overlay').classList.add('open');
+      renderPickerGrid();
+    };
+    window.clearSeoOg = function() {
+      document.getElementById('seo-inp-_ogimage').value = '';
+      document.getElementById('seo-og-preview').style.display = 'none';
+      document.getElementById('seo-og-clear').style.display = 'none';
     };
 
     window.closeImgPicker = function() {
@@ -1979,6 +1995,16 @@
 
     window.pickInsert = function(mediaId, alt) {
       closeImgPicker();
+      if (_seoOgMode) {
+        _seoOgMode = false;
+        document.getElementById('seo-inp-_ogimage').value = mediaId;
+        const prev = document.getElementById('seo-og-preview');
+        const img = document.getElementById('seo-og-img');
+        img.src = '/api/media/' + mediaId + '/raw';
+        prev.style.display = '';
+        document.getElementById('seo-og-clear').style.display = '';
+        return;
+      }
       doInsertImg(mediaId, alt||'');
     };
 
