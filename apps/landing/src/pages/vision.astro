@@ -859,7 +859,7 @@ import { ViewTransitions } from 'astro:transitions';
 <!-- Roadmap -->
 <section class="roadmap-section">
   <div class="dual-label reveal">Roadmap</div>
-  <h2 class="dual-h2 reveal reveal-d1">What we've built.<br />Where we're going.</h2>
+  <h2 class="dual-h2 reveal reveal-d1"><span class="counter" data-target="22" style="font-weight:500;color:var(--accent)">0</span> features shipped.<br />Where we're going.</h2>
 
   <div class="roadmap-track" id="roadmap-track" style="margin-top:48px;">
     <div class="roadmap-track-energy" id="track-energy"></div>
@@ -1002,15 +1002,14 @@ import { ViewTransitions } from 'astro:transitions';
         // Nav appears after hero
         if (nav) nav.classList.toggle('visible', scrollY > vh * 0.6);
 
-        // Planet sinks and fades
+        // Planet sinks and fades — slow parallax
         if (planetScene) {
-          const progress = Math.min(scrollY / (vh * 1.2), 1);
-          const translateY = progress * vh * 0.7;
-          const opacity = 1 - progress * 1.4;
-          const finalOpacity = Math.max(opacity, 0);
-          planetScene.style.transform = `translateY(${translateY}px)`;
+          const progress = Math.min(scrollY / (vh * 2), 1);
+          const translateY = progress * vh * 0.5;
+          const scale = 1 - progress * 0.15;
+          const finalOpacity = Math.max(1 - progress * 1.1, 0);
+          planetScene.style.transform = `translateY(${translateY}px) scale(${scale})`;
           planetScene.style.opacity = finalOpacity;
-          planetScene.style.display = finalOpacity <= 0 ? 'none' : '';
         }
 
         // Vertical light beam grows from top
@@ -1170,17 +1169,25 @@ import { ViewTransitions } from 'astro:transitions';
     });
   }
 
-  // ── 4. Nebula color shift on scroll ──
+  // ── 4. Nebula color shift + opacity on scroll ──
   const nebulas = document.querySelectorAll('.nebula');
   if (nebulas.length) {
     window.addEventListener('scroll', () => {
       const progress = Math.min(window.scrollY / (document.body.scrollHeight - window.innerHeight), 1);
-      const hueShift = Math.round(progress * 30);
-      const warmth = Math.round(progress * 15);
+      const hueShift = Math.round(progress * 60);
       nebulas.forEach((n, i) => {
-        if (i === 0) n.style.filter = `blur(60px) hue-rotate(${hueShift}deg)`;
-        if (i === 1) n.style.filter = `blur(60px) hue-rotate(-${warmth}deg) saturate(${1 + progress * 0.5})`;
-        if (i === 2) n.style.filter = `blur(80px) hue-rotate(${hueShift + 10}deg)`;
+        if (i === 0) {
+          n.style.filter = `blur(60px) hue-rotate(${hueShift}deg)`;
+          n.style.opacity = 1 - progress * 0.3;
+        }
+        if (i === 1) {
+          n.style.filter = `blur(60px) hue-rotate(-${Math.round(progress * 30)}deg) saturate(${1 + progress})`;
+          n.style.opacity = 0.5 + progress * 0.8;
+        }
+        if (i === 2) {
+          n.style.filter = `blur(80px) hue-rotate(${hueShift + 20}deg)`;
+          n.style.opacity = 0.6 + progress * 0.5;
+        }
       });
     });
   }
