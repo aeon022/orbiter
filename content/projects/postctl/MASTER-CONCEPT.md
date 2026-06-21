@@ -82,15 +82,66 @@ postctl connects to Orbiter CMS:
 
 ## Competitive Landscape
 
-| Tool | Type | Price | Limitation |
-|------|------|-------|------------|
-| Buffer | Web SaaS | $6-120/mo | Browser, no CLI, no AI integration |
-| Hootsuite | Web SaaS | $99+/mo | Enterprise pricing, bloated |
-| Typefully | Web SaaS | $0-29/mo | Twitter-focused, browser-only |
-| Later | Web SaaS | $0-80/mo | Instagram-focused |
-| **postctl** | **CLI** | **$0-9/mo** | **Terminal-only (by design)** |
+### Name Availability (checked 2026-06-21)
 
-**postctl doesn't compete with Buffer** — it serves a different audience (developers) with a different workflow (terminal + markdown + git).
+| Registry | Status |
+|----------|--------|
+| GitHub repos | **0 results** — name is free |
+| npm | **not found** — name is free |
+| PyPI | **not found** — name is free |
+| Go pkg.go.dev | 4 internal subpackages in other projects (0 imports, 0 stars) — no conflict |
+| Domain postctl.com | to be checked |
+
+### SaaS Tools (Web-based)
+
+| Tool | Price | Platforms | Limitation |
+|------|-------|-----------|------------|
+| Buffer | $6-120/mo | 8+ | Browser-only, no CLI, no AI integration |
+| Hootsuite | $99+/mo | 10+ | Enterprise pricing, bloated |
+| Typefully | $0-29/mo | Twitter, LinkedIn, Threads | Browser-only, no import |
+| Later | $0-80/mo | 7+ | Instagram-focused |
+
+### Open Source (Self-hosted Web)
+
+| Tool | Stars | Language | Platforms | Limitation |
+|------|-------|----------|-----------|------------|
+| Brightbean | 1,900 | Python | 10+ | Web UI only, no CLI, heavy setup |
+| TryPost | 286 | PHP/Laravel | 8 | Web UI, requires Laravel stack |
+| DemandBird | 6 | TypeScript | 6 | Web UI, AI-native but early stage |
+
+### CLI Tools
+
+| Tool | Stars | Language | Platforms | Limitation |
+|------|-------|----------|-----------|------------|
+| xmaster-cli | 6 | Rust | Twitter only | Single platform, no scheduling |
+| **postctl** | **—** | **Go** | **Twitter, LinkedIn, Threads** | **—** |
+
+### The Gap
+
+**There is no serious CLI tool for multi-platform social media posting.**
+
+- SaaS tools are browser-based, subscription-heavy, and can't be automated by AI
+- Open-source tools are all web UIs requiring full server stacks
+- The only CLI tool (xmaster-cli) supports only Twitter with 6 stars
+
+**postctl fills this gap**: terminal-native, markdown-first, multi-platform, AI-automatable, single binary, freemium.
+
+### Why postctl wins
+
+| Feature | Buffer | Typefully | xmaster-cli | **postctl** |
+|---------|--------|-----------|-------------|-------------|
+| CLI / Terminal | ✗ | ✗ | ✓ | **✓** |
+| Multi-platform | ✓ | partial | ✗ | **✓** |
+| Markdown-first | ✗ | ✗ | ✗ | **✓** |
+| AI-automatable | ✗ | ✗ | ✓ | **✓** |
+| Git-versionable posts | ✗ | ✗ | ✗ | **✓** |
+| Offline-first | ✗ | ✗ | ✓ | **✓** |
+| Single binary | ✗ | ✗ | ✓ | **✓** |
+| Free tier | limited | limited | ✓ | **✓** |
+| Thread support | ✓ | ✓ | ✓ | **✓** |
+| Scheduling | ✓ | ✓ | ✓ | **✓** |
+| Analytics | ✓ | ✓ | ✗ | **Pro** |
+| AI content gen | ✗ | ✓ (built-in) | ✗ | **Pro** |
 
 ## Revenue Model
 
