@@ -19,6 +19,7 @@
 
   var TOOLS = [
     { icon: '✉', label: 'Inbox',    href: '/inbox.html',    key: 'inbox'    },
+    { icon: '◉', label: 'Analytics',href: '/analytics.html',key: 'analytics'},
     { icon: '⌗', label: 'Snippets', href: '/snippets.html', key: 'snippets' },
     { icon: '▦', label: 'Schema',   href: '/schema.html',   key: 'schema'   },
     { icon: '◉', label: 'Build',    href: '/build.html',    key: 'build'    },
@@ -67,7 +68,7 @@
       '</div>',
       '<div class="xfce-sb-center" id="xfce-sb-title"></div>',
       '<div class="xfce-sb-right">',
-        '<span id="xfce-sb-g-ind" class="xfce-sb-g-ind" style="display:none" title="g mode: d=dashboard m=media s=settings u=users b=build i=import c=schema h=HUD a=account n=inbox p=snippets">g ›</span>',
+        '<span id="xfce-sb-g-ind" class="xfce-sb-g-ind" style="display:none" title="g mode: d=dashboard k=calendar m=media s=settings u=users b=build i=import c=schema h=HUD a=account n=inbox y=analytics p=snippets">g ›</span>',
         '<button id="xfce-sb-bell" class="xfce-sb-bell" title="Notifications"><span id="xfce-sb-bell-icon">○</span><span id="xfce-sb-bell-badge" class="xfce-sb-bell-badge" style="display:none"></span></button>',
         '<span class="xfce-sb-div">·</span>',
         '<button id="xfce-sb-cheat" class="xfce-sb-cheat" title="Shortcuts (?)">?</button>',
@@ -1515,14 +1516,18 @@
             cheatRow('↵', 'Go to selected item'),
             cheatRow('Esc', 'Close overlay / panel'),
             cheatRow('g &nbsp;+&nbsp; d', 'Dashboard'),
+            cheatRow('g &nbsp;+&nbsp; k', 'Calendar'),
             cheatRow('g &nbsp;+&nbsp; m', 'Media'),
             cheatRow('g &nbsp;+&nbsp; u', 'Users'),
-            cheatRow('g &nbsp;+&nbsp; s', 'Settings'),
+            cheatRow('g &nbsp;+&nbsp; n', 'Inbox'),
+            cheatRow('g &nbsp;+&nbsp; y', 'Analytics'),
+            cheatRow('g &nbsp;+&nbsp; p', 'Snippets'),
+            cheatRow('g &nbsp;+&nbsp; c', 'Schema'),
             cheatRow('g &nbsp;+&nbsp; b', 'Build'),
             cheatRow('g &nbsp;+&nbsp; i', 'Import'),
-            cheatRow('g &nbsp;+&nbsp; c', 'Schema'),
-            cheatRow('g &nbsp;+&nbsp; h', 'Toggle HUD'),
+            cheatRow('g &nbsp;+&nbsp; s', 'Settings'),
             cheatRow('g &nbsp;+&nbsp; a', 'Account'),
+            cheatRow('g &nbsp;+&nbsp; h', 'Toggle HUD'),
             cheatRow('1 – 9', 'Jump to nth dock item'),
           '</div>',
           '<div class="xfce-cheat-col">',
@@ -1573,7 +1578,7 @@
   var G_MAP = { d: '/dashboard.html', m: '/media.html', s: '/settings.html',
                 u: '/users.html',     b: '/build.html',  i: '/import.html',
                 c: '/schema.html',   a: '/account.html', n: '/inbox.html',
-                p: '/snippets.html' };
+                p: '/snippets.html',  k: '/calendar.html', y: '/analytics.html' };
 
   function setGMode(on) {
     _gPending = on;

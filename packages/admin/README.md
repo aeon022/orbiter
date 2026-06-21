@@ -235,14 +235,18 @@ Command history with ↑/↓. Output rendered inline in the palette.
 | `⌘⇧L` | Switch back to Glass mode |
 | `1`–`9` | Jump to nth dock item |
 | `g` + `d` | Dashboard |
+| `g` + `k` | Calendar |
 | `g` + `m` | Media |
 | `g` + `u` | Users |
-| `g` + `s` | Settings |
+| `g` + `n` | Inbox |
+| `g` + `y` | Analytics |
+| `g` + `p` | Snippets |
+| `g` + `c` | Schema |
 | `g` + `b` | Build |
 | `g` + `i` | Import |
-| `g` + `c` | Schema |
-| `g` + `h` | Toggle HUD panel |
+| `g` + `s` | Settings |
 | `g` + `a` | Account |
+| `g` + `h` | Toggle HUD panel |
 
 A `g ›` badge pulses in the status bar while waiting for the second key.
 
@@ -274,7 +278,7 @@ Floating bottom bar (or left sidebar — toggle in the Tools popup). Magnificati
 - **Nav group** — Dashboard, Calendar, Media, Users
 - **Collections group** — one item per collection; draft count badge; hover shows preview card with 3 recent entries and quick-action buttons
 - **Workspace** — Notes scratchpad, To-do list
-- **Tools** — Schema, Build, Import (popup)
+- **Tools** — Inbox, Analytics, Snippets, Schema, Build, Import (popup)
 - **Settings** — direct link
 - **HUD** — toggle button
 

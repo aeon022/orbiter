@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbiter Admin — Analytics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+  <script src="/theme.js"></script>
+  <style>
+    .an-header { display:flex; align-items:center; justify-content:space-between; padding:20px 28px; border-bottom:1px solid var(--line); }
+    .an-header-title { font-family:var(--display); font-size:20px; font-weight:500; color:var(--heading); }
+    .an-header-controls { display:flex; gap:8px; align-items:center; }
+    .an-period-btn { background:none; border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:10px; padding:5px 12px; cursor:pointer; border-radius:var(--radius); transition:all 0.12s; }
+    .an-period-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .an-period-btn.active { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+
+    .an-stats { display:grid; grid-template-columns:repeat(4,1fr); border-bottom:1px solid var(--line); }
+    .an-stat { padding:20px 24px; border-right:1px solid var(--line); }
+    .an-stat:last-child { border-right:none; }
+    .an-stat-label { font-size:9px; letter-spacing:0.22em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+    .an-stat-num { font-family:var(--display); font-weight:300; font-size:32px; color:var(--heading); line-height:1; }
+    .an-stat-sub { font-size:10px; color:var(--muted); margin-top:4px; }
+
+    .an-content { display:grid; grid-template-columns:1fr 320px; }
+    .an-main { padding:24px 28px; border-right:1px solid var(--line); }
+    .an-side { padding:24px 20px; }
+
+    .an-chart { height:180px; display:flex; align-items:flex-end; gap:2px; margin-bottom:24px; }
+    .an-bar-group { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; }
+    .an-bar { width:100%; border-radius:2px 2px 0 0; transition:height 0.3s ease; min-height:1px; }
+    .an-bar.humans { background:var(--accent); }
+    .an-bar.bots { background:color-mix(in srgb, var(--gold) 50%, transparent); }
+    .an-bar-label { font-size:7px; color:var(--muted); margin-top:2px; writing-mode:vertical-rl; transform:rotate(180deg); height:24px; overflow:hidden; }
+
+    .section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+    .section-title { font-size:9px; letter-spacing:0.22em; text-transform:uppercase; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .section-title::before { content:"—"; color:var(--gold); font-size:8px; }
+
+    .an-table { width:100%; border-collapse:collapse; }
+    .an-table th { font-size:9px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); text-align:left; padding:6px 0; border-bottom:1px solid var(--line); }
+    .an-table td { font-size:11px; color:var(--text); padding:7px 0; border-bottom:1px solid var(--line2); }
+    .an-table td:last-child { text-align:right; font-family:var(--mono); color:var(--heading); }
+    .an-table tr:hover td { color:var(--heading); }
+
+    .an-snippet { margin-top:24px; }
+    .an-snippet-title { font-size:9px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+    .an-snippet-code { background:var(--bg0); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px; font-family:var(--mono); font-size:11px; color:var(--text); line-height:1.6; overflow-x:auto; position:relative; }
+    .an-copy-btn { position:absolute; top:8px; right:8px; background:var(--bg2); border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:9px; padding:3px 8px; cursor:pointer; border-radius:var(--radius); transition:all 0.12s; }
+    .an-copy-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .an-empty { padding:40px; text-align:center; color:var(--muted); font-size:12px; line-height:2; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="logo" href="/dashboard.html"><div class="logo-mark">OR</div>Orbiter</a>
+      <div class="topbar-right">
+        <button class="search-trigger" id="search-btn" title="Search (⌘K)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Search <kbd>⌘K</kbd>
+        </button>
+        <button class="scheme-toggle" id="scheme-toggle" title="Toggle scheme">◐</button>
+        <span class="user" id="topbar-user"></span>
+        <span class="logout" id="logout-btn">Sign out</span>
+      </div>
+    </header>
+
+    <nav class="sidebar">
+      <div class="nav-section">Content</div>
+      <a class="nav-item" href="/dashboard.html"><span class="nav-icon">◈</span>Dashboard</a>
+      <a class="nav-item" href="/calendar.html"><span class="nav-icon">▤</span>Calendar</a>
+      <a class="nav-item" href="/collections.html"><span class="nav-icon">⊞</span>Collections</a>
+      <div class="nav-section">Assets</div>
+      <a class="nav-item" href="/media.html"><span class="nav-icon">⊟</span>Media</a>
+      <div class="nav-section">Tools</div>
+      <a class="nav-item" href="/inbox.html"><span class="nav-icon">✉</span>Inbox</a>
+      <a class="nav-item active" href="/analytics.html"><span class="nav-icon">◉</span>Analytics</a>
+      <a class="nav-item" href="/snippets.html"><span class="nav-icon">⌗</span>Snippets</a>
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="/schema.html"><span class="nav-icon">◈</span>Schema</a>
+      <a class="nav-item" href="/build.html"><span class="nav-icon">▲</span>Build</a>
+      <a class="nav-item" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
+      <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
+
+      <div class="sidebar-footer">
+        <div class="pod-name" id="pod-name">content.pod</div>
+        <div class="pod-info" id="pod-info"></div>
+        <div class="pod-version" id="pod-version"></div>
+        <div class="pod-status"><span class="pod-dot"></span>pod synced</div>
+      </div>
+    </nav>
+
+    <main class="main">
+      <div class="an-header glass-card">
+        <div class="an-header-title">Analytics</div>
+        <div class="an-header-controls">
+          <button class="an-period-btn" data-days="7">7d</button>
+          <button class="an-period-btn active" data-days="30">30d</button>
+          <button class="an-period-btn" data-days="90">90d</button>
+        </div>
+      </div>
+
+      <div class="an-stats glass-card" id="an-stats">
+        <div class="an-stat">
+          <div class="an-stat-label">Total views</div>
+          <div class="an-stat-num" id="stat-total">—</div>
+        </div>
+        <div class="an-stat">
+          <div class="an-stat-label">Humans</div>
+          <div class="an-stat-num" id="stat-humans">—</div>
+          <div class="an-stat-sub" id="stat-humans-pct"></div>
+        </div>
+        <div class="an-stat">
+          <div class="an-stat-label">Bots / Agents</div>
+          <div class="an-stat-num" id="stat-bots">—</div>
+          <div class="an-stat-sub" id="stat-bots-pct"></div>
+        </div>
+        <div class="an-stat">
+          <div class="an-stat-label">Top page</div>
+          <div class="an-stat-num" id="stat-top" style="font-size:16px;margin-top:6px;">—</div>
+        </div>
+      </div>
+
+      <div class="an-content glass-card">
+        <div class="an-main">
+          <div class="section-head">
+            <div class="section-title">Daily views</div>
+          </div>
+          <div class="an-chart" id="an-chart"></div>
+
+          <div class="section-head">
+            <div class="section-title">Top pages</div>
+          </div>
+          <table class="an-table" id="an-pages">
+            <thead><tr><th>Page</th><th>Views</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="an-side">
+          <div class="section-head">
+            <div class="section-title">Referrers</div>
+          </div>
+          <table class="an-table" id="an-refs">
+            <thead><tr><th>Source</th><th>Visits</th></tr></thead>
+            <tbody></tbody>
+          </table>
+
+          <div class="an-snippet">
+            <div class="an-snippet-title">Tracking snippet</div>
+            <div class="an-snippet-code" id="snippet-code">
+              <button class="an-copy-btn" id="copy-btn">copy</button>
+              &lt;script src="https://YOUR-ADMIN/t.js" data-api="https://YOUR-ADMIN/api/hit" defer&gt;&lt;/script&gt;
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).catch(() => null);
+    if (!me?.user) { location.replace('/login.html'); throw new Error('unauthenticated'); }
+    document.getElementById('topbar-user').textContent = me.user.username;
+    if (me.user.role === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      location.replace('/login.html');
+    });
+
+    let currentDays = 30;
+
+    async function loadStats(days) {
+      currentDays = days;
+      const stats = await fetch(`/api/analytics?days=${days}`, { credentials: 'include' }).then(r => r.json()).catch(() => null);
+      if (!stats) return;
+
+      document.getElementById('stat-total').textContent = stats.total;
+      document.getElementById('stat-humans').textContent = stats.humans;
+      document.getElementById('stat-bots').textContent = stats.bots;
+      const humanPct = stats.total > 0 ? Math.round(stats.humans / stats.total * 100) : 0;
+      const botPct = stats.total > 0 ? Math.round(stats.bots / stats.total * 100) : 0;
+      document.getElementById('stat-humans-pct').textContent = humanPct + '% of total';
+      document.getElementById('stat-bots-pct').textContent = botPct + '% of total';
+      document.getElementById('stat-top').textContent = stats.topPages[0]?.path ?? '—';
+
+      // Chart
+      const chart = document.getElementById('an-chart');
+      if (!stats.daily.length) {
+        chart.innerHTML = '<div class="an-empty">No data yet</div>';
+      } else {
+        const maxViews = Math.max(...stats.daily.map(d => d.views), 1);
+        chart.innerHTML = stats.daily.map(d => {
+          const humanH = Math.max(Math.round(d.human_views / maxViews * 150), 1);
+          const botH = Math.max(Math.round((d.views - d.human_views) / maxViews * 150), 0);
+          const label = d.date.slice(5);
+          return `<div class="an-bar-group">
+            ${botH > 0 ? `<div class="an-bar bots" style="height:${botH}px" title="${d.views - d.human_views} bots"></div>` : ''}
+            <div class="an-bar humans" style="height:${humanH}px" title="${d.human_views} humans"></div>
+            <div class="an-bar-label">${label}</div>
+          </div>`;
+        }).join('');
+      }
+
+      // Top pages
+      const pagesTbody = document.querySelector('#an-pages tbody');
+      pagesTbody.innerHTML = stats.topPages.map(p =>
+        `<tr><td>${p.path}</td><td>${p.views}</td></tr>`
+      ).join('') || '<tr><td colspan="2" style="color:var(--muted)">No data</td></tr>';
+
+      // Referrers
+      const refsTbody = document.querySelector('#an-refs tbody');
+      refsTbody.innerHTML = stats.topReferrers.map(r => {
+        let host = r.referrer;
+        try { host = new URL(r.referrer).host; } catch {}
+        return `<tr><td>${host}</td><td>${r.count}</td></tr>`;
+      }).join('') || '<tr><td colspan="2" style="color:var(--muted)">No referrers</td></tr>';
+
+      // Update snippet with actual URL
+      const adminUrl = location.origin;
+      document.getElementById('snippet-code').innerHTML =
+        `<button class="an-copy-btn" id="copy-btn">copy</button>` +
+        `&lt;script src="${adminUrl}/t.js" data-api="${adminUrl}/api/hit" defer&gt;&lt;/script&gt;`;
+      document.getElementById('copy-btn').addEventListener('click', () => {
+        navigator.clipboard.writeText(`<script src="${adminUrl}/t.js" data-api="${adminUrl}/api/hit" defer><\/script>`);
+        document.getElementById('copy-btn').textContent = 'copied!';
+        setTimeout(() => document.getElementById('copy-btn').textContent = 'copy', 1500);
+      });
+    }
+
+    // Period buttons
+    document.querySelectorAll('.an-period-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.an-period-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        loadStats(parseInt(btn.dataset.days));
+      });
+    });
+
+    loadStats(30);
+  </script>
+
+  <script src="/search.js"></script>
+  <script src="/sidebar.js"></script>
+  <script src="/router.js"></script>
+</body>
+</html>

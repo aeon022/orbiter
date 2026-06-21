@@ -37,6 +37,16 @@
           dashLink.parentNode.insertBefore(calLink, dashLink.nextSibling);
         }
 
+        // Inject Analytics link before Snippets in Tools section
+        var snippetsLink = sidebar.querySelector('a[href="/snippets.html"]');
+        if (snippetsLink && !sidebar.querySelector('a[href="/analytics.html"]')) {
+          var anLink = document.createElement('a');
+          anLink.className = 'nav-item' + (page === 'analytics' ? ' active' : '');
+          anLink.href = '/analytics.html';
+          anLink.innerHTML = '<span class="nav-icon">◉</span>Analytics';
+          snippetsLink.parentNode.insertBefore(anLink, snippetsLink);
+        }
+
         // Find "Assets" nav-section to insert before it
         var sections = sidebar.querySelectorAll('.nav-section');
         var assetsSection = null;

@@ -29,6 +29,7 @@ import { lockRoutes }       from './routes/locks.js';
 import { terminalRoutes }   from './routes/terminal.js';
 import { deployRoutes }     from './routes/deploy.js';
 import { formPublicRoutes, formRoutes } from './routes/forms.js';
+import { analyticsPublicRoutes, analyticsRoutes } from './routes/analytics.js';
 import { requireAuth }      from './middleware/auth.js';
 import { csrfMiddleware }  from './middleware/csrf.js';
 
@@ -70,6 +71,11 @@ export function createApp(podPath) {
   app.use('/api/form/*', async (c, next) => { c.set('podPath', podPath); await next(); });
   app.route('/api/form', formPublicRoutes);
 
+  // Public analytics hit — wide CORS (called from any static site)
+  app.use('/api/hit', cors({ origin: '*', allowMethods: ['GET', 'POST', 'OPTIONS'] }));
+  app.use('/api/hit', async (c, next) => { c.set('podPath', podPath); await next(); });
+  app.route('/api/hit', analyticsPublicRoutes);
+
   // Protected routes — CSRF + auth
   const api = new Hono();
   api.use('*', csrfMiddleware(ALLOWED_ORIGINS));
@@ -88,6 +94,7 @@ export function createApp(podPath) {
   api.route('/collections',  commentRoutes);
   api.route('/',             commentRoutes);
   api.route('/locks',        lockRoutes);
+  api.route('/analytics',    analyticsRoutes);
   api.route('/terminal',     terminalRoutes);
   api.route('/deploy',       deployRoutes);
   api.route('/forms',        formRoutes);

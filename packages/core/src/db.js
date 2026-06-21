@@ -108,6 +108,19 @@ export class OrbiterDB {
         ip         TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
+
+      CREATE TABLE IF NOT EXISTS _analytics (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        path       TEXT NOT NULL,
+        referrer   TEXT,
+        ua         TEXT,
+        lang       TEXT,
+        screen_w   INTEGER,
+        is_bot     INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_analytics_path ON _analytics(path);
+      CREATE INDEX IF NOT EXISTS idx_analytics_date ON _analytics(created_at);
     `);
 
     // Migrations: add columns that didn't exist in older pods
@@ -484,6 +497,43 @@ export class OrbiterDB {
     return this.db.prepare(
       'SELECT id, username, action, created_at FROM _audit WHERE entry_id = ? ORDER BY created_at DESC LIMIT ?'
     ).all(entryId, limit);
+  }
+
+  // ── Analytics ──────────────────────────────────────
+  trackPageview(path, { referrer, ua, lang, screenW, isBot } = {}) {
+    this.db.prepare(
+      'INSERT INTO _analytics (path, referrer, ua, lang, screen_w, is_bot) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(path, referrer || null, ua || null, lang || null, screenW || null, isBot ? 1 : 0);
+  }
+
+  getAnalytics({ days = 30, path } = {}) {
+    const since = `datetime('now', '-${Math.max(1, Math.min(days, 365))} days')`;
+    const base = `FROM _analytics WHERE created_at >= ${since}` + (path ? ` AND path = ?` : '');
+    const args = path ? [path] : [];
+
+    const total = this.db.prepare(`SELECT COUNT(*) as count ${base}`).get(...args).count;
+    const humans = this.db.prepare(`SELECT COUNT(*) as count ${base} AND is_bot = 0`).get(...args).count;
+    const bots = total - humans;
+
+    const topPages = this.db.prepare(
+      `SELECT path, COUNT(*) as views, SUM(CASE WHEN is_bot = 0 THEN 1 ELSE 0 END) as human_views ${base} GROUP BY path ORDER BY views DESC LIMIT 20`
+    ).all(...args);
+
+    const topReferrers = this.db.prepare(
+      `SELECT referrer, COUNT(*) as count ${base} AND referrer IS NOT NULL AND referrer != '' GROUP BY referrer ORDER BY count DESC LIMIT 15`
+    ).all(...args);
+
+    const daily = this.db.prepare(
+      `SELECT DATE(created_at) as date, COUNT(*) as views, SUM(CASE WHEN is_bot = 0 THEN 1 ELSE 0 END) as human_views ${base} GROUP BY DATE(created_at) ORDER BY date DESC LIMIT ?`
+    ).all(...args, days);
+
+    return { total, humans, bots, topPages, topReferrers, daily: daily.reverse() };
+  }
+
+  pruneAnalytics(days = 90) {
+    return this.db.prepare(
+      `DELETE FROM _analytics WHERE created_at < datetime('now', '-' || ? || ' days')`
+    ).run(days).changes;
   }
 
   close() {

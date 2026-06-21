@@ -1,0 +1,71 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Simple Analytics" current="/docs/analytics" prev={{ href: '/docs/seo', title: 'Built-in SEO' }} next={{ href: '/docs/snippets', title: 'Code snippets' }}>
+
+<h1>Simple Analytics</h1>
+<p class="lead">Privacy-friendly page statistics stored directly in the POD. No Google Analytics, no cookie banners, no external scripts. One line of code.</p>
+
+<h2>Setup</h2>
+<p>Add the tracking snippet to your Astro layout (or any HTML page):</p>
+<pre>&lt;script src="https://YOUR-ADMIN-URL/t.js" data-api="https://YOUR-ADMIN-URL/api/hit" defer&gt;&lt;/script&gt;</pre>
+<p>Replace <code>YOUR-ADMIN-URL</code> with the URL where your Orbiter admin runs. The snippet is also available as a copy-to-clipboard button on the <strong>Analytics</strong> page in the admin.</p>
+
+<div class="callout"><strong>Under 500 bytes.</strong> No cookies. No fingerprinting. Respects <code>Do-Not-Track</code>. Uses <code>sendBeacon</code> for zero performance impact, with an image pixel fallback.</div>
+
+<h2>What's tracked</h2>
+<table>
+  <thead><tr><th>Field</th><th>Source</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Page path</td><td><code>location.pathname</code></td><td>e.g. <code>/blog/my-post</code></td></tr>
+    <tr><td>Referrer</td><td><code>document.referrer</code></td><td>Only external referrers (same-host filtered)</td></tr>
+    <tr><td>Screen width</td><td><code>screen.width</code></td><td>For device type estimation</td></tr>
+    <tr><td>Language</td><td><code>Accept-Language</code> header</td><td>First language only</td></tr>
+    <tr><td>Bot flag</td><td><code>User-Agent</code> pattern match</td><td>Googlebot, GPTBot, ClaudeBot, etc.</td></tr>
+  </tbody>
+</table>
+
+<p><strong>Not tracked:</strong> IP addresses, cookies, browser fingerprints, session duration, scroll depth, click events.</p>
+
+<h2>Bot detection</h2>
+<p>The tracking endpoint automatically flags known bot and AI agent user agents. The analytics dashboard shows human vs. bot traffic separately — so you can see what percentage of your readers are AI systems.</p>
+<p>Detected agents include: Googlebot, Bingbot, GPTBot, ClaudeBot, PerplexityBot, FacebookExternalHit, LinkedInBot, TwitterBot, and others.</p>
+
+<h2>Dashboard</h2>
+<p>Open <strong>Analytics</strong> from the admin sidebar (or <kbd>g</kbd> + <kbd>y</kbd> in Station mode). The dashboard shows:</p>
+<ul>
+  <li><strong>Stats bar</strong> — total views, human views, bot views, top page</li>
+  <li><strong>Daily chart</strong> — bar chart with human (purple) and bot (gold) views per day</li>
+  <li><strong>Top pages</strong> — most viewed pages ranked by total views</li>
+  <li><strong>Referrers</strong> — top traffic sources</li>
+  <li><strong>Period filter</strong> — 7 days, 30 days, or 90 days</li>
+</ul>
+
+<h2>Data retention</h2>
+<p>Analytics data is stored in the <code>_analytics</code> table in the POD. To clean up old data:</p>
+<pre>DELETE /api/analytics/prune?days=90</pre>
+<p>This deletes all records older than the specified number of days. The default is 90 days.</p>
+
+<h2>API</h2>
+
+<h3>Track a pageview (public, no auth)</h3>
+<pre>POST /api/hit?p=/page-path&r=https://referrer.com&w=1920
+GET  /api/hit?p=/page-path&r=https://referrer.com&w=1920  (returns 1×1 GIF)</pre>
+
+<h3>Get analytics (auth required)</h3>
+<pre>GET /api/analytics?days=30&path=/blog
+
+&#123;
+  "total": 1234,
+  "humans": 980,
+  "bots": 254,
+  "topPages": [&#123; "path": "/", "views": 456, "human_views": 400 &#125;, ...],
+  "topReferrers": [&#123; "referrer": "https://google.com", "count": 89 &#125;, ...],
+  "daily": [&#123; "date": "2026-06-20", "views": 42, "human_views": 35 &#125;, ...]
+&#125;</pre>
+
+<h3>Prune old data (auth required)</h3>
+<pre>DELETE /api/analytics/prune?days=90
+&#123; "ok": true, "deleted": 1500 &#125;</pre>
+
+</DocsLayout>
