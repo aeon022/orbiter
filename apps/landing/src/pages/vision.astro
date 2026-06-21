@@ -445,30 +445,19 @@ import { ViewTransitions } from 'astro:transitions';
     .rm-tag.next { color: var(--accent); background: rgba(139,124,248,0.1); }
     .rm-tag.future { color: var(--muted); background: rgba(85,85,112,0.15); }
 
-    /* ── HUD back link ── */
+    /* ── Hero back link ── */
     .hud-back {
-      position: fixed; top: 20px; left: 24px; z-index: 150;
-      display: flex; align-items: center; gap: 6px;
+      display: inline-flex; align-items: center; gap: 6px;
       font-size: 10px; font-family: 'Inter', sans-serif;
       letter-spacing: 0.08em; color: var(--muted);
       text-decoration: none;
-      opacity: 0; transform: translateX(-10px);
-      transition: opacity 0.4s, transform 0.4s, color 0.2s;
-      pointer-events: none;
+      margin-bottom: 20px;
+      opacity: 0; animation: fadeUp 0.6s 0.8s forwards;
+      position: relative; z-index: 2;
+      transition: color 0.2s;
     }
-    .hud-back.visible { opacity: 0.5; transform: translateX(0); pointer-events: all; }
-    .hud-back:hover { opacity: 1; color: var(--accent); }
-    .hud-back::before {
-      content: '←'; font-size: 13px;
-    }
-    .hud-back::after {
-      content: '';
-      position: absolute; left: -4px; top: -4px; bottom: -4px; right: -4px;
-      border: 1px solid rgba(139,124,248,0);
-      border-radius: 6px;
-      transition: border-color 0.2s;
-    }
-    .hud-back:hover::after { border-color: rgba(139,124,248,0.15); }
+    .hud-back:hover { color: var(--accent); }
+    .hud-back::before { content: '←'; font-size: 13px; }
 
     /* ── Back to top — warp jump ── */
     .btt {
@@ -786,6 +775,7 @@ import { ViewTransitions } from 'astro:transitions';
 
 <!-- Hero -->
 <section class="vision-hero">
+  <a href="/" class="hud-back">orbiter.sh</a>
   <div class="vision-eyebrow">Where we're going</div>
   <h1 class="vision-h1">One content source.<br /><em>Two audiences.</em></h1>
   <p class="vision-sub">The web is splitting into two layers: one for humans, one for AI agents. Orbiter is building for both — from a single POD.</p>
@@ -961,8 +951,6 @@ import { ViewTransitions } from 'astro:transitions';
   </div>
 </footer>
 
-<a href="/" class="hud-back" id="hud-back">orbiter.sh</a>
-
 <button class="btt" id="btt" aria-label="Back to top" title="Back to top">↑</button>
 
 <div class="warp-jump" id="warp-jump">
@@ -1093,15 +1081,12 @@ import { ViewTransitions } from 'astro:transitions';
   drawStars();
   window.addEventListener('resize', () => { resize(); initStars(); });
 
-  // Back to top + HUD back link
+  // Back to top
   const btt = document.getElementById('btt');
-  const hudBack = document.getElementById('hud-back');
   const warpJump = document.getElementById('warp-jump');
   if (btt) {
     window.addEventListener('scroll', () => {
-      const past = window.scrollY > window.innerHeight * 0.5;
-      btt.classList.toggle('visible', past);
-      if (hudBack) hudBack.classList.toggle('visible', past);
+      btt.classList.toggle('visible', window.scrollY > window.innerHeight * 0.5);
     });
     btt.addEventListener('click', () => {
       if (warpJump) {
