@@ -468,7 +468,25 @@ const faqs = [
         <div class="update-date">Jun<br />2026</div>
         <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">Desktop v0.1.0 — New</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.66 · Desktop v0.2.2 — Latest</div>
+          <div class="update-title">Calendar view, Simple Analytics, cross-pod copy &amp; desktop auto-update</div>
+          <ul class="update-items">
+            <li><strong>Calendar view</strong> — full month-grid page with color-coded entries (scheduled/expiring/published/draft). Click a day to see entries, filter by status, keyboard nav. Dashboard widget with mini calendar + upcoming list.</li>
+            <li><strong>Simple Analytics</strong> — privacy-friendly pageview tracking stored in the POD. No cookies, no external scripts, &lt;500 bytes. Bot detection (GPTBot, ClaudeBot, etc). Dashboard with daily chart, top pages, referrers. Human vs. agent traffic split.</li>
+            <li><strong>Cross-pod import/export</strong> — export all collections + entries as JSON. Import from a <code>.pod</code> file or JSON export. Collections created automatically, skip or overwrite duplicates.</li>
+            <li><strong>Desktop auto-update</strong> — the Electron app downloads new releases from GitHub in the background. Universal macOS DMG (M1 + Intel in one file). One-click backup (<code>⌘⇧S</code>).</li>
+            <li><strong>Table field</strong> — mini-spreadsheet as a schema field type. Header row, data rows, add/remove rows and columns, Tab navigation. Stored as <code>string[][]</code>.</li>
+            <li><strong>Dashboard widget toggles</strong> — enable/disable Calendar, Recently Edited, Collections, Notes &amp; To-Do in Settings.</li>
+            <li><strong>OG Image picker</strong> — media picker modal in the SEO panel instead of a dropdown. Image preview + clear button.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="update-card reveal" style="border-color:color-mix(in srgb,var(--accent) 25%,var(--line))">
+        <div class="update-date">Jun<br />2026</div>
+        <div class="update-dot" style="background:color-mix(in srgb,var(--accent) 60%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 25%,transparent)">Desktop v0.1.0</div>
           <div class="update-title">Desktop App for macOS &amp; Windows — pick a template, start editing.</div>
           <ul class="update-items">
             <li><strong>Templates on first launch</strong> — choose Blog, Portfolio, Business, or Events. The app creates all collections and fills them with demo content so you can see how everything works right away.</li>
@@ -476,7 +494,6 @@ const faqs = [
             <li><strong>Windows</strong> — NSIS installer wizard, optional install directory. x64.</li>
             <li><strong>Self-contained</strong> — Electron bundles the full admin server. Runs locally, no internet required after install.</li>
             <li><strong>Multi-site switching</strong> — File → Switch POD (<code>⌘O</code>) switches to a different content database and restarts instantly.</li>
-            <li><strong>Lives in the tray</strong> — closing the window hides the app; it keeps running in the macOS menu bar or Windows system tray.</li>
           </ul>
         </div>
       </div>
