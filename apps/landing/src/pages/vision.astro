@@ -247,6 +247,7 @@ import { ViewTransitions } from 'astro:transitions';
       filter: blur(80px);
       animation: neb-drift-3 20s ease-in-out infinite alternate;
     }
+    .nebula { transition: filter 0.5s ease; }
     @keyframes neb-drift-1 { from { transform: translate(0,0) scale(1); } to { transform: translate(50px,30px) scale(1.12); } }
     @keyframes neb-drift-2 { from { transform: translate(0,0) scale(1); } to { transform: translate(-40px,-20px) scale(1.08); } }
     @keyframes neb-drift-3 { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-25px) scale(1.1); } }
@@ -298,6 +299,23 @@ import { ViewTransitions } from 'astro:transitions';
       background: linear-gradient(135deg, var(--accent), var(--gold));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
+    }
+    /* Typed cursor */
+    .typed-cursor {
+      display: inline-block; width: 2px; height: 0.9em;
+      background: var(--accent); margin-left: 2px;
+      vertical-align: text-bottom;
+      animation: cursor-blink 0.8s step-end infinite;
+    }
+    @keyframes cursor-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    /* Counter */
+    .counter { display: inline; }
+
+    /* 3D tilt on diagram */
+    .dual-diagram {
+      transition: transform 0.15s ease;
+      transform-style: preserve-3d; perspective: 800px;
     }
     .vision-sub {
       font-size: 18px; color: var(--text); max-width: 600px;
@@ -777,7 +795,7 @@ import { ViewTransitions } from 'astro:transitions';
 <section class="vision-hero">
   <a href="/" class="hud-back">orbiter.sh</a>
   <div class="vision-eyebrow">Where we're going</div>
-  <h1 class="vision-h1">One content source.<br /><em>Two audiences.</em></h1>
+  <h1 class="vision-h1">One content source.<br /><em id="typed-target"></em><span class="typed-cursor" id="typed-cursor"></span></h1>
   <p class="vision-sub">The web is splitting into two layers: one for humans, one for AI agents. Orbiter is building for both — from a single POD.</p>
   <div class="vision-scroll-hint"><span>↓</span> Scroll to explore</div>
 </section>
@@ -852,7 +870,7 @@ import { ViewTransitions } from 'astro:transitions';
       <div class="rm-phase">Phase 01–12 · Complete</div>
       <div class="rm-title">Foundation → Launch Pad</div>
       <div class="rm-desc">Core DB, admin UI, block editor, media library, auth, themes, CLI, i18n, scheduled publishing, FTP deploy, desktop app, Station dock mode, file &amp; table fields, calendar view, cross-pod copy.</div>
-      <span class="rm-tag done">19 features shipped</span>
+      <span class="rm-tag done"><span class="counter" data-target="22">0</span> features shipped</span>
     </div>
 
     <div class="rm-item reveal">
@@ -1098,6 +1116,72 @@ import { ViewTransitions } from 'astro:transitions';
       } else {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
+    });
+  }
+
+  // ── 1. Typed text effect ──
+  const typedEl = document.getElementById('typed-target');
+  const cursorEl = document.getElementById('typed-cursor');
+  if (typedEl) {
+    const text = 'Two audiences.';
+    let i = 0;
+    function typeNext() {
+      if (i < text.length) {
+        typedEl.textContent += text[i];
+        i++;
+        setTimeout(typeNext, 70 + Math.random() * 40);
+      } else if (cursorEl) {
+        setTimeout(() => cursorEl.style.display = 'none', 2000);
+      }
+    }
+    setTimeout(typeNext, 2000);
+  }
+
+  // ── 2. Counter animation ──
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const el = e.target;
+      const target = parseInt(el.dataset.target);
+      if (el.dataset.counted) return;
+      el.dataset.counted = '1';
+      let n = 0;
+      const step = Math.max(1, Math.floor(target / 30));
+      const interval = setInterval(() => {
+        n = Math.min(n + step, target);
+        el.textContent = n;
+        if (n >= target) clearInterval(interval);
+      }, 40);
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('.counter').forEach(el => counterObserver.observe(el));
+
+  // ── 3. 3D tilt on diagram ──
+  const diagram = document.querySelector('.dual-diagram');
+  if (diagram && !window.matchMedia('(max-width:700px)').matches) {
+    diagram.addEventListener('mousemove', (e) => {
+      const rect = diagram.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      diagram.style.transform = `perspective(800px) rotateY(${x * 6}deg) rotateX(${-y * 4}deg)`;
+    });
+    diagram.addEventListener('mouseleave', () => {
+      diagram.style.transform = 'perspective(800px) rotateY(0) rotateX(0)';
+    });
+  }
+
+  // ── 4. Nebula color shift on scroll ──
+  const nebulas = document.querySelectorAll('.nebula');
+  if (nebulas.length) {
+    window.addEventListener('scroll', () => {
+      const progress = Math.min(window.scrollY / (document.body.scrollHeight - window.innerHeight), 1);
+      const hueShift = Math.round(progress * 30);
+      const warmth = Math.round(progress * 15);
+      nebulas.forEach((n, i) => {
+        if (i === 0) n.style.filter = `blur(60px) hue-rotate(${hueShift}deg)`;
+        if (i === 1) n.style.filter = `blur(60px) hue-rotate(-${warmth}deg) saturate(${1 + progress * 0.5})`;
+        if (i === 2) n.style.filter = `blur(80px) hue-rotate(${hueShift + 10}deg)`;
+      });
     });
   }
 </script>
