@@ -126,3 +126,48 @@ This plan covers the release of Orbiter admin@0.3.64 and Desktop v0.2.0 features
 - [x] Docs link: https://orbiter.sh/docs/
 - [x] Vision link: https://orbiter.sh/vision
 - [x] Dual Render link: https://a83tech.com
+
+---
+
+## To-Do
+
+### Before posting
+
+- [ ] Record GIF: Calendar page — click prev/next, click a day, show sidebar (QuickTime → trim in Preview)
+- [ ] Record GIF: Vision page scroll — hero eclipse fades, roadmap scan glow, warp footer
+- [ ] Deploy landing page (vision + OG card live on orbiter.sh)
+- [ ] Verify OG card shows correctly: paste `https://github.com/aeon022/orbiter` in Twitter/LinkedIn preview
+- [ ] Create Dev.to account if not existing
+- [ ] Set up Dev.to series "Orbiter" for both articles
+- [ ] Prepare Hacker News account (karma check — need enough to post)
+
+### Campaign 1: Orbiter Features (Week 1)
+
+- [ ] Day 1 Mon AM: Post Twitter thread EN (`06-twitter-en.md`) + attach `02-calendar.png`, `01-dashboard.png`
+- [ ] Day 1 Mon PM: Post Threads EN (`08-threads-en.md`)
+- [ ] Day 2 Tue AM: Publish Dev.to article EN (`01-devto-en.md`) + embed screenshots
+- [ ] Day 2 Tue PM: Submit Hacker News (`03-hackernews.md`) — US afternoon timing
+- [ ] Day 3 Wed AM: Post LinkedIn EN (`04-linkedin-en.md`) + attach `01-dashboard.png`
+- [ ] Day 4 Thu AM: Post Twitter thread DE (`07-twitter-de.md`)
+- [ ] Day 4 Thu PM: Post Threads DE (`09-threads-de.md`)
+- [ ] Day 5 Fri AM: Publish Dev.to article DE (`02-devto-de.md`)
+- [ ] Day 5 Fri AM: Post LinkedIn DE (`05-linkedin-de.md`)
+
+### Campaign 2: Dual Render (Week 2)
+
+- [ ] Day 1 Mon AM: Post Twitter thread EN (`16-dual-render-twitter-en.md`) + attach `06-vision-diagram.png`
+- [ ] Day 1 Mon PM: Post Threads EN (`18-dual-render-threads-en.md`)
+- [ ] Day 2 Tue AM: Publish Dev.to article EN (`12-dual-render-devto-en.md`) + embed `05-vision-hero.png`, `06-vision-diagram.png`
+- [ ] Day 2 Tue PM: Submit Hacker News (`20-dual-render-hackernews.md`)
+- [ ] Day 3 Wed AM: Post LinkedIn EN (`14-dual-render-linkedin-en.md`) + attach `05-vision-hero.png`
+- [ ] Day 4 Thu AM: Post Twitter thread DE (`17-dual-render-twitter-de.md`)
+- [ ] Day 4 Thu PM: Post Threads DE (`19-dual-render-threads-de.md`)
+- [ ] Day 5 Fri AM: Publish Dev.to article DE (`13-dual-render-devto-de.md`)
+- [ ] Day 5 Fri AM: Post LinkedIn DE (`15-dual-render-linkedin-de.md`)
+
+### After posting
+
+- [ ] Monitor HN comments — respond within 1h if it gets traction
+- [ ] Cross-link: add Dev.to article URL to LinkedIn/Twitter posts as comment
+- [ ] Track: note which platform gets most engagement for next campaign
+- [ ] Respond to Dev.to comments within 24h
