@@ -1,9 +1,50 @@
+<style>
+  .warp-flash {
+    position: fixed; inset: 0; z-index: 9999;
+    background: radial-gradient(ellipse at 50% 50%, rgba(139,124,248,0.3), transparent 60%);
+    pointer-events: none;
+    opacity: 0;
+  }
+  .warp-flash.active {
+    animation: warp-flash-anim 0.6s ease-out forwards;
+  }
+  .warp-streaks {
+    position: fixed; inset: 0; z-index: 9998;
+    pointer-events: none; opacity: 0;
+    background:
+      repeating-linear-gradient(90deg, transparent 0%, transparent 48%, rgba(196,185,255,0.15) 49%, transparent 50%, transparent 100%),
+      repeating-linear-gradient(90deg, transparent 0%, transparent 45%, rgba(139,124,248,0.1) 46%, transparent 47%, transparent 100%);
+    background-size: 30px 100%;
+  }
+  .warp-streaks.active {
+    animation: warp-streak-anim 0.6s ease-out forwards;
+  }
+  @keyframes warp-flash-anim {
+    0% { opacity: 0; transform: scale(0.8); }
+    30% { opacity: 1; transform: scale(1.2); }
+    100% { opacity: 0; transform: scale(2); }
+  }
+  @keyframes warp-streak-anim {
+    0% { opacity: 0; transform: scaleX(0.5); }
+    20% { opacity: 1; transform: scaleX(1); }
+    100% { opacity: 0; transform: scaleX(3); }
+  }
+</style>
+
+<div class="warp-flash" id="warp-flash"></div>
+<div class="warp-streaks" id="warp-streaks"></div>
+
 <script>
-// Fade out before navigating to any local non-anchor page
-function navigateWithTransition(href: string) {
-  document.documentElement.classList.add('is-leaving');
-  // wait for CSS transition (0.22s) then navigate
-  setTimeout(() => { window.location.href = href; }, 230);
+function navigateWithTransition(href: string, isVision: boolean) {
+  if (isVision) {
+    document.getElementById('warp-flash')?.classList.add('active');
+    document.getElementById('warp-streaks')?.classList.add('active');
+    document.documentElement.classList.add('is-leaving');
+    setTimeout(() => { window.location.href = href; }, 500);
+  } else {
+    document.documentElement.classList.add('is-leaving');
+    setTimeout(() => { window.location.href = href; }, 230);
+  }
 }
 
 document.querySelectorAll<HTMLAnchorElement>('a[href]').forEach(a => {
@@ -18,7 +59,8 @@ document.querySelectorAll<HTMLAnchorElement>('a[href]').forEach(a => {
 
   a.addEventListener('click', e => {
     e.preventDefault();
-    navigateWithTransition(a.href);
+    const isVision = href.includes('/vision') || a.classList.contains('nav-vision');
+    navigateWithTransition(a.href, isVision);
   });
 });
 </script>

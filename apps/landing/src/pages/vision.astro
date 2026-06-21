@@ -445,6 +445,50 @@ import { ViewTransitions } from 'astro:transitions';
     .rm-tag.next { color: var(--accent); background: rgba(139,124,248,0.1); }
     .rm-tag.future { color: var(--muted); background: rgba(85,85,112,0.15); }
 
+    /* ── Back to top ── */
+    .btt {
+      position: fixed; bottom: 28px; right: 28px; z-index: 150;
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: rgba(7,7,15,0.7);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(139,124,248,0.2);
+      color: var(--accent);
+      font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      opacity: 0; transform: translateY(20px);
+      transition: opacity 0.3s, transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .btt.visible { opacity: 1; transform: translateY(0); pointer-events: all; }
+    .btt:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px rgba(139,124,248,0.3), 0 0 40px rgba(139,124,248,0.1);
+    }
+    .btt::before {
+      content: '';
+      position: absolute; inset: 0; border-radius: 50%;
+      padding: 1px;
+      background: conic-gradient(from var(--btt-angle, 0deg), transparent 60%, rgba(139,124,248,0.5) 70%, transparent 80%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      animation: btt-spin 4s linear infinite;
+    }
+    @property --btt-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+    @keyframes btt-spin { to { --btt-angle: 360deg; } }
+    .btt-pulse {
+      position: absolute; inset: -4px; border-radius: 50%;
+      border: 1px solid rgba(139,124,248,0.15);
+      animation: btt-pulse-anim 2s ease-in-out infinite;
+    }
+    @keyframes btt-pulse-anim {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.15); opacity: 0; }
+    }
+
     /* ── CTA ── */
     .vision-cta {
       text-align: center; padding: 120px 32px 80px;
@@ -854,6 +898,11 @@ import { ViewTransitions } from 'astro:transitions';
   </div>
 </footer>
 
+<button class="btt" id="btt" aria-label="Back to top" title="Back to top">
+  <div class="btt-pulse"></div>
+  ↑
+</button>
+
 <script>
   // Reveal observer — handles all animated elements
   const observer = new IntersectionObserver((entries) => {
@@ -976,6 +1025,17 @@ import { ViewTransitions } from 'astro:transitions';
   initStars();
   drawStars();
   window.addEventListener('resize', () => { resize(); initStars(); });
+
+  // Back to top button
+  const btt = document.getElementById('btt');
+  if (btt) {
+    window.addEventListener('scroll', () => {
+      btt.classList.toggle('visible', window.scrollY > window.innerHeight * 0.5);
+    });
+    btt.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
 </script>
 
 </body>
