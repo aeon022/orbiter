@@ -1067,20 +1067,19 @@ html[data-style="xfce"] body {
 }
 html[data-style="xfce"] .app {
   display: block !important;
-  min-height: 100dvh;
-  overflow-y: auto;
-  overflow-x: hidden;
+  height: auto !important;
+  overflow: visible !important;
 }
 html[data-style="xfce"] .topbar  { display: none !important; }
 html[data-style="xfce"] .sidebar { display: none !important; }
 
 html[data-style="xfce"] .main {
+  height: auto !important;
   min-height: 100dvh;
   box-sizing: border-box;
   padding-top:    calc(var(--sb-h) + 20px) !important;
   padding-bottom: calc(var(--dock-h) + 28px) !important;
-  overflow-y: auto;
-  overscroll-behavior-y: none;
+  overflow: visible !important;
 }
 /* Editor page: don't flex-column — editor-shell needs direct control */
 html[data-style="xfce"] .main:has(.editor-shell) {
