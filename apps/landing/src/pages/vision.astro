@@ -445,48 +445,111 @@ import { ViewTransitions } from 'astro:transitions';
     .rm-tag.next { color: var(--accent); background: rgba(139,124,248,0.1); }
     .rm-tag.future { color: var(--muted); background: rgba(85,85,112,0.15); }
 
-    /* ── Back to top ── */
+    /* ── HUD back link ── */
+    .hud-back {
+      position: fixed; top: 20px; left: 24px; z-index: 150;
+      display: flex; align-items: center; gap: 6px;
+      font-size: 10px; font-family: 'Inter', sans-serif;
+      letter-spacing: 0.08em; color: var(--muted);
+      text-decoration: none;
+      opacity: 0; transform: translateX(-10px);
+      transition: opacity 0.4s, transform 0.4s, color 0.2s;
+      pointer-events: none;
+    }
+    .hud-back.visible { opacity: 0.5; transform: translateX(0); pointer-events: all; }
+    .hud-back:hover { opacity: 1; color: var(--accent); }
+    .hud-back::before {
+      content: '←'; font-size: 13px;
+    }
+    .hud-back::after {
+      content: '';
+      position: absolute; left: -4px; top: -4px; bottom: -4px; right: -4px;
+      border: 1px solid rgba(139,124,248,0);
+      border-radius: 6px;
+      transition: border-color 0.2s;
+    }
+    .hud-back:hover::after { border-color: rgba(139,124,248,0.15); }
+
+    /* ── Back to top — warp jump ── */
     .btt {
       position: fixed; bottom: 28px; right: 28px; z-index: 150;
-      width: 44px; height: 44px;
+      width: 48px; height: 48px;
       border-radius: 50%;
-      background: rgba(7,7,15,0.7);
+      background: rgba(7,7,15,0.8);
       backdrop-filter: blur(16px);
-      border: 1px solid rgba(139,124,248,0.2);
+      border: none;
       color: var(--accent);
-      font-size: 18px;
+      font-size: 16px;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer;
-      opacity: 0; transform: translateY(20px);
-      transition: opacity 0.3s, transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+      opacity: 0; transform: translateY(20px) scale(0.8);
+      transition: opacity 0.3s, transform 0.3s;
       pointer-events: none;
-      overflow: hidden;
+      overflow: visible;
     }
-    .btt.visible { opacity: 1; transform: translateY(0); pointer-events: all; }
-    .btt:hover {
-      border-color: var(--accent);
-      box-shadow: 0 0 20px rgba(139,124,248,0.3), 0 0 40px rgba(139,124,248,0.1);
-    }
+    .btt.visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: all; }
     .btt::before {
       content: '';
-      position: absolute; inset: 0; border-radius: 50%;
-      padding: 1px;
-      background: conic-gradient(from var(--btt-angle, 0deg), transparent 60%, rgba(139,124,248,0.5) 70%, transparent 80%);
+      position: absolute; inset: -2px; border-radius: 50%;
+      padding: 2px;
+      background: conic-gradient(from var(--btt-angle, 0deg),
+        transparent 20%, rgba(139,124,248,0.2) 30%,
+        rgba(196,185,255,0.7) 50%,
+        rgba(139,124,248,0.2) 70%, transparent 80%
+      );
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       -webkit-mask-composite: xor;
       mask-composite: exclude;
-      animation: btt-spin 4s linear infinite;
+      animation: btt-spin 2.5s linear infinite;
+    }
+    .btt::after {
+      content: '';
+      position: absolute; inset: -8px; border-radius: 50%;
+      border: 1px solid rgba(139,124,248,0.1);
+      animation: btt-ring 2s ease-in-out infinite;
+    }
+    .btt:hover {
+      color: #fff;
+      box-shadow: 0 0 30px rgba(139,124,248,0.3), 0 0 60px rgba(139,124,248,0.1);
+    }
+    .btt:hover::after {
+      border-color: rgba(139,124,248,0.3);
+      box-shadow: 0 0 20px rgba(139,124,248,0.15);
     }
     @property --btt-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
     @keyframes btt-spin { to { --btt-angle: 360deg; } }
-    .btt-pulse {
-      position: absolute; inset: -4px; border-radius: 50%;
-      border: 1px solid rgba(139,124,248,0.15);
-      animation: btt-pulse-anim 2s ease-in-out infinite;
+    @keyframes btt-ring {
+      0%, 100% { transform: scale(1); opacity: 0.4; }
+      50% { transform: scale(1.2); opacity: 0; }
     }
-    @keyframes btt-pulse-anim {
-      0%, 100% { transform: scale(1); opacity: 0.5; }
-      50% { transform: scale(1.15); opacity: 0; }
+
+    /* Warp jump overlay */
+    .warp-jump {
+      position: fixed; inset: 0; z-index: 9999;
+      pointer-events: none; opacity: 0;
+    }
+    .warp-jump.active { animation: warp-jump-anim 0.7s ease-out forwards; }
+    .warp-jump-streaks {
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent 0%, transparent 46%,
+        rgba(196,185,255,0.2) 48%,
+        rgba(196,185,255,0.4) 50%,
+        rgba(196,185,255,0.2) 52%,
+        transparent 54%, transparent 100%
+      );
+      background-size: 100% 20px;
+    }
+    .warp-jump-flash {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(139,124,248,0.4) 0%, transparent 60%);
+    }
+    @keyframes warp-jump-anim {
+      0% { opacity: 0; }
+      15% { opacity: 1; }
+      40% { opacity: 1; }
+      100% { opacity: 0; }
     }
 
     /* ── CTA ── */
@@ -898,10 +961,14 @@ import { ViewTransitions } from 'astro:transitions';
   </div>
 </footer>
 
-<button class="btt" id="btt" aria-label="Back to top" title="Back to top">
-  <div class="btt-pulse"></div>
-  ↑
-</button>
+<a href="/" class="hud-back" id="hud-back">orbiter.sh</a>
+
+<button class="btt" id="btt" aria-label="Back to top" title="Back to top">↑</button>
+
+<div class="warp-jump" id="warp-jump">
+  <div class="warp-jump-streaks"></div>
+  <div class="warp-jump-flash"></div>
+</div>
 
 <script>
   // Reveal observer — handles all animated elements
@@ -1026,14 +1093,26 @@ import { ViewTransitions } from 'astro:transitions';
   drawStars();
   window.addEventListener('resize', () => { resize(); initStars(); });
 
-  // Back to top button
+  // Back to top + HUD back link
   const btt = document.getElementById('btt');
+  const hudBack = document.getElementById('hud-back');
+  const warpJump = document.getElementById('warp-jump');
   if (btt) {
     window.addEventListener('scroll', () => {
-      btt.classList.toggle('visible', window.scrollY > window.innerHeight * 0.5);
+      const past = window.scrollY > window.innerHeight * 0.5;
+      btt.classList.toggle('visible', past);
+      if (hudBack) hudBack.classList.toggle('visible', past);
     });
     btt.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (warpJump) {
+        warpJump.classList.add('active');
+        setTimeout(() => {
+          window.scrollTo({ top: 0, behavior: 'auto' });
+          setTimeout(() => warpJump.classList.remove('active'), 300);
+        }, 250);
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     });
   }
 </script>

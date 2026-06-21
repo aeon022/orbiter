@@ -283,25 +283,49 @@ nav {
   color: var(--accent) !important;
   padding: 5px 14px !important;
   border-radius: 99px;
-  background: rgba(139,124,248,0.06);
-  overflow: hidden;
+  background: rgba(139,124,248,0.08);
+  overflow: visible;
   z-index: 0;
+  box-shadow: 0 0 12px rgba(139,124,248,0.1);
+  animation: vision-breathe 3s ease-in-out infinite;
 }
 .nav-vision::before {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: -1px;
   border-radius: 99px;
-  padding: 1px;
-  background: conic-gradient(from var(--warp-angle, 0deg), transparent 40%, rgba(139,124,248,0.6) 50%, transparent 60%);
+  padding: 2px;
+  background: conic-gradient(from var(--warp-angle, 0deg),
+    transparent 25%, rgba(139,124,248,0.3) 35%,
+    rgba(196,185,255,0.8) 50%,
+    rgba(139,124,248,0.3) 65%, transparent 75%
+  );
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-  animation: warp-spin 3s linear infinite;
+  animation: warp-spin 2.5s linear infinite;
   z-index: -1;
 }
-.nav-vision:hover { color: var(--heading) !important; background: rgba(139,124,248,0.12); }
+.nav-vision::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 99px;
+  background: rgba(139,124,248,0.06);
+  filter: blur(8px);
+  z-index: -2;
+  animation: vision-breathe 3s ease-in-out infinite reverse;
+}
+.nav-vision:hover {
+  color: #fff !important;
+  background: rgba(139,124,248,0.2);
+  box-shadow: 0 0 24px rgba(139,124,248,0.25), 0 0 48px rgba(139,124,248,0.1);
+}
 @property --warp-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+@keyframes vision-breathe {
+  0%, 100% { box-shadow: 0 0 12px rgba(139,124,248,0.1); }
+  50% { box-shadow: 0 0 20px rgba(139,124,248,0.2), 0 0 40px rgba(139,124,248,0.06); }
+}
 @keyframes warp-spin { to { --warp-angle: 360deg; } }
 
 .nav-links a.nav-cta {
