@@ -605,26 +605,29 @@ import { ViewTransitions } from 'astro:transitions';
       .flow-arrow { transform: rotate(90deg); }
       .vision-nav { width: calc(100vw - 24px); padding: 12px 16px; top: 10px; border-radius: 12px; }
       .vision-nav-links { gap: 8px; }
-      .vision-h1 { font-size: 32px; }
-      .vision-sub { font-size: 15px; }
-      .dual-section, .roadmap-section { padding: 80px 20px; }
-      .planet-wrap { bottom: -30vh; width: 400vw; }
-      .planet-body, .planet-atmo, .planet-glow, .planet-glow-2, .planet-glow-warm { width: 400vw; }
-      .planet-horizon-line { bottom: calc(30vh + 10px); }
-      .planet-shimmer { bottom: calc(30vh + 8px); }
-      .planet-shimmer-2 { bottom: calc(30vh + 12px); }
-      .planet-flare { bottom: calc(30vh + 10px); width: 300px; }
-      .planet-flare-wide { bottom: calc(30vh + 20px); }
+      .vision-h1 { font-size: 28px; }
+      .vision-sub { font-size: 14px; max-width: 90vw; }
+      .dual-section, .roadmap-section { padding: 60px 16px; }
+      .planet-wrap { bottom: -200px; width: 300vw; height: 400px; }
+      .planet-body, .planet-atmo, .planet-glow, .planet-glow-2, .planet-glow-warm { width: 300vw; height: 400px; }
+      .planet-horizon-line { bottom: 210px; }
+      .planet-shimmer { bottom: 208px; }
+      .planet-shimmer-2 { bottom: 212px; }
+      .planet-flare { bottom: 210px; width: 250px; }
+      .planet-flare-wide { bottom: 220px; }
+      .warp-scene { min-height: 360px; }
     }
 
     /* Extra small — portrait phones */
     @media (max-width: 420px) {
-      .planet-wrap { bottom: -20vh; }
-      .planet-horizon-line { bottom: calc(20vh + 10px); }
-      .planet-shimmer { bottom: calc(20vh + 8px); }
-      .planet-shimmer-2 { bottom: calc(20vh + 12px); }
-      .planet-flare { bottom: calc(20vh + 10px); }
-      .planet-flare-wide { bottom: calc(20vh + 20px); }
+      .vision-h1 { font-size: 24px; }
+      .planet-wrap { bottom: -150px; height: 300px; }
+      .planet-body, .planet-atmo, .planet-glow, .planet-glow-2, .planet-glow-warm { height: 300px; }
+      .planet-horizon-line { bottom: 160px; }
+      .planet-shimmer { bottom: 158px; }
+      .planet-shimmer-2 { bottom: 162px; }
+      .planet-flare { bottom: 160px; width: 200px; }
+      .planet-flare-wide { bottom: 170px; }
       .vision-nav-links .btn-sm { display: none; }
     }
   </style>
