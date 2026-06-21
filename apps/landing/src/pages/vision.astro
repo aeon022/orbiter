@@ -95,7 +95,7 @@ import { ViewTransitions } from 'astro:transitions';
       0% { opacity: 1; }
       100% { opacity: 0; }
     }
-    .planet-scene { animation: planet-rise 2s ease-out 0.5s both; }
+    .planet-scene { animation: planet-rise 2s ease-out 0.5s forwards; }
     @keyframes planet-rise {
       from { transform: translateY(100px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
@@ -125,6 +125,7 @@ import { ViewTransitions } from 'astro:transitions';
         0 -5px 150px 25px rgba(139,124,248,0.35),
         0 -3px 300px 80px rgba(139,124,248,0.15),
         0 0 500px 150px rgba(100,80,220,0.07);
+      animation: atmo-breathe 8s ease-in-out infinite;
     }
     .planet-glow {
       position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
@@ -134,15 +135,15 @@ import { ViewTransitions } from 'astro:transitions';
         0 -1px 80px 15px rgba(196,185,255,0.5),
         0 -1px 30px 5px rgba(196,185,255,0.7),
         0 -1px 8px 2px rgba(230,225,255,0.8);
-      animation: atmo-pulse 5s ease-in-out infinite;
+      animation: atmo-pulse 4s ease-in-out infinite;
     }
     .planet-glow-2 {
       position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
       width: 250vw; height: 160vh;
       border-radius: 50%;
       box-shadow:
-        0 -2px 120px 30px rgba(139,124,248,0.2),
-        0 -1px 60px 15px rgba(196,185,255,0.15);
+        0 -2px 120px 30px rgba(139,124,248,0.25),
+        0 -1px 60px 15px rgba(196,185,255,0.2);
       animation: atmo-pulse 3s ease-in-out infinite 1s;
     }
     .planet-glow-warm {
@@ -150,9 +151,33 @@ import { ViewTransitions } from 'astro:transitions';
       width: 250vw; height: 160vh;
       border-radius: 50%;
       box-shadow:
-        0 -2px 120px 20px rgba(230,168,23,0.1),
-        0 -1px 60px 8px rgba(230,168,23,0.07);
+        0 -2px 120px 20px rgba(230,168,23,0.12),
+        0 -1px 60px 8px rgba(230,168,23,0.08);
       animation: atmo-pulse 7s ease-in-out infinite reverse;
+    }
+    /* Aurora wandering light on the horizon */
+    .planet-aurora {
+      position: absolute; bottom: calc(110vh + 5px); left: 0; right: 0; height: 40px;
+      background: linear-gradient(90deg,
+        transparent, rgba(139,124,248,0) 10%,
+        rgba(100,200,255,0.08), rgba(139,124,248,0.12), rgba(180,120,255,0.1),
+        rgba(230,168,23,0.06), rgba(139,124,248,0.1),
+        rgba(139,124,248,0) 90%, transparent
+      );
+      background-size: 300% 100%;
+      animation: aurora-drift 12s ease-in-out infinite alternate;
+      filter: blur(8px);
+    }
+    .planet-aurora-2 {
+      position: absolute; bottom: calc(110vh + 15px); left: 0; right: 0; height: 25px;
+      background: linear-gradient(90deg,
+        transparent, rgba(196,185,255,0) 15%,
+        rgba(230,168,23,0.06), rgba(196,185,255,0.08), rgba(100,180,255,0.05),
+        rgba(196,185,255,0) 85%, transparent
+      );
+      background-size: 250% 100%;
+      animation: aurora-drift 8s ease-in-out infinite alternate-reverse;
+      filter: blur(6px);
     }
     .planet-horizon-line {
       position: absolute; bottom: calc(110vh + 10px); left: 0; right: 0; height: 3px;
@@ -167,6 +192,7 @@ import { ViewTransitions } from 'astro:transitions';
         rgba(100,80,220,0.15) 88%,
         transparent 98%
       );
+      animation: horizon-glow 6s ease-in-out infinite;
     }
     .planet-flare {
       position: absolute; bottom: calc(110vh + 10px); left: 50%; transform: translateX(-50%);
@@ -174,10 +200,38 @@ import { ViewTransitions } from 'astro:transitions';
       background: radial-gradient(ellipse, rgba(196,185,255,0.25) 0%, rgba(139,124,248,0.1) 35%, transparent 70%);
       animation: flare-breathe 4s ease-in-out infinite;
     }
+    .planet-flare-spot {
+      position: absolute; bottom: calc(110vh + 20px); left: 35%;
+      width: 200px; height: 80px;
+      background: radial-gradient(ellipse, rgba(230,168,23,0.08) 0%, transparent 70%);
+      animation: flare-wander 10s ease-in-out infinite alternate;
+    }
+    .planet-flare-spot-2 {
+      position: absolute; bottom: calc(110vh + 15px); left: 60%;
+      width: 150px; height: 60px;
+      background: radial-gradient(ellipse, rgba(100,180,255,0.06) 0%, transparent 70%);
+      animation: flare-wander 14s ease-in-out infinite alternate-reverse;
+    }
     .planet-flare-wide {
       position: absolute; bottom: calc(110vh + 20px); left: 50%; transform: translateX(-50%);
       width: 100vw; height: 60px;
       background: linear-gradient(0deg, rgba(139,124,248,0.1), transparent);
+    }
+    @keyframes aurora-drift {
+      from { background-position: 0% 0; }
+      to { background-position: 100% 0; }
+    }
+    @keyframes horizon-glow {
+      0%, 100% { opacity: 0.8; filter: brightness(1); }
+      50% { opacity: 1; filter: brightness(1.3); }
+    }
+    @keyframes flare-wander {
+      from { transform: translateX(0); opacity: 0.6; }
+      to { transform: translateX(60px); opacity: 1; }
+    }
+    @keyframes atmo-breathe {
+      0%, 100% { box-shadow: 0 -5px 150px 25px rgba(139,124,248,0.35), 0 -3px 300px 80px rgba(139,124,248,0.15), 0 0 500px 150px rgba(100,80,220,0.07); }
+      50% { box-shadow: 0 -8px 180px 30px rgba(139,124,248,0.45), 0 -4px 350px 90px rgba(139,124,248,0.2), 0 0 550px 170px rgba(100,80,220,0.1); }
     }
     .planet-shimmer {
       position: absolute; bottom: calc(110vh + 8px); left: 0; right: 0; height: 8px;
@@ -230,21 +284,21 @@ import { ViewTransitions } from 'astro:transitions';
       pointer-events: none; z-index: 0;
     }
     .nebula-1 {
-      width: 800px; height: 800px; top: -300px; left: -300px;
-      background: radial-gradient(circle, rgba(108,92,231,0.12) 0%, transparent 65%);
+      width: 900px; height: 900px; top: -300px; left: -300px;
+      background: radial-gradient(circle, rgba(108,92,231,0.18) 0%, transparent 65%);
       filter: blur(60px);
       animation: neb-drift-1 25s ease-in-out infinite alternate;
     }
     .nebula-2 {
-      width: 600px; height: 600px; bottom: 10%; right: -250px;
-      background: radial-gradient(circle, rgba(230,168,23,0.06) 0%, transparent 65%);
-      filter: blur(60px);
+      width: 700px; height: 700px; bottom: 10%; right: -250px;
+      background: radial-gradient(circle, rgba(230,168,23,0.12) 0%, transparent 65%);
+      filter: blur(50px); opacity: 0.4;
       animation: neb-drift-2 30s ease-in-out infinite alternate;
     }
     .nebula-3 {
-      width: 500px; height: 500px; top: 45%; left: 35%;
-      background: radial-gradient(circle, rgba(139,124,248,0.06) 0%, transparent 65%);
-      filter: blur(80px);
+      width: 600px; height: 600px; top: 45%; left: 35%;
+      background: radial-gradient(circle, rgba(139,124,248,0.1) 0%, transparent 65%);
+      filter: blur(70px); opacity: 0.5;
       animation: neb-drift-3 20s ease-in-out infinite alternate;
     }
     .nebula { transition: filter 0.5s ease; }
@@ -765,10 +819,14 @@ import { ViewTransitions } from 'astro:transitions';
     <div class="planet-glow"></div>
     <div class="planet-glow-2"></div>
     <div class="planet-glow-warm"></div>
+    <div class="planet-aurora"></div>
+    <div class="planet-aurora-2"></div>
     <div class="planet-horizon-line"></div>
     <div class="planet-shimmer"></div>
     <div class="planet-shimmer-2"></div>
     <div class="planet-flare"></div>
+    <div class="planet-flare-spot"></div>
+    <div class="planet-flare-spot-2"></div>
     <div class="planet-flare-wide"></div>
     <div class="planet-body"></div>
   </div>
@@ -976,19 +1034,25 @@ import { ViewTransitions } from 'astro:transitions';
   <div class="warp-jump-flash"></div>
 </div>
 
-<script>
+<script is:inline>
   // Reveal observer — handles all animated elements
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
   }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
   document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale, .rm-item').forEach(el => observer.observe(el));
 
-  // Remove page curtain after animation
+  // Remove page curtain + clear planet animation after intro
   const curtain = document.querySelector('.page-curtain');
   if (curtain) setTimeout(() => curtain.remove(), 2000);
 
   // Scroll parallax
   const planetScene = document.getElementById('planet-scene');
+  // Clear CSS animation so JS can control transform/opacity
+  if (planetScene) {
+    planetScene.addEventListener('animationend', () => {
+      planetScene.style.animation = 'none';
+    });
+  }
   const lightBeam = document.getElementById('light-beam');
   const lightBeamGlow = document.getElementById('light-beam-glow');
   const nav = document.querySelector('.vision-nav');
@@ -1170,25 +1234,25 @@ import { ViewTransitions } from 'astro:transitions';
     });
   }
 
-  // ── 4. Nebula color shift + opacity on scroll ──
+  // ── 4. Nebula color shift on scroll — lila→gold ──
   const nebulas = document.querySelectorAll('.nebula');
   if (nebulas.length) {
+    let nebTicking = false;
     window.addEventListener('scroll', () => {
-      const progress = Math.min(window.scrollY / (document.body.scrollHeight - window.innerHeight), 1);
-      const hueShift = Math.round(progress * 60);
-      nebulas.forEach((n, i) => {
-        if (i === 0) {
-          n.style.filter = `blur(60px) hue-rotate(${hueShift}deg)`;
-          n.style.opacity = 1 - progress * 0.3;
-        }
-        if (i === 1) {
-          n.style.filter = `blur(60px) hue-rotate(-${Math.round(progress * 30)}deg) saturate(${1 + progress})`;
-          n.style.opacity = 0.5 + progress * 0.8;
-        }
-        if (i === 2) {
-          n.style.filter = `blur(80px) hue-rotate(${hueShift + 20}deg)`;
-          n.style.opacity = 0.6 + progress * 0.5;
-        }
+      if (nebTicking) return;
+      nebTicking = true;
+      requestAnimationFrame(() => {
+        const progress = Math.min(window.scrollY / (document.body.scrollHeight - window.innerHeight), 1);
+        // Nebula 1 (top-left, purple): rotate towards warm, fade slightly
+        nebulas[0].style.filter = 'blur(60px) hue-rotate(' + Math.round(progress * 90) + 'deg) brightness(' + (1 + progress * 0.5) + ')';
+        // Nebula 2 (bottom-right, gold): grow brighter and more saturated
+        nebulas[1].style.filter = 'blur(50px) saturate(' + (1 + progress * 2) + ') brightness(' + (1 + progress * 0.8) + ')';
+        nebulas[1].style.opacity = 0.4 + progress * 0.8;
+        // Nebula 3 (center, accent): shift hue + scale up
+        nebulas[2].style.filter = 'blur(70px) hue-rotate(' + Math.round(progress * 120) + 'deg) brightness(' + (1 + progress * 0.3) + ')';
+        nebulas[2].style.opacity = 0.5 + progress * 0.6;
+        nebulas[2].style.transform = 'translate(' + (30 - progress * 60) + 'px, ' + (-25 + progress * 50) + 'px) scale(' + (1.1 + progress * 0.3) + ')';
+        nebTicking = false;
       });
     });
   }
