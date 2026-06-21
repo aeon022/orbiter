@@ -1067,14 +1067,15 @@ html[data-style="xfce"] body {
 }
 html[data-style="xfce"] .app {
   display: block !important;
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 html[data-style="xfce"] .topbar  { display: none !important; }
 html[data-style="xfce"] .sidebar { display: none !important; }
 
 html[data-style="xfce"] .main {
-  height: 100dvh;
+  min-height: 100dvh;
   box-sizing: border-box;
   padding-top:    calc(var(--sb-h) + 20px) !important;
   padding-bottom: calc(var(--dock-h) + 28px) !important;
