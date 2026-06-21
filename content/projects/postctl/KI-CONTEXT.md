@@ -302,6 +302,21 @@ CREATE TABLE auth_tokens (
 - Build Tags + Cross-Compilation
 - Goreleaser für Releases
 
+### Phase 6: Future Features
+- `postctl generate` — AI-generierte Posts aus URL/Artikel
+- `postctl repurpose` — Post für andere Plattformen konvertieren
+- `postctl analytics` — Engagement-Daten von APIs holen
+- `postctl template` — vorgefertigte Post-Strukturen
+- License-Key-System für Pro-Features
+
+## Projekt
+
+```
+Repository: ~/Developing/Projects/postctl
+Module:     github.com/aeon022/postctl
+License:    MIT (Core), proprietary (Pro Features)
+```
+
 ## Befehle
 
 ```bash
@@ -333,6 +348,12 @@ postctl auth --status              # Alle Verbindungen prüfen
 # Kampagne posten
 postctl campaign post orbiter-v0365 --dry-run
 postctl campaign list
+
+# Future (v2)
+postctl generate https://dev.to/my-article
+postctl repurpose <id> --to twitter,linkedin
+postctl analytics --days 7
+postctl template launch
 ```
 
 ## Config (`~/.config/postctl/config.yaml`)
@@ -378,21 +399,38 @@ db_path: "~/.config/postctl/postctl.db"
 - Meta Developer Account (für Threads)
 - Terminal mit 256-Color Support (für TUI)
 
-## Abgrenzung
+## Abgrenzung (v1)
 
-- Kein Web-UI — rein Terminal-basiert
+- Kein Web-UI — rein Terminal-basiert (Cloud ist v2+ / Future)
 - Kein eigener Content-Editor — Markdown ist der Editor
-- Kein Analytics-Dashboard — Plattform-eigene Analytics nutzen
-- Kein Team-Feature — Single-User Tool
+- Kein Team-Feature — Single-User Tool (Team ist Pro)
 - Kein Image-Generator — Bilder werden extern erstellt
+
+## USP — was postctl abhebt
+
+- **Terminal-native** — passt in den Dev-Workflow, nicht Browser-Tab #47
+- **Markdown-first** — Posts leben im Repo, versioniert, diffbar
+- **AI-ready** — Claude/GPT können `postctl post <id>` direkt aufrufen
+- **Single Binary** — `go install`, fertig. Kein Docker, Node, Python
+- **Offline-first** — Posts schreiben ohne Internet, posten wenn online
+- **Ökosystem** — Teil des Orbiter Content-Loops (Create → Distribute → Learn)
+
+## Monetarisierung
+
+| Tier | Preis | Features |
+|------|-------|----------|
+| **Core** (OSS) | gratis | Import, Post, Schedule, TUI, alle Plattformen |
+| **Pro** | $9/mo oder $79/yr | Analytics, AI-Optimierung, Team-Mode |
+| **Kurs** | $49-79 einmalig | "Build a CLI in Go" Video-Serie basierend auf postctl |
 
 ## Nächste Schritte
 
-1. `go mod init github.com/aeon022/postctl`
-2. Cobra Setup mit Root + Import Command
-3. Markdown Parser für unser Post-Format
-4. SQLite Store
-5. TUI Grundgerüst (Dashboard)
-6. Twitter OAuth + Posting
-7. LinkedIn + Threads
-8. Scheduler
+1. Repo erstellen: `~/Developing/Projects/postctl`
+2. `go mod init github.com/aeon022/postctl`
+3. Cobra Setup mit Root + Import Command
+4. Markdown Parser für unser Post-Format
+5. SQLite Store
+6. TUI Grundgerüst (Dashboard)
+7. Twitter OAuth + Posting
+8. LinkedIn + Threads
+9. Scheduler

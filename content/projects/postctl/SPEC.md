@@ -256,8 +256,6 @@ POST https://graph.threads.net/v1.0/<user_id>/threads_publish
 - No web dashboard
 - No multi-user / team features
 - No built-in image generation
-- No analytics/engagement tracking
-- No content calendar view (use postctl TUI schedule tab instead)
 - No automatic cross-posting (explicit per platform)
 
 ## Success Metrics
@@ -267,3 +265,90 @@ POST https://graph.threads.net/v1.0/<user_id>/threads_publish
 - TUI renders at 60fps on standard terminal
 - Single binary, <20MB, no runtime dependencies
 - Works on macOS, Linux, Windows
+
+---
+
+## Future Features (v2+)
+
+### `postctl generate`
+AI generiert Posts aus einer URL oder einem Markdown-Artikel.
+- Input: URL, Markdown-Datei, oder freier Text
+- Output: Thread-Draft + LinkedIn-Post + Threads-Post als Markdown
+- Nutzt Claude API, OpenAI API, oder Ollama (lokal)
+- User reviewt und editiert vor dem Posten
+
+### `postctl repurpose`
+Nimmt einen bestehenden Post und konvertiert ihn für andere Plattformen.
+- Dev.to Artikel → Twitter Thread + LinkedIn + Threads
+- Twitter Thread → LinkedIn Langpost
+- Passt Länge, Ton, Hashtags automatisch an
+
+### `postctl analytics`
+Engagement-Daten von den APIs nach dem Posten holen.
+- Likes, Retweets, Impressions (Twitter)
+- Reactions, Comments (LinkedIn)
+- Beste Posting-Zeiten ermitteln
+- Terminal-Dashboard mit Sparklines
+
+### `postctl template`
+Vorgefertigte Post-Strukturen.
+- `postctl template launch` — Product Launch Announcement
+- `postctl template feature` — Feature Update Thread
+- `postctl template thought` — Thought Leadership Post
+- Generiert Markdown-Datei mit Platzhaltern
+
+---
+
+## Monetarisierung
+
+### postctl (Open Source, gratis)
+Das CLI-Tool ist MIT-lizenziert. Baut Reputation und Community.
+
+### postctl pro ($9/Monat oder $79/Jahr)
+Premium-Features als bezahlte Erweiterung:
+- **Analytics-Dashboard** — Engagement pro Post, beste Posting-Zeiten, Wachstum über Zeit
+- **AI-Optimierung** — Claude/GPT rewritet Posts für maximale Reichweite (A/B-Vorschläge)
+- **Team-Mode** — mehrere Leute posten unter einem Account, Approval-Workflow
+- **Priority Support** — GitHub Issues mit SLA
+- Implementierung: License Key in `~/.config/postctl/config.yaml`, Feature-Gates im Code
+
+### postctl cloud (Future — $19/Monat)
+Gehostete Version für Nicht-Entwickler.
+- Web-UI statt Terminal
+- Managed Scheduling (kein eigener Rechner muss laufen)
+- Status: niedrige Priorität, nur wenn Nachfrage da ist
+
+### Go Tutorial als Kurs ($49-79 einmalig)
+Das Tutorial das wir parallel schreiben wird zum bezahlten Produkt:
+- "Build a real CLI tool in Go" — Video-Serie
+- postctl als Projekt-Basis, 7 Phasen
+- Plattform: eigene Seite, Udemy, oder Lemon Squeezy
+- Gratis-Teaser: erste 2 Phasen als Blog-Posts auf Dev.to
+
+---
+
+## Ökosystem-Vision
+
+postctl ist Teil eines Content-Loops:
+
+```
+Orbiter (Create) → postctl (Distribute) → Analytics (Learn) → Orbiter (Improve)
+```
+
+1. Content in Orbiter schreiben (Blog Posts, Pages)
+2. Posts als Markdown exportieren / generieren
+3. postctl verteilt auf Twitter, LinkedIn, Threads
+4. Analytics zeigt was funktioniert
+5. Insights fließen in nächsten Content-Zyklus
+
+Langfristig: `orbiter export --to-postctl` als Integration.
+
+---
+
+## Projekt-Setup
+
+```
+Repository: ~/Developing/Projects/postctl
+Module:     github.com/aeon022/postctl
+License:    MIT
+```

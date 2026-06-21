@@ -2,6 +2,20 @@
 
 Dieses Tutorial führt dich durch Go anhand des postctl-Projekts. Jede Phase baut ein Feature und lehrt neue Go-Konzepte.
 
+## Kurs-Konzept
+
+Dieses Tutorial wird parallel zum Projekt geschrieben und kann als bezahlter Kurs veröffentlicht werden:
+
+- **Format**: Video-Serie (Screen Recording + Voiceover) + geschriebenes Tutorial
+- **Titel**: "Build a real CLI tool in Go — from zero to production"
+- **Zielgruppe**: Entwickler die Go lernen wollen anhand eines echten Projekts
+- **Teaser**: Phase 1 + 2 gratis als Blog-Posts auf Dev.to (Traffic + Leads)
+- **Vollversion**: Phase 3-7 als bezahlter Kurs ($49-79)
+- **Plattform**: eigene Seite (Lemon Squeezy) oder Udemy
+- **Sprachen**: Deutsch (primär) + Englisch
+
+Jede Phase endet mit einer **Challenge** — einer Aufgabe die der Lerner selbst löst bevor er die Lösung sieht.
+
 ---
 
 ## Voraussetzungen
