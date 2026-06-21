@@ -1555,17 +1555,18 @@ html[data-style="xfce"] .hero.glass-card::before {
 html[data-style="xfce"] .main:has(.stats-row) {
   display: grid !important;
   grid-template-columns: 1fr 160px;
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto auto auto auto;
   grid-template-areas:
     "hero  stats"
     "cal   stats"
-    "dash  dash";
+    "dash  dash"
+    "ws    ws";
 }
 html[data-style="xfce"] .hero.glass-card       { grid-area: hero; }
 html[data-style="xfce"] .stats-row.glass-card   { grid-area: stats; align-self: stretch; }
 html[data-style="xfce"] .cal-strip.glass-card   { grid-area: cal; }
 html[data-style="xfce"] .dash-content.glass-card { grid-area: dash; }
-html[data-style="xfce"] .workspace.glass-card   { display: none !important; }
+html[data-style="xfce"] .workspace.glass-card   { grid-area: ws; }
 
 /* Calendar strip: prominent in xfce */
 html[data-style="xfce"] .cal-strip.glass-card {
