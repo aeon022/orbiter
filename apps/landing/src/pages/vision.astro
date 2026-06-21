@@ -1002,14 +1002,15 @@ import { ViewTransitions } from 'astro:transitions';
         // Nav appears after hero
         if (nav) nav.classList.toggle('visible', scrollY > vh * 0.6);
 
-        // Planet sinks and fades — slow parallax
+        // Planet sinks and fades — smooth parallax
         if (planetScene) {
-          const progress = Math.min(scrollY / (vh * 2), 1);
-          const translateY = progress * vh * 0.5;
-          const scale = 1 - progress * 0.15;
-          const finalOpacity = Math.max(1 - progress * 1.1, 0);
+          const progress = Math.min(scrollY / (vh * 1.5), 1);
+          const translateY = progress * vh * 0.6;
+          const scale = 1 - progress * 0.12;
+          const finalOpacity = Math.max(1 - progress * 1.5, 0);
           planetScene.style.transform = `translateY(${translateY}px) scale(${scale})`;
           planetScene.style.opacity = finalOpacity;
+          planetScene.style.visibility = finalOpacity <= 0 ? 'hidden' : 'visible';
         }
 
         // Vertical light beam grows from top
