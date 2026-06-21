@@ -28,6 +28,14 @@
       .settings-grid { grid-template-columns: 1fr; }
     }
 
+    /* Toggle switch */
+    .toggle { position:relative; display:inline-block; width:36px; height:20px; flex-shrink:0; cursor:pointer; }
+    .toggle input { opacity:0; width:0; height:0; }
+    .toggle-slider { position:absolute; inset:0; background:var(--line); border-radius:10px; transition:background 0.2s; }
+    .toggle-slider::before { content:''; position:absolute; width:16px; height:16px; left:2px; bottom:2px; background:var(--bg0); border-radius:50%; transition:transform 0.2s; }
+    .toggle input:checked + .toggle-slider { background:var(--accent); }
+    .toggle input:checked + .toggle-slider::before { transform:translateX(16px); }
+
     /* Card — einheitliches bg2, eine Farbe, kein Alternieren */
     .settings-group {
       background: var(--bg2);
@@ -350,6 +358,25 @@
         </div>
 
         <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="settings-group">
+          <div class="group-header">Dashboard widgets</div>
+          <div class="setting-row">
+            <div><div class="setting-label">Calendar</div><div class="setting-desc">Mini calendar + upcoming entries</div></div>
+            <label class="toggle"><input type="checkbox" name="dashboard.show_calendar" ${get('dashboard.show_calendar')!=='0'?'checked':''} /><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Recently edited</div><div class="setting-desc">Latest entries across all collections</div></div>
+            <label class="toggle"><input type="checkbox" name="dashboard.show_recent" ${get('dashboard.show_recent')!=='0'?'checked':''} /><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Collections</div><div class="setting-desc">Collection cards with publish stats</div></div>
+            <label class="toggle"><input type="checkbox" name="dashboard.show_collections" ${get('dashboard.show_collections')!=='0'?'checked':''} /><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Notes &amp; To-Do</div><div class="setting-desc">Workspace panels (hidden in Station mode)</div></div>
+            <label class="toggle"><input type="checkbox" name="dashboard.show_workspace" ${get('dashboard.show_workspace')!=='0'?'checked':''} /><span class="toggle-slider"></span></label>
+          </div>
+        </div>
         <div class="settings-group">
           <div class="group-header">Build</div>
           <div class="setting-row">
@@ -822,6 +849,10 @@
         ['ftp.remote_path', fd.get('ftp.remote_path')],
         ['ftp.local_path',  fd.get('ftp.local_path')],
         ['ftp.auto_deploy', fd.get('ftp.auto_deploy') ? '1' : '0'],
+        ['dashboard.show_calendar',    fd.get('dashboard.show_calendar') ? '1' : '0'],
+        ['dashboard.show_recent',      fd.get('dashboard.show_recent') ? '1' : '0'],
+        ['dashboard.show_collections', fd.get('dashboard.show_collections') ? '1' : '0'],
+        ['dashboard.show_workspace',   fd.get('dashboard.show_workspace') ? '1' : '0'],
       ]);
       showBanner('site-banner','banner-ok','Settings saved');
     });

@@ -364,6 +364,18 @@
       });
     }
 
+    // Dashboard widget visibility from settings
+    const showCalendar    = meta['dashboard.show_calendar'] !== '0';
+    const showRecent      = meta['dashboard.show_recent'] !== '0';
+    const showCollections = meta['dashboard.show_collections'] !== '0';
+    const showWorkspace   = meta['dashboard.show_workspace'] !== '0';
+
+    if (!showCalendar) document.getElementById('cal-strip').style.display = 'none';
+    if (!showRecent) document.querySelector('.content-main').style.display = 'none';
+    if (!showCollections) document.querySelector('.content-side').style.display = 'none';
+    if (!showRecent && !showCollections) document.querySelector('.dash-content').style.display = 'none';
+    if (!showWorkspace) document.querySelector('.workspace')?.style.setProperty('display', 'none', 'important');
+
     // Stats — fetch published counts per collection
     const topLevel = collections.filter(c => !c.parent);
     const collStats = await Promise.all(topLevel.map(async col => {
@@ -430,7 +442,7 @@
     }
 
     // ── Calendar strip ────────────────────────────────────────────────
-    {
+    if (showCalendar) {
       const calEntries = await fetch('/api/search/calendar', { credentials: 'include' }).then(r => r.json()).catch(() => []);
 
       // Build events: scheduled, expiring, and recently edited
