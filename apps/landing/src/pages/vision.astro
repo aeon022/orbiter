@@ -442,6 +442,66 @@ import { ViewTransitions } from 'astro:transitions';
     .flow-node.gold { border-color: var(--gold); background: rgba(230,168,23,0.06); color: var(--gold); }
     .flow-arrow { color: var(--muted); font-size: 18px; }
 
+    /* ── Research Platform ── */
+    .research-section { padding: 120px 32px; max-width: 1000px; margin: 0 auto; position: relative; z-index: 1; }
+
+    .depth-model {
+      display: grid; grid-template-columns: 1fr; gap: 0;
+      border: 1px solid var(--line); border-radius: 16px;
+      overflow: hidden; margin: 48px 0 64px;
+      background: rgba(14,14,26,0.6);
+      backdrop-filter: blur(12px);
+    }
+    .depth-row {
+      display: grid; grid-template-columns: 80px 1fr 1fr;
+      border-bottom: 1px solid var(--line);
+      transition: background 0.2s;
+    }
+    .depth-row:last-child { border-bottom: none; }
+    .depth-row:hover { background: rgba(139,124,248,0.04); }
+    .depth-num {
+      padding: 20px 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 600;
+      border-right: 1px solid var(--line);
+    }
+    .depth-num.d0 { color: var(--jade); }
+    .depth-num.d1 { color: var(--accent); }
+    .depth-num.d2 { color: var(--gold); }
+    .depth-num.d3 { color: var(--muted); }
+    .depth-info {
+      padding: 20px 24px;
+      border-right: 1px solid var(--line);
+    }
+    .depth-label { font-size: 14px; font-weight: 600; color: var(--heading); margin-bottom: 4px; }
+    .depth-desc { font-size: 12px; color: var(--text); line-height: 1.5; }
+    .depth-audience {
+      padding: 20px 24px;
+      display: flex; align-items: center;
+      font-size: 12px; color: var(--muted);
+    }
+
+    .research-features {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+      margin-top: 48px;
+    }
+    .research-card {
+      padding: 28px;
+      border: 1px solid var(--line); border-radius: 12px;
+      background: rgba(14,14,26,0.5);
+      backdrop-filter: blur(8px);
+    }
+    .research-card-icon { font-size: 22px; margin-bottom: 12px; opacity: 0.7; }
+    .research-card-title { font-size: 15px; font-weight: 600; color: var(--heading); margin-bottom: 8px; }
+    .research-card-desc { font-size: 13px; color: var(--text); line-height: 1.6; }
+
+    @media (max-width: 700px) {
+      .research-section { padding: 60px 16px; }
+      .depth-row { grid-template-columns: 50px 1fr; }
+      .depth-audience { display: none; }
+      .research-features { grid-template-columns: 1fr; }
+    }
+
     /* ── Roadmap ── */
     .roadmap-section { padding: 120px 32px; max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
 
@@ -914,10 +974,77 @@ import { ViewTransitions } from 'astro:transitions';
   </p>
 </section>
 
+<!-- Research Platform -->
+<section class="research-section">
+  <div class="dual-label reveal">Research Tool</div>
+  <h2 class="dual-h2 reveal reveal-d1">Orbiter as a<br />Research Platform</h2>
+  <p class="dual-body reveal reveal-d2">The Dossier template turns Orbiter into a structured research tool. 39 fields organized in collapsible groups — Content, Research, Evidence, Meta, Provenance, Agent — capture everything from narrative body text to machine-readable claims and APA7 sources. Dual Render makes it real: the same dossier serves humans a readable story and gives AI agents structured data.</p>
+
+  <div class="dual-label reveal">The Depth Model</div>
+
+  <div class="depth-model reveal-scale">
+    <div class="depth-row">
+      <div class="depth-num d0">0</div>
+      <div class="depth-info">
+        <div class="depth-label">Narrative</div>
+        <div class="depth-desc">Body text, title, summary — the human-readable story. What you'd read on a webpage.</div>
+      </div>
+      <div class="depth-audience">Humans, browsers, social cards</div>
+    </div>
+    <div class="depth-row">
+      <div class="depth-num d1">1</div>
+      <div class="depth-info">
+        <div class="depth-label">Research</div>
+        <div class="depth-desc">Structured claims, hypotheses, methodology, key findings — the analytical layer behind the narrative.</div>
+      </div>
+      <div class="depth-audience">Researchers, reviewers, collaborators</div>
+    </div>
+    <div class="depth-row">
+      <div class="depth-num d2">2</div>
+      <div class="depth-info">
+        <div class="depth-label">Evidence</div>
+        <div class="depth-desc">APA7 sources, datasets, confidence scores, contradictions — the verifiable foundation.</div>
+      </div>
+      <div class="depth-audience">Fact-checkers, citation managers, RAG pipelines</div>
+    </div>
+    <div class="depth-row">
+      <div class="depth-num d3">3</div>
+      <div class="depth-info">
+        <div class="depth-label">Machine Mode</div>
+        <div class="depth-desc">Machine summary, processing notes, provenance chain — structured data for AI agents to ingest directly.</div>
+      </div>
+      <div class="depth-audience">AI agents, <code>/llms.txt</code>, RAG systems</div>
+    </div>
+  </div>
+
+  <div class="research-features">
+    <div class="research-card reveal">
+      <div class="research-card-icon">◫</div>
+      <div class="research-card-title">Field Groups</div>
+      <div class="research-card-desc">Complex schemas collapse into manageable sections. First two groups auto-open; the rest expand on click. Works on any collection — not just dossiers.</div>
+    </div>
+    <div class="research-card reveal reveal-d1">
+      <div class="research-card-icon">📖</div>
+      <div class="research-card-title">APA7 Citations</div>
+      <div class="research-card-desc">Table fields with <code>format: 'apa7'</code> render formatted citations in real time. Book, article, chapter, report, website — all standard academic formats.</div>
+    </div>
+    <div class="research-card reveal reveal-d2">
+      <div class="research-card-icon">⇄</div>
+      <div class="research-card-title">Template System</div>
+      <div class="research-card-desc">Export and import research schemas as JSON. Share dossier templates across teams. Install built-in templates into any existing POD with one click.</div>
+    </div>
+    <div class="research-card reveal reveal-d3">
+      <div class="research-card-icon">◈</div>
+      <div class="research-card-title">Dual Render Ready</div>
+      <div class="research-card-desc">Dossiers serve humans the narrative body and AI agents the structured claims, machine summary, and source data — from a single entry, zero duplication.</div>
+    </div>
+  </div>
+</section>
+
 <!-- Roadmap -->
 <section class="roadmap-section">
   <div class="dual-label reveal">Roadmap</div>
-  <h2 class="dual-h2 reveal reveal-d1"><span class="counter" data-target="22" style="font-weight:500;color:var(--accent)">0</span> features shipped.<br />Where we're going.</h2>
+  <h2 class="dual-h2 reveal reveal-d1"><span class="counter" data-target="26" style="font-weight:500;color:var(--accent)">0</span> features shipped.<br />Where we're going.</h2>
 
   <div class="roadmap-track" id="roadmap-track" style="margin-top:48px;">
     <div class="roadmap-track-energy" id="track-energy"></div>
@@ -928,7 +1055,7 @@ import { ViewTransitions } from 'astro:transitions';
       <div class="rm-phase">Phase 01–12 · Complete</div>
       <div class="rm-title">Foundation → Launch Pad</div>
       <div class="rm-desc">Core DB, admin UI, block editor, media library, auth, themes, CLI, i18n, scheduled publishing, FTP deploy, desktop app, Station dock mode, file &amp; table fields, calendar view, cross-pod copy.</div>
-      <span class="rm-tag done"><span class="counter" data-target="22">0</span> features shipped</span>
+      <span class="rm-tag done"><span class="counter" data-target="26">0</span> features shipped</span>
     </div>
 
     <div class="rm-item reveal">
@@ -940,11 +1067,27 @@ import { ViewTransitions } from 'astro:transitions';
     </div>
 
     <div class="rm-item reveal">
-      <div class="rm-dot next">→</div>
-      <div class="rm-phase">Next</div>
+      <div class="rm-dot done">✓</div>
+      <div class="rm-phase">Phase 15 · Complete</div>
       <div class="rm-title">Form Builder UI</div>
       <div class="rm-desc">Visual form builder — drag fields, set validation, configure email templates. Generates the HTML snippet for your Astro page. The form inbox already exists; this completes the loop.</div>
-      <span class="rm-tag next">~1-2 days</span>
+      <span class="rm-tag done">shipped</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot done">✓</div>
+      <div class="rm-phase">Phase 15 · Complete</div>
+      <div class="rm-title">Dossier Template & Research Platform</div>
+      <div class="rm-desc">39-field dossier template with field groups, APA7 citation system, and nav grouping. Collapsible editor sections, live citation previews, dock drawers with hover popups. The Depth Model: structured research content from narrative to machine mode.</div>
+      <span class="rm-tag done">shipped</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot done">✓</div>
+      <div class="rm-phase">Phase 15 · Complete</div>
+      <div class="rm-title">Template Import/Export</div>
+      <div class="rm-desc">Export collections as shareable JSON, import template files, install built-in templates into any existing POD. Settings UI with template buttons and export/import controls.</div>
+      <span class="rm-tag done">shipped</span>
     </div>
 
     <div class="rm-item reveal">
@@ -956,11 +1099,11 @@ import { ViewTransitions } from 'astro:transitions';
     </div>
 
     <div class="rm-item reveal">
-      <div class="rm-dot next">→</div>
-      <div class="rm-phase">Next</div>
+      <div class="rm-dot done">✓</div>
+      <div class="rm-phase">Phase 15 · Complete</div>
       <div class="rm-title">AI Content Assistant</div>
       <div class="rm-desc">Summarize, translate, generate SEO text, adjust tone — directly in the block editor via <code>/ai</code>. Supports Ollama (local, free) or OpenAI/Anthropic API keys. No cloud required.</div>
-      <span class="rm-tag next">~2-3 days</span>
+      <span class="rm-tag done">shipped</span>
     </div>
 
     <div class="rm-item reveal">

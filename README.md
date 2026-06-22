@@ -208,10 +208,11 @@ On first launch, Orbiter asks whether to open an existing `.pod` or create a new
 | Template | Collections | Demo content |
 |----------|-------------|--------------|
 | Blank | — | — |
-| Blog | Posts, Categories | 2 posts (1 published, 1 draft) |
-| Portfolio | Projects, Categories | 2 projects + 2 categories |
+| Blog | Posts, Post-Kategorien | 2 posts (1 published, 1 draft) |
+| Portfolio | Projects, Projekt-Kategorien | 2 projects + 2 categories |
 | Business | Pages, Services, Team | 2 pages, 2 services, 1 team member |
-| Events | Events, Categories | 2 events + 2 categories |
+| Events | Events, Event-Kategorien | 2 events + 2 categories |
+| Dossier | Dossiers | 1 pilot dossier (39 fields in 6 groups: Content, Research, Evidence, Meta, Provenance, Agent) |
 
 Every template sets up an `admin / admin` user so you can log in immediately. Change the password in Account settings.
 
@@ -504,6 +505,12 @@ Relation fields are resolved at build time — the raw UUID array is replaced wi
 
   // conditional visibility:
   showWhen: 'category:event',   // show only when `category` equals `event`
+
+  // field grouping (editor sidebar):
+  group: 'Research',            // collapsible group header in the editor
+
+  // table format:
+  format: 'apa7',              // APA7 citation preview below the table
 }
 ```
 
@@ -520,7 +527,7 @@ const fileUrl = `/api/media/${entry.data.brochure}/raw`;
 <a href={fileUrl}>Download PDF</a>
 ```
 
-**`table`** — stored as `string[][]`. First row is the header:
+**`table`** — stored as `string[][]`. First row is the header. Table fields with `format: 'apa7'` render an APA7-formatted citation preview below the table (supports book, article, chapter, report, website):
 
 ```astro
 ---
@@ -780,6 +787,21 @@ Three themes × two schemes (dark/light) × two layouts, switchable in Settings:
 | **Catppuccin** | Mocha | Latte |
 
 **Layouts:** Classic (sidebar + content grid) or **Station** (Space Station mode — floating magnification dock, HUD panel with stats/notes, frosted glass page headers). Layout and theme saved to `localStorage`.
+
+### Editor field groups
+Schema fields with a `group` property are rendered as collapsible sections in the editor sidebar. First two groups and groups containing APA7 fields auto-expand. Collections without groups render flat as before — fully backward compatible.
+
+### APA7 citation preview
+Table fields with `format: 'apa7'` display a formatted citation list below the table. Default headers: Author, Year, Title, Source, URL, Type. Supports book, article, chapter, report, and website formats. Preview updates live on every keystroke.
+
+### Template import/export
+Export collections as shareable JSON templates (`POST /api/templates/export`). Import template JSON files (`POST /api/templates/import`). List built-in templates with install status (`GET /api/templates/available`). Install a built-in template into an existing POD (`POST /api/templates/install/:id`). Settings UI with template buttons, export checkboxes, and import file picker. Automatic `nav.groups` configuration on template install.
+
+### Navigation grouping & dock drawers
+Collections support `nav.hidden` (hide from sidebar/dock) and `nav.groups` (group into drawer sections) meta keys. Sidebar renders collapsible nav groups with hover-to-peek. Dock in Station mode shows hexagon drawer items with triangle indicator; hover opens a popup with collection links and preview cards. Settings UI: per-collection visibility toggle and group assignment.
+
+### AI Content Assistant
+`/ai` slash command and toolbar button in the block editor. Summarize, translate, generate SEO text, adjust tone. Supports Ollama (local, free) or OpenAI/Anthropic API keys. Configurable in Settings → AI. Preset pills for common tasks. No cloud lock-in.
 
 ### PWA
 The admin is installable as a Progressive Web App on mobile and desktop. Service worker caches assets, offline page shown when disconnected.
@@ -1052,6 +1074,21 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 
 ## Changelog
 
+### June 2026 · admin@0.3.68 — Dossier template, field groups, APA7 citations, template system, nav grouping
+
+- **Dossier POD template** — new "Dossier" template alongside Blog, Portfolio, Business, Events. Creates a `dossiers` collection with 39 fields organized in 6 groups (Content, Research, Evidence, Meta, Provenance, Agent). Includes a demo "Pilot-Dossier" entry. Available in the Desktop app "New POD" dialog and via the template install system.
+- **Editor sidebar field groups** — schema fields with a `group` property render as collapsible sections in the editor sidebar. First two groups and groups with APA7 fields auto-expand. Backward compatible — collections without groups render flat as before.
+- **APA7 citation system** — table fields with `format: 'apa7'` display APA7-formatted citation previews below the table. Default headers: Author, Year, Title, Source, URL, Type. Supports book, article, chapter, report, website formats. Live preview updates on every keystroke.
+- **Template import/export system** — `POST /api/templates/export` (export collections as shareable JSON), `POST /api/templates/import` (import template files), `GET /api/templates/available` (list built-in templates with install status), `POST /api/templates/install/:id` (install into existing POD). Settings UI with built-in template buttons, export checkboxes, import file picker. Auto `nav.groups` configuration on template install.
+- **Navigation grouping & dock drawers** — `nav.hidden` and `nav.groups` meta keys. Sidebar: collapsible nav groups with hover-to-peek. Dock (Station mode): hexagon drawer items with triangle indicator, hover popup with collection links and preview cards. Active state + breadcrumb update on SPA navigation. Settings UI: per-collection visibility toggle + group assignment.
+- **Named categories with parent/child** — templates create named category collections (`post_categories`, `project_categories`, `event_categories`) with parent relationship instead of a generic `categories` collection.
+- **AI Content Assistant** — `/ai` slash command + toolbar button in the block editor. Summarize, translate, generate SEO text, adjust tone. Supports Ollama (local, free) or OpenAI/Anthropic API keys. Preset pills for common tasks. Configurable in Settings → AI.
+- **Keyboard navigation updates** — 1-9 keys cover all dock items including drawers. g-mode extended with dynamic collection shortcuts (first unused letter). Cheatsheet updated.
+- **Dashboard collections panel** — matches height of "Recently edited", scrolls independently.
+- **Dock visual updates** — 22px icons, .88 opacity, calendar icon (☰), hexagon drawer icon with triangle indicator (pulses on hover), darker labels.
+
+---
+
 ### June 2026 · admin@0.3.66 · Desktop v0.2.2 — Simple Analytics, OG image picker, dashboard toggles
 
 - **Simple Analytics** — privacy-friendly pageview tracking stored in the POD. No cookies, no fingerprinting, <500 bytes tracking script. Bot detection for GPTBot, ClaudeBot, Perplexity, etc. Admin page with daily chart, top pages, referrers, and human vs. agent traffic split. `POST/GET /api/hit` (public) + `GET /api/analytics` (auth). Period filter: 7d/30d/90d.
@@ -1272,16 +1309,17 @@ The block editor gains full rich-media embedding:
 | 12 | Launch Pad | ✅ Done — file upload field, table field, desktop auto-update, universal macOS DMG |
 | 13 | Observatory | ✅ Done — calendar view, cross-pod import/export, nodemailer security fix |
 | 14 | Signal | ✅ Done — Simple Analytics, OG image picker, dashboard widget toggles, keyboard nav |
+| 15 | Beacon | ✅ Done — Form Builder UI, AI Content Assistant, Dossier template, template import/export, field groups, APA7 citations, nav grouping & dock drawers |
 
 ### Next up
 
 | Priority | Feature | Notes |
 |----------|---------|-------|
 | 1 | **Windows app menu** | Test and fix menu behavior on Windows (builds work, untested on real Windows) |
-| 2 | **Form Builder UI** | Visual form builder — drag fields, set validation, generate HTML snippet |
-| 3 | **Multi-POD Dashboard** | Manage multiple PODs from one desktop window |
-| 4 | **AI Content Assistant** | `/ai` slash command — summarize, translate, SEO text (Ollama or API key) |
-| 5 | **Dashboard Drag & Drop** | Reorder widgets, custom layouts stored in POD |
+| 2 | **Multi-POD Dashboard** | Manage multiple PODs from one desktop window |
+| 3 | **Dashboard Drag & Drop** | Reorder widgets, custom layouts stored in POD |
+| 4 | **Dual Render — llms.txt** | Auto-generate structured content map at `/llms.txt` during every Astro build |
+| 5 | **Dual Render — Semantic Depth Fields** | New field types for marking content depth layers (surface/deep/machine) |
 | 6 | **SvelteKit integration** | `@a83/orbiter-sveltekit` — same virtual module API as the Astro integration |
 
 ### v0.3.47 — released
