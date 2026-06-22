@@ -1145,7 +1145,8 @@
           ['nav.hidden', [...navHiddenSet].join(',')],
           ['nav.groups', Object.keys(cleanGroups).length ? JSON.stringify(cleanGroups) : ''],
         ]);
-        showBanner('site-banner', 'banner-ok', 'Navigation settings saved — reload to see changes');
+        showBanner('site-banner', 'banner-ok', 'Navigation saved — reloading…');
+        setTimeout(() => location.reload(), 600);
       });
     }
 

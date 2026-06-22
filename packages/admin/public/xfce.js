@@ -1317,7 +1317,7 @@
     dockInner.appendChild(el('div', 'xfce-dock-sep'));
 
     // Tools popup button
-    var toolsActive = TOOLS.some(function (t) { return t.key === page; });
+    var toolsActive = TOOLS.some(function (t) { return t.key !== 'settings' && t.key === page; });
     var toolsBtn = makeDockItem('⚒', 'Tools', null, toolsActive, true);
     toolsBtn.id = 'xfce-tools-btn';
     toolsBtn.addEventListener('click', function (e) {
