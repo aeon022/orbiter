@@ -1268,10 +1268,10 @@ html[data-style="xfce"] .editor-shell {
   font-size: 8px;
   letter-spacing: .05em;
   margin-top: 3px;
-  color: var(--mid);
+  color: var(--text);
   white-space: nowrap;
   transition: color .12s, opacity .12s;
-  opacity: .48;
+  opacity: .7;
 }
 .xfce-dock-item:hover .xfce-dock-lbl {
   opacity: 1;
