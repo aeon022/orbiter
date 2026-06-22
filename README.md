@@ -797,6 +797,17 @@ Table fields with `format: 'apa7'` display a formatted citation list below the t
 ### Template import/export
 Export collections as shareable JSON templates (`POST /api/templates/export`). Import template JSON files (`POST /api/templates/import`). List built-in templates with install status (`GET /api/templates/available`). Install a built-in template into an existing POD (`POST /api/templates/install/:id`). Settings UI with template buttons, export checkboxes, and import file picker. Automatic `nav.groups` configuration on template install.
 
+**Installing a template is always additive, never destructive.** If a collection already exists, it is skipped — no data, schema, or entries are overwritten. Only missing collections are created.
+
+To update a schema without losing entries, use **Schema → Import Schema** — this overwrites only the field definitions while all entries remain intact. Deleting a collection removes all its entries permanently.
+
+| Action | Schema | Entries |
+|--------|--------|---------|
+| Install template (collection doesn't exist) | ✅ created | ✅ demo entries |
+| Install template (collection exists) | ⏭ skipped | ⏭ skipped |
+| Import schema (↑ Import Schema) | 🔄 overwritten | ✅ preserved |
+| Delete collection + reinstall | ✅ created | ❌ **lost** |
+
 ### Navigation grouping & dock drawers
 Collections support `nav.hidden` (hide from sidebar/dock) and `nav.groups` (group into drawer sections) meta keys. Sidebar renders collapsible nav groups with hover-to-peek. Dock in Station mode shows hexagon drawer items with triangle indicator; hover opens a popup with collection links and preview cards. Settings UI: per-collection visibility toggle and group assignment.
 
