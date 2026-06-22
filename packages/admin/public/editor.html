@@ -188,6 +188,29 @@
     .v-time { font-size:9px; color:var(--muted); }
 
     /* Block picker */
+    /* AI assistant panel — floating */
+    .ai-panel { position:fixed; z-index:9998; top:50%; left:50%; transform:translate(-50%,-50%); width:600px; max-width:calc(100vw - 32px); background:var(--bg2); border:1px solid var(--line); box-shadow:0 8px 40px rgba(0,0,0,.3); display:none; font-family:var(--mono); border-radius:12px; overflow:hidden; }
+    .ai-panel.open { display:block; }
+    .ai-panel-header { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-bottom:1px solid var(--line); }
+    .ai-panel-title { font-size:11px; color:var(--accent); letter-spacing:.08em; display:flex; align-items:center; gap:6px; }
+    .ai-panel-close { background:none; border:1px solid var(--line); color:var(--muted); font-size:10px; padding:3px 8px; cursor:pointer; border-radius:var(--radius); }
+    .ai-panel-close:hover { color:var(--text); border-color:var(--mid); }
+    .ai-panel-body { padding:12px 16px; display:flex; gap:8px; }
+    .ai-prompt { flex:1; background:var(--bg0); border:1px solid var(--line); border-radius:var(--radius); padding:8px 12px; color:var(--text); font-family:var(--mono); font-size:12px; outline:none; resize:none; min-height:36px; max-height:120px; }
+    .ai-prompt:focus { border-color:var(--accent); }
+    .ai-send { padding:8px 16px; background:var(--accent); border:none; color:#fff; font-family:var(--mono); font-size:10px; cursor:pointer; border-radius:var(--radius); letter-spacing:.06em; white-space:nowrap; }
+    .ai-send:hover { filter:brightness(1.1); }
+    .ai-send:disabled { opacity:.5; cursor:not-allowed; }
+    .ai-presets { display:flex; gap:4px; padding:0 16px 10px; flex-wrap:wrap; }
+    .ai-preset { padding:4px 10px; background:var(--bg0); border:1px solid var(--line); color:var(--muted); font-size:9px; cursor:pointer; border-radius:12px; transition:all .12s; }
+    .ai-preset:hover { border-color:var(--accent); color:var(--accent); }
+    .ai-result { padding:0 16px 12px; font-size:12px; color:var(--text); line-height:1.6; max-height:200px; overflow-y:auto; }
+    .ai-result .ai-loading { color:var(--muted); font-size:11px; }
+    .ai-actions { display:flex; gap:6px; padding:0 16px 12px; }
+    .ai-act-btn { padding:5px 12px; border:1px solid var(--line); background:transparent; color:var(--muted); font-family:var(--mono); font-size:9px; cursor:pointer; border-radius:var(--radius); }
+    .ai-act-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .ai-act-btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+
     .block-picker { position:fixed; z-index:9999; width:220px; background:var(--bg2); border:1px solid var(--line); box-shadow:0 4px 16px rgba(0,0,0,.12); border-radius:2px; overflow:hidden; display:none; font-family:var(--mono); }
     .bp-header { padding:7px 12px; border-bottom:1px solid var(--line); font-size:10px; color:var(--muted); letter-spacing:.06em; }
     .bp-list { max-height:240px; overflow-y:auto; }
@@ -471,6 +494,8 @@
             <button type="button" class="tool-btn" onclick="openFilePicker()" title="Insert file / PDF download link">
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="display:block"><path d="M3.5 1.5h4l3 3V11a.5.5 0 01-.5.5h-6.5a.5.5 0 01-.5-.5V2a.5.5 0 01.5-.5z" stroke="currentColor" stroke-width="1.1"/><path d="M7.5 1.5V4.5H10.5" stroke="currentColor" stroke-width="1.1"/><line x1="5" y1="7" x2="8.5" y2="7" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><line x1="5" y1="9" x2="8.5" y2="9" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>
             </button>
+            <div class="tool-sep"></div>
+            <button type="button" class="tool-btn" onclick="openAiPanel()" title="AI Assistant (✦)" style="color:var(--accent)">✦</button>
           </div>
         </div>
         <div id="locale-bar" class="locale-bar" style="display:none">
@@ -507,6 +532,33 @@
       <div class="meta-panel" id="meta-panel">
         <!-- filled by JS -->
       </div>
+    </div>
+  </div>
+
+  <div class="ai-panel" id="ai-panel">
+    <div class="ai-panel-header">
+      <div class="ai-panel-title">✦ AI Assistant</div>
+      <button class="ai-panel-close" onclick="closeAiPanel()">✕ close</button>
+    </div>
+    <div class="ai-presets">
+      <button class="ai-preset" data-prompt="Rewrite this text to be more concise">Shorten</button>
+      <button class="ai-preset" data-prompt="Make this more professional and formal">Professional</button>
+      <button class="ai-preset" data-prompt="Make this more casual and friendly">Casual</button>
+      <button class="ai-preset" data-prompt="Fix grammar and spelling">Fix grammar</button>
+      <button class="ai-preset" data-prompt="Translate to German">→ Deutsch</button>
+      <button class="ai-preset" data-prompt="Translate to English">→ English</button>
+      <button class="ai-preset" data-prompt="Summarize this in 2-3 sentences">Summarize</button>
+      <button class="ai-preset" data-prompt="Write SEO meta description (max 160 chars)">SEO desc</button>
+    </div>
+    <div class="ai-panel-body">
+      <textarea class="ai-prompt" id="ai-prompt" placeholder="Ask AI anything… or select a preset above" rows="1"></textarea>
+      <button class="ai-send" id="ai-send" onclick="sendAiRequest()">Generate</button>
+    </div>
+    <div class="ai-result" id="ai-result"></div>
+    <div class="ai-actions" id="ai-actions" style="display:none">
+      <button class="ai-act-btn primary" onclick="aiInsert()">Insert</button>
+      <button class="ai-act-btn" onclick="aiReplace()">Replace selection</button>
+      <button class="ai-act-btn" onclick="aiRetry()">Retry</button>
     </div>
   </div>
 
@@ -1793,6 +1845,7 @@
       {label:'Divider',    icon:'—',   hint:'hr',  type:'hr'},
       {label:'Image',      icon:'⊡',   hint:'img', type:'image'},
       {label:'Video',      icon:'▶',   hint:'vid', type:'video'},
+      {label:'AI Assistant',icon:'✦',   hint:'ai',  type:'ai'},
     ];
     let bpOpen=false, bpIdx=0, bpQuery='', bpTargetBlock=null;
     const bpEl=document.getElementById('block-picker');
@@ -1831,6 +1884,9 @@
     function bpInsert(relIdx) {
       const items=bpFiltered(); const blk=items[relIdx];
       if (!blk||!bpTargetBlock) { bpClose(); return; }
+      if (blk.type==='ai') {
+        bpTargetBlock.innerHTML=''; bpClose(); openAiPanel(bpTargetBlock); return;
+      }
       if (blk.type==='image') {
         pickerAnchor = bpTargetBlock;
         bpTargetBlock.innerHTML=''; bpClose(); openImgPicker(); return;
@@ -2287,6 +2343,104 @@
       if (tbl.rows[0] && tbl.rows[0].cells.length > 1) Array.from(tbl.rows).forEach(tr=>tr.deleteCell(-1));
       tblSync(key);
     };
+
+    // ── AI Assistant ────────────────────────────────────────────────
+    let _aiAnchor = null;
+    let _aiLastResult = '';
+
+    window.openAiPanel = function(anchor) {
+      _aiAnchor = anchor || getFocusedBlock();
+      document.getElementById('ai-panel').classList.add('open');
+      const promptEl = document.getElementById('ai-prompt');
+      promptEl.value = '';
+      promptEl.focus();
+      document.getElementById('ai-result').innerHTML = '';
+      document.getElementById('ai-actions').style.display = 'none';
+    };
+
+    window.closeAiPanel = function() {
+      document.getElementById('ai-panel').classList.remove('open');
+      _aiAnchor = null;
+    };
+
+    window.sendAiRequest = async function() {
+      const promptEl = document.getElementById('ai-prompt');
+      const prompt = promptEl.value.trim();
+      if (!prompt) return;
+
+      const resultEl = document.getElementById('ai-result');
+      const sendBtn = document.getElementById('ai-send');
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Thinking…';
+      resultEl.innerHTML = '<div class="ai-loading">✦ Generating…</div>';
+      document.getElementById('ai-actions').style.display = 'none';
+
+      // Gather context: selected text or current block text
+      const sel = window.getSelection();
+      let context = '';
+      if (sel && !sel.isCollapsed && beEditor.contains(sel.anchorNode)) {
+        context = sel.toString();
+      } else if (_aiAnchor) {
+        context = _aiAnchor.textContent || '';
+      }
+
+      try {
+        const res = await fetch('/api/ai/generate', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, context }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'AI request failed');
+
+        _aiLastResult = data.text;
+        resultEl.textContent = data.text;
+        document.getElementById('ai-actions').style.display = 'flex';
+      } catch (e) {
+        resultEl.innerHTML = '<div style="color:var(--gold)">' + escHtml(e.message) + '</div>';
+      }
+
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Generate';
+    };
+
+    window.aiInsert = function() {
+      if (!_aiLastResult) return;
+      const block = _aiAnchor || getFocusedBlock();
+      if (block) {
+        const newBlock = createBlock('p', _aiLastResult);
+        block.after(newBlock);
+      }
+      closeAiPanel();
+    };
+
+    window.aiReplace = function() {
+      if (!_aiLastResult) return;
+      const block = _aiAnchor || getFocusedBlock();
+      if (block) {
+        block.textContent = _aiLastResult;
+      }
+      closeAiPanel();
+    };
+
+    window.aiRetry = function() {
+      document.getElementById('ai-actions').style.display = 'none';
+      sendAiRequest();
+    };
+
+    // Preset buttons
+    document.querySelectorAll('.ai-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('ai-prompt').value = btn.dataset.prompt;
+        sendAiRequest();
+      });
+    });
+
+    // Enter to send (shift+enter for newline)
+    document.getElementById('ai-prompt').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAiRequest(); }
+      if (e.key === 'Escape') closeAiPanel();
+    });
 
     // ── Init ──────────────────────────────────────────────────────────
     renderMetaPanel();

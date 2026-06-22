@@ -15,6 +15,7 @@ const ALLOWED_KEYS = [
   'dashboard.notes', 'dashboard.todos',
   'dashboard.show_calendar', 'dashboard.show_recent', 'dashboard.show_collections', 'dashboard.show_workspace',
   'analytics.enabled',
+  'ai.provider', 'ai.model', 'ai.api_key', 'ai.ollama_url',
   'ui.theme',
   'format_version',
   'email.smtp_host', 'email.smtp_port', 'email.smtp_user', 'email.smtp_pass',

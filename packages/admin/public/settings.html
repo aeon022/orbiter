@@ -280,7 +280,7 @@
       </div>
     </nav>
     <main class="main">
-      <div class="page-header glass-card" style="display:flex;align-items:center;justify-content:space-between;">
+      <div class="page-header glass-card" style="display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;">
         <h1 class="page-title">Settings</h1>
         <button type="submit" form="site-form" class="btn-save" id="header-save-btn">Save settings</button>
       </div>
@@ -375,6 +375,30 @@
           <div class="setting-row">
             <div><div class="setting-label">Notes &amp; To-Do</div><div class="setting-desc">Workspace panels (hidden in Station mode)</div></div>
             <label class="toggle"><input type="checkbox" name="dashboard.show_workspace" ${get('dashboard.show_workspace')!=='0'?'checked':''} /><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+        <div class="settings-group">
+          <div class="group-header">AI Assistant</div>
+          <div class="setting-row">
+            <div><div class="setting-label">Provider</div><div class="setting-desc">Ollama (local, free), Anthropic, or OpenAI</div></div>
+            <select class="input" name="ai.provider" style="appearance:auto">
+              <option value="ollama" ${get('ai.provider')==='ollama'||!get('ai.provider')?'selected':''}>Ollama (local)</option>
+              <option value="anthropic" ${get('ai.provider')==='anthropic'?'selected':''}>Anthropic (Claude)</option>
+              <option value="openai" ${get('ai.provider')==='openai'?'selected':''}>OpenAI (GPT)</option>
+              <option value="gemini" ${get('ai.provider')==='gemini'?'selected':''}>Google Gemini</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Model</div><div class="setting-desc">Leave empty for default</div></div>
+            <input class="input" name="ai.model" value="${get('ai.model')}" placeholder="llama3.2 / claude-sonnet-4-20250514 / gpt-4o-mini / gemini-2.5-flash" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">API Key</div><div class="setting-desc">Required for Anthropic/OpenAI. Not needed for Ollama.</div></div>
+            <input class="input" name="ai.api_key" type="password" value="${get('ai.api_key')}" placeholder="sk-..." />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Ollama URL</div><div class="setting-desc">Default: http://localhost:11434</div></div>
+            <input class="input" name="ai.ollama_url" value="${get('ai.ollama_url')}" placeholder="http://localhost:11434" />
           </div>
         </div>
         <div class="settings-group">
@@ -849,6 +873,10 @@
         ['ftp.remote_path', fd.get('ftp.remote_path')],
         ['ftp.local_path',  fd.get('ftp.local_path')],
         ['ftp.auto_deploy', fd.get('ftp.auto_deploy') ? '1' : '0'],
+        ['ai.provider',    fd.get('ai.provider') || 'ollama'],
+        ['ai.model',       fd.get('ai.model') || ''],
+        ['ai.api_key',     fd.get('ai.api_key') || ''],
+        ['ai.ollama_url',  fd.get('ai.ollama_url') || ''],
         ['dashboard.show_calendar',    fd.get('dashboard.show_calendar') ? '1' : '0'],
         ['dashboard.show_recent',      fd.get('dashboard.show_recent') ? '1' : '0'],
         ['dashboard.show_collections', fd.get('dashboard.show_collections') ? '1' : '0'],
