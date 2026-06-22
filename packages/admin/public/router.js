@@ -27,7 +27,7 @@
     var pg = target.pathname.split('/').pop().replace('.html', '');
 
     // Update classic sidebar + xfce dock/HUD link items
-    document.querySelectorAll('.nav-item, a.xfce-dock-item, a.xfce-hud-nav-item, a.xfce-tools-item').forEach(function (a) {
+    document.querySelectorAll('.nav-item, .nav-group-body a, a.xfce-dock-item, a.xfce-hud-nav-item, a.xfce-tools-item').forEach(function (a) {
       var raw = a.getAttribute('href');
       if (!raw) return;
       var itemUrl;
@@ -45,6 +45,43 @@
     var toolsBtn = document.getElementById('xfce-tools-btn');
     if (toolsBtn) {
       toolsBtn.classList.toggle('active', ['schema', 'build', 'import'].indexOf(pg) !== -1);
+    }
+
+    // xfce drawer buttons — active if any child <a> in their popup matches
+    var col = target.searchParams.get('col') || target.searchParams.get('collection') || '';
+    document.querySelectorAll('.xfce-drawer-popup').forEach(function (popup) {
+      var links = popup.querySelectorAll('a.xfce-tools-item');
+      var hasActive = false;
+      links.forEach(function (a) {
+        try {
+          var u = new URL(a.getAttribute('href'), location.origin);
+          var linkCol = u.searchParams.get('col') || u.searchParams.get('collection') || '';
+          if (linkCol && linkCol === col) { hasActive = true; a.classList.add('active'); }
+          else a.classList.remove('active');
+        } catch (e) {}
+      });
+      if (popup._drawerBtn) popup._drawerBtn.classList.toggle('active', hasActive);
+    });
+
+    // xfce status bar breadcrumb
+    var sbTitle = document.getElementById('xfce-sb-title');
+    if (sbTitle && col && (pg === 'entries' || pg === 'editor')) {
+      var colLabel = col;
+      document.querySelectorAll('.xfce-drawer-popup a.xfce-tools-item, #xfce-dock-cols a.xfce-dock-item').forEach(function (a) {
+        try {
+          var u = new URL(a.getAttribute('href'), location.origin);
+          if ((u.searchParams.get('col') || u.searchParams.get('collection')) === col) {
+            colLabel = a.textContent.replace(/^\w{2}/, '').replace(/\d+.*$/, '').trim() || col;
+          }
+        } catch (e) {}
+      });
+      var crumbPage = pg === 'editor' ? 'Editor' : 'Entries';
+      sbTitle.innerHTML = '<a href="/entries.html?col=' + encodeURIComponent(col) + '" class="xfce-sb-crumb-link">' + colLabel + '</a>'
+        + '<span class="xfce-sb-crumb-sep"> › </span>'
+        + '<span class="xfce-sb-crumb-page">' + crumbPage + '</span>';
+    } else if (sbTitle && pg !== 'entries' && pg !== 'editor') {
+      var pageTitle = document.title.replace(/\s*—\s*Orbiter.*$/, '').trim();
+      if (pageTitle) sbTitle.textContent = pageTitle;
     }
   }
 

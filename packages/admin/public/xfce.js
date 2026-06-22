@@ -12,7 +12,7 @@
 
   var NAV = [
     { icon: '⬡', label: 'Dashboard', href: '/dashboard.html', key: 'dashboard' },
-    { icon: '▤', label: 'Calendar',  href: '/calendar.html',  key: 'calendar' },
+    { icon: '☰', label: 'Calendar',  href: '/calendar.html',  key: 'calendar' },
     { icon: '◫', label: 'Media',     href: '/media.html',     key: 'media' },
     { icon: '⊛', label: 'Users',     href: '/users.html',     key: 'users' },
   ];
@@ -38,6 +38,7 @@
     return { icon: n.icon, label: n.label, href: n.href, group: n.key in { schema:1, build:1, import:1, settings:1 } ? 'Tools' : 'Nav' };
   });
   var _termCols   = []; // collection metadata for palette commands
+  var _activeDrawerTimer = null;
   var _palRecents = []; // prefetched recent entries for empty palette
 
   // ── Helpers ───────────────────────────────────────────────────────────
@@ -266,8 +267,18 @@
   function buildPreview() {
     _previewEl = el('div', 'xfce-col-preview');
     _previewEl.id = 'xfce-col-preview';
-    _previewEl.addEventListener('mouseenter', function () { clearTimeout(_previewTimer); });
-    _previewEl.addEventListener('mouseleave', function () { _previewTimer = setTimeout(hideColPreview, 150); });
+    _previewEl.addEventListener('mouseenter', function () {
+      clearTimeout(_previewTimer);
+      clearTimeout(_activeDrawerTimer);
+    });
+    _previewEl.addEventListener('mouseleave', function () {
+      _previewTimer = setTimeout(hideColPreview, 150);
+      if (_previewEl.classList.contains('from-drawer')) {
+        _activeDrawerTimer = setTimeout(function () {
+          document.querySelectorAll('.xfce-drawer-popup.open').forEach(function (p) { p.classList.remove('open'); });
+        }, 250);
+      }
+    });
     document.body.appendChild(_previewEl);
   }
 
@@ -282,9 +293,17 @@
     var isLeft  = document.documentElement.dataset.dockPos === 'left';
     var dockR   = dock ? dock.getBoundingClientRect() : { top: 0, right: 0 };
     var itemR   = itemEl.getBoundingClientRect();
+    var inDrawer = !!itemEl.closest('.xfce-drawer-popup');
+    _previewEl.classList.toggle('from-drawer', inDrawer);
 
     function place() {
-      if (isLeft) {
+      if (inDrawer) {
+        var popupEl = itemEl.closest('.xfce-drawer-popup');
+        var popupR  = popupEl ? popupEl.getBoundingClientRect() : itemR;
+        _previewEl.style.left   = Math.round(popupR.right + 8) + 'px';
+        _previewEl.style.bottom = Math.round(window.innerHeight - popupR.top - popupR.height) + 'px';
+        _previewEl.style.top    = 'auto';
+      } else if (isLeft) {
         _previewEl.style.left = Math.round(dockR.right + 10) + 'px';
         _previewEl.style.top  = Math.round(itemR.top + itemR.height / 2 - _previewEl.offsetHeight / 2) + 'px';
         _previewEl.style.bottom = 'auto';
@@ -1374,8 +1393,17 @@
         // Collections in dock
         var colGroup = document.getElementById('xfce-dock-cols');
         if (colGroup) {
-          var topLevel = (info.collections || []).filter(function (c) { return !c.parent; });
-          topLevel.forEach(function (col, idx) {
+          var navHidden = new Set((info.nav && info.nav.hidden) || []);
+          var navGroups = (info.nav && info.nav.groups) || null;
+          var groupedIds = new Set();
+          if (navGroups) { Object.keys(navGroups).forEach(function (g) { (navGroups[g] || []).forEach(function (id) { groupedIds.add(id); }); }); }
+
+          var allCols = (info.collections || []).filter(function (c) { return !navHidden.has(c.id); });
+          var topLevel = allCols.filter(function (c) { return !c.parent; });
+          var colById = {};
+          allCols.forEach(function (c) { colById[c.id] = c; });
+
+          function addColDockItem(col, idx) {
             var isSingleton = !!col.singleton;
             var href = isSingleton
               ? '/editor.html?collection=' + encodeURIComponent(col.id) + '&singleton=1'
@@ -1385,19 +1413,158 @@
               : page === 'entries' && activeCol === col.id;
             var abbr = col.label.substring(0, 2);
             var item = makeDockItem(abbr, col.label, href, isActive, false);
-            item.querySelector('.xfce-dock-icon').style.cssText = 'font-size:14px;font-weight:700;font-family:var(--mono);letter-spacing:-.03em;line-height:1;opacity:1;';
+            item.querySelector('.xfce-dock-icon').style.cssText = 'font-size:16px;font-weight:700;font-family:var(--mono);letter-spacing:-.03em;line-height:1;';
             item.dataset.dockIdx = idx + 1;
-
-            // Hover shows preview card with recent entries
             item.addEventListener('mouseenter', function () { showColPreview(col, item); });
             item.addEventListener('mouseleave', function () { _previewTimer = setTimeout(hideColPreview, 150); });
-
             colGroup.appendChild(item);
-
-            // Add to palette fuzzy search and command list
             _palItems.push({ icon: abbr, label: col.label, href: href, group: 'Collections' });
             _termCols.push({ id: col.id, label: col.label, total: col.total || 0, drafts: col.drafts || 0, singleton: !!col.singleton });
+          }
+
+          // Drawer groups
+          if (navGroups) {
+            Object.keys(navGroups).forEach(function (groupLabel) {
+              var colIds = navGroups[groupLabel] || [];
+              var grpCols = colIds.map(function (id) { return colById[id]; }).filter(Boolean);
+              if (!grpCols.length) return;
+
+              var anyActive = grpCols.some(function (c) {
+                return (page === 'entries' && activeCol === c.id) || (page === 'editor' && activeCol === c.id);
+              });
+              var drawerItem = makeDockItem('⬡', groupLabel, null, anyActive, true);
+              // inherits base .xfce-dock-icon sizing (20px, opacity .82)
+              colGroup.appendChild(drawerItem);
+
+              // Build drawer popup with stats (reuses xfce-tools-popup styling)
+              var popup = el('div', 'xfce-tools-popup xfce-drawer-popup');
+              popup.innerHTML = '<div style="padding:7px 14px 6px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px"><span style="font-size:11px;opacity:.6">⬡</span>' + escHtml(groupLabel) + '</div>';
+              grpCols.forEach(function (gc) {
+                var gcSingleton = !!gc.singleton;
+                var gcHref = gcSingleton
+                  ? '/editor.html?collection=' + encodeURIComponent(gc.id) + '&singleton=1'
+                  : '/entries.html?col=' + encodeURIComponent(gc.id) + '&label=' + encodeURIComponent(gc.label);
+                var gcActive = gcSingleton
+                  ? page === 'editor' && activeCol === gc.id
+                  : page === 'entries' && activeCol === gc.id;
+                var stats = [];
+                if (gc.total > 0) stats.push(gc.total + ' pub');
+                if (gc.drafts > 0) stats.push(gc.drafts + ' draft');
+                var statsHtml = stats.length ? '<span style="margin-left:auto;font-size:9px;color:var(--muted)">' + stats.join(' · ') + '</span>' : '';
+                var a = el('a', 'xfce-tools-item' + (gcActive ? ' active' : ''));
+                a.href = gcHref;
+                a.innerHTML = '<span class="xfce-tools-icon" style="font-size:12px;font-weight:700;font-family:var(--mono);letter-spacing:-.02em">' + gc.label.substring(0, 2) + '</span><span>' + escHtml(gc.label) + '</span>' + statsHtml;
+                a.addEventListener('mouseenter', function () { showColPreview(gc, a); });
+                a.addEventListener('mouseleave', function () { _previewTimer = setTimeout(hideColPreview, 150); });
+                popup.appendChild(a);
+                _palItems.push({ icon: gc.label.substring(0, 2), label: gc.label, href: gcHref, group: 'Collections' });
+                _termCols.push({ id: gc.id, label: gc.label, total: gc.total || 0, drafts: gc.drafts || 0, singleton: gcSingleton });
+              });
+              popup._drawerBtn = drawerItem;
+              drawerItem._groupPopup = popup;
+              drawerItem._positionPopup = function () {
+                var dck = document.getElementById('xfce-dock');
+                var isLeft = document.documentElement.dataset.dockPos === 'left';
+                var bRect = drawerItem.getBoundingClientRect();
+                var dRect = dck ? dck.getBoundingClientRect() : { top: 0, right: 0 };
+                if (isLeft) {
+                  popup.style.left = Math.round(dRect.right + 10) + 'px';
+                  popup.style.top = Math.round(bRect.top + bRect.height / 2) + 'px';
+                  popup.style.bottom = 'auto';
+                  popup.style.transform = 'translateY(-50%)';
+                } else {
+                  popup.style.left = Math.round(bRect.left + bRect.width / 2) + 'px';
+                  popup.style.top = '';
+                  popup.style.bottom = '';
+                  popup.style.transform = '';
+                }
+              };
+              drawerItem.classList.add('xfce-dock-col-group');
+              document.body.appendChild(popup);
+
+              var drawerTimer;
+              function showDrawer() {
+                clearTimeout(drawerTimer);
+                clearTimeout(_activeDrawerTimer);
+                hideColPreview();
+                document.querySelectorAll('.xfce-drawer-popup.open').forEach(function (p) { if (p !== popup) p.classList.remove('open'); });
+                var dck = document.getElementById('xfce-dock');
+                var isLeft = document.documentElement.dataset.dockPos === 'left';
+                var bRect = drawerItem.getBoundingClientRect();
+                var dRect = dck ? dck.getBoundingClientRect() : { top: 0, right: 0 };
+                if (isLeft) {
+                  popup.style.left = Math.round(dRect.right + 10) + 'px';
+                  popup.style.top = Math.round(bRect.top + bRect.height / 2) + 'px';
+                  popup.style.bottom = 'auto';
+                  popup.style.transform = 'translateY(-50%)';
+                } else {
+                  popup.style.left = Math.round(bRect.left + bRect.width / 2) + 'px';
+                  popup.style.top = '';
+                  popup.style.bottom = '';
+                  popup.style.transform = '';
+                }
+                popup.classList.add('open');
+              }
+              function scheduleHide() {
+                drawerTimer = setTimeout(function () { popup.classList.remove('open'); hideColPreview(); }, 250);
+                _activeDrawerTimer = drawerTimer;
+              }
+              drawerItem.addEventListener('mouseenter', showDrawer);
+              drawerItem.addEventListener('mouseleave', scheduleHide);
+              popup.addEventListener('mouseenter', function () { clearTimeout(drawerTimer); clearTimeout(_activeDrawerTimer); });
+              popup.addEventListener('mouseleave', scheduleHide);
+            });
+          }
+
+          // Ungrouped collections — original behaviour with hover preview
+          var idx = 0;
+          topLevel.forEach(function (col) {
+            if (groupedIds.has(col.id)) return;
+            addColDockItem(col, idx++);
           });
+
+          // Extend g-mode with collection shortcuts (first unused letter of label)
+          var usedKeys = new Set(Object.keys(G_MAP));
+          var colShortcuts = [];
+          topLevel.forEach(function (col) {
+            var href = col.singleton
+              ? '/editor.html?collection=' + encodeURIComponent(col.id) + '&singleton=1'
+              : '/entries.html?col=' + encodeURIComponent(col.id) + '&label=' + encodeURIComponent(col.label);
+            var label = col.label.toLowerCase();
+            for (var ci = 0; ci < label.length; ci++) {
+              var ch = label[ci];
+              if (/[a-z]/.test(ch) && !usedKeys.has(ch)) {
+                G_MAP[ch] = href;
+                usedKeys.add(ch);
+                colShortcuts.push({ key: ch, label: col.label });
+                break;
+              }
+            }
+          });
+          // Update g-mode tooltip
+          var gInd = document.getElementById('xfce-sb-g-ind');
+          if (gInd) {
+            var _gLabels = {};
+            NAV.concat(TOOLS).forEach(function (n) { _gLabels[n.href] = n.label; });
+            colShortcuts.forEach(function (cs) { _gLabels[G_MAP[cs.key]] = cs.label; });
+            var tips = Object.keys(G_MAP).sort().map(function (k) {
+              var label = _gLabels[G_MAP[k]] || G_MAP[k].replace(/.*\//, '').replace('.html', '').replace(/\?.*/, '');
+              return k + '=' + label;
+            });
+            gInd.title = 'g mode: ' + tips.join(' ');
+          }
+          // Inject collection shortcuts into cheatsheet if already built
+          if (_cheatEl) {
+            var navCol = _cheatEl.querySelector('.xfce-cheat-col');
+            if (navCol && colShortcuts.length) {
+              var dockRow = navCol.querySelector('.xfce-cheat-row:last-child');
+              var html = '<div class="xfce-cheat-section" style="margin-top:10px">Collections (g + key)</div>';
+              colShortcuts.forEach(function (cs) {
+                html += cheatRow('g &nbsp;+&nbsp; ' + cs.key, cs.label);
+              });
+              if (dockRow) dockRow.insertAdjacentHTML('afterend', html);
+            }
+          }
         }
 
         // HUD pod section
@@ -1655,18 +1822,30 @@
         return;
       }
 
-      // 1–9 — jump to nth dock link (no modifier, not in input)
+      // 1–9 — jump to nth dock item (links navigate, drawers open popup)
       if (!mod && !e.shiftKey && !e.altKey && !isEditing(e.target)) {
         var n = parseInt(e.key);
-        if (n >= 1 && n <= 9) {
-          var links = dockInner
-            ? Array.from(dockInner.querySelectorAll('a.xfce-dock-item')).filter(function (a) {
-                return !a.classList.contains('xfce-dock-create');
-              })
-            : [];
-          if (links[n - 1]) {
+        if (n >= 1 && n <= 9 && dockInner) {
+          var items = Array.from(dockInner.querySelectorAll('.xfce-dock-item')).filter(function (it) {
+            return !it.classList.contains('xfce-dock-create')
+              && !it.dataset.wspane
+              && it.dataset.label !== 'Tools'
+              && it.dataset.label !== 'HUD'
+              && it.dataset.label !== 'Scheme';
+          });
+          var target = items[n - 1];
+          if (target) {
             e.preventDefault();
-            location.href = links[n - 1].href;
+            if (target.tagName === 'A' && target.href) {
+              location.href = target.href;
+            } else if (target._groupPopup) {
+              document.querySelectorAll('.xfce-drawer-popup.open').forEach(function (p) { p.classList.remove('open'); });
+              hideColPreview();
+              if (target._positionPopup) target._positionPopup();
+              target._groupPopup.classList.add('open');
+            } else {
+              target.click();
+            }
           }
         }
       }

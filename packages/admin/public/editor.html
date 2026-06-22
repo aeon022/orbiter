@@ -179,6 +179,19 @@
     .rel-selected { display:flex; flex-wrap:wrap; gap:3px; margin-bottom:4px; min-height:18px; }
     .rel-tag { font-size:9px; padding:2px 6px; background:var(--accent-bg); color:var(--accent); border:1px solid rgba(90,122,240,.2); border-radius:2px; }
 
+    /* Field groups (collapsible) */
+    .field-group { border:1px solid var(--line2); border-radius:var(--radius); margin-bottom:8px; overflow:hidden; }
+    .field-group:last-child { margin-bottom:0; }
+    .field-group-header { display:flex; align-items:center; gap:6px; padding:7px 10px; background:var(--bg2); cursor:pointer; user-select:none; border-bottom:1px solid transparent; transition:background .12s; }
+    .field-group-header:hover { background:var(--bg3); }
+    .field-group.open .field-group-header { border-bottom-color:var(--line2); }
+    .field-group-arrow { font-size:8px; color:var(--muted); transition:transform .15s; flex-shrink:0; }
+    .field-group.open .field-group-arrow { transform:rotate(90deg); }
+    .field-group-name { font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); flex:1; }
+    .field-group-count { font-size:9px; color:var(--line); }
+    .field-group-body { padding:10px; display:none; }
+    .field-group.open .field-group-body { display:block; }
+
     /* Version history */
     .version-row { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid var(--line2); }
     .version-row:last-child { border-bottom:none; }
@@ -420,6 +433,11 @@
     /* ── Table field ────────────────────────────────────────────── */
     .tbl-field-wrap { border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
     .tbl-field-scroll { overflow:auto; }
+    .cite-preview { padding:8px 10px; border-top:1px solid var(--line2); background:var(--bg0); }
+    .cite-preview-label { font-size:8px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+    .cite-entry { font-size:10px; color:var(--text); line-height:1.6; padding:3px 0; padding-left:16px; text-indent:-16px; font-family:var(--serif); }
+    .cite-entry em { font-style:italic; }
+    .cite-empty { font-size:10px; color:var(--line); font-style:italic; }
 
     /* SERP preview */
     .serp-preview { background:var(--bg0); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px; margin-top:12px; }
@@ -721,14 +739,19 @@
       const publishAtInput   = publishAt   ? publishAt.replace(' ', 'T').slice(0, 16)   : '';
       const unpublishAtInput = unpublishAt ? unpublishAt.replace(' ', 'T').slice(0, 16) : '';
 
-      let fieldsHtml = '';
+      const fieldGroupMap = {};
+      const fieldGroupOrder = [];
       const seoFields = {};
+      const hasGroups = extraFields.some(([,f]) => f.group);
       for (const [key, field] of extraFields) {
         const val = entryData?.data?.[key];
         if (SEO_TITLE_KEYS.has(key)) seoFields.titleKey = key;
         if (SEO_DESC_KEYS.has(key))  seoFields.descKey  = key;
         const isSeoTitle = SEO_TITLE_KEYS.has(key);
         const isSeoDesc  = SEO_DESC_KEYS.has(key);
+        const grp = field.group || '_ungrouped';
+        if (!fieldGroupMap[grp]) { fieldGroupMap[grp] = ''; fieldGroupOrder.push(grp); }
+        let fieldsHtml = '';
         if (isSeoTitle || isSeoDesc) {
           fieldsHtml += `<div class="meta-field" data-field-key="${key}" ${field.showWhen?`data-show-when="${field.showWhen}"`:''}><div class="field-label" style="display:flex;justify-content:space-between;">${escHtml(field.label??key)}<span class="seo-counter" id="seo-ctr-${key}">${(val??'').length}</span></div>`;
         } else {
@@ -783,11 +806,17 @@
           let tblRows;
           if (Array.isArray(val)) { tblRows = val; }
           else { try { tblRows = JSON.parse(val||'null'); } catch(e) { tblRows = null; } }
-          if (!Array.isArray(tblRows) || !tblRows.length) tblRows = [['',''],['',''],['','']];
+          const isApa = field.format === 'apa7';
+          const apaHeaders = ['Author', 'Year', 'Title', 'Source', 'URL', 'Type'];
+          if (!Array.isArray(tblRows) || !tblRows.length) {
+            tblRows = isApa
+              ? [apaHeaders, ['', '', '', '', '', 'website']]
+              : [['',''],['',''],['','']];
+          }
           const tblCols = tblRows[0].length || 2;
           const theadHtml = `<thead><tr>${tblRows[0].map(c=>`<th contenteditable="true">${escHtml(String(c??''))}</th>`).join('')}</tr></thead>`;
           const tbodyHtml = `<tbody>${tblRows.slice(1).map(r=>`<tr>${Array.from({length:tblCols},(_,i)=>`<td contenteditable="true">${escHtml(String(r[i]??''))}</td>`).join('')}</tr>`).join('')}</tbody>`;
-          fieldsHtml += `<div class="tbl-field-wrap" id="tbl-wrap-${key}">
+          fieldsHtml += `<div class="tbl-field-wrap" id="tbl-wrap-${key}" ${isApa?'data-format="apa7"':''}>
             <div class="table-toolbar">
               <button type="button" onclick="tblAddRow('${key}')">+ Row</button>
               <button type="button" onclick="tblAddCol('${key}')">+ Col</button>
@@ -795,6 +824,7 @@
               <button type="button" onclick="tblDelCol('${key}')">− Col</button>
             </div>
             <div class="tbl-field-scroll"><table class="be-table" id="tbl-${key}">${theadHtml}${tbodyHtml}</table></div>
+            ${isApa ? `<div class="cite-preview" id="cite-preview-${key}"><div class="cite-preview-label">APA 7 Preview</div><div id="cite-list-${key}" class="cite-empty">Add sources above…</div></div>` : ''}
           </div>
           <input type="hidden" name="${key}" id="tbl-val-${key}" value="${escHtml(Array.isArray(val)?JSON.stringify(val):(val??''))}">`;
         } else if (field.type==='array') {
@@ -835,6 +865,32 @@
           fieldsHtml += `<input type="text" class="field-input" name="${key}" value="${escHtml(val??'')}" />`;
         }
         fieldsHtml += '</div>';
+        fieldGroupMap[grp] += fieldsHtml;
+      }
+
+      let fieldsSectionHtml = '';
+      if (hasGroups) {
+        const openGroups = new Set(fieldGroupOrder.slice(0, 2));
+        for (const [key, field] of extraFields) {
+          if (field.format === 'apa7' && field.group) openGroups.add(field.group);
+        }
+        for (const grp of fieldGroupOrder) {
+          if (grp === '_ungrouped') {
+            fieldsSectionHtml += `<div class="meta-section"><div class="meta-label">Fields</div>${fieldGroupMap[grp]}</div>`;
+          } else {
+            const count = (fieldGroupMap[grp].match(/data-field-key=/g) || []).length;
+            fieldsSectionHtml += `<div class="meta-section" style="padding-bottom:6px;"><div class="field-group${openGroups.has(grp)?' open':''}" data-group="${grp}">
+              <div class="field-group-header" onclick="this.parentElement.classList.toggle('open')">
+                <span class="field-group-arrow">▶</span>
+                <span class="field-group-name">${escHtml(grp)}</span>
+                <span class="field-group-count">${count}</span>
+              </div>
+              <div class="field-group-body">${fieldGroupMap[grp]}</div>
+            </div></div>`;
+          }
+        }
+      } else if (extraFields.length) {
+        fieldsSectionHtml = `<div class="meta-section"><div class="meta-label">Fields</div>${fieldGroupMap['_ungrouped'] || ''}</div>`;
       }
 
       const versHtml = versionsData.slice(0,8).map((v,i)=>`
@@ -861,7 +917,7 @@
       const _seoOg    = _seoData.ogImage ?? '';
 
       panel.innerHTML = `
-        ${extraFields.length ? `<div class="meta-section"><div class="meta-label">Fields</div>${fieldsHtml}</div>` : ''}
+        ${fieldsSectionHtml}
         <div class="meta-section">
           <div class="meta-label">SEO</div>
           <div class="serp-preview" id="serp-preview">
@@ -1027,7 +1083,7 @@
         });
       });
 
-      // Table field — Tab navigation + sync on input
+      // Table field — Tab navigation + sync on input + initial APA7 preview
       panel.querySelectorAll('.tbl-field-wrap').forEach(wrap=>{
         const key = wrap.id.replace('tbl-wrap-','');
         wrap.addEventListener('input', ()=>tblSync(key));
@@ -1041,6 +1097,13 @@
           const next = e.shiftKey ? cells[idx-1] : cells[idx+1];
           if (next) { next.focus(); } else if (!e.shiftKey) { tblAddRow(key); }
         });
+        if (wrap.dataset.format === 'apa7') {
+          const tbl = document.getElementById('tbl-'+key);
+          if (tbl) {
+            const rows = Array.from(tbl.rows).map(tr=>Array.from(tr.cells).map(c=>c.innerText));
+            renderApa7Preview(key, rows);
+          }
+        }
       });
 
       // Publish / draft / schedule buttons
@@ -2315,7 +2378,73 @@
       const rows = Array.from(tbl.rows).map(tr=>Array.from(tr.cells).map(c=>c.innerText.replace(/\n/g,' ')));
       document.getElementById('tbl-val-'+key).value = JSON.stringify(rows);
       markDirty();
+      const wrap = document.getElementById('tbl-wrap-'+key);
+      if (wrap?.dataset.format === 'apa7') renderApa7Preview(key, rows);
     };
+
+    function renderApa7Preview(key, rows) {
+      const el = document.getElementById('cite-list-'+key);
+      if (!el) return;
+      const headers = (rows[0] || []).map(h => h.toLowerCase().trim());
+      const ci = (name) => headers.indexOf(name);
+      const iAuthor = ci('author'), iYear = ci('year'), iTitle = ci('title');
+      const iSource = ci('source'), iUrl = ci('url'), iType = ci('type');
+
+      const refs = rows.slice(1)
+        .filter(r => r.some(c => c.trim()))
+        .map(r => {
+          const get = (i) => i >= 0 ? (r[i] || '').trim() : '';
+          const author = get(iAuthor), year = get(iYear), title = get(iTitle);
+          const source = get(iSource), url = get(iUrl), type = get(iType).toLowerCase();
+          return formatApa7(author, year, title, source, url, type);
+        })
+        .filter(Boolean);
+
+      if (!refs.length) {
+        el.className = 'cite-empty';
+        el.innerHTML = 'Add sources above…';
+      } else {
+        el.className = '';
+        el.innerHTML = refs.map(r => `<div class="cite-entry">${r}</div>`).join('');
+      }
+    }
+
+    function formatApa7(author, year, title, source, url, type) {
+      if (!title && !author) return '';
+      const a = author || 'Unknown';
+      const y = year ? `(${year})` : '(n.d.)';
+      const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+      if (type === 'book') {
+        let ref = `${esc(a)} ${y}. <em>${esc(title)}</em>.`;
+        if (source) ref += ` ${esc(source)}.`;
+        if (url) ref += ` ${esc(url)}`;
+        return ref;
+      }
+      if (type === 'article' || type === 'journal') {
+        let ref = `${esc(a)} ${y}. ${esc(title)}.`;
+        if (source) ref += ` <em>${esc(source)}</em>.`;
+        if (url) ref += ` ${esc(url)}`;
+        return ref;
+      }
+      if (type === 'chapter') {
+        let ref = `${esc(a)} ${y}. ${esc(title)}.`;
+        if (source) ref += ` In <em>${esc(source)}</em>.`;
+        if (url) ref += ` ${esc(url)}`;
+        return ref;
+      }
+      if (type === 'report') {
+        let ref = `${esc(a)} ${y}. <em>${esc(title)}</em>.`;
+        if (source) ref += ` ${esc(source)}.`;
+        if (url) ref += ` ${esc(url)}`;
+        return ref;
+      }
+      // website (default)
+      let ref = `${esc(a)} ${y}. ${esc(title)}.`;
+      if (source) ref += ` <em>${esc(source)}</em>.`;
+      if (url) ref += ` ${esc(url)}`;
+      return ref;
+    }
     window.tblAddRow = function(key) {
       const tbl = document.getElementById('tbl-'+key);
       const cols = tbl.rows[0] ? tbl.rows[0].cells.length : 2;

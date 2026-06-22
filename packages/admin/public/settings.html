@@ -580,6 +580,40 @@
         </div>
 
         <div class="settings-group" style="grid-column:1/-1">
+          <div class="group-header">Templates</div>
+          <div id="tpl-banner" class="banner" style="display:none;margin:8px 20px 0"></div>
+          <div style="padding:14px 20px;border-bottom:1px solid var(--line2)">
+            <div class="setting-label" style="margin-bottom:6px">Add built-in template</div>
+            <div class="setting-desc" style="margin-bottom:12px">Install pre-built collection schemas into this pod. Existing collections are not overwritten.</div>
+            <div id="tpl-available" style="display:flex;flex-wrap:wrap;gap:8px;">
+              <span style="font-size:11px;color:var(--muted)">Loading…</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;padding:14px 20px;flex-wrap:wrap;align-items:flex-start">
+            <div style="flex:1;min-width:240px;">
+              <div class="setting-label" style="margin-bottom:6px">Export collections as template</div>
+              <div class="setting-desc" style="margin-bottom:10px">Select collections and download as a shareable JSON template file.</div>
+              <div id="tpl-export-cols" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px"></div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <label style="font-size:10px;color:var(--muted);display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none">
+                  <input type="checkbox" id="tpl-export-entries" checked style="accent-color:var(--accent);width:13px;height:13px;" />
+                  Include sample entries
+                </label>
+                <button type="button" class="btn btn-ghost btn-sm" id="tpl-export-btn" disabled>⬇ Export</button>
+              </div>
+            </div>
+            <div style="flex:1;min-width:240px;">
+              <div class="setting-label" style="margin-bottom:6px">Import template from file</div>
+              <div class="setting-desc" style="margin-bottom:10px">Upload a <code style="font-family:var(--mono);font-size:10px;background:var(--bg3);padding:1px 5px;border-radius:3px">.orbiter-template.json</code> file to add its collections.</div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <button type="button" class="btn btn-ghost btn-sm" id="tpl-import-btn">⬆ Import template</button>
+                <span id="tpl-import-status" style="font-size:10px;color:var(--muted)"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-group" style="grid-column:1/-1">
           <div class="group-header">FTP / FTPS Deploy</div>
           <div class="setting-row">
             <div><div class="setting-label">FTP host</div><div class="setting-desc">e.g. ftp.world4you.com or ftp.strato.de</div></div>
@@ -787,12 +821,23 @@
           <div><div class="pod-stat-label">Admin version</div><span class="pod-meta-ver" id="pod-admin-ver">—</span></div>
           <div><div class="pod-stat-label">Uptime</div><span class="pod-meta-ver" id="pod-uptime">—</span></div>
         </div>
+        <div style="padding:6px 20px;border-bottom:1px solid var(--line);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;justify-content:space-between">
+          <span style="display:flex;align-items:center;gap:6px"><span style="font-size:4px;color:var(--gold)">◆</span>Collections &amp; Navigation</span>
+          <span style="font-size:9px;color:var(--muted);letter-spacing:0;text-transform:none">Toggle visibility · assign groups</span>
+        </div>
         <div id="pod-collections-list">
           <div class="pod-col-row"><span class="pod-col-name" style="color:var(--muted)">Loading…</span></div>
         </div>
-        <div style="padding:8px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:20px">
-          <span style="font-family:var(--mono);font-size:10px;color:var(--muted)"><span id="pod-col-count">—</span> collections</span>
-          <span style="font-family:var(--mono);font-size:10px;color:var(--muted)"><span id="pod-total-entries">—</span> entries total</span>
+        <div style="padding:8px 20px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div style="display:flex;gap:16px">
+            <span style="font-family:var(--mono);font-size:10px;color:var(--muted)"><span id="pod-col-count">—</span> collections</span>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--muted)"><span id="pod-total-entries">—</span> entries total</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input class="input" type="text" id="nav-new-group" placeholder="New group name…" style="width:140px;font-size:10px;padding:4px 8px;" />
+            <button type="button" class="btn btn-ghost btn-sm" id="nav-add-group-btn">+ Group</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="nav-save-btn">Save nav</button>
+          </div>
         </div>
       </div>
 
@@ -1021,20 +1066,212 @@
       up.textContent = h > 0 ? `${h}h ${m}m` : `${m}m`;
     }
 
+    // Nav config state
+    const navHiddenSet = new Set((info.nav?.hidden) || []);
+    let navGroupsObj = info.nav?.groups || {};
+    if (typeof navGroupsObj !== 'object' || navGroupsObj === null) navGroupsObj = {};
+    const existingGroupNames = () => Object.keys(navGroupsObj);
+    const colGroupOf = (colId) => {
+      for (const [g, ids] of Object.entries(navGroupsObj)) {
+        if (Array.isArray(ids) && ids.includes(colId)) return g;
+      }
+      return '';
+    };
+
     if (cl) {
       const cols = info.collections ?? [];
       const total = cols.reduce((n, c) => n + (c.total ?? 0), 0);
       if (tc) tc.textContent = total;
       if (cc) cc.textContent = cols.length;
-      cl.innerHTML = cols.length
-        ? cols.map(c =>
-            `<div class="pod-col-row">
-              <span class="pod-col-name">${c.label}</span>
-              <span class="pod-col-count">${c.total ?? 0}</span>
-            </div>`
-          ).join('')
-        : '<div class="pod-col-row"><span class="pod-col-name" style="color:var(--muted)">No collections</span></div>';
+
+      function renderNavColList() {
+        const groups = existingGroupNames();
+        cl.innerHTML = cols.length
+          ? cols.map(c => {
+              const hidden = navHiddenSet.has(c.id);
+              const group  = colGroupOf(c.id);
+              return `<div class="pod-col-row" style="gap:8px">
+                <label class="toggle" style="flex-shrink:0" title="${hidden ? 'Hidden' : 'Visible'}">
+                  <input type="checkbox" class="nav-vis-cb" data-col="${c.id}" ${hidden ? '' : 'checked'} />
+                  <span class="toggle-slider"></span>
+                </label>
+                <span class="pod-col-name" style="flex:1;${hidden ? 'opacity:.4' : ''}">${c.label}</span>
+                <select class="input nav-group-sel" data-col="${c.id}" style="width:auto;min-width:90px;font-size:10px;padding:3px 6px;">
+                  <option value="">— no group —</option>
+                  ${groups.map(g => `<option value="${g}" ${group===g?'selected':''}>${g}</option>`).join('')}
+                </select>
+                <span class="pod-col-count">${c.total ?? 0}</span>
+              </div>`;
+            }).join('')
+          : '<div class="pod-col-row"><span class="pod-col-name" style="color:var(--muted)">No collections</span></div>';
+
+        cl.querySelectorAll('.nav-vis-cb').forEach(cb => {
+          cb.addEventListener('change', () => {
+            if (cb.checked) navHiddenSet.delete(cb.dataset.col);
+            else navHiddenSet.add(cb.dataset.col);
+          });
+        });
+        cl.querySelectorAll('.nav-group-sel').forEach(sel => {
+          sel.addEventListener('change', () => {
+            const colId = sel.dataset.col;
+            for (const [g, ids] of Object.entries(navGroupsObj)) {
+              const idx = ids.indexOf(colId);
+              if (idx !== -1) ids.splice(idx, 1);
+            }
+            if (sel.value) {
+              if (!navGroupsObj[sel.value]) navGroupsObj[sel.value] = [];
+              navGroupsObj[sel.value].push(colId);
+            }
+          });
+        });
+      }
+      renderNavColList();
+
+      document.getElementById('nav-add-group-btn')?.addEventListener('click', () => {
+        const inp = document.getElementById('nav-new-group');
+        const name = inp?.value.trim();
+        if (!name) return;
+        if (!navGroupsObj[name]) navGroupsObj[name] = [];
+        inp.value = '';
+        renderNavColList();
+      });
+
+      document.getElementById('nav-save-btn')?.addEventListener('click', async () => {
+        const cleanGroups = {};
+        for (const [g, ids] of Object.entries(navGroupsObj)) {
+          if (ids.length) cleanGroups[g] = ids;
+        }
+        await saveMeta([
+          ['nav.hidden', [...navHiddenSet].join(',')],
+          ['nav.groups', Object.keys(cleanGroups).length ? JSON.stringify(cleanGroups) : ''],
+        ]);
+        showBanner('site-banner', 'banner-ok', 'Navigation settings saved — reload to see changes');
+      });
     }
+
+    // ── Templates ──────────────────────────────────────────────────────
+    function tplBanner(cls, text) {
+      const el = document.getElementById('tpl-banner');
+      if (!el) return;
+      el.className = 'banner ' + cls;
+      el.textContent = (cls === 'banner-ok' ? '✓ ' : '✕ ') + text;
+      el.style.display = '';
+      setTimeout(() => el.style.display = 'none', 5000);
+    }
+
+    // Available built-in templates
+    async function loadAvailableTemplates() {
+      const templates = await fetch('/api/templates/available', { credentials: 'include' }).then(r => r.json()).catch(() => []);
+      const wrap = document.getElementById('tpl-available');
+      if (!wrap) return;
+      wrap.innerHTML = templates.map(t => `
+        <button type="button" class="btn btn-ghost btn-sm tpl-install-btn" data-id="${t.id}"
+          ${t.installed ? 'disabled style="opacity:.5"' : ''}
+          title="${t.description}">
+          ${t.installed ? '✓ ' : t.partial ? '◐ ' : '+ '}${t.label}
+        </button>
+      `).join('');
+      wrap.querySelectorAll('.tpl-install-btn:not([disabled])').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          btn.disabled = true;
+          btn.textContent = 'Installing…';
+          const res = await fetch(`/api/templates/install/${btn.dataset.id}`, { method: 'POST', credentials: 'include' });
+          const json = await res.json();
+          if (res.ok) {
+            tplBanner('banner-ok', `Installed: ${json.created.join(', ')}${json.skipped.length ? ' (skipped: ' + json.skipped.join(', ') + ')' : ''} — ${json.entries} sample entries`);
+            btn.textContent = '✓ ' + btn.textContent.replace('Installing…', '').trim();
+          } else {
+            tplBanner('banner-err', json.error || 'Install failed');
+            btn.disabled = false;
+          }
+          loadAvailableTemplates();
+          // Refresh pod info + export checkboxes
+          refreshExportCols();
+        });
+      });
+    }
+
+    // Export: collection checkboxes
+    async function refreshExportCols() {
+      const cols = await fetch('/api/collections', { credentials: 'include' }).then(r => r.json()).catch(() => []);
+      const wrap = document.getElementById('tpl-export-cols');
+      if (!wrap) return;
+      wrap.innerHTML = cols.map(c => `
+        <label style="font-size:10px;display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none;padding:3px 8px;border:1px solid var(--line);border-radius:4px;background:var(--bg0);transition:border-color .12s;">
+          <input type="checkbox" class="tpl-exp-cb" value="${c.id}" style="accent-color:var(--accent);width:12px;height:12px;" />
+          ${c.label}
+        </label>
+      `).join('');
+      const exportBtn = document.getElementById('tpl-export-btn');
+      wrap.querySelectorAll('.tpl-exp-cb').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const any = wrap.querySelectorAll('.tpl-exp-cb:checked').length > 0;
+          exportBtn.disabled = !any;
+        });
+      });
+    }
+
+    // Export button
+    document.getElementById('tpl-export-btn')?.addEventListener('click', async () => {
+      const checked = [...document.querySelectorAll('.tpl-exp-cb:checked')].map(cb => cb.value);
+      if (!checked.length) return;
+      const includeEntries = document.getElementById('tpl-export-entries')?.checked ?? true;
+      const res = await fetch('/api/templates/export', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ collections: checked, includeSampleEntries: includeEntries }),
+      });
+      if (!res.ok) { tplBanner('banner-err', 'Export failed'); return; }
+      const data = await res.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url;
+      a.download = `${data.id}.orbiter-template.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      tplBanner('banner-ok', `Exported ${checked.length} collection(s)`);
+    });
+
+    // Import button
+    document.getElementById('tpl-import-btn')?.addEventListener('click', () => {
+      const fi = document.createElement('input');
+      fi.type = 'file';
+      fi.accept = '.json,.orbiter-template.json';
+      fi.onchange = async () => {
+        const file = fi.files[0];
+        if (!file) return;
+        const status = document.getElementById('tpl-import-status');
+        if (status) status.textContent = 'Importing…';
+        try {
+          const text = await file.text();
+          const template = JSON.parse(text);
+          if (!template.collections) throw new Error('Invalid template file');
+          const res = await fetch('/api/templates/import', {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: text,
+          });
+          const json = await res.json();
+          if (res.ok) {
+            tplBanner('banner-ok', `Imported: ${json.created.join(', ') || 'none new'}${json.skipped.length ? ' (skipped: ' + json.skipped.join(', ') + ')' : ''} — ${json.entries} entries`);
+            if (status) status.textContent = '';
+            loadAvailableTemplates();
+            refreshExportCols();
+          } else {
+            tplBanner('banner-err', json.error || 'Import failed');
+            if (status) status.textContent = '';
+          }
+        } catch (e) {
+          tplBanner('banner-err', 'Invalid template file: ' + e.message);
+          if (status) status.textContent = '';
+        }
+      };
+      fi.click();
+    });
+
+    loadAvailableTemplates();
+    refreshExportCols();
   </script>
 </main>
   </div>

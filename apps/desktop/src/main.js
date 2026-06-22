@@ -63,7 +63,7 @@ function waitForServer(port, timeout = 10000) {
 }
 
 // ── Templates ─────────────────────────────────────────────────────────────────
-const TEMPLATE_IDS = ['blank', 'blog', 'portfolio', 'business', 'events'];
+const TEMPLATE_IDS = ['blank', 'blog', 'portfolio', 'business', 'events', 'dossier'];
 
 async function seedPod(podPath, templateId) {
   const { createPod, hashPassword } = await import('@a83/orbiter-core');
@@ -74,19 +74,20 @@ async function seedPod(podPath, templateId) {
   db.insertUser(randomUUID(), 'admin', pw, 'admin');
 
   if (templateId === 'blog') {
-    db.createCollection('categories', 'Kategorien', {
-      title: { type: 'string', required: true, label: 'Name' },
-    });
     db.createCollection('posts', 'Posts', {
       title:      { type: 'string',   required: true,  label: 'Titel' },
       excerpt:    { type: 'string',   required: false, label: 'Teaser' },
       body:       { type: 'richtext', required: false, label: 'Text' },
       image:      { type: 'media',    required: false, label: 'Bild' },
       tags:       { type: 'array',    required: false, label: 'Tags' },
-      categories: { type: 'relation', collection: 'categories', multiple: true, required: false, label: 'Kategorien' },
+      categories: { type: 'relation', collection: 'post_categories', multiple: true, required: false, label: 'Kategorien' },
     });
+    db.createCollection('post_categories', 'Post-Kategorien', {
+      title: { type: 'string', required: true, label: 'Name' },
+    });
+    db.setMeta('collection.post_categories.parent', 'posts');
 
-    const catId = db.createEntry('categories', 'allgemein', { title: 'Allgemein' }, 'published');
+    const catId = db.createEntry('post_categories', 'allgemein', { title: 'Allgemein' }, 'published');
     db.createEntry('posts', 'herzlich-willkommen', {
       title:      'Herzlich willkommen',
       excerpt:    'Das ist mein erster Beitrag — schön, dass du da bist.',
@@ -103,20 +104,21 @@ async function seedPod(podPath, templateId) {
     }, 'draft');
 
   } else if (templateId === 'portfolio') {
-    db.createCollection('categories', 'Kategorien', {
-      title: { type: 'string', required: true, label: 'Name' },
-    });
     db.createCollection('projects', 'Projekte', {
       title:      { type: 'string',   required: true,  label: 'Titel' },
       body:       { type: 'richtext', required: false, label: 'Beschreibung' },
       image:      { type: 'media',    required: false, label: 'Vorschau' },
       url:        { type: 'string',   required: false, label: 'Website' },
       tags:       { type: 'array',    required: false, label: 'Tags' },
-      categories: { type: 'relation', collection: 'categories', multiple: true, required: false, label: 'Kategorien' },
+      categories: { type: 'relation', collection: 'project_categories', multiple: true, required: false, label: 'Kategorien' },
     });
+    db.createCollection('project_categories', 'Projekt-Kategorien', {
+      title: { type: 'string', required: true, label: 'Name' },
+    });
+    db.setMeta('collection.project_categories.parent', 'projects');
 
-    const webId  = db.createEntry('categories', 'webdesign',  { title: 'Webdesign' },  'published');
-    const brandId = db.createEntry('categories', 'branding',  { title: 'Branding' },   'published');
+    const webId  = db.createEntry('project_categories', 'webdesign',  { title: 'Webdesign' },  'published');
+    const brandId = db.createEntry('project_categories', 'branding',  { title: 'Branding' },   'published');
     db.createEntry('projects', 'website-muster-gmbh', {
       title:      'Website Muster GmbH',
       body:       '## Aufgabe\n\nNeue Unternehmenswebsite mit modernem Design, klarer Struktur und schnellen Ladezeiten.\n\n## Umsetzung\n\nAstro als Framework, Orbiter als CMS. Der Kunde pflegt Inhalte selbst über den Admin — keine technischen Kenntnisse nötig.\n\n## Ergebnis\n\nPerformance Score 98/100, vollständig responsiv, SEO-optimiert.',
@@ -173,9 +175,6 @@ async function seedPod(podPath, templateId) {
     }, 'published');
 
   } else if (templateId === 'events') {
-    db.createCollection('categories', 'Kategorien', {
-      title: { type: 'string', required: true, label: 'Name' },
-    });
     db.createCollection('events', 'Events', {
       title:      { type: 'string',   required: true,  label: 'Titel' },
       date:       { type: 'date',     required: true,  label: 'Datum' },
@@ -183,11 +182,15 @@ async function seedPod(podPath, templateId) {
       body:       { type: 'richtext', required: false, label: 'Beschreibung' },
       image:      { type: 'media',    required: false, label: 'Bild' },
       ticket_url: { type: 'string',   required: false, label: 'Ticket-Link' },
-      categories: { type: 'relation', collection: 'categories', multiple: true, required: false, label: 'Kategorien' },
+      categories: { type: 'relation', collection: 'event_categories', multiple: true, required: false, label: 'Kategorien' },
     });
+    db.createCollection('event_categories', 'Event-Kategorien', {
+      title: { type: 'string', required: true, label: 'Name' },
+    });
+    db.setMeta('collection.event_categories.parent', 'events');
 
-    const workshopId = db.createEntry('categories', 'workshop', { title: 'Workshop' }, 'published');
-    const konzertId  = db.createEntry('categories', 'konzert',  { title: 'Konzert' },  'published');
+    const workshopId = db.createEntry('event_categories', 'workshop', { title: 'Workshop' }, 'published');
+    const konzertId  = db.createEntry('event_categories', 'konzert',  { title: 'Konzert' },  'published');
     db.createEntry('events', 'orbiter-einfuehrung', {
       title:      'Orbiter Einführungs-Workshop',
       date:       '2026-09-15',
@@ -203,6 +206,66 @@ async function seedPod(podPath, templateId) {
       body:       '## Sommerkonzert im Stadtpark\n\nEin Abend unter freiem Himmel mit Live-Musik, Getränken und gutem Gespräch.\n\nEintritt frei — Spende willkommen.',
       categories: [konzertId],
     }, 'published');
+  } else if (templateId === 'dossier') {
+    db.createCollection('dossiers', 'Dossiers', {
+      title:           { type: 'string',   required: true,  label: 'Titel', group: 'Content' },
+      excerpt:         { type: 'string',   required: false, label: 'Teaser', group: 'Content' },
+      body:            { type: 'richtext', required: false, label: 'Text', group: 'Content' },
+      humanSummary:    { type: 'string',   required: false, label: 'Human Summary', group: 'Content' },
+      hypothesis:      { type: 'string',   required: false, label: 'Hypothese', group: 'Research' },
+      testSetup:       { type: 'string',   required: false, label: 'Test-Setup', group: 'Research' },
+      observations:    { type: 'string',   required: false, label: 'Beobachtungen', group: 'Research' },
+      findings:        { type: 'string',   required: false, label: 'Findings', group: 'Research' },
+      limitations:     { type: 'string',   required: false, label: 'Einschränkungen', group: 'Research' },
+      openQuestions:    { type: 'string',   required: false, label: 'Offene Fragen', group: 'Research' },
+      claims:          { type: 'table',    required: false, label: 'Claims', group: 'Evidence' },
+      sources:         { type: 'table',    required: false, label: 'Sources (APA 7)', group: 'Evidence', format: 'apa7' },
+      relationships:   { type: 'table',    required: false, label: 'Relationships', group: 'Evidence' },
+      series:          { type: 'string',   required: false, label: 'Serie', group: 'Meta' },
+      keywords:        { type: 'array',    required: false, label: 'Keywords', group: 'Meta' },
+      contentType:     { type: 'select',   required: false, label: 'Content-Typ', group: 'Meta', options: ['investigation', 'analysis', 'comparison', 'guide', 'deep-dive', 'tutorial'] },
+      language:        { type: 'select',   required: false, label: 'Sprache', group: 'Meta', options: ['de', 'en', 'de+en'] },
+      author:          { type: 'string',   required: false, label: 'Autor', group: 'Provenance' },
+      authorship:      { type: 'select',   required: false, label: 'Authorship', group: 'Provenance', options: ['human', 'ai-assisted', 'ai-generated', 'collaborative'] },
+      aiContribution:  { type: 'string',   required: false, label: 'AI-Beitrag', group: 'Provenance' },
+      reviewedBy:      { type: 'string',   required: false, label: 'Reviewed by', group: 'Provenance' },
+      reviewStatus:    { type: 'select',   required: false, label: 'Review-Status', group: 'Provenance', options: ['draft', 'peer-reviewed', 'self-reviewed', 'unreviewed'] },
+      modelDisclosure: { type: 'string',   required: false, label: 'Modell-Disclosure', group: 'Provenance' },
+      summaryMachine:  { type: 'string',   required: false, label: 'Machine Summary', group: 'Agent' },
+      dossierId:       { type: 'string',   required: false, label: 'Dossier-ID', group: 'Agent' },
+      tokensApprox:    { type: 'number',   required: false, label: 'Tokens (ca.)', group: 'Agent' },
+      suggestedPrompts:{ type: 'array',    required: false, label: 'Suggested Prompts', group: 'Agent' },
+      hero:            { type: 'media',    required: false, label: 'Hero-Bild' },
+    });
+
+    db.createEntry('dossiers', 'pilot-dossier', {
+      title:          'Pilot-Dossier: Dual Render im Praxistest',
+      excerpt:        'Erste Untersuchung, ob ein Dossier-Format gleichzeitig für Menschen und AI-Agenten funktioniert.',
+      body:           '## Kontext\n\nDieses Pilot-Dossier testet das Dual Render Konzept in der Praxis. Ziel ist eine Dokumentstruktur, die auf Depth 0 eine lesbare Erzählung bietet und ab Depth 2 maschinenlesbare Evidence bereitstellt.\n\n## Vorgehen\n\nWir definieren ein Schema mit 39 Feldern, gruppiert in Content, Research, Evidence, Meta, Provenance und Agent. Jede Gruppe wird im Editor als collapsible Section dargestellt.\n\n## Ergebnis\n\nDas Format funktioniert — Menschen lesen den Body, Agenten lesen summaryMachine + Claims.',
+      humanSummary:   'Dual Render funktioniert als Dokumentformat: eine Erzählung für Menschen, strukturierte Daten für AI.',
+      hypothesis:     'Ein einzelnes Dokument kann gleichzeitig als menschenlesbarer Artikel und als maschinenlesbare Datenquelle dienen.',
+      testSetup:      'Schema V2 mit 39 Feldern, Orbiter Admin als Editor, Astro als Frontend mit Depth-basiertem Rendering.',
+      observations:   'Die Gruppierung im Editor reduziert die kognitive Last. Claims-Tables werden von LLMs gut geparst.',
+      findings:       'Dual Render ist praktikabel. Der Schlüssel ist die Depth-Abstraktion: nicht alle Felder auf einmal zeigen.',
+      limitations:    'Nur mit 3 Pilot-Dossiers getestet. Noch keine echte Agent-Interaktion validiert.',
+      openQuestions:   'Wie verhält sich das Format bei >50 Dossiers? Braucht summaryMachine ein Token-Limit?',
+      claims:         [['Claim', 'Confidence', 'Source'], ['Dual Render funktioniert als Einzeldokument', 'high', 'Pilot-Test'], ['Depth-Modell reduziert UI-Komplexität', 'medium', 'Editor-Beobachtung']],
+      sources:        [['Author', 'Year', 'Title', 'Source', 'URL', 'Type'], ['Weiher, G.', '2026', 'Dual Render: Astro + Orbiter Guide', 'a83tech.com', 'https://a83tech.com', 'website'], ['Orbiter Project', '2026', 'Vision: Dual Render CMS', 'orbiter.sh', 'https://orbiter.sh/vision', 'website']],
+      relationships:  [['Von', 'Relation', 'Zu'], ['pilot-dossier', 'validates', 'Dual Render Konzept'], ['pilot-dossier', 'precedes', 'depth-analysis']],
+      series:         'dual-render',
+      keywords:       ['dual-render', 'dossier', 'pilot', 'orbiter'],
+      contentType:    'investigation',
+      language:       'de',
+      author:         'admin',
+      authorship:     'collaborative',
+      aiContribution: 'Schema-Design, Template-Generierung',
+      reviewStatus:   'self-reviewed',
+      modelDisclosure:'Claude Sonnet 4',
+      summaryMachine: 'Pilot investigation of the Dual Render document format. Tests whether a single dossier can serve both human readers (via narrative body) and AI agents (via structured claims, sources, and machine summary). Result: viable with depth-based progressive disclosure.',
+      dossierId:      'dsr-pilot-001',
+      tokensApprox:   '1200',
+      suggestedPrompts:['What is Dual Render?', 'How does the depth model work?', 'What are the limitations of this approach?'],
+    }, 'published');
   }
   // 'blank': nur Admin-User, keine Collections
 
@@ -215,11 +278,11 @@ async function pickTemplateAndSeed(filePath) {
     title:     'Template wählen',
     message:   'Welches Template soll verwendet werden?',
     detail:    `Datei: ${path.basename(filePath)}\n\nLogin nach dem Start: admin / admin\n(Passwort bitte danach ändern)`,
-    buttons:   ['Leer', 'Blog', 'Portfolio', 'Business', 'Events', 'Abbrechen'],
+    buttons:   ['Leer', 'Blog', 'Portfolio', 'Business', 'Events', 'Dossier', 'Abbrechen'],
     defaultId: 0,
-    cancelId:  5,
+    cancelId:  6,
   });
-  if (response === 5) return false;
+  if (response === 6) return false;
   await seedPod(filePath, TEMPLATE_IDS[response]);
   return true;
 }

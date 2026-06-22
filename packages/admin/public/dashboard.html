@@ -39,9 +39,11 @@
     .stat-dot.gold { background:var(--gold); }
 
     /* Content layout */
-    .dash-content { display:grid; grid-template-columns:1fr 300px; }
+    .dash-content { display:grid; grid-template-columns:1fr 300px; grid-template-rows:1fr; }
     .content-main { padding:28px 32px; border-right:1px solid var(--line); }
-    .content-side { padding:24px 0; }
+    .content-side { padding:24px 0; display:flex; flex-direction:column; overflow:hidden; height:0; min-height:100%; }
+    .side-section { display:flex; flex-direction:column; min-height:0; flex:1; overflow:hidden; }
+    #coll-cards { overflow-y:auto; flex:1; min-height:0; }
     /* Section headers */
     .section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
     .section-title { font-size:9px; letter-spacing:0.26em; text-transform:uppercase; color:var(--text); display:flex; align-items:center; gap:8px; }
@@ -440,7 +442,6 @@
         </div>`;
       }).join('');
     }
-
     // ── Calendar strip ────────────────────────────────────────────────
     if (showCalendar) {
       const calEntries = await fetch('/api/search/calendar', { credentials: 'include' }).then(r => r.json()).catch(() => []);

@@ -69,18 +69,66 @@
         if (!assetsSection) return;
 
         var collections = info.collections || [];
+        var navHidden = new Set((info.nav && info.nav.hidden) || []);
+        var navGroups = (info.nav && info.nav.groups) || null;
 
         // Build parent→children map
-        var topLevel = collections.filter(function (c) { return !c.parent; });
+        var topLevel = collections.filter(function (c) { return !c.parent && !navHidden.has(c.id); });
         var childMap = {};
-        collections.filter(function (c) { return c.parent; }).forEach(function (c) {
+        collections.filter(function (c) { return c.parent && !navHidden.has(c.id); }).forEach(function (c) {
           if (!childMap[c.parent]) childMap[c.parent] = [];
           childMap[c.parent].push(c);
         });
 
         var frag = document.createDocumentFragment();
 
-        topLevel.forEach(function (col) {
+        // Grouped collections (if nav.groups defined)
+        var groupedIds = new Set();
+        if (navGroups && typeof navGroups === 'object') {
+          Object.keys(navGroups).forEach(function (groupLabel) {
+            var colIds = navGroups[groupLabel] || [];
+            var groupCols = colIds.map(function (id) {
+              return topLevel.find(function (c) { return c.id === id; });
+            }).filter(Boolean);
+            if (!groupCols.length) return;
+            colIds.forEach(function (id) { groupedIds.add(id); });
+
+            var groupWrap = document.createElement('div');
+            groupWrap.className = 'nav-group-wrap';
+            var anyActive = groupCols.some(function (c) {
+              return (page === 'entries' && activeCol === c.id) || (page === 'editor' && activeCol === c.id);
+            });
+            groupWrap.classList.add('pinned');
+            var header = document.createElement('div');
+            header.className = 'nav-group-header open';
+            header.innerHTML = '<span class="nav-group-arrow">▶</span><span class="nav-group-label">' + groupLabel + '</span><span class="nav-group-count">' + groupCols.length + '</span>';
+            header.addEventListener('click', function () {
+              groupWrap.classList.toggle('pinned');
+              header.classList.toggle('open', groupWrap.classList.contains('pinned'));
+            });
+            groupWrap.appendChild(header);
+
+            var body = document.createElement('div');
+            body.className = 'nav-group-body';
+            groupCols.forEach(function (col) {
+              var isSingleton = !!col.singleton;
+              var isActive = isSingleton
+                ? (page === 'editor') && activeCol === col.id
+                : (page === 'entries') && activeCol === col.id;
+              var a = document.createElement('a');
+              a.className = 'nav-item nav-child' + (isActive ? ' active' : '');
+              a.href = isSingleton
+                ? '/editor.html?collection=' + encodeURIComponent(col.id) + '&singleton=1'
+                : '/entries.html?col=' + encodeURIComponent(col.id) + '&label=' + encodeURIComponent(col.label);
+              a.innerHTML = '<span class="nav-icon">' + (isSingleton ? '◈' : '◦') + '</span><span class="nav-label">' + col.label + '</span>';
+              body.appendChild(a);
+            });
+            groupWrap.appendChild(body);
+            frag.appendChild(groupWrap);
+          });
+        }
+
+        topLevel.filter(function (c) { return !groupedIds.has(c.id); }).forEach(function (col) {
           var isSingleton = !!col.singleton;
           var isActive = isSingleton
             ? (page === 'editor') && activeCol === col.id

@@ -24,7 +24,17 @@ infoRoutes.get('/', (c) => {
     parent:    db.getMeta(`collection.${col.id}.parent`) ?? null,
     singleton: !!col.singleton,
   }));
-  const version = db.getMeta('format_version') ?? '1';
+  const version   = db.getMeta('format_version') ?? '1';
+  const navHidden = db.getMeta('nav.hidden') ?? '';
+  const navGroups = db.getMeta('nav.groups') ?? '';
   db.close();
-  return c.json({ podPath, formatVersion: version, adminVersion, collections: cols });
+  let navGroupsParsed = null;
+  try { navGroupsParsed = navGroups ? JSON.parse(navGroups) : null; } catch {}
+  return c.json({
+    podPath, formatVersion: version, adminVersion, collections: cols,
+    nav: {
+      hidden: navHidden ? navHidden.split(',').map(s => s.trim()).filter(Boolean) : [],
+      groups: navGroupsParsed,
+    },
+  });
 });
