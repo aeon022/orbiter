@@ -330,7 +330,7 @@
     wrap.innerHTML = `
       <div id="site-banner" class="banner" style="display:none"></div>
 
-      <!-- Site + Build + GitHub + API — one form -->
+      <!-- All settings — one form -->
       <form id="site-form">
         <div class="settings-grid">
         <div class="settings-group">
@@ -357,7 +357,6 @@
           </div>
         </div>
 
-        <div style="display:flex;flex-direction:column;gap:8px">
         <div class="settings-group">
           <div class="group-header">Dashboard widgets</div>
           <div class="setting-row">
@@ -402,22 +401,18 @@
           </div>
         </div>
         <div class="settings-group">
-          <div class="group-header">Build</div>
+          <div class="group-header">Build &amp; Language</div>
           <div class="setting-row">
             <div><div class="setting-label">Webhook URL</div><div class="setting-desc">POST to this URL to trigger a build</div></div>
             <input class="input" name="build.webhook_url" value="${get('build.webhook_url')}" placeholder="https://api.netlify.com/build/hook/…" />
           </div>
-        </div>
-        <div class="settings-group">
-          <div class="group-header">Interface language</div>
           <div class="setting-row">
-            <div><div class="setting-label">Admin language</div><div class="setting-desc">Language for the admin interface labels</div></div>
+            <div><div class="setting-label">Admin language</div><div class="setting-desc">Interface labels</div></div>
             <div style="display:flex;gap:8px">
               <button class="btn btn-ghost btn-sm lang-btn ${(localStorage.getItem('orb_lang')||'en')==='en'?'active':''}" data-lang="en">EN</button>
               <button class="btn btn-ghost btn-sm lang-btn ${localStorage.getItem('orb_lang')==='de'?'active':''}" data-lang="de">DE</button>
             </div>
           </div>
-        </div>
         </div>
 
         <div class="settings-group">
