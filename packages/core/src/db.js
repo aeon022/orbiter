@@ -121,6 +121,14 @@ export class OrbiterDB {
       );
       CREATE INDEX IF NOT EXISTS idx_analytics_path ON _analytics(path);
       CREATE INDEX IF NOT EXISTS idx_analytics_date ON _analytics(created_at);
+
+      CREATE TABLE IF NOT EXISTS _form_configs (
+        form_id    TEXT PRIMARY KEY,
+        label      TEXT NOT NULL DEFAULT '',
+        fields     TEXT NOT NULL DEFAULT '[]',
+        settings   TEXT NOT NULL DEFAULT '{}',
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
     `);
 
     // Migrations: add columns that didn't exist in older pods
@@ -497,6 +505,29 @@ export class OrbiterDB {
     return this.db.prepare(
       'SELECT id, username, action, created_at FROM _audit WHERE entry_id = ? ORDER BY created_at DESC LIMIT ?'
     ).all(entryId, limit);
+  }
+
+  // ── Form configs ──────────────────────────────────
+  getFormConfigs() {
+    return this.db.prepare('SELECT * FROM _form_configs ORDER BY form_id').all()
+      .map(r => ({ ...r, fields: JSON.parse(r.fields), settings: JSON.parse(r.settings) }));
+  }
+
+  getFormConfig(formId) {
+    const row = this.db.prepare('SELECT * FROM _form_configs WHERE form_id = ?').get(formId);
+    if (!row) return null;
+    return { ...row, fields: JSON.parse(row.fields), settings: JSON.parse(row.settings) };
+  }
+
+  saveFormConfig(formId, { label, fields, settings } = {}) {
+    const now = new Date().toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, '');
+    this.db.prepare(
+      'INSERT OR REPLACE INTO _form_configs (form_id, label, fields, settings, updated_at) VALUES (?, ?, ?, ?, ?)'
+    ).run(formId, label || formId, JSON.stringify(fields || []), JSON.stringify(settings || {}), now);
+  }
+
+  deleteFormConfig(formId) {
+    this.db.prepare('DELETE FROM _form_configs WHERE form_id = ?').run(formId);
   }
 
   // ── Analytics ──────────────────────────────────────

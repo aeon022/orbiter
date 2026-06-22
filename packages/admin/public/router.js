@@ -136,6 +136,7 @@
     if (url.pathname === '/editor.html') return; // full-screen layout, no .main to swap
     if (url.pathname === '/calendar.html') return; // top-level await, needs full reload
     if (url.pathname === '/analytics.html') return;
+    if (url.pathname === '/forms.html') return;
     e.preventDefault();
     if (url.href === location.href) return;
     navigate(url.href, false);

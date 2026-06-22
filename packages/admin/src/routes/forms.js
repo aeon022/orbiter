@@ -97,3 +97,44 @@ formRoutes.delete('/:id', (c) => {
   db.close();
   return c.json({ ok: true });
 });
+
+// ── Form Builder Configs ──────────────────────────
+
+// GET /api/forms/configs — list all form configs
+formRoutes.get('/configs/list', (c) => {
+  const db = openPod(c.get('podPath'));
+  const configs = db.getFormConfigs();
+  db.close();
+  return c.json(configs);
+});
+
+// GET /api/forms/configs/:formId — get single config
+formRoutes.get('/configs/:formId', (c) => {
+  const db = openPod(c.get('podPath'));
+  const config = db.getFormConfig(c.req.param('formId'));
+  db.close();
+  if (!config) return c.json({ error: 'Not found' }, 404);
+  return c.json(config);
+});
+
+// PUT /api/forms/configs/:formId — save config
+formRoutes.put('/configs/:formId', async (c) => {
+  const formId = c.req.param('formId').slice(0, 64).replace(/[^a-z0-9_-]/gi, '-');
+  const body = await c.req.json();
+  const db = openPod(c.get('podPath'));
+  db.saveFormConfig(formId, {
+    label: body.label,
+    fields: body.fields,
+    settings: body.settings,
+  });
+  db.close();
+  return c.json({ ok: true });
+});
+
+// DELETE /api/forms/configs/:formId — delete config
+formRoutes.delete('/configs/:formId', (c) => {
+  const db = openPod(c.get('podPath'));
+  db.deleteFormConfig(c.req.param('formId'));
+  db.close();
+  return c.json({ ok: true });
+});

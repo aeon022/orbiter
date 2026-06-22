@@ -37,6 +37,16 @@
           dashLink.parentNode.insertBefore(calLink, dashLink.nextSibling);
         }
 
+        // Inject Form Builder link after Inbox
+        var inboxLink = sidebar.querySelector('a[href="/inbox.html"]');
+        if (inboxLink && !sidebar.querySelector('a[href="/forms.html"]')) {
+          var fbLink = document.createElement('a');
+          fbLink.className = 'nav-item' + (page === 'forms' ? ' active' : '');
+          fbLink.href = '/forms.html';
+          fbLink.innerHTML = '<span class="nav-icon">▣</span>Form Builder';
+          inboxLink.parentNode.insertBefore(fbLink, inboxLink.nextSibling);
+        }
+
         // Inject Analytics link before Snippets in Tools section
         var snippetsLink = sidebar.querySelector('a[href="/snippets.html"]');
         if (snippetsLink && !sidebar.querySelector('a[href="/analytics.html"]')) {

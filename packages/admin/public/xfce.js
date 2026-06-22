@@ -19,6 +19,7 @@
 
   var TOOLS = [
     { icon: '✉', label: 'Inbox',    href: '/inbox.html',    key: 'inbox'    },
+    { icon: '▣', label: 'Forms',   href: '/forms.html',    key: 'forms'    },
     { icon: '◉', label: 'Analytics',href: '/analytics.html',key: 'analytics'},
     { icon: '⌗', label: 'Snippets', href: '/snippets.html', key: 'snippets' },
     { icon: '▦', label: 'Schema',   href: '/schema.html',   key: 'schema'   },
@@ -68,7 +69,7 @@
       '</div>',
       '<div class="xfce-sb-center" id="xfce-sb-title"></div>',
       '<div class="xfce-sb-right">',
-        '<span id="xfce-sb-g-ind" class="xfce-sb-g-ind" style="display:none" title="g mode: d=dashboard k=calendar m=media s=settings u=users b=build i=import c=schema h=HUD a=account n=inbox y=analytics p=snippets">g ›</span>',
+        '<span id="xfce-sb-g-ind" class="xfce-sb-g-ind" style="display:none" title="g mode: d=dashboard k=calendar m=media u=users n=inbox f=forms y=analytics p=snippets c=schema b=build i=import s=settings a=account h=HUD">g ›</span>',
         '<button id="xfce-sb-bell" class="xfce-sb-bell" title="Notifications"><span id="xfce-sb-bell-icon">○</span><span id="xfce-sb-bell-badge" class="xfce-sb-bell-badge" style="display:none"></span></button>',
         '<span class="xfce-sb-div">·</span>',
         '<button id="xfce-sb-cheat" class="xfce-sb-cheat" title="Shortcuts (?)">?</button>',
@@ -1520,6 +1521,7 @@
             cheatRow('g &nbsp;+&nbsp; m', 'Media'),
             cheatRow('g &nbsp;+&nbsp; u', 'Users'),
             cheatRow('g &nbsp;+&nbsp; n', 'Inbox'),
+            cheatRow('g &nbsp;+&nbsp; f', 'Form Builder'),
             cheatRow('g &nbsp;+&nbsp; y', 'Analytics'),
             cheatRow('g &nbsp;+&nbsp; p', 'Snippets'),
             cheatRow('g &nbsp;+&nbsp; c', 'Schema'),
@@ -1578,7 +1580,8 @@
   var G_MAP = { d: '/dashboard.html', m: '/media.html', s: '/settings.html',
                 u: '/users.html',     b: '/build.html',  i: '/import.html',
                 c: '/schema.html',   a: '/account.html', n: '/inbox.html',
-                p: '/snippets.html',  k: '/calendar.html', y: '/analytics.html' };
+                p: '/snippets.html',  k: '/calendar.html', y: '/analytics.html',
+                f: '/forms.html' };
 
   function setGMode(on) {
     _gPending = on;

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbiter Admin — Form Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+  <script src="/theme.js"></script>
+  <style>
+    .fb-layout { display:grid; grid-template-columns:1fr 400px; min-height:calc(100vh - 60px); }
+    .fb-main { padding:24px 28px; overflow-y:auto; }
+    .fb-preview { border-left:1px solid var(--line); padding:24px 20px; overflow-y:auto; background:var(--bg0); }
+
+    .fb-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+    .fb-title { font-family:var(--display); font-size:18px; font-weight:500; color:var(--heading); }
+    .fb-actions { display:flex; gap:8px; }
+
+    .fb-form-name { display:flex; gap:10px; margin-bottom:20px; align-items:center; }
+    .fb-form-name input { flex:1; background:var(--bg0); border:1px solid var(--line); border-radius:var(--radius); padding:8px 12px; color:var(--heading); font-family:var(--mono); font-size:12px; outline:none; }
+    .fb-form-name input:focus { border-color:var(--accent); }
+
+    /* Field list */
+    .fb-fields { display:flex; flex-direction:column; gap:8px; min-height:60px; }
+    .fb-field {
+      display:grid; grid-template-columns:auto 1fr auto auto auto;
+      gap:10px; align-items:center;
+      padding:10px 14px; background:var(--bg2); border:1px solid var(--line);
+      border-radius:var(--radius); transition:border-color 0.12s;
+    }
+    .fb-field:hover { border-color:var(--mid); }
+    .fb-field.dragging { opacity:0.4; }
+    .fb-drag { cursor:grab; color:var(--muted); font-size:12px; user-select:none; }
+    .fb-drag:active { cursor:grabbing; }
+    .fb-field-name { font-size:12px; color:var(--heading); font-family:var(--mono); }
+    .fb-field-type { font-size:10px; color:var(--muted); background:var(--bg0); padding:2px 8px; border-radius:3px; }
+    .fb-field-req { font-size:9px; color:var(--gold); }
+    .fb-field-del { background:none; border:none; color:var(--line); font-size:12px; cursor:pointer; padding:2px 6px; transition:color 0.12s; }
+    .fb-field-del:hover { color:var(--muted); }
+
+    /* Add field */
+    .fb-add-row { display:flex; gap:8px; margin-top:12px; }
+    .fb-add-row input { flex:1; background:var(--bg0); border:1px solid var(--line); border-radius:var(--radius); padding:7px 10px; color:var(--text); font-family:var(--mono); font-size:11px; outline:none; }
+    .fb-add-row select { background:var(--bg0); border:1px solid var(--line); border-radius:var(--radius); padding:7px 10px; color:var(--text); font-family:var(--mono); font-size:11px; outline:none; appearance:none; }
+    .fb-add-btn { padding:7px 14px; background:var(--accent); border:none; color:#fff; font-family:var(--mono); font-size:10px; cursor:pointer; border-radius:var(--radius); letter-spacing:0.06em; }
+    .fb-add-btn:hover { filter:brightness(1.1); }
+
+    /* Settings */
+    .fb-settings { margin-top:24px; border-top:1px solid var(--line); padding-top:18px; }
+    .fb-setting { display:flex; align-items:center; justify-content:space-between; padding:6px 0; }
+    .fb-setting-label { font-size:11px; color:var(--text); }
+    .fb-setting input[type="checkbox"] { accent-color:var(--accent); }
+
+    /* Preview */
+    .fb-preview-title { font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
+    .fb-preview-form { background:var(--bg2); border:1px solid var(--line); border-radius:var(--radius); padding:20px; }
+    .fb-preview-form label { display:block; font-size:11px; color:var(--text); margin-bottom:4px; }
+    .fb-preview-form input, .fb-preview-form textarea, .fb-preview-form select {
+      width:100%; background:var(--bg0); border:1px solid var(--line); border-radius:var(--radius);
+      padding:8px 10px; color:var(--heading); font-family:var(--mono); font-size:11px; outline:none; margin-bottom:12px; box-sizing:border-box;
+    }
+    .fb-preview-form textarea { min-height:80px; resize:vertical; }
+    .fb-preview-form button {
+      padding:8px 20px; background:var(--accent); border:none; color:#fff;
+      font-family:var(--mono); font-size:11px; cursor:pointer; border-radius:var(--radius);
+    }
+    .fb-preview-form .fb-req { color:var(--gold); }
+
+    /* Snippet */
+    .fb-snippet { margin-top:20px; }
+    .fb-snippet-title { font-size:9px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+    .fb-snippet-code { background:var(--bg2); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px; font-family:var(--mono); font-size:10px; color:var(--text); line-height:1.6; overflow-x:auto; white-space:pre; position:relative; }
+    .fb-copy-btn { position:absolute; top:8px; right:8px; background:var(--bg0); border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:9px; padding:3px 8px; cursor:pointer; border-radius:var(--radius); }
+    .fb-copy-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+    /* Form list */
+    .fb-list { margin-bottom:20px; }
+    .fb-list-item { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border:1px solid var(--line); border-radius:var(--radius); margin-bottom:6px; cursor:pointer; transition:border-color 0.12s; }
+    .fb-list-item:hover { border-color:var(--accent); }
+    .fb-list-item.active { border-color:var(--accent); background:var(--accent-bg); }
+    .fb-list-name { font-size:12px; color:var(--heading); font-family:var(--mono); }
+    .fb-list-count { font-size:10px; color:var(--muted); }
+
+    .btn-save { padding:7px 16px; background:var(--accent); border:none; color:#fff; font-family:var(--mono); font-size:10px; cursor:pointer; border-radius:var(--radius); letter-spacing:0.06em; }
+    .btn-ghost { padding:7px 16px; background:transparent; border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:10px; cursor:pointer; border-radius:var(--radius); }
+    .btn-ghost:hover { border-color:var(--accent); color:var(--accent); }
+
+    @media (max-width: 768px) {
+      .fb-layout { grid-template-columns:1fr; }
+      .fb-preview { border-left:none; border-top:1px solid var(--line); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="logo" href="/dashboard.html"><div class="logo-mark">OR</div>Orbiter</a>
+      <div class="topbar-right">
+        <button class="search-trigger" id="search-btn" title="Search (⌘K)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Search <kbd>⌘K</kbd>
+        </button>
+        <button class="scheme-toggle" id="scheme-toggle" title="Toggle scheme">◐</button>
+        <span class="user" id="topbar-user"></span>
+        <span class="logout" id="logout-btn">Sign out</span>
+      </div>
+    </header>
+
+    <nav class="sidebar">
+      <div class="nav-section">Content</div>
+      <a class="nav-item" href="/dashboard.html"><span class="nav-icon">◈</span>Dashboard</a>
+      <a class="nav-item" href="/collections.html"><span class="nav-icon">⊞</span>Collections</a>
+      <div class="nav-section">Assets</div>
+      <a class="nav-item" href="/media.html"><span class="nav-icon">⊟</span>Media</a>
+      <div class="nav-section">Tools</div>
+      <a class="nav-item" href="/inbox.html"><span class="nav-icon">✉</span>Inbox</a>
+      <a class="nav-item active" href="/forms.html"><span class="nav-icon">▣</span>Form Builder</a>
+      <a class="nav-item" href="/snippets.html"><span class="nav-icon">⌗</span>Snippets</a>
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="/schema.html"><span class="nav-icon">◈</span>Schema</a>
+      <a class="nav-item" href="/build.html"><span class="nav-icon">▲</span>Build</a>
+      <a class="nav-item" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
+      <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
+      <div class="sidebar-footer">
+        <div class="pod-name" id="pod-name">content.pod</div>
+        <div class="pod-info" id="pod-info"></div>
+        <div class="pod-version" id="pod-version"></div>
+        <div class="pod-status"><span class="pod-dot"></span>pod synced</div>
+      </div>
+    </nav>
+
+    <main class="main">
+      <div class="fb-layout">
+        <div class="fb-main" id="fb-main"></div>
+        <div class="fb-preview" id="fb-preview"></div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).catch(() => null);
+    if (!me?.user) { location.replace('/login.html'); throw new Error('unauthenticated'); }
+    document.getElementById('topbar-user').textContent = me.user.username;
+    if (me.user.role === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      location.replace('/login.html');
+    });
+
+    const esc = s => String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const adminUrl = location.origin;
+
+    let configs = [];
+    let activeId = null;
+    let fields = [];
+    let formLabel = '';
+    let settings = { honeypot: true, submitLabel: 'Send', successMessage: 'Thank you!' };
+
+    const FIELD_TYPES = [
+      { value: 'text', label: 'Text' },
+      { value: 'email', label: 'Email' },
+      { value: 'textarea', label: 'Textarea' },
+      { value: 'select', label: 'Dropdown' },
+      { value: 'checkbox', label: 'Checkbox' },
+      { value: 'tel', label: 'Phone' },
+      { value: 'url', label: 'URL' },
+      { value: 'number', label: 'Number' },
+    ];
+
+    async function loadConfigs() {
+      configs = await fetch('/api/forms/configs/list', { credentials: 'include' }).then(r => r.json()).catch(() => []);
+    }
+
+    function selectForm(formId) {
+      activeId = formId;
+      const cfg = configs.find(c => c.form_id === formId);
+      if (cfg) {
+        fields = cfg.fields || [];
+        formLabel = cfg.label || formId;
+        settings = { honeypot: true, submitLabel: 'Send', successMessage: 'Thank you!', ...(cfg.settings || {}) };
+      }
+      render();
+    }
+
+    function newForm() {
+      const id = prompt('Form ID (slug, e.g. "contact"):');
+      if (!id) return;
+      const slug = id.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 64);
+      activeId = slug;
+      fields = [
+        { name: 'name', type: 'text', label: 'Name', required: true },
+        { name: 'email', type: 'email', label: 'Email', required: true },
+        { name: 'message', type: 'textarea', label: 'Message', required: true },
+      ];
+      formLabel = id.charAt(0).toUpperCase() + id.slice(1);
+      settings = { honeypot: true, submitLabel: 'Send', successMessage: 'Thank you!' };
+      render();
+    }
+
+    async function saveForm() {
+      if (!activeId) return;
+      await fetch(`/api/forms/configs/${activeId}`, {
+        method: 'PUT', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label: formLabel, fields, settings }),
+      });
+      await loadConfigs();
+      render();
+    }
+
+    function addField() {
+      const nameEl = document.getElementById('fb-new-name');
+      const typeEl = document.getElementById('fb-new-type');
+      const name = nameEl.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
+      if (!name) return;
+      fields.push({ name, type: typeEl.value, label: name.charAt(0).toUpperCase() + name.slice(1).replace(/_/g, ' '), required: false });
+      nameEl.value = '';
+      render();
+    }
+
+    function removeField(idx) {
+      fields.splice(idx, 1);
+      render();
+    }
+
+    function toggleRequired(idx) {
+      fields[idx].required = !fields[idx].required;
+      render();
+    }
+
+    function generateSnippet() {
+      const action = `${adminUrl}/api/form/${activeId}`;
+      let html = `<form action="${action}" method="POST">\n`;
+      for (const f of fields) {
+        const req = f.required ? ' required' : '';
+        const reqStar = f.required ? ' <span style="color:red">*</span>' : '';
+        if (f.type === 'textarea') {
+          html += `  <label>${esc(f.label)}${reqStar}</label>\n  <textarea name="${esc(f.name)}"${req}></textarea>\n\n`;
+        } else if (f.type === 'select') {
+          html += `  <label>${esc(f.label)}${reqStar}</label>\n  <select name="${esc(f.name)}"${req}>\n    <option value="">— select —</option>\n    <option value="option1">Option 1</option>\n    <option value="option2">Option 2</option>\n  </select>\n\n`;
+        } else if (f.type === 'checkbox') {
+          html += `  <label><input type="checkbox" name="${esc(f.name)}" value="yes" /> ${esc(f.label)}</label>\n\n`;
+        } else {
+          html += `  <label>${esc(f.label)}${reqStar}</label>\n  <input type="${f.type}" name="${esc(f.name)}"${req} />\n\n`;
+        }
+      }
+      if (settings.honeypot) {
+        html += `  <div style="display:none"><input name="_honeypot" tabindex="-1" autocomplete="off" /></div>\n`;
+      }
+      html += `  <button type="submit">${esc(settings.submitLabel || 'Send')}</button>\n</form>`;
+      return html;
+    }
+
+    function render() {
+      const main = document.getElementById('fb-main');
+      const preview = document.getElementById('fb-preview');
+
+      // Left: form list + builder
+      let html = `<div class="fb-header">
+        <div class="fb-title">Form Builder</div>
+        <div class="fb-actions">
+          <button class="btn-ghost" onclick="newForm()">+ New form</button>
+          ${activeId ? `<button class="btn-save" onclick="saveForm()">Save</button>` : ''}
+        </div>
+      </div>`;
+
+      // Form list
+      html += '<div class="fb-list">';
+      if (!configs.length && !activeId) {
+        html += '<div style="padding:20px;text-align:center;color:var(--muted);font-size:11px">No forms yet. Click "+ New form" to start.</div>';
+      }
+      for (const c of configs) {
+        html += `<div class="fb-list-item${c.form_id===activeId?' active':''}" onclick="selectForm('${esc(c.form_id)}')">
+          <span class="fb-list-name">${esc(c.label || c.form_id)}</span>
+          <span class="fb-list-count">${c.form_id}</span>
+        </div>`;
+      }
+      html += '</div>';
+
+      if (activeId) {
+        // Form name
+        html += `<div class="fb-form-name">
+          <input value="${esc(formLabel)}" placeholder="Form label" oninput="formLabel=this.value" />
+          <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">${esc(activeId)}</span>
+        </div>`;
+
+        // Fields
+        html += '<div class="fb-fields">';
+        fields.forEach((f, i) => {
+          html += `<div class="fb-field" draggable="true" data-idx="${i}">
+            <span class="fb-drag">⠿</span>
+            <span class="fb-field-name">${esc(f.label || f.name)}</span>
+            <span class="fb-field-type">${f.type}</span>
+            <span class="fb-field-req" style="cursor:pointer" onclick="toggleRequired(${i})">${f.required ? '● required' : '○ optional'}</span>
+            <button class="fb-field-del" onclick="removeField(${i})">✕</button>
+          </div>`;
+        });
+        html += '</div>';
+
+        // Add field
+        html += `<div class="fb-add-row">
+          <input id="fb-new-name" placeholder="field name" onkeydown="if(event.key==='Enter')addField()" />
+          <select id="fb-new-type">
+            ${FIELD_TYPES.map(t => `<option value="${t.value}">${t.label}</option>`).join('')}
+          </select>
+          <button class="fb-add-btn" onclick="addField()">+ Add</button>
+        </div>`;
+
+        // Settings
+        html += `<div class="fb-settings">
+          <div class="fb-setting">
+            <span class="fb-setting-label">Honeypot spam filter</span>
+            <input type="checkbox" ${settings.honeypot?'checked':''} onchange="settings.honeypot=this.checked;render()" />
+          </div>
+          <div class="fb-setting">
+            <span class="fb-setting-label">Submit button text</span>
+            <input style="width:120px;background:var(--bg0);border:1px solid var(--line);border-radius:var(--radius);padding:4px 8px;color:var(--heading);font-family:var(--mono);font-size:10px;outline:none;text-align:right" value="${esc(settings.submitLabel)}" oninput="settings.submitLabel=this.value;render()" />
+          </div>
+        </div>`;
+      }
+
+      main.innerHTML = html;
+
+      // Right: preview + snippet
+      if (!activeId) {
+        preview.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:11px">Select or create a form</div>';
+        return;
+      }
+
+      let prevHtml = '<div class="fb-preview-title">Live Preview</div><div class="fb-preview-form">';
+      for (const f of fields) {
+        const req = f.required ? '<span class="fb-req"> *</span>' : '';
+        if (f.type === 'textarea') {
+          prevHtml += `<label>${esc(f.label)}${req}</label><textarea placeholder="${esc(f.label)}"></textarea>`;
+        } else if (f.type === 'select') {
+          prevHtml += `<label>${esc(f.label)}${req}</label><select><option>— select —</option></select>`;
+        } else if (f.type === 'checkbox') {
+          prevHtml += `<label style="display:flex;align-items:center;gap:6px;margin-bottom:12px"><input type="checkbox" /> ${esc(f.label)}</label>`;
+        } else {
+          prevHtml += `<label>${esc(f.label)}${req}</label><input type="${f.type}" placeholder="${esc(f.label)}" />`;
+        }
+      }
+      prevHtml += `<button>${esc(settings.submitLabel || 'Send')}</button></div>`;
+
+      // Snippet
+      const snippet = generateSnippet();
+      prevHtml += `<div class="fb-snippet">
+        <div class="fb-snippet-title">HTML Snippet — paste into your Astro page</div>
+        <div class="fb-snippet-code"><button class="fb-copy-btn" id="fb-copy-btn">copy</button>${esc(snippet)}</div>
+      </div>`;
+
+      preview.innerHTML = prevHtml;
+
+      document.getElementById('fb-copy-btn')?.addEventListener('click', () => {
+        navigator.clipboard.writeText(snippet);
+        document.getElementById('fb-copy-btn').textContent = 'copied!';
+        setTimeout(() => { const b = document.getElementById('fb-copy-btn'); if (b) b.textContent = 'copy'; }, 1500);
+      });
+
+      // Drag and drop reorder
+      const fieldEls = main.querySelectorAll('.fb-field[draggable]');
+      let dragIdx = null;
+      fieldEls.forEach(el => {
+        el.addEventListener('dragstart', e => { dragIdx = parseInt(el.dataset.idx); el.classList.add('dragging'); });
+        el.addEventListener('dragend', () => { el.classList.remove('dragging'); });
+        el.addEventListener('dragover', e => { e.preventDefault(); });
+        el.addEventListener('drop', e => {
+          e.preventDefault();
+          const dropIdx = parseInt(el.dataset.idx);
+          if (dragIdx !== null && dragIdx !== dropIdx) {
+            const [moved] = fields.splice(dragIdx, 1);
+            fields.splice(dropIdx, 0, moved);
+            render();
+          }
+        });
+      });
+    }
+
+    // Make functions global
+    window.newForm = newForm;
+    window.selectForm = selectForm;
+    window.saveForm = saveForm;
+    window.addField = addField;
+    window.removeField = removeField;
+    window.toggleRequired = toggleRequired;
+
+    await loadConfigs();
+    render();
+  </script>
+
+  <script src="/search.js"></script>
+  <script src="/sidebar.js"></script>
+  <script src="/router.js"></script>
+</body>
+</html>
