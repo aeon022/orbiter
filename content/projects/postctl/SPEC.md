@@ -14,10 +14,88 @@
 - I want to see what I've posted and when
 - I want character count validation before posting (280 chars per tweet)
 
-### As an AI assistant:
+### As an AI assistant (Claude, GPT, Antigravity):
 - I want to create properly formatted Markdown posts
 - I want to trigger posting via CLI commands
 - I want to check post status and history
+- I want to run the full workflow end-to-end without human intervention (except approval)
+- I want structured JSON output for all commands so I can parse results
+- I want dry-run mode to preview everything before committing
+
+## AI-as-Operator Principle
+
+**postctl is designed for AI to operate, not just to generate text.**
+
+Most social media tools treat AI as a copywriting feature — "AI writes your caption." postctl treats AI as the operator of the entire tool. The human sets the strategy and approves; the AI executes.
+
+### Workflow: AI operates, human approves
+
+```
+Human: "Post the new Orbiter v0.3.66 release"
+   ↓
+AI (Claude/GPT):
+   1. Writes posts as Markdown files (all platforms, EN+DE)
+   2. postctl import ./posts/
+   3. postctl list --format json          → shows draft posts
+   4. "Here are 8 posts ready. Review?"
+   ↓
+Human: "LinkedIn DE ändern, sonst passt"
+   ↓
+AI:
+   5. Edits the file, re-imports
+   6. postctl campaign post orbiter-v0366 --dry-run
+   7. "Dry run passed. Post?"
+   ↓
+Human: "go"
+   ↓
+AI:
+   8. postctl campaign post orbiter-v0366
+   9. "Posted. 4/4 Twitter, 2/2 LinkedIn, 2/2 Threads. IDs: ..."
+```
+
+### Design requirements for AI operation
+
+1. **All commands must work non-interactively** — no prompts, no "are you sure?", no interactive menus. Flags control everything.
+2. **`--format json`** on all commands — structured output that AI can parse. Default is human-readable, `--format json` returns machine-readable.
+3. **`--dry-run`** on all mutation commands — AI can preview without side effects. Human approves, then AI runs without `--dry-run`.
+4. **Exit codes** — 0 = success, 1 = validation error, 2 = API error, 3 = auth error. AI reads exit codes, not just output.
+5. **Idempotent imports** — running `postctl import` twice doesn't duplicate posts. AI can re-import after edits without cleanup.
+6. **Partial failure recovery** — if tweet 3/5 fails, `postctl post <id> --resume` continues from where it stopped. AI doesn't need to track state manually.
+7. **No browser required** — OAuth flow uses localhost callback, but once authenticated, everything is CLI-only. AI never needs to open a browser.
+8. **Batch operations** — `postctl campaign post <name>` posts all posts in a campaign. AI doesn't need to loop over individual posts.
+
+### JSON output example
+
+```bash
+$ postctl list --format json
+{
+  "posts": [
+    {
+      "id": "orbiter-v0366-twitter-en",
+      "platform": "twitter",
+      "type": "thread",
+      "status": "draft",
+      "tweets": 5,
+      "images": 2,
+      "chars": [245, 220, 180, 260, 190],
+      "valid": true
+    }
+  ],
+  "total": 8,
+  "by_status": {"draft": 8, "posted": 0, "scheduled": 0}
+}
+```
+
+```bash
+$ postctl post orbiter-v0366-twitter-en --format json
+{
+  "ok": true,
+  "platform": "twitter",
+  "tweets_posted": 5,
+  "thread_id": "1234567890",
+  "urls": ["https://x.com/gerwinweiher/status/1234567890"]
+}
+```
 
 ## Core Workflows
 
