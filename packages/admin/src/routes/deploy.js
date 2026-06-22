@@ -2,8 +2,10 @@ import { Hono } from 'hono';
 import { Client } from 'basic-ftp';
 import { existsSync } from 'node:fs';
 import { openPod } from '@a83/orbiter-core';
+import { requireAdmin } from '../middleware/auth.js';
 
 export const deployRoutes = new Hono();
+deployRoutes.use('*', requireAdmin);
 
 async function getFtpCfg(podPath) {
   const db = openPod(podPath);

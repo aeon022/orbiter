@@ -1,8 +1,10 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
 import { readFileSync } from 'node:fs';
+import { requireAdmin } from '../middleware/auth.js';
 
 export const githubRoutes = new Hono();
+githubRoutes.use('*', requireAdmin);
 
 const API = 'https://api.github.com';
 

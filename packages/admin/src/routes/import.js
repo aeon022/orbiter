@@ -4,7 +4,10 @@ import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { parseWXR, buildImportPlan, executeImport } from '../wp-importer.js';
 
+import { requireAdmin } from '../middleware/auth.js';
+
 export const importRoutes = new Hono();
+importRoutes.use('*', requireAdmin);
 
 // In-memory token store — holds parsed WXR between analyze and execute (30 min TTL)
 const pendingImports = new Map();

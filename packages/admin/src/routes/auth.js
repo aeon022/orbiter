@@ -56,9 +56,11 @@ authRoutes.post('/login', async (c) => {
   db.createSession(user.id, token, expiresAt);
   db.close();
 
+  const isSecure = c.req.url.startsWith('https') || c.req.header('x-forwarded-proto') === 'https';
   setCookie(c, 'orb_sess', token, {
     httpOnly: true,
     sameSite: 'Strict',
+    secure: isSecure,
     path: '/',
     maxAge: 30 * 24 * 60 * 60,
   });
