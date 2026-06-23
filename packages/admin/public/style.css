@@ -17,8 +17,8 @@
   --bg3:       #1a2638;
   --line:      #1c2e46;
   --line2:     #132030;
-  --muted:     #5878a0;
-  --mid:       #7890b0;
+  --muted:     #6888b0;
+  --mid:       #8098c0;
   --text:      #a0b4c8;
   --heading:   #d0dce8;
   --gold:      #00c8a0;
@@ -127,7 +127,7 @@
   --bg3:       #313244;
   --line:      #313244;
   --line2:     #262637;
-  --muted:     #7c8098;
+  --muted:     #8890a8;
   --mid:       #9399b2;
   --text:      #cdd6f4;
   --heading:   #cdd6f4;
@@ -325,7 +325,7 @@ html[data-scheme="dark"][data-theme="catppuccin"] {
   --bg3:       #313244;
   --line:      #313244;
   --line2:     #262637;
-  --muted:     #7c8098;
+  --muted:     #8890a8;
   --mid:       #9399b2;
   --text:      #cdd6f4;
   --heading:   #cdd6f4;
@@ -452,7 +452,7 @@ html[data-scheme="light"][data-theme="space"] {
   --bg3:       #313244;
   --line:      #313244;
   --line2:     #262637;
-  --muted:     #7c8098;
+  --muted:     #8890a8;
   --mid:       #9399b2;
   --text:      #cdd6f4;
   --heading:   #cdd6f4;
@@ -1443,6 +1443,7 @@ html[data-style="xfce"] .table-wrap {
 html[data-style="xfce"] .page-header {
   padding: 20px 24px !important;
   margin-bottom: 0;
+  top: var(--sb-h, 26px) !important;
 }
 html[data-style="xfce"] .entries-content-card {
   padding: 16px 20px !important;
