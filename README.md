@@ -1085,18 +1085,28 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 
 ## Changelog
 
+### June 2026 · admin@0.3.69 — Tabler Icons, WCAG compliance, UI zoom, security hardening
+
+- **Tabler SVG icons** — all dock icons replaced with Tabler Icons (inline SVGs, zero dependencies). Dashboard, Calendar, Media, Users, Inbox, Forms, Analytics, Snippets, Schema, Build, Import, Settings, Notes, To-do, Tools, HUD — all proper vector icons.
+- **Dynamic scheme toggle** — dock button cycles Auto→Light→Dark with matching icons (sun-moon/sun/moon) and label updates.
+- **WCAG AA contrast compliance** — all 6 themes (Space/Zen/Catppuccin × dark/light) now meet 4.5:1 minimum contrast ratio for `--muted` text against backgrounds. Zen Dark gold/accent significantly boosted.
+- **Space palette refined** — less saturated steel-blue accent (#5088c0), desaturated teal gold/jade, warmer backgrounds in light mode. No more "baby blue".
+- **Dashboard typography scale** — Major Third (1.25 ratio). Entry names 13px, section titles 10px, status pills 10px, dates 11px. All secondary text uses `--mid` instead of `--muted`.
+- **UI Zoom** — slider in Settings → Appearance (85%–130%). Uses CSS `zoom` property. Stored in `localStorage`, applied before first paint by `theme.js`.
+- **Security hardening** (admin@0.3.68) — `GET /api/meta/:key` enforces ALLOWED_KEYS (was reading arbitrary keys including secrets). Secret keys masked for non-admin users. Admin-only keys require admin role for writes. Deploy, import, GitHub push routes require admin. Session cookie gets `secure` flag over HTTPS.
+- **Light/dark shadow consistency** — auto and explicit light mode now produce identical shadows across all styles (classic, glass, station).
+- **Station mode fixes** — sticky settings header offset by status bar height. xfce elements hidden in classic/glass modes via CSS.
+
 ### June 2026 · admin@0.3.68 — Dossier template, field groups, APA7 citations, template system, nav grouping
 
-- **Dossier POD template** — new "Dossier" template alongside Blog, Portfolio, Business, Events. Creates a `dossiers` collection with 39 fields organized in 6 groups (Content, Research, Evidence, Meta, Provenance, Agent). Includes a demo "Pilot-Dossier" entry. Available in the Desktop app "New POD" dialog and via the template install system.
-- **Editor sidebar field groups** — schema fields with a `group` property render as collapsible sections in the editor sidebar. First two groups and groups with APA7 fields auto-expand. Backward compatible — collections without groups render flat as before.
-- **APA7 citation system** — table fields with `format: 'apa7'` display APA7-formatted citation previews below the table. Default headers: Author, Year, Title, Source, URL, Type. Supports book, article, chapter, report, website formats. Live preview updates on every keystroke.
-- **Template import/export system** — `POST /api/templates/export` (export collections as shareable JSON), `POST /api/templates/import` (import template files), `GET /api/templates/available` (list built-in templates with install status), `POST /api/templates/install/:id` (install into existing POD). Settings UI with built-in template buttons, export checkboxes, import file picker. Auto `nav.groups` configuration on template install.
-- **Navigation grouping & dock drawers** — `nav.hidden` and `nav.groups` meta keys. Sidebar: collapsible nav groups with hover-to-peek. Dock (Station mode): hexagon drawer items with triangle indicator, hover popup with collection links and preview cards. Active state + breadcrumb update on SPA navigation. Settings UI: per-collection visibility toggle + group assignment.
-- **Named categories with parent/child** — templates create named category collections (`post_categories`, `project_categories`, `event_categories`) with parent relationship instead of a generic `categories` collection.
-- **AI Content Assistant** — `/ai` slash command + toolbar button in the block editor. Summarize, translate, generate SEO text, adjust tone. Supports Ollama (local, free) or OpenAI/Anthropic API keys. Preset pills for common tasks. Configurable in Settings → AI.
-- **Keyboard navigation updates** — 1-9 keys cover all dock items including drawers. g-mode extended with dynamic collection shortcuts (first unused letter). Cheatsheet updated.
-- **Dashboard collections panel** — matches height of "Recently edited", scrolls independently.
-- **Dock visual updates** — 22px icons, .88 opacity, calendar icon (☰), hexagon drawer icon with triangle indicator (pulses on hover), darker labels.
+- **Dossier POD template** — new "Dossier" template alongside Blog, Portfolio, Business, Events. 39 fields in 6 groups (Content, Research, Evidence, Meta, Provenance, Agent). Demo pilot dossier included.
+- **Editor sidebar field groups** — schema fields with `group` property render as collapsible sections. First two groups + APA7 groups auto-expand.
+- **APA7 citation system** — table fields with `format: 'apa7'` display live-formatted citation previews (book, article, chapter, report, website).
+- **Template import/export** — export/import collections as JSON, install built-in templates into existing PODs. Additive, never destructive.
+- **Navigation grouping & dock drawers** — `nav.hidden`/`nav.groups` meta keys. Sidebar collapsible groups. Dock drawer items with hover preview cards.
+- **Named categories** — templates create `post_categories`, `project_categories`, `event_categories` with parent/child relationships.
+- **AI Content Assistant** — `/ai` slash command, Ollama/Anthropic/OpenAI/Gemini support.
+- **Keyboard navigation** — 1-9 covers drawers, g-mode with dynamic collection shortcuts.
 
 ---
 
