@@ -1006,7 +1006,7 @@
       });
     });
 
-    // UI Zoom — live preview on drag, save + reload on release
+    // UI Zoom — live preview on drag, saved to localStorage on change, applied on next page load
     const zoomSlider = document.getElementById('ui-zoom-slider');
     const zoomVal = document.getElementById('ui-zoom-val');
     if (zoomSlider) {
@@ -1017,11 +1017,12 @@
       });
       zoomSlider.addEventListener('change', () => {
         localStorage.setItem('orb_ui_zoom', zoomSlider.value);
-        setTimeout(() => location.reload(), 200);
       });
       document.getElementById('ui-zoom-reset')?.addEventListener('click', () => {
+        zoomSlider.value = '100';
+        zoomVal.textContent = '100%';
+        document.documentElement.style.zoom = '';
         localStorage.setItem('orb_ui_zoom', '100');
-        location.reload();
       });
     }
 
