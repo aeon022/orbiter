@@ -27,7 +27,7 @@
   if (style === 'xfce')  root.setAttribute('data-style', 'xfce');
 
   var zoom = localStorage.getItem('orb_ui_zoom') || '100';
-  if (zoom !== '100') root.style.fontSize = zoom + '%';
+  if (zoom !== '100') root.style.zoom = (parseInt(zoom) / 100);
 
   // Wire up toggle button once DOM is ready
   document.addEventListener('DOMContentLoaded', function () {

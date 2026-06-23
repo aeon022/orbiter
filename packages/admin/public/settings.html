@@ -280,9 +280,12 @@
       </div>
     </nav>
     <main class="main">
-      <div class="page-header glass-card" style="display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;">
+      <div class="page-header glass-card" style="display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;margin-bottom:4px;">
         <h1 class="page-title">Settings</h1>
-        <button type="submit" form="site-form" class="btn-save" id="header-save-btn">Save settings</button>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span id="header-save-msg" style="font-size:10px;color:var(--jade);opacity:0;transition:opacity .3s"></span>
+          <button type="submit" form="site-form" class="btn-save" id="header-save-btn">Save settings</button>
+        </div>
       </div>
       <div class="settings-wrap" id="settings-content">
         <div class="empty"><div class="spinner"></div></div>
@@ -931,6 +934,8 @@
         ['dashboard.show_workspace',   fd.get('dashboard.show_workspace') ? '1' : '0'],
       ]);
       showBanner('site-banner','banner-ok','Settings saved');
+      const msg = document.getElementById('header-save-msg');
+      if (msg) { msg.textContent = '✓ Saved'; msg.style.opacity = '1'; setTimeout(() => msg.style.opacity = '0', 2500); }
     });
 
     // Preview token generator
@@ -1008,13 +1013,13 @@
       zoomSlider.addEventListener('input', () => {
         const v = zoomSlider.value;
         zoomVal.textContent = v + '%';
-        document.documentElement.style.fontSize = v === '100' ? '' : v + '%';
+        document.documentElement.style.zoom = v === '100' ? '' : (parseInt(v) / 100);
         localStorage.setItem('orb_ui_zoom', v);
       });
       document.getElementById('ui-zoom-reset')?.addEventListener('click', () => {
         zoomSlider.value = '100';
         zoomVal.textContent = '100%';
-        document.documentElement.style.fontSize = '';
+        document.documentElement.style.zoom = '';
         localStorage.setItem('orb_ui_zoom', '100');
       });
     }
