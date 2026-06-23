@@ -70,8 +70,8 @@
     }
     .setting-row:last-child { border-bottom: none; }
     .setting-row:hover { background: var(--hover-bg); }
-    .setting-label { font-size: 13px; color: var(--text); margin-bottom: 3px; }
-    .setting-desc { font-size: 11px; color: var(--muted); line-height: 1.55; }
+    .setting-label { font-size: 13px; color: var(--heading); margin-bottom: 3px; }
+    .setting-desc { font-size: 11px; color: var(--mid); line-height: 1.55; }
 
     /* Inputs — vollständig gerundete Box, weicher Focus */
     .settings-wrap .input {
@@ -130,8 +130,8 @@
     .theme-card.active { border-color: var(--accent); background: var(--accent-bg); box-shadow: 0 0 0 1px var(--accent); }
     .theme-swatch { display: flex; gap: 4px; margin-bottom: 10px; height: 4px; }
     .theme-swatch span { flex: 1; border-radius: 2px; }
-    .theme-card-name { font-size: 11px; color: var(--text); margin-bottom: 2px; font-weight: 500; }
-    .theme-card-sub  { font-size: 9px; color: var(--muted); letter-spacing: 0.03em; line-height: 1.4; }
+    .theme-card-name { font-size: 12px; color: var(--heading); margin-bottom: 2px; font-weight: 500; }
+    .theme-card-sub  { font-size: 10px; color: var(--mid); letter-spacing: 0.03em; line-height: 1.4; }
 
     /* Style cards */
     .style-cards { display: flex; gap: 10px; }
@@ -1006,23 +1006,22 @@
       });
     });
 
-    // UI Zoom — live preview on drag, saved to localStorage on change, applied on next page load
+    // UI Zoom — no live preview (causes layout jump), value shown, applied on next page load
     const zoomSlider = document.getElementById('ui-zoom-slider');
     const zoomVal = document.getElementById('ui-zoom-val');
     if (zoomSlider) {
       zoomSlider.addEventListener('input', () => {
-        const v = zoomSlider.value;
-        zoomVal.textContent = v + '%';
-        document.documentElement.style.zoom = v === '100' ? '' : (parseInt(v) / 100);
+        zoomVal.textContent = zoomSlider.value + '%';
       });
       zoomSlider.addEventListener('change', () => {
         localStorage.setItem('orb_ui_zoom', zoomSlider.value);
+        zoomVal.textContent = zoomSlider.value + '% — applies on next page';
       });
       document.getElementById('ui-zoom-reset')?.addEventListener('click', () => {
         zoomSlider.value = '100';
         zoomVal.textContent = '100%';
-        document.documentElement.style.zoom = '';
         localStorage.setItem('orb_ui_zoom', '100');
+        document.documentElement.style.zoom = '';
       });
     }
 
