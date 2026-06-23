@@ -772,6 +772,14 @@
             </button>
           </div>
         </div>
+        <div style="padding:10px 20px;border-top:1px solid var(--line2)">
+          <div class="setting-label" style="margin-bottom:8px">UI Zoom</div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <input type="range" id="ui-zoom-slider" min="85" max="130" step="5" value="${localStorage.getItem('orb_ui_zoom')||'100'}" style="flex:1;accent-color:var(--accent);" />
+            <span id="ui-zoom-val" style="font-family:var(--mono);font-size:11px;color:var(--text);min-width:36px;text-align:right">${localStorage.getItem('orb_ui_zoom')||'100'}%</span>
+            <button class="btn btn-ghost btn-sm" id="ui-zoom-reset" style="font-size:9px">Reset</button>
+          </div>
+        </div>
       </div>
 
       <!-- Account (bottom) -->
@@ -992,6 +1000,24 @@
         }
       });
     });
+
+    // UI Zoom
+    const zoomSlider = document.getElementById('ui-zoom-slider');
+    const zoomVal = document.getElementById('ui-zoom-val');
+    if (zoomSlider) {
+      zoomSlider.addEventListener('input', () => {
+        const v = zoomSlider.value;
+        zoomVal.textContent = v + '%';
+        document.documentElement.style.fontSize = v === '100' ? '' : v + '%';
+        localStorage.setItem('orb_ui_zoom', v);
+      });
+      document.getElementById('ui-zoom-reset')?.addEventListener('click', () => {
+        zoomSlider.value = '100';
+        zoomVal.textContent = '100%';
+        document.documentElement.style.fontSize = '';
+        localStorage.setItem('orb_ui_zoom', '100');
+      });
+    }
 
     // FTP test connection
     document.getElementById('ftp-test-btn')?.addEventListener('click', async () => {

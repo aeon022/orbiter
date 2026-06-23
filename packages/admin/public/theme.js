@@ -26,6 +26,9 @@
   if (style === 'glass') root.setAttribute('data-style', 'glass');
   if (style === 'xfce')  root.setAttribute('data-style', 'xfce');
 
+  var zoom = localStorage.getItem('orb_ui_zoom') || '100';
+  if (zoom !== '100') root.style.fontSize = zoom + '%';
+
   // Wire up toggle button once DOM is ready
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('scheme-toggle');

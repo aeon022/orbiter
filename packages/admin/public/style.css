@@ -17,9 +17,9 @@
   --bg3:       #1a2638;
   --line:      #1c2e46;
   --line2:     #132030;
-  --muted:     #3a5878;
-  --mid:       #5888b0;
-  --text:      #88a8d0;
+  --muted:     #5a80a8;
+  --mid:       #6898c0;
+  --text:      #90b0d8;
   --heading:   #b8d4f0;
   --gold:      #00c8a0;
   --gold-bg:   rgba(0,200,160,.08);
@@ -48,8 +48,8 @@
   --bg3:       #d0e8ff;
   --line:      #b0ccf0;
   --line2:     #cce0ff;
-  --muted:     #6080a8;
-  --mid:       #204878;
+  --muted:     #506888;
+  --mid:       #1a3868;
   --text:      #0a1e3a;
   --heading:   #030d1e;
   --gold:      #0088b8;
@@ -75,9 +75,9 @@
   --bg3:       #242228;
   --line:      #2c2830;
   --line2:     #221f26;
-  --muted:     #6a5a4a;
-  --mid:       #7e8a98;
-  --text:      #a8b4c0;
+  --muted:     #908070;
+  --mid:       #8e9aaa;
+  --text:      #b0bcc8;
   --heading:   #e0ccd0;
   --gold:      #ad7575;
   --gold-bg:   rgba(173,117,117,.08);
@@ -101,7 +101,7 @@
   --bg3:       #e0e2e8;
   --line:      #cccdd8;
   --line2:     #d8d9e4;
-  --muted:     #8c8fa0;
+  --muted:     #6a6d80;
   --mid:       #4a5060;
   --text:      #282c38;
   --heading:   #10131e;
@@ -153,7 +153,7 @@
   --bg3:       #ccd0da;
   --line:      #ccd0da;
   --line2:     #dce0e8;
-  --muted:     #8488a0;
+  --muted:     #6c7088;
   --mid:       #7c7f93;
   --text:      #4c4f69;
   --heading:   #1e1e2e;
@@ -247,7 +247,7 @@ html[data-scheme="light"][data-theme="space"]
     --bg3:       #ccd0da;
     --line:      #ccd0da;
     --line2:     #dce0e8;
-    --muted:     #8488a0;
+    --muted:     #6c7088;
     --mid:       #7c7f93;
     --text:      #4c4f69;
     --heading:   #1e1e2e;
@@ -375,7 +375,7 @@ html[data-scheme="light"][data-theme="catppuccin"] {
   --bg3:       #ccd0da;
   --line:      #ccd0da;
   --line2:     #dce0e8;
-  --muted:     #8488a0;
+  --muted:     #6c7088;
   --mid:       #7c7f93;
   --text:      #4c4f69;
   --heading:   #1e1e2e;
@@ -400,8 +400,8 @@ html[data-scheme="light"][data-theme="space"] {
   --bg3:       #d0e8ff;
   --line:      #b0ccf0;
   --line2:     #cce0ff;
-  --muted:     #6080a8;
-  --mid:       #204878;
+  --muted:     #506888;
+  --mid:       #1a3868;
   --text:      #0a1e3a;
   --heading:   #030d1e;
   --gold:      #0088b8;
@@ -1597,9 +1597,9 @@ html[data-style="xfce"] .cal-up-title { font-size: 12px; }
 /* Dashboard compact entries in xfce */
 html[data-style="xfce"] .entry-row { padding: 7px 12px; gap: 10px; }
 html[data-style="xfce"] .entry-name { font-size: 11px; }
-html[data-style="xfce"] .entry-coll { font-size: 8px; }
+html[data-style="xfce"] .entry-coll { font-size: 9px; }
 html[data-style="xfce"] .entry-date { font-size: 9px; }
-html[data-style="xfce"] .pill { font-size: 8px; padding: 1px 5px; }
+html[data-style="xfce"] .pill { font-size: 9px; padding: 2px 6px; }
 
 /* Stats: compact vertical list */
 html[data-style="xfce"] .stats-row.glass-card {
@@ -1620,12 +1620,12 @@ html[data-style="xfce"] .stat-num {
   margin-bottom: 0 !important;
 }
 html[data-style="xfce"] .stat-label {
-  font-size: 7px !important;
-  letter-spacing: 0.2em !important;
+  font-size: 9px !important;
+  letter-spacing: 0.18em !important;
   margin-bottom: 4px !important;
 }
 html[data-style="xfce"] .stat-sub {
-  font-size: 8px !important;
+  font-size: 9px !important;
 }
 html[data-style="xfce"] .stat-bar {
   display: none !important;
