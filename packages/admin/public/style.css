@@ -17,9 +17,9 @@
   --bg3:       #1a2638;
   --line:      #1c2e46;
   --line2:     #132030;
-  --muted:     #284060;
-  --mid:       #4a7098;
-  --text:      #7898c0;
+  --muted:     #3a5878;
+  --mid:       #5888b0;
+  --text:      #88a8d0;
   --heading:   #b8d4f0;
   --gold:      #00c8a0;
   --gold-bg:   rgba(0,200,160,.08);
@@ -75,9 +75,9 @@
   --bg3:       #242228;
   --line:      #2c2830;
   --line2:     #221f26;
-  --muted:     #574838;
-  --mid:       #6e7a88;
-  --text:      #98a4b0;
+  --muted:     #6a5a4a;
+  --mid:       #7e8a98;
+  --text:      #a8b4c0;
   --heading:   #e0ccd0;
   --gold:      #ad7575;
   --gold-bg:   rgba(173,117,117,.08);
@@ -127,7 +127,7 @@
   --bg3:       #313244;
   --line:      #313244;
   --line2:     #262637;
-  --muted:     #6c7086;
+  --muted:     #7c8098;
   --mid:       #9399b2;
   --text:      #cdd6f4;
   --heading:   #cdd6f4;
@@ -153,7 +153,7 @@
   --bg3:       #ccd0da;
   --line:      #ccd0da;
   --line2:     #dce0e8;
-  --muted:     #9ca0b0;
+  --muted:     #8488a0;
   --mid:       #7c7f93;
   --text:      #4c4f69;
   --heading:   #1e1e2e;
@@ -247,7 +247,7 @@ html[data-scheme="light"][data-theme="space"]
     --bg3:       #ccd0da;
     --line:      #ccd0da;
     --line2:     #dce0e8;
-    --muted:     #9ca0b0;
+    --muted:     #8488a0;
     --mid:       #7c7f93;
     --text:      #4c4f69;
     --heading:   #1e1e2e;
@@ -301,7 +301,7 @@ html[data-scheme="dark"][data-theme="zen"] {
   --bg3:       #242228;
   --line:      #2c2830;
   --line2:     #221f26;
-  --muted:     #574838;
+  --muted:     #6a5a4a;
   --mid:       #6e7a88;
   --text:      #98a4b0;
   --heading:   #e0ccd0;
@@ -325,7 +325,7 @@ html[data-scheme="dark"][data-theme="catppuccin"] {
   --bg3:       #313244;
   --line:      #313244;
   --line2:     #262637;
-  --muted:     #6c7086;
+  --muted:     #7c8098;
   --mid:       #9399b2;
   --text:      #cdd6f4;
   --heading:   #cdd6f4;
@@ -375,7 +375,7 @@ html[data-scheme="light"][data-theme="catppuccin"] {
   --bg3:       #ccd0da;
   --line:      #ccd0da;
   --line2:     #dce0e8;
-  --muted:     #9ca0b0;
+  --muted:     #8488a0;
   --mid:       #7c7f93;
   --text:      #4c4f69;
   --heading:   #1e1e2e;
@@ -426,7 +426,7 @@ html[data-scheme="light"][data-theme="space"] {
   --bg3:       #242228;
   --line:      #2c2830;
   --line2:     #221f26;
-  --muted:     #574838;
+  --muted:     #6a5a4a;
   --mid:       #6e7a88;
   --text:      #98a4b0;
   --heading:   #e0ccd0;
@@ -452,7 +452,7 @@ html[data-scheme="light"][data-theme="space"] {
   --bg3:       #313244;
   --line:      #313244;
   --line2:     #262637;
-  --muted:     #6c7086;
+  --muted:     #7c8098;
   --mid:       #9399b2;
   --text:      #cdd6f4;
   --heading:   #cdd6f4;
@@ -1265,13 +1265,13 @@ html[data-style="xfce"] .editor-shell {
 }
 .xfce-dock-lbl {
   font-family: var(--mono);
-  font-size: 8px;
-  letter-spacing: .05em;
+  font-size: 9px;
+  letter-spacing: .04em;
   margin-top: 3px;
   color: var(--text);
   white-space: nowrap;
   transition: color .12s, opacity .12s;
-  opacity: .7;
+  opacity: .8;
 }
 .xfce-dock-item:hover .xfce-dock-lbl {
   opacity: 1;

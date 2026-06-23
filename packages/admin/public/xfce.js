@@ -10,27 +10,48 @@
   var params    = new URLSearchParams(location.search);
   var activeCol = params.get('col') || params.get('collection');
 
+  function tblr(paths) {
+    return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">' + paths + '</svg>';
+  }
+  var TI = {
+    dashboard: tblr('<path d="M5 4h4a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1"/><path d="M5 16h4a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1"/><path d="M15 12h4a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1"/><path d="M15 4h4a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1"/>'),
+    calendar:  tblr('<path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/><path d="M11 15h1"/><path d="M12 15v3"/>'),
+    media:     tblr('<path d="M15 8h.01"/><path d="M3 6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6"/><path d="M3 16l5-5c.928-.893 2.072-.893 3 0l5 5"/><path d="M14 14l1-1c.928-.893 2.072-.893 3 0l3 3"/>'),
+    users:     tblr('<path d="M5 7a4 4 0 1 0 8 0a4 4 0 1 0-8 0"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/>'),
+    inbox:     tblr('<path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7"/><path d="M3 7l9 6l9-6"/>'),
+    forms:     tblr('<path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6"/><path d="M4 16a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2"/>'),
+    analytics: tblr('<path d="M3 13a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6"/><path d="M15 9a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V9"/><path d="M9 5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V5"/><path d="M4 20h14"/>'),
+    snippets:  tblr('<path d="M7 8l-4 4l4 4"/><path d="M17 8l4 4l-4 4"/><path d="M14 4l-4 16"/>'),
+    schema:    tblr('<path d="M4 6a8 3 0 1 0 16 0a8 3 0 1 0-16 0"/><path d="M4 6v6a8 3 0 0 0 16 0V6"/><path d="M4 12v6a8 3 0 0 0 16 0v-6"/>'),
+    build:     tblr('<path d="M4 13a8 8 0 0 1 7 7a6 6 0 0 0 3-5a9 9 0 0 0 6-8a3 3 0 0 0-3-3a9 9 0 0 0-8 6a6 6 0 0 0-5 3"/><path d="M7 14a6 6 0 0 0-3 6a6 6 0 0 0 6-3"/><path d="M14 9a1 1 0 1 0 2 0a1 1 0 1 0-2 0"/>'),
+    import:    tblr('<path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M7 11l5 5l5-5"/><path d="M12 4v12"/>'),
+    settings:  tblr('<path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37c1 .608 2.296.07 2.572-1.065"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"/>'),
+    notes:     tblr('<path d="M4 20h4l10.5-10.5a2.828 2.828 0 1 0-4-4L4 16v4"/><path d="M13.5 6.5l4 4"/>'),
+    todos:     tblr('<path d="M9 11l3 3l8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/>'),
+    tools:     tblr('<path d="M3 21h4l13-13a1.5 1.5 0 0 0-4-4L3 17v4"/><path d="M14.5 5.5l4 4"/><path d="M12 8l-5-5l-4 4l5 5"/><path d="M7 8l-1.5 1.5"/><path d="M16 12l5 5l-4 4l-5-5"/><path d="M16 17l-1.5 1.5"/>'),
+  };
+
   var NAV = [
-    { icon: '⬡', label: 'Dashboard', href: '/dashboard.html', key: 'dashboard' },
-    { icon: '☰', label: 'Calendar',  href: '/calendar.html',  key: 'calendar' },
-    { icon: '◫', label: 'Media',     href: '/media.html',     key: 'media' },
-    { icon: '⊛', label: 'Users',     href: '/users.html',     key: 'users' },
+    { icon: TI.dashboard, label: 'Dashboard', href: '/dashboard.html', key: 'dashboard' },
+    { icon: TI.calendar,  label: 'Calendar',  href: '/calendar.html',  key: 'calendar' },
+    { icon: TI.media,     label: 'Media',     href: '/media.html',     key: 'media' },
+    { icon: TI.users,     label: 'Users',     href: '/users.html',     key: 'users' },
   ];
 
   var TOOLS = [
-    { icon: '✉', label: 'Inbox',    href: '/inbox.html',    key: 'inbox'    },
-    { icon: '▣', label: 'Forms',   href: '/forms.html',    key: 'forms'    },
-    { icon: '◉', label: 'Analytics',href: '/analytics.html',key: 'analytics'},
-    { icon: '⌗', label: 'Snippets', href: '/snippets.html', key: 'snippets' },
-    { icon: '▦', label: 'Schema',   href: '/schema.html',   key: 'schema'   },
-    { icon: '◉', label: 'Build',    href: '/build.html',    key: 'build'    },
-    { icon: '↓', label: 'Import',   href: '/import.html',   key: 'import'   },
-    { icon: '⚙', label: 'Settings', href: '/settings.html', key: 'settings' },
+    { icon: TI.inbox,     label: 'Inbox',     href: '/inbox.html',    key: 'inbox'    },
+    { icon: TI.forms,     label: 'Forms',     href: '/forms.html',    key: 'forms'    },
+    { icon: TI.analytics, label: 'Analytics', href: '/analytics.html',key: 'analytics'},
+    { icon: TI.snippets,  label: 'Snippets',  href: '/snippets.html', key: 'snippets' },
+    { icon: TI.schema,    label: 'Schema',    href: '/schema.html',   key: 'schema'   },
+    { icon: TI.build,     label: 'Build',     href: '/build.html',    key: 'build'    },
+    { icon: TI.import,    label: 'Import',    href: '/import.html',   key: 'import'   },
+    { icon: TI.settings,  label: 'Settings',  href: '/settings.html', key: 'settings' },
   ];
 
   var WORKSPACE = [
-    { icon: '✎', label: 'Notes', pane: 'notes' },
-    { icon: '☑', label: 'To-do', pane: 'todos' },
+    { icon: TI.notes, label: 'Notes', pane: 'notes' },
+    { icon: TI.todos, label: 'To-do', pane: 'todos' },
   ];
 
   // palette items — nav + tools pre-seeded; collections appended after /api/info
@@ -1318,7 +1339,7 @@
 
     // Tools popup button
     var toolsActive = TOOLS.some(function (t) { return t.key !== 'settings' && t.key === page; });
-    var toolsBtn = makeDockItem('⚒', 'Tools', null, toolsActive, true);
+    var toolsBtn = makeDockItem(TI.tools, 'Tools', null, toolsActive, true);
     toolsBtn.id = 'xfce-tools-btn';
     toolsBtn.addEventListener('click', function (e) {
       e.stopPropagation();
@@ -1326,24 +1347,37 @@
     });
     dockInner.appendChild(toolsBtn);
 
-    var settingsDockBtn = makeDockItem('⚙', 'Settings', '/settings.html', page === 'settings', false);
+    var settingsDockBtn = makeDockItem(TI.settings, 'Settings', '/settings.html', page === 'settings', false);
     dockInner.appendChild(settingsDockBtn);
 
     dockInner.appendChild(el('div', 'xfce-dock-sep'));
 
     // HUD toggle
-    var hudBtn = makeDockItem('▣', 'HUD', null, false, true);
+    var hudBtn = makeDockItem(tblr('<path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6"/><path d="M4 12h16"/><path d="M12 4v16"/>'), 'HUD', null, false, true);
     hudBtn.addEventListener('click', toggleHUD);
     dockInner.appendChild(hudBtn);
 
     // Scheme toggle
-    var schemeBtn   = document.getElementById('scheme-toggle');
-    var schemeClone = makeDockItem('◐', 'Scheme', null, false, true);
+    var schemeBtn = document.getElementById('scheme-toggle');
+    var SCHEME_ICONS = {
+      light: tblr('<path d="M8 12a4 4 0 1 0 8 0a4 4 0 1 0-8 0"/><path d="M3 12h1m8-9v1m8 8h1m-9 8v1m-6.4-15.4l.7.7m12.1-.7l-.7.7m0 11.4l.7.7m-12.1-.7l-.7.7"/>'),
+      dark:  tblr('<path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1-8.313-12.454"/>'),
+      auto:  tblr('<path d="M9.173 14.83a4 4 0 1 1 5.657-5.657"/><path d="M11.294 12.707l.174.247a7.5 7.5 0 0 0 8.845 2.492a9 9 0 0 1-14.671 2.914"/><path d="M3 12h1"/><path d="M12 3v1"/><path d="M5.6 5.6l.7.7"/>'),
+    };
+    var curScheme = localStorage.getItem('orb_scheme') || 'auto';
+    var schemeClone = makeDockItem(SCHEME_ICONS[curScheme] || SCHEME_ICONS.auto, curScheme === 'dark' ? 'Dark' : curScheme === 'light' ? 'Light' : 'Auto', null, false, true);
+    function updateSchemeIcon() {
+      curScheme = curScheme === 'auto' ? 'light' : curScheme === 'light' ? 'dark' : 'auto';
+      localStorage.setItem('orb_scheme', curScheme);
+      var root = document.documentElement;
+      root.removeAttribute('data-scheme');
+      if (curScheme === 'dark') root.setAttribute('data-scheme', 'dark');
+      if (curScheme === 'light') root.setAttribute('data-scheme', 'light');
+      schemeClone.querySelector('.xfce-dock-icon').innerHTML = SCHEME_ICONS[curScheme] || SCHEME_ICONS.auto;
+      schemeClone.querySelector('.xfce-dock-lbl').textContent = curScheme === 'dark' ? 'Dark' : curScheme === 'light' ? 'Light' : 'Auto';
+    }
     schemeClone.addEventListener('click', function () {
-      if (schemeBtn) schemeBtn.click();
-      setTimeout(function () {
-        schemeClone.querySelector('.xfce-dock-icon').textContent = schemeBtn ? schemeBtn.textContent : '◐';
-      }, 50);
+      updateSchemeIcon();
     });
     dockInner.appendChild(schemeClone);
 
