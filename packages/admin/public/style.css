@@ -487,12 +487,15 @@ html[data-style="glass"] {
 
 /* Light mode: softer shadow so cards don't cast dark halos on each other */
 html[data-scheme="light"],
-html[data-style="glass"][data-scheme="light"] {
-  --glass-shadow: 0 2px 12px rgba(0,0,0,.06), inset 0 1px 0 rgba(255,255,255,.6);
+html[data-style="glass"][data-scheme="light"],
+html[data-style="xfce"][data-scheme="light"] {
+  --glass-shadow: 0 4px 20px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.6);
 }
 @media (prefers-color-scheme: light) {
-  html:not([data-scheme="dark"]) {
-    --glass-shadow: 0 2px 12px rgba(0,0,0,.06), inset 0 1px 0 rgba(255,255,255,.6);
+  html:not([data-scheme="dark"]),
+  html[data-style="xfce"]:not([data-scheme="dark"]),
+  html[data-style="glass"]:not([data-scheme="dark"]) {
+    --glass-shadow: 0 4px 20px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.6);
   }
 }
 
