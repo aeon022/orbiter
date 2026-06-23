@@ -1112,6 +1112,10 @@ html[data-style="xfce"] .editor-shell {
 }
 
 /* ── Status Bar ───────────────────────────────────────────── */
+html:not([data-style="xfce"]) .xfce-sb,
+html:not([data-style="xfce"]) .xfce-dock,
+html:not([data-style="xfce"]) .xfce-hud { display: none !important; }
+
 .xfce-sb {
   position: fixed;
   top: 0; left: 0; right: 0;
