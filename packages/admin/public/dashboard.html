@@ -26,9 +26,9 @@
     .stats-row { display:grid; grid-template-columns:repeat(4,1fr); border-bottom:1px solid var(--line); }
     .stat-cell { padding:20px 24px; border-right:1px solid var(--line); position:relative; }
     .stat-cell:last-child { border-right:none; }
-    .stat-label { font-size:9px; letter-spacing:0.26em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+    .stat-label { font-size:10px; letter-spacing:0.22em; text-transform:uppercase; color:var(--mid); margin-bottom:10px; }
     .stat-num { font-family:var(--display); font-weight:300; font-size:36px; color:var(--heading); line-height:1; margin-bottom:6px; }
-    .stat-sub { font-size:10px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+    .stat-sub { font-size:11px; color:var(--mid); display:flex; align-items:center; gap:6px; }
     .stat-bar { height:2px; background:var(--line); margin-top:12px; }
     .stat-bar-fill { height:100%; transition:width 0.4s; }
     .stat-bar-fill.jade { background:var(--jade); }
@@ -46,18 +46,18 @@
     #coll-cards { overflow-y:auto; flex:1; min-height:0; }
     /* Section headers */
     .section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
-    .section-title { font-size:9px; letter-spacing:0.26em; text-transform:uppercase; color:var(--text); display:flex; align-items:center; gap:8px; }
-    .section-title::before { content:"—"; color:var(--gold); font-size:8px; }
+    .section-title { font-size:10px; letter-spacing:0.22em; text-transform:uppercase; color:var(--heading); display:flex; align-items:center; gap:8px; }
+    .section-title::before { content:"—"; color:var(--gold); font-size:9px; }
 
     /* Recent entries */
     .entry-list { border:1px solid var(--line); }
-    .entry-row { display:grid; grid-template-columns:1fr 90px 70px; align-items:center; gap:16px; padding:11px 14px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; }
+    .entry-row { display:grid; grid-template-columns:1fr 95px 80px; align-items:center; gap:16px; padding:12px 16px; border-bottom:1px solid var(--line2); text-decoration:none; transition:background 0.1s; }
     .entry-row:hover { background:var(--line2); }
     .entry-row:last-child { border-bottom:none; }
-    .entry-name { font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .entry-coll { font-size:9px; color:var(--muted); margin-top:1px; letter-spacing:0.04em; }
-    .entry-date { font-size:10px; color:var(--muted); text-align:right; }
-    .pill { font-size:9px; padding:2px 7px; letter-spacing:0.06em; text-align:center; border-radius:2px; }
+    .entry-name { font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .entry-coll { font-size:10px; color:var(--mid); margin-top:2px; letter-spacing:0.04em; }
+    .entry-date { font-size:11px; color:var(--mid); text-align:right; }
+    .pill { font-size:10px; padding:3px 8px; letter-spacing:0.04em; text-align:center; border-radius:3px; }
     .pill.published { color:var(--jade); background:var(--jade-bg); }
     .pill.draft { color:var(--gold); background:var(--gold-bg); }
     .pill.scheduled { color:var(--accent); background:var(--accent-bg); }
@@ -95,12 +95,12 @@
     .coll-card { padding:12px 0; border-bottom:1px solid var(--line2); }
     .coll-card:last-child { border-bottom:none; }
     .coll-card-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
-    .coll-card-name { font-size:12px; color:var(--heading); display:flex; align-items:center; gap:7px; }
-    .coll-card-name::before { content:"▤"; font-size:9px; color:var(--muted); }
-    .coll-card-count { font-size:10px; color:var(--muted); }
+    .coll-card-name { font-size:13px; color:var(--heading); display:flex; align-items:center; gap:7px; }
+    .coll-card-name::before { content:"▤"; font-size:10px; color:var(--mid); }
+    .coll-card-count { font-size:11px; color:var(--mid); }
     .coll-progress { height:2px; background:var(--line); margin-bottom:6px; }
     .coll-progress-fill { height:100%; background:var(--jade); transition:width 0.4s; }
-    .coll-card-meta { display:flex; justify-content:space-between; font-size:9px; color:var(--muted); }
+    .coll-card-meta { display:flex; justify-content:space-between; font-size:10px; color:var(--mid); }
     .coll-card-meta .pub { color:var(--jade); }
     .coll-actions { display:flex; gap:6px; margin-top:8px; }
     .btn-sm { font-size:9px; padding:4px 10px; border:1px solid var(--line); color:var(--mid); background:transparent; font-family:var(--mono); cursor:pointer; text-decoration:none; letter-spacing:0.06em; display:inline-flex; align-items:center; gap:4px; border-radius:var(--radius); transition:all 0.12s; }
