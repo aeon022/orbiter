@@ -1109,7 +1109,7 @@ html[data-style="xfce"] .main:has(.editor-shell) {
 
 /* Editor: fix full-height shell */
 html[data-style="xfce"] .editor-shell {
-  height: calc(100vh - var(--sb-h) - var(--dock-h) - 8px) !important;
+  height: calc(100vh - var(--sb-h) - var(--dock-h) - 40px) !important;
   position: relative;
   top: var(--sb-h);
 }
