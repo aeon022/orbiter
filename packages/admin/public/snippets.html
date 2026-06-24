@@ -343,6 +343,20 @@ Sitemap: https://your-domain.com/orbiter/sitemap.xml`,
 const { entries } = await res.json();`,
       },
 
+      // ── Widgets ──────────────────────────────────────────────────────
+      {
+        tag: 'Integration', title: 'Embed Widget — Cards',
+        desc: `Drop this on any website to show ${colLabel} entries as cards.`,
+        code: `<div data-orbiter="${origin}" data-collection="${colId}" data-limit="5" data-style="cards"></div>
+<script src="${origin}/widget.js" defer><\/script>`,
+      },
+      {
+        tag: 'Integration', title: 'Embed Widget — List',
+        desc: 'Compact list style with titles and dates.',
+        code: `<div data-orbiter="${origin}" data-collection="${colId}" data-limit="10" data-style="list"></div>
+<script src="${origin}/widget.js" defer><\/script>`,
+      },
+
     ];
 
     // ── Tags ─────────────────────────────────────────────────────────

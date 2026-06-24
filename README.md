@@ -1085,6 +1085,21 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 
 ## Changelog
 
+### June 2026 · admin@0.3.74 — Smart Suggestions, Widgets, Graph, Webhooks
+
+- **Smart Suggestions** — AI suggests tags, related entries, and missing field values after every save. Non-blocking banner in the editor. Auto-tags via AI, related entries via keyword overlap, missing fields with AI-generated fill values.
+- **Embeddable Widget SDK** — `<script src="/widget.js">` + `<div data-orbiter="..." data-collection="posts">`. Three styles: cards, list, minimal. Public API: `GET /api/widget/:collection` with wide CORS.
+- **Knowledge Graph** — interactive force-directed graph of all entries and their relationships. Canvas-based, drag nodes, pan, zoom, double-click to open. `/graph.html` with Tabler network icon in sidebar/dock.
+- **Webhook event system** — `webhooks.urls` meta key (JSON array). Events: publish, delete. JSON payload with event type, timestamp, collection. Backward-compatible with existing build webhook.
+- **User management** — change role (admin↔editor), reset password per user. `PUT /api/users/:id`.
+- **Authors schema template** — name, role, bio, avatar, email, website, social links, expertise, ORCID iD.
+- **Editor shortcuts** — `⌘⇧S` publish, `⌘⇧P` toggle sidebar.
+- **Markdown export** — `↓ md` button exports entry as structured Markdown with grouped fields and APA7 tables.
+- **Schema templates** — "Apply template…" dropdown in schema editor (Blog, Portfolio, Business, Events, Dossier, Authors).
+- **Bulk AI Summarize** — select entries → `✦ AI Summarize` generates summaryMachine for each.
+
+---
+
 ### June 2026 · admin@0.3.70 — Dual Render Phase, HUD editor sidebar, AI settings
 
 - **Semantic Depth Fields** — `depth` property (0-3) on schema fields. Depth 0 = Narrative, 1 = Research, 2 = Evidence, 3 = Machine. Color-coded D0/D1/D2/D3 badges in the editor sidebar. Depth dropdown in the schema editor. Dossier template ships with all 28 fields depth-tagged.
