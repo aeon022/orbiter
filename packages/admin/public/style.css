@@ -1141,17 +1141,17 @@ html[data-style="xfce"] .meta-panel-toggle {
 .meta-panel-toggle {
   display: none;
   align-items: center; justify-content: center;
-  gap: 5px;
-  height: 26px; padding: 0 10px;
-  background: var(--accent-bg); border: 1px solid var(--accent);
-  border-radius: 14px; cursor: pointer; color: var(--accent);
-  font-family: var(--mono); font-size: 9px; letter-spacing: .06em;
+  gap: 6px;
+  height: 28px; padding: 0 14px;
+  background: var(--accent); border: none;
+  border-radius: 14px; cursor: pointer; color: var(--bg0);
+  font-family: var(--mono); font-size: 10px; letter-spacing: .06em; font-weight: 500;
   transition: all .15s;
 }
 .meta-panel-toggle::before { content: '◧'; font-size: 12px; }
-.meta-panel-toggle::after { content: 'Fields'; }
-.meta-panel-toggle:hover { background: var(--accent); color: var(--bg0); }
-.meta-panel-toggle.active { background: var(--accent); color: var(--bg0); }
+.meta-panel-toggle::after { content: 'Sidebar'; }
+.meta-panel-toggle:hover { filter: brightness(1.15); box-shadow: 0 2px 12px color-mix(in srgb, var(--accent) 40%, transparent); }
+.meta-panel-toggle.active { filter: brightness(.85); }
 .meta-panel-close {
   display: none; position: sticky; top: 0; z-index: 10;
   width: 100%; padding: 8px 14px;
