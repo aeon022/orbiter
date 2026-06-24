@@ -57,6 +57,15 @@
           snippetsLink.parentNode.insertBefore(anLink, snippetsLink);
         }
 
+        // Inject Graph link after Snippets
+        if (snippetsLink && !sidebar.querySelector('a[href="/graph.html"]')) {
+          var graphLink = document.createElement('a');
+          graphLink.className = 'nav-item' + (page === 'graph' ? ' active' : '');
+          graphLink.href = '/graph.html';
+          graphLink.innerHTML = '<span class="nav-icon">◎</span>Graph';
+          snippetsLink.parentNode.insertBefore(graphLink, snippetsLink.nextSibling);
+        }
+
         // Find "Assets" nav-section to insert before it
         var sections = sidebar.querySelectorAll('.nav-section');
         var assetsSection = null;

@@ -1511,7 +1511,7 @@ html[data-style="xfce"] .table-wrap {
 /* Entries page: header and content card */
 html[data-style="xfce"] .page-header {
   padding: 20px 24px !important;
-  margin-bottom: 0;
+  margin-bottom: 8px;
   top: var(--sb-h, 26px) !important;
 }
 html[data-style="xfce"] .entries-content-card {
