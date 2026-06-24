@@ -519,6 +519,8 @@
             </button>
             <div class="tool-sep"></div>
             <button type="button" class="tool-btn" onclick="openAiPanel()" title="AI Assistant (✦)" style="color:var(--accent)">✦</button>
+            <div class="tool-sep"></div>
+            <button type="button" class="meta-panel-toggle" id="meta-panel-toggle" onclick="toggleMetaPanel()" title="Toggle sidebar (⌘⇧M)">◧</button>
           </div>
         </div>
         <div id="locale-bar" class="locale-bar" style="display:none">
@@ -553,7 +555,7 @@
 
       <!-- Meta / sidebar -->
       <div class="meta-panel" id="meta-panel">
-        <!-- filled by JS -->
+        <!-- filled by JS (includes close button in station mode) -->
       </div>
     </div>
   </div>
@@ -923,6 +925,7 @@
       const _seoOg    = _seoData.ogImage ?? '';
 
       panel.innerHTML = `
+        <button class="meta-panel-close" id="meta-panel-close" onclick="toggleMetaPanel()">✕</button>
         ${fieldsSectionHtml}
         <div class="meta-section">
           <div class="meta-label">SEO</div>
@@ -2351,6 +2354,20 @@
       if (e.key==='Enter')  { e.preventDefault(); confirmVideoUrl(); }
       if (e.key==='Escape') { e.preventDefault(); closeVideoPicker(); }
     });
+
+    // ── Meta panel slide-over toggle (Station mode) ──────────────────
+    window.toggleMetaPanel = function() {
+      const panel = document.getElementById('meta-panel');
+      const btn = document.getElementById('meta-panel-toggle');
+      if (!panel) return;
+      panel.classList.toggle('open');
+      if (btn) btn.classList.toggle('active', panel.classList.contains('open'));
+    };
+    // Auto-open sidebar in non-station mode
+    if (!document.documentElement.dataset.style || document.documentElement.dataset.style !== 'xfce') {
+      const panel = document.getElementById('meta-panel');
+      if (panel) panel.classList.add('open');
+    }
 
     // ── Table toolbar helpers ─────────────────────────────────────────
     window.tableAddRow = function(btn) {
