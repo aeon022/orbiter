@@ -262,6 +262,18 @@ export default function orbiter(options = {}) {
           entrypoint: resolve(routesDir, 'sitemap.js'),
         });
 
+        // llms.txt — machine-readable content map for AI agents
+        injectRoute({
+          pattern:    '/orbiter/llms.txt',
+          entrypoint: resolve(routesDir, 'llms-txt.js'),
+        });
+
+        // JSON Feed v1.1 — structured content for agents and feed readers
+        injectRoute({
+          pattern:    '/orbiter/feed.json',
+          entrypoint: resolve(routesDir, 'feed-json.js'),
+        });
+
         // ── Vite virtual modules ─────────────────
         updateConfig({
           vite: {

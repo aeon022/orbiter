@@ -1,7 +1,28 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
 
-const BOT_PATTERNS = /bot|crawl|spider|slurp|facebookexternalhit|bingpreview|linkedinbot|twitterbot|whatsapp|telegrambot|gptbot|claudebot|perplexity|anthropic/i;
+const BOT_PATTERNS = /bot|crawl|spider|slurp|facebookexternalhit|bingpreview|linkedinbot|twitterbot|whatsapp|telegrambot|gptbot|claudebot|perplexity|anthropic|cohere-ai|chatgpt|meta-externalagent/i;
+
+const AGENT_CLASSIFY = [
+  [/gptbot/i,              'ai-crawler',   'GPTBot'],
+  [/claudebot/i,           'ai-crawler',   'ClaudeBot'],
+  [/anthropic/i,           'ai-crawler',   'Anthropic'],
+  [/perplexity/i,          'ai-agent',     'Perplexity'],
+  [/chatgpt/i,             'ai-agent',     'ChatGPT'],
+  [/cohere-ai/i,           'rag-pipeline', 'Cohere'],
+  [/meta-externalagent/i,  'ai-crawler',   'Meta AI'],
+  [/bingbot|bingpreview/i, 'search',       'Bing'],
+  [/googlebot/i,           'search',       'Google'],
+  [/feedbin|feedly|newsblur|miniflux|inoreader/i, 'feed-reader', 'Feed Reader'],
+];
+
+function classifyAgent(ua) {
+  for (const [re, type, name] of AGENT_CLASSIFY) {
+    if (re.test(ua)) return { type, name };
+  }
+  if (BOT_PATTERNS.test(ua)) return { type: 'bot', name: 'Other Bot' };
+  return null;
+}
 
 export const analyticsPublicRoutes = new Hono();
 export const analyticsRoutes = new Hono();
@@ -55,6 +76,40 @@ analyticsRoutes.get('/', (c) => {
   const stats = db.getAnalytics({ days, path });
   db.close();
   return c.json(stats);
+});
+
+// GET /api/analytics/agents — AI agent breakdown (auth required)
+analyticsRoutes.get('/agents', (c) => {
+  const db = openPod(c.get('podPath'));
+  const days = Math.min(parseInt(c.req.query('days') ?? '30'), 365);
+  const since = `datetime('now', '-${days} days')`;
+
+  const rows = db.db.prepare(
+    `SELECT ua, path, COUNT(*) as hits, MAX(created_at) as last_seen
+     FROM _analytics WHERE is_bot = 1 AND created_at >= ${since}
+     GROUP BY ua, path ORDER BY hits DESC LIMIT 200`
+  ).all();
+
+  const agentMap = {};
+  for (const row of rows) {
+    const cls = classifyAgent(row.ua);
+    if (!cls) continue;
+    const key = cls.name;
+    if (!agentMap[key]) agentMap[key] = { type: cls.type, name: cls.name, hits: 0, lastSeen: '', topPaths: {} };
+    agentMap[key].hits += row.hits;
+    if (row.last_seen > agentMap[key].lastSeen) agentMap[key].lastSeen = row.last_seen;
+    agentMap[key].topPaths[row.path] = (agentMap[key].topPaths[row.path] || 0) + row.hits;
+  }
+
+  const agents = Object.values(agentMap)
+    .sort((a, b) => b.hits - a.hits)
+    .map(a => ({
+      ...a,
+      topPaths: Object.entries(a.topPaths).sort((x, y) => y[1] - x[1]).slice(0, 5).map(([p, h]) => ({ path: p, hits: h })),
+    }));
+
+  db.close();
+  return c.json({ agents, period: days });
 });
 
 // DELETE /api/analytics/prune — clean old data (auth required)

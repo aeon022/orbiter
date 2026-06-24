@@ -192,7 +192,7 @@
         allColls.filter(c=>c.id!==selectedId).map(c=>`<option value="${c.id}"${c.id===sel?' selected':''}>${escHtml(c.label)} (${c.id})</option>`).join('');
     }
 
-    function addFieldRow(container, key='', label='', type='string', required=false, options='', collection='', multiple=true) {
+    function addFieldRow(container, key='', label='', type='string', required=false, options='', collection='', multiple=true, group='', depth='') {
       const div = document.createElement('div');
       div.style.cssText = S.row;
       div.setAttribute('draggable','true');
@@ -214,6 +214,16 @@
               <span class="mul-box" style="${S.reqBox}${multiple?'background:var(--gold);border-color:var(--gold);color:var(--bg0);':'color:transparent;'}">${multiple?'✓':''}</span>
               <span style="${S.reqTxt}">Multiple</span>
             </label>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <input class="f-group" style="${S.input};flex:1" placeholder="Group" value="${escHtml(group)}" />
+            <select class="f-depth" style="${S.input};width:60px">
+              <option value=""${depth===''||depth==null?' selected':''}>—</option>
+              <option value="0"${depth===0||depth==='0'?' selected':''}>D0</option>
+              <option value="1"${depth===1||depth==='1'?' selected':''}>D1</option>
+              <option value="2"${depth===2||depth==='2'?' selected':''}>D2</option>
+              <option value="3"${depth===3||depth==='3'?' selected':''}>D3</option>
+            </select>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <label style="${S.reqW}">
@@ -292,6 +302,10 @@
         const entry = { type, required:row.querySelector('.f-required').checked, label:row.querySelector('.f-label').value.trim()||key };
         if (type==='select') entry.options=row.querySelector('.f-options').value.split(',').map(s=>s.trim()).filter(Boolean);
         if (type==='relation') { entry.collection=row.querySelector('.f-rel-col').value; entry.multiple=row.querySelector('.f-multiple').checked; }
+        const grp = row.querySelector('.f-group')?.value.trim();
+        if (grp) entry.group = grp;
+        const dep = row.querySelector('.f-depth')?.value;
+        if (dep !== '' && dep != null) entry.depth = parseInt(dep);
         schema[key]=entry;
       });
       return schema;
@@ -407,7 +421,7 @@
       `;
       const rowsEl=document.getElementById('edit-field-rows');
       enableFieldDrag(rowsEl);
-      Object.entries(schema).forEach(([k,f])=>addFieldRow(rowsEl,k,f.label??k,f.type??'string',!!f.required,(f.options??[]).join(', '),f.collection??'',f.multiple!==false));
+      Object.entries(schema).forEach(([k,f])=>addFieldRow(rowsEl,k,f.label??k,f.type??'string',!!f.required,(f.options??[]).join(', '),f.collection??'',f.multiple!==false,f.group??'',f.depth??''));
       document.getElementById('btn-add-edit').addEventListener('click',()=>addFieldRow(rowsEl));
       document.getElementById('btn-export-schema').addEventListener('click',()=>{
         const blob=new Blob([JSON.stringify(serializeSchema(rowsEl),null,2)],{type:'application/json'});
@@ -420,7 +434,7 @@
           try {
             const s=JSON.parse(ev.target.result);
             rowsEl.innerHTML='';
-            Object.entries(s).forEach(([k,f])=>addFieldRow(rowsEl,k,f.label??k,f.type??'string',!!f.required,(f.options??[]).join(', '),f.collection??'',f.multiple!==false));
+            Object.entries(s).forEach(([k,f])=>addFieldRow(rowsEl,k,f.label??k,f.type??'string',!!f.required,(f.options??[]).join(', '),f.collection??'',f.multiple!==false,f.group??'',f.depth??''));
           } catch { alert('Invalid schema JSON'); }
         };
         reader.readAsText(file); e.target.value='';

@@ -95,8 +95,13 @@
     .meta-label { font-size:9px; letter-spacing:.28em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
     .meta-field { margin-bottom:10px; }
     .meta-field:last-child { margin-bottom:0; }
-    .field-label { font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+    .field-label { font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; display:flex; align-items:center; gap:5px; }
     .field-readonly { font-size:11px; color:var(--muted); padding:6px 0; }
+    .depth-badge { font-size:7px; padding:1px 4px; border-radius:3px; letter-spacing:.06em; font-weight:600; flex-shrink:0; }
+    .depth-badge.d0 { color:var(--jade); background:var(--jade-bg); }
+    .depth-badge.d1 { color:var(--accent); background:var(--accent-bg); }
+    .depth-badge.d2 { color:var(--gold); background:var(--gold-bg); }
+    .depth-badge.d3 { color:var(--muted); background:var(--bg3); }
 
     /* Status */
     .status-bar { display:flex; align-items:center; gap:8px; padding:8px 0; margin-bottom:10px; }
@@ -755,7 +760,8 @@
         if (isSeoTitle || isSeoDesc) {
           fieldsHtml += `<div class="meta-field" data-field-key="${key}" ${field.showWhen?`data-show-when="${field.showWhen}"`:''}><div class="field-label" style="display:flex;justify-content:space-between;">${escHtml(field.label??key)}<span class="seo-counter" id="seo-ctr-${key}">${(val??'').length}</span></div>`;
         } else {
-          fieldsHtml += `<div class="meta-field" data-field-key="${key}" ${field.showWhen?`data-show-when="${field.showWhen}"`:''}><div class="field-label">${escHtml(field.label??key)}</div>`;
+          const depthBadge = field.depth != null ? `<span class="depth-badge d${field.depth}">D${field.depth}</span>` : '';
+          fieldsHtml += `<div class="meta-field" data-field-key="${key}" ${field.showWhen?`data-show-when="${field.showWhen}"`:''}><div class="field-label">${escHtml(field.label??key)}${depthBadge}</div>`;
         }
 
         if (field.type==='boolean') {

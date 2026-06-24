@@ -24,6 +24,7 @@ const ALLOWED_KEYS = [
   'ftp.host', 'ftp.port', 'ftp.user', 'ftp.password',
   'ftp.remote_path', 'ftp.local_path', 'ftp.secure', 'ftp.auto_deploy',
   'nav.hidden', 'nav.groups',
+  'llms.collections',
 ];
 
 const SECRET_KEYS = new Set([
