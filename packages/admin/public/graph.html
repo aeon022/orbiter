@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbiter Admin — Knowledge Graph</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+  <script src="/theme.js"></script>
+  <style>
+    html,body,.app { height:100%; overflow:hidden; }
+    .graph-wrap { flex:1; position:relative; overflow:hidden; }
+    #graph-canvas { width:100%; height:100%; display:block; cursor:grab; }
+    #graph-canvas.dragging { cursor:grabbing; }
+    .graph-toolbar { position:absolute; top:12px; right:12px; display:flex; gap:6px; z-index:10; }
+    .graph-btn { height:28px; padding:0 12px; background:var(--bg2); border:1px solid var(--line); color:var(--mid); font-family:var(--mono); font-size:10px; cursor:pointer; border-radius:6px; transition:all .12s; display:flex; align-items:center; gap:5px; }
+    .graph-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .graph-legend { position:absolute; bottom:12px; left:12px; display:flex; gap:12px; font-size:9px; color:var(--muted); font-family:var(--mono); z-index:10; }
+    .legend-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:4px; vertical-align:middle; }
+    .graph-info { position:absolute; top:12px; left:12px; font-size:10px; color:var(--muted); font-family:var(--mono); z-index:10; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="logo" href="/dashboard.html"><div class="logo-mark">OR</div>Orbiter</a>
+      <div style="font-size:11px;color:var(--muted);margin-left:16px;padding-left:16px;border-left:1px solid var(--line);display:flex;align-items:center;gap:6px;">
+        <a href="/dashboard.html" style="color:var(--muted);text-decoration:none;">Dashboard</a>
+        <span style="color:var(--line);">/</span>
+        <span style="color:var(--text);">Knowledge Graph</span>
+      </div>
+      <div class="topbar-right">
+        <button class="search-trigger" id="search-btn" title="Search (⌘K)">Search <kbd>⌘K</kbd></button>
+        <button class="scheme-toggle" id="scheme-toggle" title="Toggle scheme">◐</button>
+        <span class="user" id="topbar-user"></span>
+        <span class="logout" id="logout-btn">Sign out</span>
+      </div>
+    </header>
+    <nav class="sidebar">
+      <div class="nav-section">Content</div>
+      <a class="nav-item" href="/dashboard.html"><span class="nav-icon">◈</span>Dashboard</a>
+      <a class="nav-item" href="/collections.html"><span class="nav-icon">⊞</span>Collections</a>
+      <div class="nav-section">Assets</div>
+      <a class="nav-item" href="/media.html"><span class="nav-icon">⊟</span>Media</a>
+      <div class="nav-section">Tools</div>
+      <a class="nav-item" href="/inbox.html"><span class="nav-icon">✉</span>Inbox</a>
+      <a class="nav-item" href="/snippets.html"><span class="nav-icon">⌗</span>Snippets</a>
+      <a class="nav-item active" href="/graph.html"><span class="nav-icon">◎</span>Graph</a>
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="/schema.html"><span class="nav-icon">◈</span>Schema</a>
+      <a class="nav-item" href="/build.html"><span class="nav-icon">▲</span>Build</a>
+      <a class="nav-item" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
+      <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
+      <div class="sidebar-footer">
+        <div class="pod-name" id="pod-name">content.pod</div>
+        <div class="pod-info" id="pod-info"></div>
+        <div class="pod-version" id="pod-version"></div>
+        <div class="pod-status"><span class="pod-dot"></span>pod synced</div>
+      </div>
+    </nav>
+    <main class="main">
+      <div class="graph-wrap">
+        <canvas id="graph-canvas"></canvas>
+        <div class="graph-info" id="graph-info">Loading…</div>
+        <div class="graph-toolbar">
+          <button class="graph-btn" onclick="resetZoom()">⟲ Reset</button>
+          <button class="graph-btn" onclick="zoomIn()">+</button>
+          <button class="graph-btn" onclick="zoomOut()">−</button>
+        </div>
+        <div class="graph-legend">
+          <span><span class="legend-dot" style="background:var(--accent)"></span>Entry</span>
+          <span><span class="legend-dot" style="background:var(--gold)"></span>External</span>
+          <span>—— Relationship</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    const me = await fetch('/api/auth/me',{credentials:'include'}).then(r=>r.json()).catch(()=>null);
+    if (!me?.user) { location.replace('/login.html'); throw new Error('unauthenticated'); }
+    document.getElementById('topbar-user').textContent = me.user.username;
+    if (me.user.role==='admin') document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
+    document.getElementById('logout-btn').addEventListener('click',async()=>{
+      await fetch('/api/auth/logout',{method:'POST',credentials:'include'});
+      location.replace('/login.html');
+    });
+
+    // ── Load data ──
+    const collections = await fetch('/api/collections',{credentials:'include'}).then(r=>r.json()).catch(()=>[]);
+    const nodes = [];
+    const edges = [];
+    const nodeMap = {};
+
+    for (const col of collections) {
+      const entries = await fetch(`/api/collections/${col.id}/entries`,{credentials:'include'}).then(r=>r.json()).catch(()=>[]);
+      for (const entry of entries) {
+        const d = entry.data;
+        const id = `${col.id}/${entry.slug}`;
+        const node = {
+          id, slug: entry.slug, title: d.title || d.name || entry.slug,
+          collection: col.id, collectionLabel: col.label,
+          x: Math.random() * 800 - 400, y: Math.random() * 600 - 300,
+          vx: 0, vy: 0,
+        };
+        nodes.push(node);
+        nodeMap[entry.slug] = node;
+        nodeMap[id] = node;
+
+        // Parse relationships table
+        const rels = d.relationships;
+        if (Array.isArray(rels) && rels.length > 1) {
+          for (let i = 1; i < rels.length; i++) {
+            const row = rels[i];
+            if (row.length >= 3) {
+              edges.push({ from: row[0], relation: row[1], to: row[2] });
+            }
+          }
+        }
+      }
+    }
+
+    // Resolve edge endpoints — create external nodes for unresolved references
+    for (const edge of edges) {
+      if (!nodeMap[edge.from]) {
+        const ext = { id: 'ext/' + edge.from, slug: edge.from, title: edge.from, collection: '_external', collectionLabel: 'External', x: Math.random() * 800 - 400, y: Math.random() * 600 - 300, vx: 0, vy: 0, external: true };
+        nodes.push(ext);
+        nodeMap[edge.from] = ext;
+      }
+      if (!nodeMap[edge.to]) {
+        const ext = { id: 'ext/' + edge.to, slug: edge.to, title: edge.to, collection: '_external', collectionLabel: 'External', x: Math.random() * 800 - 400, y: Math.random() * 600 - 300, vx: 0, vy: 0, external: true };
+        nodes.push(ext);
+        nodeMap[edge.to] = ext;
+      }
+      edge.source = nodeMap[edge.from];
+      edge.target = nodeMap[edge.to];
+    }
+
+    document.getElementById('graph-info').textContent = `${nodes.length} nodes · ${edges.length} edges`;
+
+    // ── Canvas rendering ──
+    const canvas = document.getElementById('graph-canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, scale = 1, panX = 0, panY = 0;
+    let dragNode = null, dragStartX, dragStartY;
+    let isPanning = false, panStartX, panStartY, panStartPX, panStartPY;
+    let hoveredNode = null;
+
+    function resize() {
+      const r = canvas.parentElement.getBoundingClientRect();
+      canvas.width = r.width * devicePixelRatio;
+      canvas.height = r.height * devicePixelRatio;
+      canvas.style.width = r.width + 'px';
+      canvas.style.height = r.height + 'px';
+      W = r.width; H = r.height;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const cs = getComputedStyle(document.documentElement);
+    const COL_ACCENT = cs.getPropertyValue('--accent').trim() || '#5088c0';
+    const COL_GOLD = cs.getPropertyValue('--gold').trim() || '#2eb89a';
+    const COL_LINE = cs.getPropertyValue('--line').trim() || '#1c2e46';
+    const COL_TEXT = cs.getPropertyValue('--text').trim() || '#a0b0c0';
+    const COL_HEAD = cs.getPropertyValue('--heading').trim() || '#d0dce8';
+    const COL_MID = cs.getPropertyValue('--mid').trim() || '#8098b8';
+    const COL_BG = cs.getPropertyValue('--bg0').trim() || '#080e18';
+
+    // ── Force simulation ──
+    function simulate() {
+      const k = 0.01, repulse = 8000, damp = 0.92, edgeLen = 120;
+
+      // Center gravity
+      for (const n of nodes) {
+        n.vx -= n.x * k;
+        n.vy -= n.y * k;
+      }
+      // Node repulsion
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const a = nodes[i], b = nodes[j];
+          let dx = b.x - a.x, dy = b.y - a.y;
+          const d2 = dx * dx + dy * dy + 1;
+          const f = repulse / d2;
+          const fx = dx / Math.sqrt(d2) * f, fy = dy / Math.sqrt(d2) * f;
+          a.vx -= fx; a.vy -= fy;
+          b.vx += fx; b.vy += fy;
+        }
+      }
+      // Edge attraction
+      for (const e of edges) {
+        if (!e.source || !e.target) continue;
+        const dx = e.target.x - e.source.x, dy = e.target.y - e.source.y;
+        const d = Math.sqrt(dx * dx + dy * dy) || 1;
+        const f = (d - edgeLen) * 0.005;
+        const fx = dx / d * f, fy = dy / d * f;
+        e.source.vx += fx; e.source.vy += fy;
+        e.target.vx -= fx; e.target.vy -= fy;
+      }
+      // Apply velocity
+      for (const n of nodes) {
+        if (n === dragNode) continue;
+        n.vx *= damp; n.vy *= damp;
+        n.x += n.vx; n.y += n.vy;
+      }
+    }
+
+    function draw() {
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+      ctx.save();
+      ctx.translate(W / 2 + panX, H / 2 + panY);
+      ctx.scale(scale, scale);
+
+      // Edges
+      for (const e of edges) {
+        if (!e.source || !e.target) continue;
+        ctx.beginPath();
+        ctx.moveTo(e.source.x, e.source.y);
+        ctx.lineTo(e.target.x, e.target.y);
+        ctx.strokeStyle = COL_LINE;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Edge label
+        const mx = (e.source.x + e.target.x) / 2;
+        const my = (e.source.y + e.target.y) / 2;
+        ctx.font = '9px "DM Mono", monospace';
+        ctx.fillStyle = COL_MID;
+        ctx.textAlign = 'center';
+        ctx.fillText(e.relation, mx, my - 4);
+      }
+
+      // Nodes
+      for (const n of nodes) {
+        const r = n === hoveredNode ? 8 : 6;
+        const color = n.external ? COL_GOLD : COL_ACCENT;
+
+        // Glow for hovered
+        if (n === hoveredNode) {
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, 16, 0, Math.PI * 2);
+          ctx.fillStyle = color + '22';
+          ctx.fill();
+        }
+
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+
+        // Label
+        ctx.font = n === hoveredNode ? 'bold 11px "DM Mono", monospace' : '10px "DM Mono", monospace';
+        ctx.fillStyle = n === hoveredNode ? COL_HEAD : COL_TEXT;
+        ctx.textAlign = 'center';
+        ctx.fillText(n.title.slice(0, 30), n.x, n.y + r + 14);
+
+        if (n === hoveredNode) {
+          ctx.font = '8px "DM Mono", monospace';
+          ctx.fillStyle = COL_MID;
+          ctx.fillText(n.collectionLabel, n.x, n.y + r + 25);
+        }
+      }
+
+      ctx.restore();
+      simulate();
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    // ── Interaction ──
+    function canvasToWorld(cx, cy) {
+      return { x: (cx - W / 2 - panX) / scale, y: (cy - H / 2 - panY) / scale };
+    }
+    function hitTest(cx, cy) {
+      const w = canvasToWorld(cx, cy);
+      for (const n of nodes) {
+        const dx = w.x - n.x, dy = w.y - n.y;
+        if (dx * dx + dy * dy < 15 * 15 / scale) return n;
+      }
+      return null;
+    }
+
+    canvas.addEventListener('mousedown', e => {
+      const rect = canvas.getBoundingClientRect();
+      const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+      const node = hitTest(cx, cy);
+      if (node) {
+        dragNode = node;
+        dragStartX = node.x; dragStartY = node.y;
+        canvas.classList.add('dragging');
+      } else {
+        isPanning = true;
+        panStartX = e.clientX; panStartY = e.clientY;
+        panStartPX = panX; panStartPY = panY;
+        canvas.classList.add('dragging');
+      }
+    });
+    canvas.addEventListener('mousemove', e => {
+      const rect = canvas.getBoundingClientRect();
+      const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+      if (dragNode) {
+        const w = canvasToWorld(cx, cy);
+        dragNode.x = w.x; dragNode.y = w.y;
+        dragNode.vx = 0; dragNode.vy = 0;
+      } else if (isPanning) {
+        panX = panStartPX + (e.clientX - panStartX);
+        panY = panStartPY + (e.clientY - panStartY);
+      } else {
+        hoveredNode = hitTest(cx, cy);
+        canvas.style.cursor = hoveredNode ? 'pointer' : 'grab';
+      }
+    });
+    canvas.addEventListener('mouseup', () => {
+      dragNode = null;
+      isPanning = false;
+      canvas.classList.remove('dragging');
+    });
+    canvas.addEventListener('dblclick', e => {
+      const rect = canvas.getBoundingClientRect();
+      const node = hitTest(e.clientX - rect.left, e.clientY - rect.top);
+      if (node && !node.external) {
+        location.href = `/editor.html?collection=${encodeURIComponent(node.collection)}&slug=${encodeURIComponent(node.slug)}`;
+      }
+    });
+    canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      const factor = e.deltaY > 0 ? 0.9 : 1.1;
+      scale = Math.max(0.2, Math.min(5, scale * factor));
+    }, { passive: false });
+
+    window.resetZoom = () => { scale = 1; panX = 0; panY = 0; };
+    window.zoomIn = () => { scale = Math.min(5, scale * 1.2); };
+    window.zoomOut = () => { scale = Math.max(0.2, scale / 1.2); };
+  </script>
+
+  <script src="/search.js"></script>
+  <script src="/sidebar.js"></script>
+</body>
+</html>
