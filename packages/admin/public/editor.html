@@ -240,6 +240,8 @@
 
     /* Autosave indicator */
     #autosave-indicator { font-size:10px; color:var(--muted); padding:0 12px 0 8px; border-left:1px solid var(--line); margin-left:8px; }
+    .ai-toolbar-btn { height:26px; padding:0 12px; background:linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent2, var(--accent)) 60%, var(--accent))); border:none; border-radius:13px; color:#fff; font-family:var(--mono); font-size:10px; font-weight:500; letter-spacing:.04em; cursor:pointer; display:flex; align-items:center; gap:5px; transition:filter .12s, box-shadow .12s; }
+    .ai-toolbar-btn:hover { filter:brightness(1.15); box-shadow:0 2px 12px color-mix(in srgb, var(--accent) 40%, transparent); }
 
     /* SEO char counter */
     .seo-counter { font-size:9px; float:right; color:var(--muted); transition:color .12s; }
@@ -518,9 +520,9 @@
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="display:block"><path d="M3.5 1.5h4l3 3V11a.5.5 0 01-.5.5h-6.5a.5.5 0 01-.5-.5V2a.5.5 0 01.5-.5z" stroke="currentColor" stroke-width="1.1"/><path d="M7.5 1.5V4.5H10.5" stroke="currentColor" stroke-width="1.1"/><line x1="5" y1="7" x2="8.5" y2="7" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><line x1="5" y1="9" x2="8.5" y2="9" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>
             </button>
             <div class="tool-sep"></div>
-            <button type="button" class="tool-btn" onclick="openAiPanel()" title="AI Assistant (✦)" style="color:var(--accent)">✦</button>
-            <div class="tool-sep"></div>
+            <button type="button" class="ai-toolbar-btn" onclick="openAiPanel()" title="AI Assistant">✦ AI</button>
             <button type="button" class="meta-panel-toggle" id="meta-panel-toggle" onclick="toggleMetaPanel()" title="Toggle sidebar"></button>
+            <span id="autosave-indicator-toolbar" style="font-size:9px;color:var(--muted);margin-left:auto;padding-left:8px;white-space:nowrap;"></span>
           </div>
         </div>
         <div id="locale-bar" class="locale-bar" style="display:none">
@@ -1489,11 +1491,13 @@
       if (_dirty) { e.preventDefault(); e.returnValue = ''; }
     });
 
+    const indicatorToolbar = document.getElementById('autosave-indicator-toolbar');
     function setIndicator(state) {
       const states = { pending:{text:'Unsaved',color:'var(--gold)'}, saving:{text:'Saving…',color:'var(--muted)'}, saved:{text:'✓ Saved',color:'var(--jade)'}, error:{text:'Error',color:'var(--red)'} };
       const s = states[state] ?? {};
       indicator.textContent = s.text ?? '';
       indicator.style.color = s.color ?? '';
+      if (indicatorToolbar) { indicatorToolbar.textContent = s.text ?? ''; indicatorToolbar.style.color = s.color ?? ''; }
       if (state === 'saved') markClean();
       if (state === 'pending') markDirty();
     }
