@@ -1108,41 +1108,10 @@ html[data-style="xfce"] .main:has(.editor-shell) {
 }
 
 /* Editor: fix full-height shell */
-html[data-style="xfce"]:has(.editor-shell) body,
-html[data-style="xfce"]:has(.editor-shell) .app {
-  height: auto !important;
-  overflow: visible !important;
-}
 html[data-style="xfce"] .editor-shell {
-  display: flex !important;
-  flex-direction: column !important;
-  grid-template-columns: none !important;
-  height: auto !important;
-  min-height: calc(100vh - var(--sb-h) - var(--dock-h) - 20px);
-  overflow: visible !important;
+  height: calc(100vh - var(--sb-h) - var(--dock-h) - 40px) !important;
   position: relative;
   top: var(--sb-h);
-}
-html[data-style="xfce"] .editor-shell .editor-main {
-  min-height: 50vh;
-}
-html[data-style="xfce"] .editor-shell .preview-panel {
-  border-left: none !important;
-  border-top: 1px solid var(--line);
-}
-html[data-style="xfce"] .editor-shell .meta-panel {
-  width: 100% !important;
-  border-left: none !important;
-  border-top: 1px solid var(--line);
-  overflow-y: visible !important;
-  display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 0;
-  padding-bottom: calc(var(--dock-h) + 40px);
-}
-html[data-style="xfce"] .editor-shell .meta-panel .meta-section {
-  border-bottom: 1px solid var(--line);
-  border-right: 1px solid var(--line2);
 }
 
 /* ── Status Bar ───────────────────────────────────────────── */
