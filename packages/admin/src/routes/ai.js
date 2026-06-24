@@ -10,7 +10,9 @@ aiRoutes.post('/generate', async (c) => {
 
   const db = openPod(c.get('podPath'));
   const provider = db.getMeta('ai.provider') || 'ollama';
-  const model    = db.getMeta('ai.model') || (provider === 'ollama' ? 'llama3.2' : 'claude-sonnet-4-20250514');
+  const DEFAULT_MODELS = { ollama: 'llama3.2', anthropic: 'claude-sonnet-4-20250514', openai: 'gpt-4o-mini', gemini: 'gemini-2.5-flash' };
+  const rawModel = db.getMeta('ai.model') || '';
+  const model = rawModel || DEFAULT_MODELS[provider] || DEFAULT_MODELS.gemini;
   const apiKey   = db.getMeta('ai.api_key') || '';
   const ollamaUrl = db.getMeta('ai.ollama_url') || 'http://localhost:11434';
   db.close();
