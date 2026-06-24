@@ -118,6 +118,7 @@
           <button class="btn btn-ghost btn-sm bulk-normal" id="bulk-publish">Publish</button>
           <button class="btn btn-ghost btn-sm bulk-normal" id="bulk-draft">Unpublish</button>
           <button class="btn btn-ghost btn-sm bulk-trash" id="bulk-restore" style="display:none">Restore</button>
+          <button class="btn btn-ghost btn-sm bulk-normal" id="bulk-ai" style="color:var(--accent);border-color:var(--accent)">✦ AI Summarize</button>
           <span class="bulk-bar-spacer"></span>
           <button class="btn btn-danger btn-sm bulk-normal" id="bulk-delete">Move to Trash</button>
           <button class="btn btn-danger btn-sm bulk-trash" id="bulk-permanent" style="display:none">Delete forever</button>
@@ -410,6 +411,42 @@
       const n = selected.size;
       if (!confirm(`Permanently delete ${n} entr${n !== 1 ? 'ies' : 'y'}? This cannot be undone.`)) return;
       await bulkAction('permanent');
+    });
+
+    // Bulk AI Summarize
+    document.getElementById('bulk-ai')?.addEventListener('click', async () => {
+      const slugs = [...selected];
+      if (!slugs.length) return;
+      const btn = document.getElementById('bulk-ai');
+      btn.disabled = true; btn.textContent = '✦ Generating…';
+      let done = 0, failed = 0;
+      for (const slug of slugs) {
+        try {
+          const entry = await fetch(`/api/collections/${colId}/entries/${slug}`, { credentials:'include' }).then(r=>r.json());
+          if (entry?.data?.summaryMachine) { done++; continue; }
+          const title = entry?.data?.title || slug;
+          const body = entry?.data?.body || entry?.data?.excerpt || '';
+          const prompt = `Write a concise 2-3 sentence machine summary of this content. Output only the summary, no preamble:\n\nTitle: ${title}\n\n${body.slice(0,2000)}`;
+          const aiRes = await fetch('/api/ai/generate', {
+            method:'POST', credentials:'include',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ prompt }),
+          }).then(r=>r.json());
+          if (aiRes.text) {
+            const data = { ...entry.data, summaryMachine: aiRes.text.trim() };
+            await fetch(`/api/collections/${colId}/entries/${slug}`, {
+              method:'PUT', credentials:'include',
+              headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({ data, status: entry.status }),
+            });
+            done++;
+          } else { failed++; }
+        } catch { failed++; }
+        btn.textContent = `✦ ${done}/${slugs.length}…`;
+      }
+      btn.disabled = false; btn.textContent = '✦ AI Summarize';
+      alert(`Done: ${done} summarized${failed ? ', ' + failed + ' failed' : ''}`);
+      location.reload();
     });
 
     // CSV Export
