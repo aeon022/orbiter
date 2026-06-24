@@ -1159,7 +1159,7 @@ html[data-style="xfce"] .meta-panel-toggle {
 html[data-style="xfce"] .meta-panel-close {
   display: flex; align-items: center; justify-content: space-between;
   position: sticky; top: 0; z-index: 10;
-  width: 100%; padding: 10px 14px 8px;
+  width: 100%; height: 40px; padding: 0 14px;
   background: var(--bg1);
   border: none; border-bottom: 1px solid var(--line);
   cursor: pointer; flex-shrink: 0;
