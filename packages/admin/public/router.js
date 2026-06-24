@@ -175,6 +175,7 @@
     if (url.pathname === '/analytics.html') return;
     if (url.pathname === '/forms.html') return;
     if (url.pathname === '/graph.html') return; // canvas, needs full reload
+    if (url.pathname === '/users.html') return; // module scripts, needs full reload
     e.preventDefault();
     if (url.href === location.href) return;
     navigate(url.href, false);
