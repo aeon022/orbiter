@@ -240,6 +240,20 @@
 
     /* Autosave indicator */
     #autosave-indicator { font-size:10px; color:var(--muted); padding:0 12px 0 8px; border-left:1px solid var(--line); margin-left:8px; }
+    /* Suggestions banner */
+    .suggest-banner { display:none; padding:8px 20px; background:var(--accent-bg); border-bottom:1px solid color-mix(in srgb, var(--accent) 20%, transparent); font-size:11px; color:var(--text); align-items:center; gap:8px; flex-shrink:0; animation:suggest-slide .25s ease; }
+    .suggest-banner.visible { display:flex; }
+    .suggest-banner .suggest-label { color:var(--accent); font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; flex-shrink:0; }
+    .suggest-banner .suggest-content { flex:1; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+    .suggest-tag { font-size:10px; padding:2px 8px; background:var(--bg3); border:1px solid var(--line); border-radius:10px; color:var(--text); }
+    .suggest-entry { font-size:10px; color:var(--accent); text-decoration:none; padding:2px 8px; border:1px solid color-mix(in srgb, var(--accent) 20%, transparent); border-radius:10px; }
+    .suggest-entry:hover { background:var(--accent-bg); }
+    .suggest-btn { font-size:9px; padding:3px 10px; border:1px solid var(--accent); background:var(--accent-bg); color:var(--accent); font-family:var(--mono); cursor:pointer; border-radius:4px; transition:all .12s; }
+    .suggest-btn:hover { background:var(--accent); color:var(--bg0); }
+    .suggest-btn.dismiss { border-color:var(--line); color:var(--muted); background:transparent; }
+    .suggest-btn.dismiss:hover { border-color:var(--mid); color:var(--text); }
+    @keyframes suggest-slide { from { opacity:0; transform:translateY(-100%); } to { opacity:1; transform:translateY(0); } }
+
     .ai-toolbar-btn { height:26px; padding:0 12px; background:linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent2, var(--accent)) 60%, var(--accent))); border:none; border-radius:13px; color:#fff; font-family:var(--mono); font-size:10px; font-weight:500; letter-spacing:.04em; cursor:pointer; display:flex; align-items:center; gap:5px; transition:filter .12s, box-shadow .12s; }
     .ai-toolbar-btn:hover { filter:brightness(1.15); box-shadow:0 2px 12px color-mix(in srgb, var(--accent) 40%, transparent); }
 
@@ -493,6 +507,12 @@
     <div class="editor-shell" id="editor-shell">
       <div class="editor-main" id="editor-main">
         <div id="saved-flash" style="display:none;" class="saved-flash">Entry saved</div>
+        <div class="suggest-banner" id="suggest-banner">
+          <span class="suggest-label" id="suggest-label">✦ Suggestion</span>
+          <div class="suggest-content" id="suggest-content"></div>
+          <button class="suggest-btn" id="suggest-apply">Apply</button>
+          <button class="suggest-btn dismiss" id="suggest-dismiss">Dismiss</button>
+        </div>
         <div class="editor-toolbar">
           <div class="tool-group" onmousedown="event.preventDefault()">
             <button type="button" class="tool-btn" onclick="beCmd('bold')" title="Bold"><b style="font-size:11px;">B</b></button>
@@ -1466,7 +1486,7 @@
             slugInput.value = currentSlug;
           }
           setIndicator('saved'); updateStatusUI(status);
-          if (!isAutosave) showFlash();
+          if (!isAutosave) { showFlash(); setTimeout(triggerSuggestions, 500); }
         } else { setIndicator('error'); }
       }
     }
@@ -1518,6 +1538,85 @@
       }
       updateWc(); scheduleAutosave(); updatePreview();
     };
+
+    // ── Smart Suggestions ──────────────────────────────────────────
+    let _suggestPending = null;
+    const suggestBanner = document.getElementById('suggest-banner');
+    const suggestContent = document.getElementById('suggest-content');
+    const suggestLabel = document.getElementById('suggest-label');
+
+    document.getElementById('suggest-dismiss').addEventListener('click', () => {
+      suggestBanner.classList.remove('visible');
+      _suggestPending = null;
+    });
+
+    document.getElementById('suggest-apply').addEventListener('click', async () => {
+      if (!_suggestPending) return;
+      const s = _suggestPending;
+      _suggestPending = null;
+      suggestBanner.classList.remove('visible');
+
+      if (s.type === 'tags' && s.tags?.length) {
+        const inp = document.querySelector('[name="keywords"]') || document.getElementById('arr-keywords');
+        if (inp) {
+          const existing = inp.value ? inp.value.split(',').map(t => t.trim()).filter(Boolean) : [];
+          const merged = [...new Set([...existing, ...s.tags])];
+          inp.value = merged.join(', ');
+          inp.dispatchEvent(new Event('input'));
+        }
+        saveEntry(document.getElementById('status-select')?.value ?? 'draft', true);
+      } else if (s.type === 'fill' && s.field && s.value) {
+        const inp = document.querySelector(`[name="${s.field}"]`);
+        if (inp) {
+          inp.value = Array.isArray(s.value) ? s.value.join(', ') : s.value;
+          inp.dispatchEvent(new Event('input'));
+        }
+        saveEntry(document.getElementById('status-select')?.value ?? 'draft', true);
+      }
+    });
+
+    async function triggerSuggestions() {
+      if (!currentSlug) return;
+      const types = ['tags', 'related', 'missing'];
+      for (const type of types) {
+        try {
+          const res = await fetch('/api/ai/suggest', {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ collection: COLLECTION, slug: currentSlug, type }),
+          });
+          if (!res.ok) continue;
+          const data = await res.json();
+          const suggestions = data.suggestions || [];
+          if (!suggestions.length) continue;
+
+          const s = suggestions[0];
+          if (s.type === 'tags' && s.tags?.length) {
+            suggestLabel.textContent = '✦ Suggested tags';
+            suggestContent.innerHTML = s.tags.map(t => `<span class="suggest-tag">${t}</span>`).join('');
+            _suggestPending = s;
+            suggestBanner.classList.add('visible');
+            return;
+          } else if (s.type === 'related' && s.entries?.length) {
+            suggestLabel.textContent = '✦ Related';
+            suggestContent.innerHTML = s.entries.map(e =>
+              `<a class="suggest-entry" href="/editor.html?collection=${COLLECTION}&slug=${e.slug}">${e.title}</a>`
+            ).join('');
+            _suggestPending = null;
+            document.getElementById('suggest-apply').style.display = 'none';
+            suggestBanner.classList.add('visible');
+            return;
+          } else if (s.type === 'fill') {
+            suggestLabel.textContent = `✦ Generate ${s.label}?`;
+            suggestContent.innerHTML = `<span style="font-size:10px;color:var(--mid)">${String(s.value).slice(0, 120)}…</span>`;
+            _suggestPending = s;
+            document.getElementById('suggest-apply').style.display = '';
+            suggestBanner.classList.add('visible');
+            return;
+          }
+        } catch {}
+      }
+    }
 
     // ── Markdown export ─────────────────────────────────────────────
     window.exportMarkdown = function() {
