@@ -1518,11 +1518,20 @@
       updateWc(); scheduleAutosave(); updatePreview();
     };
 
-    // Cmd+S
+    // Keyboard shortcuts
     document.addEventListener('keydown', e=>{
-      if ((e.metaKey||e.ctrlKey) && e.key==='s') {
+      const mod = e.metaKey || e.ctrlKey;
+      if (mod && !e.shiftKey && e.key==='s') {
         e.preventDefault();
         saveEntry(document.getElementById('status-select')?.value??'draft');
+      }
+      if (mod && e.shiftKey && (e.key==='s' || e.key==='S')) {
+        e.preventDefault();
+        saveEntry('published');
+      }
+      if (mod && e.shiftKey && (e.key==='p' || e.key==='P')) {
+        e.preventDefault();
+        toggleMetaPanel();
       }
     });
 
