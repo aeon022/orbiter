@@ -396,8 +396,11 @@
             <input class="input" name="ai.model" value="${get('ai.model')}" placeholder="gemini-2.5-flash" />
           </div>
           <div class="setting-row" id="ai-key-row">
-            <div><div class="setting-label">API Key</div><div class="setting-desc">Not needed for Ollama.</div></div>
-            <input class="input" name="ai.api_key" type="password" value="${get('ai.api_key')}" placeholder="API key…" />
+            <div><div class="setting-label">API Key</div><div class="setting-desc" id="ai-key-desc">Not needed for Ollama.</div></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input class="input" name="ai.api_key" type="password" value="${get('ai.api_key')}" placeholder="API key…" style="flex:1" />
+              <a id="ai-get-key-btn" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="white-space:nowrap;display:none">↗ Get free key</a>
+            </div>
           </div>
           <div class="setting-row" id="ai-ollama-row" style="display:none">
             <div><div class="setting-label">Ollama URL</div><div class="setting-desc">Default: http://localhost:11434</div></div>
@@ -1034,6 +1037,12 @@
       openai: 'Requires API key from <a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--accent)">platform.openai.com</a>. Pay-per-use.',
     };
     const AI_PLACEHOLDERS = { gemini: 'gemini-2.5-flash', ollama: 'llama3.2', anthropic: 'claude-sonnet-4-20250514', openai: 'gpt-4o-mini' };
+    const AI_KEY_URLS = {
+      gemini: 'https://aistudio.google.com/apikey',
+      anthropic: 'https://console.anthropic.com/settings/keys',
+      openai: 'https://platform.openai.com/api-keys',
+    };
+    const AI_KEY_LABELS = { gemini: '↗ Get free key', anthropic: '↗ Get key', openai: '↗ Get key' };
     function updateAiFields() {
       const p = document.getElementById('ai-provider-select')?.value || 'ollama';
       const hint = document.getElementById('ai-hint');
@@ -1044,6 +1053,11 @@
       if (ollamaRow) ollamaRow.style.display = p === 'ollama' ? '' : 'none';
       const modelInp = document.querySelector('[name="ai.model"]');
       if (modelInp) modelInp.placeholder = AI_PLACEHOLDERS[p] || '';
+      const keyBtn = document.getElementById('ai-get-key-btn');
+      if (keyBtn) {
+        if (AI_KEY_URLS[p]) { keyBtn.href = AI_KEY_URLS[p]; keyBtn.textContent = AI_KEY_LABELS[p]; keyBtn.style.display = ''; }
+        else keyBtn.style.display = 'none';
+      }
     }
     document.getElementById('ai-provider-select')?.addEventListener('change', updateAiFields);
     updateAiFields();
