@@ -4,12 +4,27 @@ import { sendNotification } from '../email.js';
 
 export const entryRoutes = new Hono();
 
-function fireWebhook(podPath) {
+function fireWebhook(podPath, event = 'publish', payload = {}) {
   const db  = openPod(podPath);
-  const url = db.getMeta('build.webhook_url') ?? '';
+  const buildUrl = db.getMeta('build.webhook_url') ?? '';
   db.setMeta('build.last_triggered', new Date().toISOString());
+
+  let hooks = [];
+  try { hooks = JSON.parse(db.getMeta('webhooks.urls') || '[]'); } catch {}
   db.close();
-  if (url) fetch(url, { method: 'POST' }).catch(() => {});
+
+  const body = JSON.stringify({ event, timestamp: new Date().toISOString(), ...payload });
+  const headers = { 'Content-Type': 'application/json', 'User-Agent': 'Orbiter-Webhook/1.0' };
+
+  if (buildUrl && (event === 'publish' || event === 'build')) {
+    fetch(buildUrl, { method: 'POST' }).catch(() => {});
+  }
+
+  for (const hook of hooks) {
+    if (!hook.url) continue;
+    if (hook.events && !hook.events.includes(event) && !hook.events.includes('*')) continue;
+    fetch(hook.url, { method: 'POST', headers, body }).catch(() => {});
+  }
 }
 
 // POST /api/collections/:id/entries/bulk — bulk publish or delete
@@ -30,7 +45,8 @@ entryRoutes.post('/:collectionId/entries/bulk', async (c) => {
     });
   }
   db.close();
-  if (action === 'publish') fireWebhook(c.get('podPath'));
+  if (action === 'publish') fireWebhook(c.get('podPath'), 'publish', { collection: collectionId, action, count: slugs.length });
+  else if (action === 'delete') fireWebhook(c.get('podPath'), 'delete', { collection: collectionId, action, count: slugs.length });
   return c.json({ ok: true, count: slugs.length });
 });
 
