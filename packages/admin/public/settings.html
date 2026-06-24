@@ -1054,9 +1054,6 @@
       const modelInp = document.querySelector('[name="ai.model"]');
       if (modelInp) {
         modelInp.placeholder = AI_PLACEHOLDERS[p] || '';
-        const cur = modelInp.value.trim();
-        const isOtherDefault = Object.values(AI_PLACEHOLDERS).some(d => d === cur) && cur !== AI_PLACEHOLDERS[p];
-        if (isOtherDefault) modelInp.value = '';
       }
       const keyBtn = document.getElementById('ai-get-key-btn');
       if (keyBtn) {
@@ -1064,7 +1061,11 @@
         else keyBtn.style.display = 'none';
       }
     }
-    document.getElementById('ai-provider-select')?.addEventListener('change', updateAiFields);
+    document.getElementById('ai-provider-select')?.addEventListener('change', () => {
+      const modelInp = document.querySelector('[name="ai.model"]');
+      if (modelInp) modelInp.value = '';
+      updateAiFields();
+    });
     updateAiFields();
 
     // FTP test connection
