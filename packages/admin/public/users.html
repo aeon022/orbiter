@@ -11,9 +11,12 @@
   <script src="/theme.js"></script>
   <style>
     .user-table { border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; margin-bottom:28px; }
-    .user-head { display:grid; grid-template-columns:1fr 90px 160px 80px; padding:7px 16px; background:var(--bg2); border-bottom:1px solid var(--line); }
+    .user-head { display:grid; grid-template-columns:1fr 90px 160px 1fr; padding:7px 16px; background:var(--bg2); border-bottom:1px solid var(--line); }
     .user-head-cell { font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); }
-    .user-row { display:grid; grid-template-columns:1fr 90px 160px 80px; align-items:center; padding:12px 16px; border-bottom:1px solid var(--line2); background:var(--bg1); }
+    .user-row { display:grid; grid-template-columns:1fr 90px 160px 1fr; align-items:center; padding:12px 16px; border-bottom:1px solid var(--line2); background:var(--bg1); }
+    .user-actions { display:flex; gap:6px; justify-content:flex-end; }
+    .btn-action { padding:3px 10px; background:transparent; border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:9px; cursor:pointer; transition:all .12s; border-radius:2px; }
+    .btn-action:hover { border-color:var(--accent); color:var(--accent); }
     .user-row:last-child { border-bottom:none; }
     .user-row.is-self { background:var(--accent-bg); }
     .user-name { font-size:12px; color:var(--text); display:flex; align-items:center; gap:8px; }
@@ -124,7 +127,9 @@
               <div class="user-name">${u.username}${u.id===me.user.id?'<span class="self-tag">you</span>':''}</div>
               <div><span class="role-badge ${u.role}">${u.role}</span></div>
               <div class="user-date">${u.last_login ? new Date(u.last_login).toLocaleDateString() : '—'}</div>
-              <div>
+              <div class="user-actions">
+                <button class="btn-action btn-role" data-id="${u.id}" data-role="${u.role}" ${u.id===me.user.id?'disabled':''}>${u.role==='admin'?'→ Editor':'→ Admin'}</button>
+                <button class="btn-action btn-reset-pw" data-id="${u.id}" data-name="${u.username}" ${u.id===me.user.id?'disabled':''}>Reset PW</button>
                 <button class="btn-del" data-id="${u.id}" ${u.id===me.user.id?'disabled':''}>Delete</button>
               </div>
             </div>
@@ -138,6 +143,23 @@
         const res = await fetch(`/api/users/${btn.dataset.id}`,{method:'DELETE',credentials:'include'});
         if (res.ok) { showBanner('banner-ok ✓ User deleted'); loadUsers(); }
         else showBanner('banner-err', '✕ Could not delete user');
+      }));
+
+      wrap.querySelectorAll('.btn-role').forEach(btn=>btn.addEventListener('click', async ()=>{
+        const newRole = btn.dataset.role === 'admin' ? 'editor' : 'admin';
+        if (!confirm(`Change role to ${newRole}?`)) return;
+        const res = await fetch(`/api/users/${btn.dataset.id}`,{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({role:newRole})});
+        if (res.ok) { showBanner('banner-ok', `✓ Role changed to ${newRole}`); loadUsers(); }
+        else showBanner('banner-err', '✕ Could not change role');
+      }));
+
+      wrap.querySelectorAll('.btn-reset-pw').forEach(btn=>btn.addEventListener('click', async ()=>{
+        const pw = prompt(`New password for ${btn.dataset.name}:`)?.trim();
+        if (!pw) return;
+        if (pw.length < 8) { alert('Password must be at least 8 characters'); return; }
+        const res = await fetch(`/api/users/${btn.dataset.id}`,{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
+        if (res.ok) { showBanner('banner-ok', `✓ Password reset for ${btn.dataset.name}`); }
+        else showBanner('banner-err', '✕ Could not reset password');
       }));
     }
 

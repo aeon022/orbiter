@@ -33,6 +33,32 @@ userRoutes.post('/', async (c) => {
   return c.json({ ok: true, id, username, role }, 201);
 });
 
+// PUT /api/users/:id — update role and/or password
+userRoutes.put('/:id', async (c) => {
+  const currentUser = c.get('user');
+  const id = c.req.param('id');
+  const { role, password } = await c.req.json();
+
+  const db = openPod(c.get('podPath'));
+  const users = db.getUsers();
+  const target = users.find(u => u.id === id);
+  if (!target) { db.close(); return c.json({ error: 'User not found' }, 404); }
+
+  if (role && ['admin', 'editor'].includes(role)) {
+    if (id === currentUser.id) { db.close(); return c.json({ error: 'Cannot change your own role' }, 400); }
+    db.db.prepare('UPDATE _users SET role = ? WHERE id = ?').run(role, id);
+  }
+
+  if (password) {
+    if (password.length < 8) { db.close(); return c.json({ error: 'Password must be at least 8 characters' }, 400); }
+    const hashed = await hashPassword(password);
+    db.db.prepare('UPDATE _users SET password = ? WHERE id = ?').run(hashed, id);
+  }
+
+  db.close();
+  return c.json({ ok: true });
+});
+
 // DELETE /api/users/:id
 userRoutes.delete('/:id', (c) => {
   const currentUser = c.get('user');
