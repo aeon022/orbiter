@@ -78,6 +78,26 @@ export function createApp(podPath) {
   app.use('/api/hit', async (c, next) => { c.set('podPath', podPath); await next(); });
   app.route('/api/hit', analyticsPublicRoutes);
 
+  // Public widget API — wide CORS, read-only, for embeddable widgets
+  app.use('/api/widget/*', cors({ origin: '*', allowMethods: ['GET', 'OPTIONS'] }));
+  app.use('/api/widget/*', async (c, next) => { c.set('podPath', podPath); await next(); });
+  app.get('/api/widget/:collection', (c) => {
+    const db = openPod(c.get('podPath'));
+    const enabled = db.getMeta('api.enabled');
+    if (enabled === '0') { db.close(); return c.json({ error: 'API disabled' }, 403); }
+    const colId = c.req.param('collection');
+    const col = db.getCollection(colId);
+    if (!col) { db.close(); return c.json({ error: 'Not found' }, 404); }
+    const limit = Math.min(parseInt(c.req.query('limit') ?? '10'), 50);
+    const entries = db.getEntries(colId, { status: 'published' }).slice(0, limit);
+    db.close();
+    return c.json({
+      collection: colId,
+      label: col.label,
+      entries: entries.map(e => ({ slug: e.slug, data: e.data, created_at: e.created_at, updated_at: e.updated_at })),
+    });
+  });
+
   // Protected routes — CSRF + auth
   const api = new Hono();
   api.use('*', csrfMiddleware(ALLOWED_ORIGINS));
