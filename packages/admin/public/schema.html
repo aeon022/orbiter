@@ -415,6 +415,16 @@
             <button class="btn" id="btn-add-edit">+ Add field</button>
             <button class="btn" id="btn-export-schema">↓ Export schema</button>
             <label class="btn" style="cursor:pointer;">↑ Import schema<input type="file" id="import-schema-file" accept=".json" style="display:none"></label>
+            <select class="btn" id="apply-template-select" style="appearance:auto;padding:0 10px;cursor:pointer;">
+              <option value="">Apply template…</option>
+              <option value="blog">Blog (Posts)</option>
+              <option value="portfolio">Portfolio (Projects)</option>
+              <option value="business-pages">Business (Pages)</option>
+              <option value="business-services">Business (Services)</option>
+              <option value="business-team">Business (Team)</option>
+              <option value="events">Events</option>
+              <option value="dossier">Dossier (39 fields, depth)</option>
+            </select>
           </div>
           <button class="btn" id="btn-del-col" style="color:var(--red);border-color:var(--red);">Delete collection</button>
         </div>
@@ -438,6 +448,25 @@
           } catch { alert('Invalid schema JSON'); }
         };
         reader.readAsText(file); e.target.value='';
+      });
+      document.getElementById('apply-template-select').addEventListener('change', async e=>{
+        const tpl = e.target.value; e.target.value = '';
+        if (!tpl) return;
+        if (!confirm(`Apply "${tpl}" template schema? This replaces all fields (entries are preserved).`)) return;
+        const SCHEMAS = {
+          blog: {title:{type:'string',required:true,label:'Titel'},excerpt:{type:'string',label:'Teaser'},body:{type:'richtext',label:'Text'},image:{type:'media',label:'Bild'},tags:{type:'array',label:'Tags'},categories:{type:'relation',collection:'post_categories',multiple:true,label:'Kategorien'}},
+          portfolio: {title:{type:'string',required:true,label:'Titel'},body:{type:'richtext',label:'Beschreibung'},image:{type:'media',label:'Vorschau'},url:{type:'string',label:'Website'},tags:{type:'array',label:'Tags'},categories:{type:'relation',collection:'project_categories',multiple:true,label:'Kategorien'}},
+          'business-pages': {title:{type:'string',required:true,label:'Titel'},body:{type:'richtext',label:'Text'}},
+          'business-services': {title:{type:'string',required:true,label:'Titel'},description:{type:'string',label:'Beschreibung'},price:{type:'string',label:'Preis'}},
+          'business-team': {name:{type:'string',required:true,label:'Name'},role:{type:'string',label:'Rolle'},bio:{type:'richtext',label:'Bio'},image:{type:'media',label:'Foto'}},
+          events: {title:{type:'string',required:true,label:'Titel'},date:{type:'date',required:true,label:'Datum'},location:{type:'string',label:'Ort'},body:{type:'richtext',label:'Beschreibung'},image:{type:'media',label:'Bild'},ticket_url:{type:'string',label:'Ticket-Link'},categories:{type:'relation',collection:'event_categories',multiple:true,label:'Kategorien'}},
+          dossier: {title:{type:'string',required:true,label:'Titel',group:'Content',depth:0},excerpt:{type:'string',label:'Teaser',group:'Content',depth:0},body:{type:'richtext',label:'Text',group:'Content',depth:0},humanSummary:{type:'string',label:'Human Summary',group:'Content',depth:0},hypothesis:{type:'string',label:'Hypothese',group:'Research',depth:1},testSetup:{type:'string',label:'Test-Setup',group:'Research',depth:1},observations:{type:'string',label:'Beobachtungen',group:'Research',depth:1},findings:{type:'string',label:'Findings',group:'Research',depth:1},limitations:{type:'string',label:'Einschränkungen',group:'Research',depth:1},openQuestions:{type:'string',label:'Offene Fragen',group:'Research',depth:1},claims:{type:'table',label:'Claims',group:'Evidence',depth:2},sources:{type:'table',label:'Sources (APA 7)',group:'Evidence',format:'apa7',depth:2},relationships:{type:'table',label:'Relationships',group:'Evidence',depth:2},series:{type:'string',label:'Serie',group:'Meta',depth:1},keywords:{type:'array',label:'Keywords',group:'Meta',depth:3},contentType:{type:'select',label:'Content-Typ',group:'Meta',depth:1,options:['investigation','analysis','comparison','guide','deep-dive','tutorial']},language:{type:'select',label:'Sprache',group:'Meta',depth:1,options:['de','en','de+en']},author:{type:'string',label:'Autor',group:'Provenance',depth:3},authorship:{type:'select',label:'Authorship',group:'Provenance',depth:3,options:['human','ai-assisted','ai-generated','collaborative']},aiContribution:{type:'string',label:'AI-Beitrag',group:'Provenance',depth:3},reviewedBy:{type:'string',label:'Reviewed by',group:'Provenance',depth:3},reviewStatus:{type:'select',label:'Review-Status',group:'Provenance',depth:3,options:['draft','peer-reviewed','self-reviewed','unreviewed']},modelDisclosure:{type:'string',label:'Modell-Disclosure',group:'Provenance',depth:3},summaryMachine:{type:'string',label:'Machine Summary',group:'Agent',depth:3},dossierId:{type:'string',label:'Dossier-ID',group:'Agent',depth:3},tokensApprox:{type:'number',label:'Tokens (ca.)',group:'Agent',depth:3},suggestedPrompts:{type:'array',label:'Suggested Prompts',group:'Agent',depth:3},hero:{type:'media',label:'Hero-Bild',depth:0}},
+        };
+        const s = SCHEMAS[tpl];
+        if (!s) return;
+        rowsEl.innerHTML='';
+        Object.entries(s).forEach(([k,f])=>addFieldRow(rowsEl,k,f.label??k,f.type??'string',!!f.required,(f.options??[]).join(', '),f.collection??'',f.multiple!==false,f.group??'',f.depth??''));
+        showBannerIn('banner','banner-ok',`Template "${tpl}" applied — click Save to persist`);
       });
       // Load existing preview URL for this collection
       fetch(`/api/meta/preview_url~${col.id}`,{credentials:'include'}).then(r=>r.json()).then(d=>{
