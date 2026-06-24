@@ -1085,6 +1085,19 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 
 ## Changelog
 
+### June 2026 · admin@0.3.70 — Dual Render Phase, HUD editor sidebar, AI settings
+
+- **Semantic Depth Fields** — `depth` property (0-3) on schema fields. Depth 0 = Narrative, 1 = Research, 2 = Evidence, 3 = Machine. Color-coded D0/D1/D2/D3 badges in the editor sidebar. Depth dropdown in the schema editor. Dossier template ships with all 28 fields depth-tagged.
+- **llms.txt generator** (`/orbiter/llms.txt`) — machine-readable content map for AI agents. Lists all published entries with summaries, grouped by collection. Configurable via `llms.collections` meta key.
+- **JSON Feed v1.1** (`/orbiter/feed.json`) — structured content feed for RAG pipelines and feed readers. `?depth=0-3` filters fields by semantic depth level. `?collections=col1,col2` filters by collection. `_orbiter` extension with provenance data.
+- **Agent Analytics** — extended bot classification (ai-crawler, ai-agent, rag-pipeline, search, feed-reader). `GET /api/analytics/agents` endpoint with hits, top paths, last seen per agent type.
+- **HUD-style editor sidebar** — in Station mode, the meta panel becomes a slide-over panel from the right with glassmorphism backdrop. Toggle pill button "◧ Sidebar" in the toolbar. Header bar matches HUD design (accent title + close button). Full-width editor when sidebar is hidden.
+- **AI settings redesign** — Gemini highlighted as free-tier recommended provider. "↗ Get free key" button next to API key input. Dynamic provider hints with signup links. Model field auto-clears when switching providers. Per-provider default models.
+- **AI gradient button** — "✦ AI" pill button with accent gradient in the editor toolbar.
+- **Autosave indicator** — visible in editor toolbar (Station mode where topbar is hidden).
+
+---
+
 ### June 2026 · admin@0.3.69 — Tabler Icons, WCAG compliance, UI zoom, security hardening
 
 - **Tabler SVG icons** — all dock icons replaced with Tabler Icons (inline SVGs, zero dependencies). Dashboard, Calendar, Media, Users, Inbox, Forms, Analytics, Snippets, Schema, Build, Import, Settings, Notes, To-do, Tools, HUD — all proper vector icons.
@@ -1331,6 +1344,7 @@ The block editor gains full rich-media embedding:
 | 13 | Observatory | ✅ Done — calendar view, cross-pod import/export, nodemailer security fix |
 | 14 | Signal | ✅ Done — Simple Analytics, OG image picker, dashboard widget toggles, keyboard nav |
 | 15 | Beacon | ✅ Done — Form Builder UI, AI Content Assistant, Dossier template, template import/export, field groups, APA7 citations, nav grouping & dock drawers |
+| 16 | Horizon II | ✅ Done — Dual Render: semantic depth fields, llms.txt, feed.json, agent analytics, HUD editor sidebar |
 
 ### Next up
 
@@ -1339,9 +1353,7 @@ The block editor gains full rich-media embedding:
 | 1 | **Windows app menu** | Test and fix menu behavior on Windows (builds work, untested on real Windows) |
 | 2 | **Multi-POD Dashboard** | Manage multiple PODs from one desktop window |
 | 3 | **Dashboard Drag & Drop** | Reorder widgets, custom layouts stored in POD |
-| 4 | **Dual Render — llms.txt** | Auto-generate structured content map at `/llms.txt` during every Astro build |
-| 5 | **Dual Render — Semantic Depth Fields** | New field types for marking content depth layers (surface/deep/machine) |
-| 6 | **SvelteKit integration** | `@a83/orbiter-sveltekit` — same virtual module API as the Astro integration |
+| 4 | **SvelteKit integration** | `@a83/orbiter-sveltekit` — same virtual module API as the Astro integration |
 
 ### v0.3.47 — released
 

@@ -1044,7 +1044,7 @@ import { ViewTransitions } from 'astro:transitions';
 <!-- Roadmap -->
 <section class="roadmap-section">
   <div class="dual-label reveal">Roadmap</div>
-  <h2 class="dual-h2 reveal reveal-d1"><span class="counter" data-target="26" style="font-weight:500;color:var(--accent)">0</span> features shipped.<br />Where we're going.</h2>
+  <h2 class="dual-h2 reveal reveal-d1"><span class="counter" data-target="30" style="font-weight:500;color:var(--accent)">0</span> features shipped.<br />Where we're going.</h2>
 
   <div class="roadmap-track" id="roadmap-track" style="margin-top:48px;">
     <div class="roadmap-track-energy" id="track-energy"></div>
@@ -1055,7 +1055,7 @@ import { ViewTransitions } from 'astro:transitions';
       <div class="rm-phase">Phase 01–12 · Complete</div>
       <div class="rm-title">Foundation → Launch Pad</div>
       <div class="rm-desc">Core DB, admin UI, block editor, media library, auth, themes, CLI, i18n, scheduled publishing, FTP deploy, desktop app, Station dock mode, file &amp; table fields, calendar view, cross-pod copy.</div>
-      <span class="rm-tag done"><span class="counter" data-target="26">0</span> features shipped</span>
+      <span class="rm-tag done"><span class="counter" data-target="30">0</span> features shipped</span>
     </div>
 
     <div class="rm-item reveal">
@@ -1107,27 +1107,27 @@ import { ViewTransitions } from 'astro:transitions';
     </div>
 
     <div class="rm-item reveal">
-      <div class="rm-dot future">◇</div>
-      <div class="rm-phase">Future · Dual Render Integration</div>
+      <div class="rm-dot done">✓</div>
+      <div class="rm-phase">Phase 16 · Complete</div>
       <div class="rm-title">llms.txt Auto-Generator</div>
-      <div class="rm-desc">Orbiter automatically generates a structured content map at <code>/llms.txt</code> during every Astro build. AI agents get a curated entry point to your content — no manual maintenance.</div>
-      <span class="rm-tag future">planned</span>
+      <div class="rm-desc">Orbiter generates <code>/orbiter/llms.txt</code> — a machine-readable content map listing all published entries with summaries. AI agents get a curated entry point. Configurable per collection.</div>
+      <span class="rm-tag done">shipped</span>
     </div>
 
     <div class="rm-item reveal">
-      <div class="rm-dot future">◇</div>
-      <div class="rm-phase">Future · Dual Render Integration</div>
-      <div class="rm-title">Semantic Depth Fields</div>
-      <div class="rm-desc">New field types and block-editor tags for semantic depth. Mark paragraphs as "surface" or "deep". The agent layer uses these markers to serve different levels of detail.</div>
-      <span class="rm-tag future">planned</span>
+      <div class="rm-dot done">✓</div>
+      <div class="rm-phase">Phase 16 · Complete</div>
+      <div class="rm-title">Semantic Depth Fields + JSON Feed</div>
+      <div class="rm-desc"><code>depth: 0-3</code> on schema fields (Narrative → Research → Evidence → Machine). <code>/orbiter/feed.json</code> serves JSON Feed v1.1 with <code>?depth=</code> filter for progressive disclosure to AI agents.</div>
+      <span class="rm-tag done">shipped</span>
     </div>
 
     <div class="rm-item reveal">
-      <div class="rm-dot future">◇</div>
-      <div class="rm-phase">Future · Dual Render Integration</div>
+      <div class="rm-dot done">✓</div>
+      <div class="rm-phase">Phase 16 · Complete</div>
       <div class="rm-title">Agent Analytics</div>
-      <div class="rm-desc">Distinguish human traffic from agent traffic in your analytics dashboard. See what percentage of your readers are AI systems. Understand how agents consume your content.</div>
-      <span class="rm-tag future">planned</span>
+      <div class="rm-desc">Classify bot traffic by type: AI crawler (GPTBot, ClaudeBot), AI agent (Perplexity, ChatGPT), RAG pipeline (Cohere), feed reader, search. Per-agent hit counts and top paths.</div>
+      <span class="rm-tag done">shipped</span>
     </div>
 
     <div class="rm-item reveal">
