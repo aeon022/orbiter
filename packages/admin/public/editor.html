@@ -521,6 +521,7 @@
             </button>
             <div class="tool-sep"></div>
             <button type="button" class="ai-toolbar-btn" onclick="openAiPanel()" title="AI Assistant">✦ AI</button>
+            <button type="button" class="tool-btn" onclick="exportMarkdown()" title="Export as Markdown" style="font-size:9px;letter-spacing:.04em;">↓ md</button>
             <button type="button" class="meta-panel-toggle" id="meta-panel-toggle" onclick="toggleMetaPanel()" title="Toggle sidebar"></button>
             <span id="autosave-indicator-toolbar" style="font-size:9px;color:var(--muted);margin-left:auto;padding-left:8px;white-space:nowrap;"></span>
           </div>
@@ -1516,6 +1517,76 @@
         document.getElementById('slug-preview').textContent = s || '…';
       }
       updateWc(); scheduleAutosave(); updatePreview();
+    };
+
+    // ── Markdown export ─────────────────────────────────────────────
+    window.exportMarkdown = function() {
+      syncToHidden();
+      const title = document.getElementById('title-input').value;
+      const body = document.getElementById('body-input').value;
+      const slug = currentSlug || SLUG;
+      const lines = [`# ${title}`, ''];
+
+      // Gather extra fields by group
+      const groups = {};
+      for (const [key, field] of extraFields) {
+        if (key === 'title' || key === 'body') continue;
+        const grp = field.group || 'Fields';
+        if (!groups[grp]) groups[grp] = [];
+        const el = document.querySelector(`[name="${key}"]`);
+        let val;
+        if (field.type === 'boolean') val = el?.checked ? 'Yes' : 'No';
+        else if (field.type === 'table') {
+          try { val = JSON.parse(document.getElementById('tbl-val-' + key)?.value || '[]'); } catch { val = []; }
+        } else if (field.type === 'array') {
+          val = (el?.value || '').split(',').map(s => s.trim()).filter(Boolean);
+        } else if (field.type === 'relation') {
+          val = [...document.querySelectorAll(`[name="${key}"]:checked`)].map(cb => {
+            const name = cb.closest('.rel-item')?.querySelector('.rel-name')?.textContent;
+            return name || cb.value;
+          });
+        } else {
+          val = el?.value || '';
+        }
+        if (!val || (Array.isArray(val) && !val.length)) return;
+        groups[grp].push({ key, label: field.label || key, val, field });
+      }
+
+      // Body
+      if (body) { lines.push(body, ''); }
+
+      // Extra fields by group
+      for (const [grp, fields] of Object.entries(groups)) {
+        if (!fields.length) continue;
+        lines.push(`---`, '', `## ${grp}`, '');
+        for (const { label, val, field } of fields) {
+          if (field.type === 'table' && Array.isArray(val) && val.length > 1) {
+            lines.push(`### ${label}`, '');
+            const hdr = val[0];
+            lines.push('| ' + hdr.join(' | ') + ' |');
+            lines.push('| ' + hdr.map(() => '---').join(' | ') + ' |');
+            for (const row of val.slice(1)) {
+              lines.push('| ' + row.map(c => c || '').join(' | ') + ' |');
+            }
+            lines.push('');
+          } else if (Array.isArray(val)) {
+            lines.push(`**${label}:** ${val.join(', ')}`, '');
+          } else if (val.length > 100) {
+            lines.push(`### ${label}`, '', val, '');
+          } else {
+            lines.push(`**${label}:** ${val}`, '');
+          }
+        }
+      }
+
+      lines.push('---', '', `*Exported from Orbiter · ${COLLECTION}/${slug} · ${new Date().toISOString().slice(0,10)}*`);
+
+      const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${slug}.md`;
+      a.click();
+      URL.revokeObjectURL(a.href);
     };
 
     // Keyboard shortcuts
