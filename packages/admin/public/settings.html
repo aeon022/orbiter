@@ -398,7 +398,7 @@
           <div class="setting-row" id="ai-key-row">
             <div><div class="setting-label">API Key</div><div class="setting-desc" id="ai-key-desc">Not needed for Ollama.</div></div>
             <div style="display:flex;gap:8px;align-items:center">
-              <input class="input" name="ai.api_key" type="password" value="${get('ai.api_key')}" placeholder="API key…" style="flex:1" />
+              <input class="input" name="ai.api_key" type="text" value="${get('ai.api_key')}" placeholder="API key…" style="flex:1" autocomplete="off" />
               <a id="ai-get-key-btn" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="white-space:nowrap;display:none">↗ Get free key</a>
             </div>
           </div>
