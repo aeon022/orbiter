@@ -382,23 +382,24 @@
         <div class="settings-group">
           <div class="group-header">AI Assistant</div>
           <div class="setting-row">
-            <div><div class="setting-label">Provider</div><div class="setting-desc">Ollama (local, free), Anthropic, or OpenAI</div></div>
-            <select class="input" name="ai.provider" style="appearance:auto">
-              <option value="ollama" ${get('ai.provider')==='ollama'||!get('ai.provider')?'selected':''}>Ollama (local)</option>
-              <option value="anthropic" ${get('ai.provider')==='anthropic'?'selected':''}>Anthropic (Claude)</option>
-              <option value="openai" ${get('ai.provider')==='openai'?'selected':''}>OpenAI (GPT)</option>
-              <option value="gemini" ${get('ai.provider')==='gemini'?'selected':''}>Google Gemini</option>
+            <div><div class="setting-label">Provider</div><div class="setting-desc">Choose your AI backend. Gemini and Ollama are free.</div></div>
+            <select class="input" name="ai.provider" id="ai-provider-select" style="appearance:auto">
+              <option value="gemini" ${get('ai.provider')==='gemini'?'selected':''}>★ Google Gemini — free tier (recommended)</option>
+              <option value="ollama" ${get('ai.provider')==='ollama'||!get('ai.provider')?'selected':''}>Ollama — local, free, no API key</option>
+              <option value="anthropic" ${get('ai.provider')==='anthropic'?'selected':''}>Anthropic (Claude) — API key required</option>
+              <option value="openai" ${get('ai.provider')==='openai'?'selected':''}>OpenAI (GPT) — API key required</option>
             </select>
           </div>
+          <div id="ai-hint" style="padding:6px 20px;font-size:10px;color:var(--mid);line-height:1.6;border-bottom:1px solid var(--line2)"></div>
           <div class="setting-row">
             <div><div class="setting-label">Model</div><div class="setting-desc">Leave empty for default</div></div>
-            <input class="input" name="ai.model" value="${get('ai.model')}" placeholder="llama3.2 / claude-sonnet-4-20250514 / gpt-4o-mini / gemini-2.5-flash" />
+            <input class="input" name="ai.model" value="${get('ai.model')}" placeholder="gemini-2.5-flash" />
           </div>
-          <div class="setting-row">
-            <div><div class="setting-label">API Key</div><div class="setting-desc">Required for Anthropic/OpenAI. Not needed for Ollama.</div></div>
-            <input class="input" name="ai.api_key" type="password" value="${get('ai.api_key')}" placeholder="sk-..." />
+          <div class="setting-row" id="ai-key-row">
+            <div><div class="setting-label">API Key</div><div class="setting-desc">Not needed for Ollama.</div></div>
+            <input class="input" name="ai.api_key" type="password" value="${get('ai.api_key')}" placeholder="API key…" />
           </div>
-          <div class="setting-row">
+          <div class="setting-row" id="ai-ollama-row" style="display:none">
             <div><div class="setting-label">Ollama URL</div><div class="setting-desc">Default: http://localhost:11434</div></div>
             <input class="input" name="ai.ollama_url" value="${get('ai.ollama_url')}" placeholder="http://localhost:11434" />
           </div>
@@ -1024,6 +1025,28 @@
         document.documentElement.style.zoom = '';
       });
     }
+
+    // AI provider hint + conditional fields
+    const AI_HINTS = {
+      gemini: '★ <strong>Free tier</strong>: 15 requests/min, 1M tokens/month. Get a key at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">aistudio.google.com/apikey</a> — no credit card needed.',
+      ollama: '100% local, 100% free. Install: <code style="font-size:10px;background:var(--bg3);padding:1px 5px;border-radius:3px">brew install ollama && ollama pull llama3.2</code> then <code style="font-size:10px;background:var(--bg3);padding:1px 5px;border-radius:3px">ollama serve</code>',
+      anthropic: 'Requires API key from <a href="https://console.anthropic.com/" target="_blank" style="color:var(--accent)">console.anthropic.com</a>. Pay-per-use.',
+      openai: 'Requires API key from <a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--accent)">platform.openai.com</a>. Pay-per-use.',
+    };
+    const AI_PLACEHOLDERS = { gemini: 'gemini-2.5-flash', ollama: 'llama3.2', anthropic: 'claude-sonnet-4-20250514', openai: 'gpt-4o-mini' };
+    function updateAiFields() {
+      const p = document.getElementById('ai-provider-select')?.value || 'ollama';
+      const hint = document.getElementById('ai-hint');
+      if (hint) hint.innerHTML = AI_HINTS[p] || '';
+      const keyRow = document.getElementById('ai-key-row');
+      const ollamaRow = document.getElementById('ai-ollama-row');
+      if (keyRow) keyRow.style.display = p === 'ollama' ? 'none' : '';
+      if (ollamaRow) ollamaRow.style.display = p === 'ollama' ? '' : 'none';
+      const modelInp = document.querySelector('[name="ai.model"]');
+      if (modelInp) modelInp.placeholder = AI_PLACEHOLDERS[p] || '';
+    }
+    document.getElementById('ai-provider-select')?.addEventListener('change', updateAiFields);
+    updateAiFields();
 
     // FTP test connection
     document.getElementById('ftp-test-btn')?.addEventListener('click', async () => {
