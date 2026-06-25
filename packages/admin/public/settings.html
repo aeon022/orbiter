@@ -461,6 +461,16 @@
         </div>
 
         <div class="settings-group">
+          <div class="group-header">Preview URLs</div>
+          <div style="padding:10px 20px 4px;font-size:11px;color:var(--muted);line-height:1.6">
+            URL template opened when clicking <strong style="color:var(--text);font-weight:500">↗ Preview</strong> in the editor. Use <code style="font-family:var(--mono);font-size:10px;background:var(--bg3);padding:1px 5px;border-radius:3px">{slug}</code> as placeholder.
+          </div>
+          <div id="preview-url-rows">
+            <div style="padding:14px 20px;font-size:11px;color:var(--muted)">Loading collections…</div>
+          </div>
+        </div>
+
+        <div class="settings-group">
           <div class="group-header">Media</div>
           <div class="setting-row">
             <div><div class="setting-label">Backend</div><div class="setting-desc">Where uploaded files are stored</div></div>
@@ -532,6 +542,10 @@
           <div class="setting-row">
             <div><div class="setting-label">Quality</div><div class="setting-desc">JPEG / WebP / AVIF compression quality (1–100)</div></div>
             <input class="input" name="media.img_quality" type="number" min="1" max="100" value="${get('media.img_quality')||'85'}" placeholder="85" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Convert to WebP</div><div class="setting-desc">Auto-convert JPEG and PNG uploads to WebP on ingest — smaller files, same quality</div></div>
+            <label class="toggle"><input type="checkbox" name="media.img_convert_webp" value="1" ${get('media.img_convert_webp')==='1'?'checked':''} /><span class="toggle-slider"></span></label>
           </div>
         </div>
 
@@ -880,6 +894,28 @@
     document.getElementById('media-backend-select')?.addEventListener('change', updateMediaFields);
     updateMediaFields();
 
+    // Preview URLs — populate one row per collection
+    (async () => {
+      const rows = document.getElementById('preview-url-rows');
+      if (!rows) return;
+      try {
+        const cols = await fetch('/api/collections', { credentials: 'include' }).then(r => r.json());
+        if (!cols.length) { rows.innerHTML = '<div style="padding:10px 20px;font-size:11px;color:var(--muted)">No collections yet</div>'; return; }
+        const urlMetas = await Promise.all(
+          cols.map(col => fetch(`/api/meta/preview_url~${col.id}`, { credentials: 'include' }).then(r => r.json()).catch(() => ({})))
+        );
+        rows.innerHTML = cols.map((col, i) => {
+          const val = (urlMetas[i]?.value ?? '').replace(/"/g, '&quot;');
+          return `<div class="setting-row">
+            <div><div class="setting-label" style="font-family:var(--mono);font-size:11px">${col.id}</div></div>
+            <input class="input" data-preview-url-col="${col.id}" value="${val}" placeholder="http://localhost:4321/blog/{slug}" style="flex:1;max-width:380px" />
+          </div>`;
+        }).join('');
+      } catch {
+        rows.innerHTML = '<div style="padding:10px 20px;font-size:11px;color:var(--muted)">Could not load collections</div>';
+      }
+    })();
+
     // Site form
     document.getElementById('site-form').addEventListener('submit', async e => {
       e.preventDefault();
@@ -911,6 +947,7 @@
         ['preview.token',            document.getElementById('preview-token-display').value || null],
         ['media.img_max_width',      fd.get('media.img_max_width')],
         ['media.img_quality',        fd.get('media.img_quality')],
+        ['media.img_convert_webp',   fd.get('media.img_convert_webp') ? '1' : '0'],
         ['email.smtp_host',          fd.get('email.smtp_host')],
         ['email.smtp_port',          fd.get('email.smtp_port')],
         ['email.smtp_user',          fd.get('email.smtp_user')],
@@ -936,6 +973,10 @@
         ['dashboard.show_recent',      fd.get('dashboard.show_recent') ? '1' : '0'],
         ['dashboard.show_collections', fd.get('dashboard.show_collections') ? '1' : '0'],
         ['dashboard.show_workspace',   fd.get('dashboard.show_workspace') ? '1' : '0'],
+        // dynamic preview URLs per collection
+        ...Array.from(document.querySelectorAll('[data-preview-url-col]')).map(el => [
+          `preview_url.${el.dataset.previewUrlCol}`, el.value || null
+        ]),
       ]);
       showBanner('site-banner','banner-ok','Settings saved');
       const msg = document.getElementById('header-save-msg');

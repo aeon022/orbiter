@@ -6,20 +6,24 @@ import sharp from 'sharp';
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/tiff']);
 
 async function optimizeImage(buffer, mimeType, db) {
-  if (!IMAGE_TYPES.has(mimeType)) return buffer;
-  const maxWidth = parseInt(db.getMeta('media.img_max_width') ?? '2400', 10);
-  const quality  = parseInt(db.getMeta('media.img_quality')   ?? '85',   10);
+  if (!IMAGE_TYPES.has(mimeType)) return { buffer, type: mimeType };
+  const maxWidth    = parseInt(db.getMeta('media.img_max_width')    ?? '2400', 10);
+  const quality     = parseInt(db.getMeta('media.img_quality')      ?? '85',   10);
+  const convertWebp = db.getMeta('media.img_convert_webp') === '1';
   try {
     const img  = sharp(buffer);
     const meta = await img.metadata();
     if (meta.width && meta.width > maxWidth) img.resize({ width: maxWidth, withoutEnlargement: true });
-    if (mimeType === 'image/jpeg') return await img.jpeg({ quality, mozjpeg: true }).toBuffer();
-    if (mimeType === 'image/png')  return await img.png({ quality }).toBuffer();
-    if (mimeType === 'image/webp') return await img.webp({ quality }).toBuffer();
-    if (mimeType === 'image/avif') return await img.avif({ quality }).toBuffer();
-    return await img.toBuffer();
+    if (convertWebp && (mimeType === 'image/jpeg' || mimeType === 'image/png')) {
+      return { buffer: await img.webp({ quality }).toBuffer(), type: 'image/webp' };
+    }
+    if (mimeType === 'image/jpeg') return { buffer: await img.jpeg({ quality, mozjpeg: true }).toBuffer(), type: mimeType };
+    if (mimeType === 'image/png')  return { buffer: await img.png({ quality }).toBuffer(), type: mimeType };
+    if (mimeType === 'image/webp') return { buffer: await img.webp({ quality }).toBuffer(), type: mimeType };
+    if (mimeType === 'image/avif') return { buffer: await img.avif({ quality }).toBuffer(), type: mimeType };
+    return { buffer: await img.toBuffer(), type: mimeType };
   } catch {
-    return buffer;
+    return { buffer, type: mimeType };
   }
 }
 
@@ -84,9 +88,12 @@ mediaRoutes.post('/', async (c) => {
   const db        = openPod(c.get('podPath'));
 
   try {
-    const buffer  = await optimizeImage(rawBuffer, file.type, db);
+    const { buffer, type: finalType } = await optimizeImage(rawBuffer, file.type, db);
+    const finalName = finalType === 'image/webp' && file.type !== 'image/webp'
+      ? file.name.replace(/\.[^.]+$/, '.webp')
+      : file.name;
     const backend = getMediaBackend(db);
-    await backend.upload(id, file.name, file.type, buffer.byteLength, buffer, alt, folder);
+    await backend.upload(id, finalName, finalType, buffer.byteLength, buffer, alt, folder);
     const item    = db.getMediaItem(id);
     db.close();
     const { data: _, ...meta } = item;
@@ -128,9 +135,12 @@ mediaRoutes.post('/import-url', async (c) => {
   const db        = openPod(c.get('podPath'));
 
   try {
-    const buffer  = await optimizeImage(rawBuffer, mime, db);
+    const { buffer, type: finalType } = await optimizeImage(rawBuffer, mime, db);
+    const finalName = finalType === 'image/webp' && mime !== 'image/webp'
+      ? filename.replace(/\.[^.]+$/, '.webp')
+      : filename;
     const backend = getMediaBackend(db);
-    await backend.upload(id, filename, mime, buffer.byteLength, buffer, alt ?? null, folder ?? '');
+    await backend.upload(id, finalName, finalType, buffer.byteLength, buffer, alt ?? null, folder ?? '');
     const item    = db.getMediaItem(id);
     db.close();
     const { data: _, ...meta } = item;

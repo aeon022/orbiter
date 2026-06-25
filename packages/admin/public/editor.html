@@ -39,7 +39,7 @@
     .editor-title-input::placeholder { color:var(--line); }
     .editor-slug-line { font-size:10px; color:var(--muted); margin-bottom:32px; padding-bottom:14px; border-bottom:1px solid var(--line); }
     .editor-slug-line span { color:var(--accent); }
-    .word-count { font-size:10px; color:var(--muted); margin-top:28px; padding-top:12px; border-top:1px solid var(--line2); }
+    #word-count-display { font-size:10px; color:var(--muted); margin-top:28px; padding-top:12px; border-top:1px solid var(--line2); }
 
     /* Block editor */
     .be-editor { min-height:400px; cursor:text; }
@@ -1745,11 +1745,8 @@
       const words = text.split(/\s+/).filter(w => w.length > 0).length;
       wordCountEl.textContent = words > 0 ? words + ' words' : '';
     }
-    const beEditor = document.getElementById('be-editor');
-    if (beEditor) {
-      beEditor.addEventListener('input', updateWordCount);
-      setTimeout(updateWordCount, 500);
-    }
+    document.getElementById('be-editor')?.addEventListener('input', updateWordCount);
+    setTimeout(updateWordCount, 500);
 
     // ── Markdown export ─────────────────────────────────────────────
     window.exportMarkdown = function() {
