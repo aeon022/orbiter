@@ -1085,14 +1085,34 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 
 ## Changelog
 
-### June 2026 · Smart Suggestions v2 + Publish HTML
+### June 2026 · Content Layer, Publish HTML, Smart Suggestions v2, CLI, UI Polish
 
-- **Smart Suggestions v2** — all suggestions shown simultaneously in a multi-section panel. Cross-collection related entries (not just same collection). AI-generated SEO title & description. Content quality hints (missing image, excerpt, tags, SEO — no AI needed). `suggestedPrompts` generation for dossier entries. Manual trigger button `✦ Suggest` in toolbar, grouped with `✦ AI` as segmented control. Apply feedback with "✓ Applied → Sidebar" hint. All AI tasks run in parallel.
-- **Publish HTML** — generate a complete static website directly from the admin. No Astro, no build tools, no config. Choose a theme, click Generate, download the ZIP and deploy it anywhere.
-- **Two built-in themes** — *Orbit* (modern, floating island header, card layouts) and *Canvas* (editorial whiteboard, Cinzel serif headings, paper-like design). Both with automatic dark mode, responsive layout, reading time, OG meta tags, and SVG favicon.
-- **Smart field detection** — the generator reads your collection schemas and picks the right title, body, excerpt, date, image, and tags fields automatically. Works with any collection, not just blog posts.
-- **Theme picker in admin** — choose between themes before generating. The API supports `POST /api/publish/generate` with `{ theme: "orbit" | "canvas" }`.
-- **Child collection handling** — parent collections show category links as pills, child collections show breadcrumb navigation back to the parent. Taxonomy pages (post_categories, event_categories) are filtered from the main nav.
+**Astro Content Layer Adapter**
+- **`orbiterLoader()`** — build-time Content Layer loader for `astro:content`. Use `getCollection()` and `getEntry()` from the standard Astro API. Incremental digest caching, relation resolution, SEO enrichment.
+- **`orbiterLiveLoader()`** — SSR/hybrid live loader, queries the pod at request time.
+- **`orbiterSchema()`** — auto-generates Zod schema from pod collection definitions.
+- **Hot Reload** — file watcher on the pod triggers automatic HMR in Astro dev server.
+- **Backward compatible** — `orbiter:collections` virtual module continues to work unchanged.
+
+**Publish HTML**
+- **One-click static site generator** — choose a theme, click Generate, download a ZIP. No Astro, no build tools.
+- **Two themes** — *Orbit* (modern, floating island header, card layouts) and *Canvas* (editorial whiteboard, Cinzel serif, paper-like). Both with dark mode, responsive layout, reading time, OG tags, SVG favicon.
+- **Smart field detection** — auto-detects title, body, excerpt, date, image, tags from any schema.
+- **Child collection breadcrumbs** — parent→child navigation, taxonomy filtering.
+
+**Smart Suggestions v2**
+- **Multi-section panel** — tags, related entries, SEO, missing fields, quality hints shown simultaneously.
+- **Cross-collection** — related entries found across all collections, not just the current one.
+- **SEO suggestions** — AI-generated meta title & description.
+- **Content quality hints** — missing image, excerpt, tags, SEO (no AI needed).
+- **Manual trigger** — `✦ Suggest` button in toolbar, grouped with `✦ AI`.
+
+**CLI**
+- **`orbiter publish`** — generate HTML site from terminal. `--pod`, `--out`, `--theme` flags.
+- **`orbiter backup`** — timestamped pod copy. `--pod`, `--out` flags.
+
+**UI Polish**
+- Dashboard greeting ("Good morning, admin"), live word count, pulsing autosave dot, favicon badge for unsaved changes, pod size in sidebar, collection color dots, relative timestamps, keyboard shortcut hints, skeleton loading CSS.
 
 ---
 

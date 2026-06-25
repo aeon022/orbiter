@@ -14,6 +14,7 @@ const features = [
   { icon: '◈', title: 'One file. Everything.',        body: 'Content, media, schema, users, sessions — all in a single POD (a SQLite database with a <code>.pod</code> extension). Copy it anywhere. Back it up with <code>cp</code>.' },
   { icon: '⬡', title: 'Astro-native',                 body: 'One line in <code>astro.config.mjs</code> gives you <code>orbiter:collections</code> — a Vite virtual module that snapshots your published content at build time. Zero runtime fetch.' },
   { icon: '⌗', title: 'Familiar content API',         body: 'Read content with <code>getCollection</code> and <code>getEntry</code> — same shape as Astro\'s built-in content collections.' },
+  { icon: '⬢', title: 'Content Layer loader',         body: '<code>orbiterLoader()</code> plugs directly into Astro\'s Content Layer API. Use <code>astro:content</code> with auto-generated Zod schemas, incremental builds, and hot reload when the pod changes.' },
   { icon: '▦', title: 'Schema editor',                body: 'Add or change fields without migrations. Export and import schemas as JSON to copy them between collections or pods.' },
   { icon: '◫', title: 'Media library',                body: 'Upload, browse, and manage files. Images are automatically resized and compressed on upload. Four storage backends: pod BLOB, local disk, GitHub CDN, or external URL.' },
   { icon: '⟳', title: 'Version history',              body: 'Every save creates a snapshot, capped at 20 per entry. Restore any previous version with one click from the editor sidebar.' },
@@ -275,7 +276,7 @@ const faqs = [
     </div>
 
     <div class="hero-inner">
-      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">Smart Suggestions v2 + Publish HTML — cross-collection AI, static site generator · Changelog →</a>
+      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">Astro Content Layer + Publish HTML + Smart Suggestions v2 — standard astro:content API, static sites, AI panel · Changelog →</a>
       <h1>Your entire CMS<br />in <span>one file.</span></h1>
       <p class="hero-sub">
         Content, media, schema, users — all in a single POD.
@@ -469,14 +470,14 @@ const faqs = [
         <div class="update-date">Jun<br />2026</div>
         <div class="update-dot" style="background:var(--gold);box-shadow:0 0 0 4px color-mix(in srgb,var(--gold) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--gold) 14%,transparent);color:var(--gold);border-color:color-mix(in srgb,var(--gold) 30%,transparent)">Publish HTML + Smart Suggestions v2 — Latest</div>
-          <div class="update-title">Static site generator, AI suggestions panel, cross-collection intelligence</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--gold) 14%,transparent);color:var(--gold);border-color:color-mix(in srgb,var(--gold) 30%,transparent)">Content Layer + Publish HTML + Suggestions v2 — Latest</div>
+          <div class="update-title">Standard astro:content API, static site generator, AI suggestions, CLI, UI polish</div>
           <ul class="update-items">
-            <li><strong>Smart Suggestions v2</strong> — all suggestions at once in a multi-section panel. Cross-collection related entries, AI-generated SEO title &amp; description, content quality hints (no AI needed), <code>suggestedPrompts</code> for dossiers. Manual <code>✦ Suggest</code> button in toolbar.</li>
-            <li><strong>Publish HTML</strong> — generate a complete static website from the admin. Pick a theme, click Generate, deploy the ZIP anywhere. No Astro, no build tools, no config needed.</li>
-            <li><strong>Two themes</strong> — <em>Orbit</em> (modern sans-serif, floating island header, card layouts) and <em>Canvas</em> (editorial whiteboard, Cinzel serif headings, generous spacing).</li>
-            <li><strong>Automatic dark mode</strong>, responsive design, reading time, OG/Twitter meta tags, sitemap.xml, robots.txt, SVG favicon.</li>
-            <li><strong>Theme picker</strong> in the admin UI with live description. API: <code>POST /api/publish/generate</code>.</li>
+            <li><strong>Astro Content Layer</strong> — <code>orbiterLoader()</code> for build-time, <code>orbiterLiveLoader()</code> for SSR. Use <code>getCollection()</code> from <code>astro:content</code> instead of the custom virtual module. Auto Zod schema, hot reload on pod changes.</li>
+            <li><strong>Smart Suggestions v2</strong> — multi-section panel with tags, cross-collection related entries, AI SEO title &amp; description, content quality hints, <code>suggestedPrompts</code>. Manual <code>✦ Suggest</code> button grouped with <code>✦ AI</code>.</li>
+            <li><strong>Publish HTML</strong> — one-click static site. Two themes: <em>Orbit</em> (modern) and <em>Canvas</em> (editorial whiteboard). Dark mode, responsive, OG tags, reading time.</li>
+            <li><strong>CLI</strong> — <code>orbiter publish</code> generates HTML from terminal, <code>orbiter backup</code> creates timestamped pod copy.</li>
+            <li><strong>UI polish</strong> — dashboard greeting, live word count, pulsing autosave dot, favicon badge, pod size in sidebar, collection color dots, relative timestamps, shortcut hints.</li>
           </ul>
         </div>
       </div>
