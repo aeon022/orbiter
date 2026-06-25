@@ -32,6 +32,7 @@ import { formPublicRoutes, formRoutes } from './routes/forms.js';
 import { analyticsPublicRoutes, analyticsRoutes } from './routes/analytics.js';
 import { aiRoutes } from './routes/ai.js';
 import { templateRoutes } from './routes/templates.js';
+import { publishRoutes }  from './routes/publish.js';
 import { requireAuth }      from './middleware/auth.js';
 import { csrfMiddleware }  from './middleware/csrf.js';
 
@@ -122,6 +123,7 @@ export function createApp(podPath) {
   api.route('/deploy',       deployRoutes);
   api.route('/forms',        formRoutes);
   api.route('/templates',    templateRoutes);
+  api.route('/publish',      publishRoutes);
 
   app.route('/api', api);
 
