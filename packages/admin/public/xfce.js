@@ -47,7 +47,7 @@
     { icon: tblr('<path d="M6 6m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0"/><path d="M18 18m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0"/><path d="M6 18m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0"/><path d="M18 6m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0"/><path d="M7.5 7.5l9 9"/><path d="M7.5 16.5l9-9"/>'), label: 'Graph', href: '/graph.html', key: 'graph' },
     { icon: TI.schema,    label: 'Schema',    href: '/schema.html',   key: 'schema'   },
     { icon: TI.build,     label: 'Build',     href: '/build.html',    key: 'build'    },
-    { icon: TI.publish,   label: 'Publish',   href: '/publish.html',  key: 'publish'  },
+    { icon: TI.publish,   label: 'Publish HTML', href: '/publish.html',  key: 'publish'  },
     { icon: TI.import,    label: 'Import',    href: '/import.html',   key: 'import'   },
     { icon: TI.settings,  label: 'Settings',  href: '/settings.html', key: 'settings' },
   ];

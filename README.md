@@ -1085,6 +1085,16 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 
 ## Changelog
 
+### June 2026 · Publish HTML — One-Click Static Site Generator
+
+- **Publish HTML** — generate a complete static website directly from the admin. No Astro, no build tools, no config. Choose a theme, click Generate, download the ZIP and deploy it anywhere.
+- **Two built-in themes** — *Orbit* (modern, floating island header, card layouts) and *Canvas* (editorial whiteboard, Cinzel serif headings, paper-like design). Both with automatic dark mode, responsive layout, reading time, OG meta tags, and SVG favicon.
+- **Smart field detection** — the generator reads your collection schemas and picks the right title, body, excerpt, date, image, and tags fields automatically. Works with any collection, not just blog posts.
+- **Theme picker in admin** — choose between themes before generating. The API supports `POST /api/publish/generate` with `{ theme: "orbit" | "canvas" }`.
+- **Child collection handling** — parent collections show category links as pills, child collections show breadcrumb navigation back to the parent. Taxonomy pages (post_categories, event_categories) are filtered from the main nav.
+
+---
+
 ### June 2026 · admin@0.3.74 — Smart Suggestions, Widgets, Graph, Webhooks
 
 - **Smart Suggestions** — AI suggests tags, related entries, and missing field values after every save. Non-blocking banner in the editor. Auto-tags via AI, related entries via keyword overlap, missing fields with AI-generated fill values.

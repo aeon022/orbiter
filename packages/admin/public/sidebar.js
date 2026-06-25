@@ -72,7 +72,7 @@
           var pubLink = document.createElement('a');
           pubLink.className = 'nav-item' + (page === 'publish' ? ' active' : '');
           pubLink.href = '/publish.html';
-          pubLink.innerHTML = '<span class="nav-icon">◆</span>Publish';
+          pubLink.innerHTML = '<span class="nav-icon">◆</span>Publish HTML';
           buildLink.parentNode.insertBefore(pubLink, buildLink.nextSibling);
         }
 

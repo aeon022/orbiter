@@ -35,6 +35,7 @@ const features = [
   { icon: '⊕', title: 'WordPress importer',            body: 'Export your WordPress site as WXR and import it directly in the admin. HTML body text converts to Markdown automatically. Post dates, categories, and slugs are preserved. No CLI, no scripts.' },
   { icon: '⊘', title: 'Entry locking',                 body: 'When two editors open the same entry simultaneously, a lock warning appears before any changes are made. 90-second lock with automatic heartbeat refresh. Prevents silent last-write-wins overwrites.' },
   { icon: '⌨', title: 'CLI',                           body: '<code>orbiter init</code> scaffolds a new Astro + Orbiter project. <code>orbiter add-user</code> creates users. <code>orbiter pack / unpack</code> syncs media BLOBs to files for git-friendly workflows.' },
+  { icon: '◆', title: 'Publish HTML',                  body: 'One-click static site generator. Choose a built-in theme (Orbit or Canvas), click Generate, download a ZIP with a complete website. Dark mode, responsive, OG tags, sitemap — no Astro or build tools needed.' },
 ];
 
 const tradeoffs = [
@@ -274,7 +275,7 @@ const faqs = [
     </div>
 
     <div class="hero-inner">
-      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">v0.3.70 — Dual Render, AI Assistant, Dossiers, 30 features shipped · Changelog →</a>
+      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">Publish HTML — one-click static sites with built-in themes · Changelog →</a>
       <h1>Your entire CMS<br />in <span>one file.</span></h1>
       <p class="hero-sub">
         Content, media, schema, users — all in a single POD.
@@ -464,11 +465,27 @@ const faqs = [
 
     <div class="updates-feed">
 
+      <div class="update-card reveal" style="border-color:color-mix(in srgb,var(--gold) 50%,var(--line))">
+        <div class="update-date">Jun<br />2026</div>
+        <div class="update-dot" style="background:var(--gold);box-shadow:0 0 0 4px color-mix(in srgb,var(--gold) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--gold) 14%,transparent);color:var(--gold);border-color:color-mix(in srgb,var(--gold) 30%,transparent)">Publish HTML — Latest</div>
+          <div class="update-title">One-click static site generator with built-in themes</div>
+          <ul class="update-items">
+            <li><strong>Publish HTML</strong> — generate a complete static website from the admin. Pick a theme, click Generate, deploy the ZIP anywhere. No Astro, no build tools, no config needed.</li>
+            <li><strong>Two themes</strong> — <em>Orbit</em> (modern sans-serif, floating island header, card layouts) and <em>Canvas</em> (editorial whiteboard, Cinzel serif headings, generous spacing).</li>
+            <li><strong>Automatic dark mode</strong>, responsive design, reading time, OG/Twitter meta tags, sitemap.xml, robots.txt, SVG favicon.</li>
+            <li><strong>Smart field detection</strong> — works with any collection schema. The generator finds title, body, excerpt, date, image, and tag fields automatically.</li>
+            <li><strong>Theme picker</strong> in the admin UI with live description. API: <code>POST /api/publish/generate</code>.</li>
+          </ul>
+        </div>
+      </div>
+
       <div class="update-card reveal" style="border-color:color-mix(in srgb,var(--accent) 40%,var(--line))">
         <div class="update-date">Jun<br />2026</div>
         <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.66 · Desktop v0.2.2 — Latest</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.74</div>
           <div class="update-title">Calendar view, Simple Analytics, cross-pod copy &amp; desktop auto-update</div>
           <ul class="update-items">
             <li><strong>Calendar view</strong> — full month-grid page with color-coded entries (scheduled/expiring/published/draft). Click a day to see entries, filter by status, keyboard nav. Dashboard widget with mini calendar + upcoming list.</li>
