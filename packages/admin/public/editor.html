@@ -60,7 +60,8 @@
     .be-block em { color:var(--mid); font-style:italic; }
 
     /* Saved indicator */
-    .saved-flash { background:var(--jade-bg); border-bottom:1px solid rgba(45,139,106,.15); padding:6px 20px; font-size:10px; color:var(--jade); display:flex; align-items:center; gap:6px; flex-shrink:0; }
+    .saved-flash { padding:4px 12px; font-size:10px; color:var(--jade); display:none; align-items:center; gap:4px; flex-shrink:0; font-family:var(--mono); letter-spacing:.03em; margin-left:12px; opacity:0; transition:opacity .3s; }
+    .saved-flash.show { display:flex; opacity:1; }
     .saved-flash::before { content:"✓"; }
 
     /* Preview panel */
@@ -240,22 +241,37 @@
 
     /* Autosave indicator */
     #autosave-indicator { font-size:10px; color:var(--muted); padding:0 12px 0 8px; border-left:1px solid var(--line); margin-left:8px; }
-    /* Suggestions banner */
-    .suggest-banner { display:none; padding:8px 20px; background:var(--accent-bg); border-bottom:1px solid color-mix(in srgb, var(--accent) 20%, transparent); font-size:11px; color:var(--text); align-items:center; gap:8px; flex-shrink:0; animation:suggest-slide .25s ease; }
-    .suggest-banner.visible { display:flex; }
-    .suggest-banner .suggest-label { color:var(--accent); font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; flex-shrink:0; }
-    .suggest-banner .suggest-content { flex:1; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+    /* Suggestions panel */
+    .suggest-panel { display:none; background:var(--bg1); border-bottom:1px solid var(--line); font-size:11px; color:var(--text); flex-shrink:0; animation:suggest-slide .25s ease; max-height:280px; overflow-y:auto; }
+    .suggest-panel.visible { display:block; }
+    .suggest-section { display:flex; align-items:flex-start; gap:8px; padding:7px 20px; border-bottom:1px solid var(--line); }
+    .suggest-section:last-child { border-bottom:none; }
+    .suggest-label { color:var(--accent); font-family:var(--mono); font-size:9px; letter-spacing:.06em; text-transform:uppercase; flex-shrink:0; min-width:70px; padding-top:2px; }
+    .suggest-content { flex:1; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
     .suggest-tag { font-size:10px; padding:2px 8px; background:var(--bg3); border:1px solid var(--line); border-radius:10px; color:var(--text); }
-    .suggest-entry { font-size:10px; color:var(--accent); text-decoration:none; padding:2px 8px; border:1px solid color-mix(in srgb, var(--accent) 20%, transparent); border-radius:10px; }
+    .suggest-entry { font-size:10px; color:var(--accent); text-decoration:none; padding:2px 8px; border:1px solid color-mix(in srgb, var(--accent) 20%, transparent); border-radius:10px; white-space:nowrap; }
     .suggest-entry:hover { background:var(--accent-bg); }
-    .suggest-btn { font-size:9px; padding:3px 10px; border:1px solid var(--accent); background:var(--accent-bg); color:var(--accent); font-family:var(--mono); cursor:pointer; border-radius:4px; transition:all .12s; }
+    .suggest-col-badge { font-size:8px; color:var(--muted); padding:1px 5px; background:var(--bg3); border-radius:6px; margin-left:-4px; }
+    .suggest-btn { font-size:9px; padding:3px 10px; border:1px solid var(--accent); background:var(--accent-bg); color:var(--accent); font-family:var(--mono); cursor:pointer; border-radius:4px; transition:all .12s; flex-shrink:0; }
     .suggest-btn:hover { background:var(--accent); color:var(--bg0); }
     .suggest-btn.dismiss { border-color:var(--line); color:var(--muted); background:transparent; }
     .suggest-btn.dismiss:hover { border-color:var(--mid); color:var(--text); }
+    .suggest-seo-preview { font-size:10px; color:var(--mid); line-height:1.4; }
+    .suggest-seo-preview strong { color:var(--text); font-weight:500; }
+    .suggest-hint { font-size:10px; color:var(--muted); display:flex; align-items:center; gap:5px; }
+    .suggest-hint.warn { color:var(--gold); }
+    .suggest-close { position:absolute; top:6px; right:12px; background:none; border:none; color:var(--muted); cursor:pointer; font-size:14px; padding:2px 6px; border-radius:4px; }
+    .suggest-close:hover { color:var(--text); background:var(--bg3); }
+    .suggest-head { position:relative; display:flex; align-items:center; gap:8px; padding:6px 20px; border-bottom:1px solid var(--line); }
+    .suggest-head-title { font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); }
     @keyframes suggest-slide { from { opacity:0; transform:translateY(-100%); } to { opacity:1; transform:translateY(0); } }
 
-    .ai-toolbar-btn { height:26px; padding:0 12px; background:linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent2, var(--accent)) 60%, var(--accent))); border:none; border-radius:13px; color:#fff; font-family:var(--mono); font-size:10px; font-weight:500; letter-spacing:.04em; cursor:pointer; display:flex; align-items:center; gap:5px; transition:filter .12s, box-shadow .12s; }
+    .ai-btn-group { display:flex; align-items:center; gap:3px; }
+    .ai-toolbar-btn { height:26px; padding:0 12px; background:linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent2, var(--accent)) 60%, var(--accent))); border:none; border-radius:13px 4px 4px 13px; color:#fff; font-family:var(--mono); font-size:10px; font-weight:500; letter-spacing:.04em; cursor:pointer; display:flex; align-items:center; gap:5px; transition:filter .12s, box-shadow .12s; }
     .ai-toolbar-btn:hover { filter:brightness(1.15); box-shadow:0 2px 12px color-mix(in srgb, var(--accent) 40%, transparent); }
+    .suggest-toolbar-btn { height:26px; padding:0 12px; background:transparent; border:1px solid var(--accent); border-radius:4px 13px 13px 4px; color:var(--accent); font-family:var(--mono); font-size:10px; font-weight:500; letter-spacing:.04em; cursor:pointer; display:flex; align-items:center; gap:5px; transition:all .15s; }
+    .suggest-toolbar-btn:hover { background:var(--accent-bg); box-shadow:0 2px 12px color-mix(in srgb, var(--accent) 25%, transparent); }
+    .suggest-toolbar-btn:disabled { opacity:.5; cursor:wait; }
 
     /* SEO char counter */
     .seo-counter { font-size:9px; float:right; color:var(--muted); transition:color .12s; }
@@ -506,12 +522,12 @@
     </div>
     <div class="editor-shell" id="editor-shell">
       <div class="editor-main" id="editor-main">
-        <div id="saved-flash" style="display:none;" class="saved-flash">Entry saved</div>
-        <div class="suggest-banner" id="suggest-banner">
-          <span class="suggest-label" id="suggest-label">✦ Suggestion</span>
-          <div class="suggest-content" id="suggest-content"></div>
-          <button class="suggest-btn" id="suggest-apply">Apply</button>
-          <button class="suggest-btn dismiss" id="suggest-dismiss">Dismiss</button>
+        <div class="suggest-panel" id="suggest-panel">
+          <div class="suggest-head">
+            <span class="suggest-head-title">✦ Suggestions</span>
+            <button class="suggest-close" id="suggest-close">&times;</button>
+          </div>
+          <div id="suggest-sections"></div>
         </div>
         <div class="editor-toolbar">
           <div class="tool-group" onmousedown="event.preventDefault()">
@@ -541,7 +557,11 @@
             </button>
             <button type="button" class="tool-btn" onclick="exportMarkdown()" title="Export as Markdown" style="font-size:9px;letter-spacing:.04em;">↓ md</button>
             <div class="tool-sep"></div>
-            <button type="button" class="ai-toolbar-btn" onclick="openAiPanel()" title="AI Assistant">✦ AI</button>
+            <div class="ai-btn-group">
+              <button type="button" class="ai-toolbar-btn" onclick="openAiPanel()" title="AI Assistant">✦ AI</button>
+              <button type="button" class="suggest-toolbar-btn" id="suggest-trigger-btn" onclick="triggerSuggestions()" title="Smart Suggestions">✦ Suggest</button>
+            </div>
+            <div id="saved-flash" class="saved-flash">Saved</div>
             <button type="button" class="meta-panel-toggle" id="meta-panel-toggle" onclick="toggleMetaPanel()" title="Toggle sidebar"></button>
             <span id="autosave-indicator-toolbar" style="font-size:9px;color:var(--muted);margin-left:auto;padding-left:8px;white-space:nowrap;"></span>
           </div>
@@ -1497,7 +1517,9 @@
 
     function showFlash() {
       const f = document.getElementById('saved-flash');
-      f.style.display=''; setTimeout(()=>f.style.display='none',2000);
+      f.classList.add('show');
+      clearTimeout(f._t);
+      f._t = setTimeout(() => f.classList.remove('show'), 2000);
     }
 
     // ── Autosave ──────────────────────────────────────────────────────
@@ -1539,84 +1561,150 @@
       updateWc(); scheduleAutosave(); updatePreview();
     };
 
-    // ── Smart Suggestions ──────────────────────────────────────────
-    let _suggestPending = null;
-    const suggestBanner = document.getElementById('suggest-banner');
-    const suggestContent = document.getElementById('suggest-content');
-    const suggestLabel = document.getElementById('suggest-label');
+    // ── Smart Suggestions v2 ────────────────────────────────────────
+    const suggestPanel = document.getElementById('suggest-panel');
+    const suggestSections = document.getElementById('suggest-sections');
 
-    document.getElementById('suggest-dismiss').addEventListener('click', () => {
-      suggestBanner.classList.remove('visible');
-      _suggestPending = null;
+    document.getElementById('suggest-close').addEventListener('click', () => {
+      suggestPanel.classList.remove('visible');
     });
 
-    document.getElementById('suggest-apply').addEventListener('click', async () => {
-      if (!_suggestPending) return;
-      const s = _suggestPending;
-      _suggestPending = null;
-      suggestBanner.classList.remove('visible');
-
-      if (s.type === 'tags' && s.tags?.length) {
-        const inp = document.querySelector('[name="keywords"]') || document.getElementById('arr-keywords');
-        if (inp) {
-          const existing = inp.value ? inp.value.split(',').map(t => t.trim()).filter(Boolean) : [];
-          const merged = [...new Set([...existing, ...s.tags])];
-          inp.value = merged.join(', ');
-          inp.dispatchEvent(new Event('input'));
-        }
-        saveEntry(document.getElementById('status-select')?.value ?? 'draft', true);
-      } else if (s.type === 'fill' && s.field && s.value) {
-        const inp = document.querySelector(`[name="${s.field}"]`);
-        if (inp) {
-          inp.value = Array.isArray(s.value) ? s.value.join(', ') : s.value;
-          inp.dispatchEvent(new Event('input'));
-        }
-        saveEntry(document.getElementById('status-select')?.value ?? 'draft', true);
+    function showApplyHint(label) {
+      const btn = event?.target;
+      if (btn) {
+        const orig = btn.textContent;
+        btn.textContent = '✓ Applied';
+        btn.style.borderColor = 'var(--jade)';
+        btn.style.color = 'var(--jade)';
+        btn.disabled = true;
+        setTimeout(() => { btn.textContent = orig; btn.style.borderColor = ''; btn.style.color = ''; btn.disabled = false; }, 2000);
       }
-    });
+      const flash = document.getElementById('saved-flash');
+      if (flash) {
+        flash.textContent = label ? `✓ ${label} → Sidebar` : '✓ Applied → Sidebar';
+        flash.classList.add('show');
+        clearTimeout(flash._t);
+        flash._t = setTimeout(() => { flash.classList.remove('show'); flash.textContent = 'Saved'; }, 3000);
+      }
+    }
+
+    function applyField(name, value) {
+      const inp = document.querySelector(`[name="${name}"]`) || document.getElementById(`arr-${name}`);
+      if (inp) {
+        inp.value = Array.isArray(value) ? value.join(', ') : value;
+        inp.dispatchEvent(new Event('input'));
+      }
+      saveEntry(document.getElementById('status-select')?.value ?? 'draft', true);
+      showApplyHint(name);
+    }
+
+    function applySeo(title, desc) {
+      if (title) { const el = document.getElementById('seo-inp-_title'); if (el) { el.value = title; el.dispatchEvent(new Event('input')); } }
+      if (desc) { const el = document.getElementById('seo-inp-_desc'); if (el) { el.value = desc; el.dispatchEvent(new Event('input')); } }
+      saveEntry(document.getElementById('status-select')?.value ?? 'draft', true);
+      showApplyHint('SEO');
+    }
+
+    function applyTags(tags) {
+      const inp = document.querySelector('[name="keywords"]') || document.querySelector('[name="tags"]') || document.getElementById('arr-keywords') || document.getElementById('arr-tags');
+      if (inp) {
+        const existing = inp.value ? inp.value.split(',').map(t => t.trim()).filter(Boolean) : [];
+        const merged = [...new Set([...existing, ...tags])];
+        inp.value = merged.join(', ');
+        inp.dispatchEvent(new Event('input'));
+      }
+      saveEntry(document.getElementById('status-select')?.value ?? 'draft', true);
+      showApplyHint('Tags');
+    }
 
     async function triggerSuggestions() {
       if (!currentSlug) return;
-      const types = ['tags', 'related', 'missing'];
-      for (const type of types) {
-        try {
-          const res = await fetch('/api/ai/suggest', {
-            method: 'POST', credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ collection: COLLECTION, slug: currentSlug, type }),
-          });
-          if (!res.ok) continue;
-          const data = await res.json();
-          const suggestions = data.suggestions || [];
-          if (!suggestions.length) continue;
+      const btn = document.getElementById('suggest-trigger-btn');
+      if (btn) { btn.disabled = true; btn.textContent = '...'; }
 
-          const s = suggestions[0];
-          if (s.type === 'tags' && s.tags?.length) {
-            suggestLabel.textContent = '✦ Suggested tags';
-            suggestContent.innerHTML = s.tags.map(t => `<span class="suggest-tag">${t}</span>`).join('');
-            _suggestPending = s;
-            suggestBanner.classList.add('visible');
-            return;
-          } else if (s.type === 'related' && s.entries?.length) {
-            suggestLabel.textContent = '✦ Related';
-            suggestContent.innerHTML = s.entries.map(e =>
-              `<a class="suggest-entry" href="/editor.html?collection=${COLLECTION}&slug=${e.slug}">${e.title}</a>`
-            ).join('');
-            _suggestPending = null;
-            document.getElementById('suggest-apply').style.display = 'none';
-            suggestBanner.classList.add('visible');
-            return;
-          } else if (s.type === 'fill') {
-            suggestLabel.textContent = `✦ Generate ${s.label}?`;
-            suggestContent.innerHTML = `<span style="font-size:10px;color:var(--mid)">${String(s.value).slice(0, 120)}…</span>`;
-            _suggestPending = s;
-            document.getElementById('suggest-apply').style.display = '';
-            suggestBanner.classList.add('visible');
-            return;
+      try {
+        const res = await fetch('/api/ai/suggest-all', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ collection: COLLECTION, slug: currentSlug }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        const sections = [];
+
+        if (data.tags?.length) {
+          sections.push(`<div class="suggest-section">
+            <span class="suggest-label">Tags</span>
+            <div class="suggest-content">${data.tags.map(t => `<span class="suggest-tag">${t}</span>`).join('')}</div>
+            <button class="suggest-btn" onclick="applyTags(${JSON.stringify(data.tags).replace(/"/g,'&quot;')})">Apply</button>
+          </div>`);
+        }
+
+        if (data.seo) {
+          const preview = [];
+          if (data.seo.title) preview.push(`<strong>Title:</strong> ${data.seo.title}`);
+          if (data.seo.description) preview.push(`<strong>Desc:</strong> ${data.seo.description}`);
+          sections.push(`<div class="suggest-section">
+            <span class="suggest-label">SEO</span>
+            <div class="suggest-content"><span class="suggest-seo-preview">${preview.join('<br>')}</span></div>
+            <button class="suggest-btn" onclick="applySeo(${data.seo.title?`'${data.seo.title.replace(/'/g,"\\'")}'`:'null'},${data.seo.description?`'${data.seo.description.replace(/'/g,"\\'")}'`:'null'})">Apply</button>
+          </div>`);
+        }
+
+        if (data.fills?.length) {
+          for (const f of data.fills) {
+            const preview = Array.isArray(f.value) ? f.value.join(', ') : String(f.value).slice(0, 100);
+            sections.push(`<div class="suggest-section">
+              <span class="suggest-label">${f.label}</span>
+              <div class="suggest-content"><span style="font-size:10px;color:var(--mid)">${preview}</span></div>
+              <button class="suggest-btn" onclick="applyField('${f.field}',${JSON.stringify(f.value).replace(/"/g,'&quot;')})">Apply</button>
+            </div>`);
           }
-        } catch {}
+        }
+
+        if (data.prompts) {
+          const preview = data.prompts.value.slice(0, 3).map(p => `<span class="suggest-tag">${p}</span>`).join('');
+          sections.push(`<div class="suggest-section">
+            <span class="suggest-label">Prompts</span>
+            <div class="suggest-content">${preview}</div>
+            <button class="suggest-btn" onclick="applyField('${data.prompts.field}',${JSON.stringify(data.prompts.value).replace(/"/g,'&quot;')})">Apply</button>
+          </div>`);
+        }
+
+        if (data.related?.length) {
+          sections.push(`<div class="suggest-section">
+            <span class="suggest-label">Related</span>
+            <div class="suggest-content">${data.related.map(e =>
+              `<a class="suggest-entry" href="/editor.html?collection=${e.collection}&slug=${e.slug}">${e.title}</a><span class="suggest-col-badge">${e.collectionLabel}</span>`
+            ).join('')}</div>
+          </div>`);
+        }
+
+        if (data.quality?.length) {
+          sections.push(`<div class="suggest-section">
+            <span class="suggest-label">Quality</span>
+            <div class="suggest-content">${data.quality.map(h =>
+              `<span class="suggest-hint${h.severity === 'warn' ? ' warn' : ''}">${h.severity === 'warn' ? '⚠' : 'ℹ'} ${h.message}</span>`
+            ).join('')}</div>
+          </div>`);
+        }
+
+        if (sections.length) {
+          suggestSections.innerHTML = sections.join('');
+          suggestPanel.classList.add('visible');
+        }
+      } catch (e) {
+        console.warn('[suggestions]', e.message);
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '✦ Suggest'; }
       }
     }
+
+    window.applyField = applyField;
+    window.applySeo = applySeo;
+    window.applyTags = applyTags;
+    window.triggerSuggestions = triggerSuggestions;
 
     // ── Markdown export ─────────────────────────────────────────────
     window.exportMarkdown = function() {
