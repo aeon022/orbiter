@@ -1085,8 +1085,9 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 
 ## Changelog
 
-### June 2026 · Publish HTML — One-Click Static Site Generator
+### June 2026 · Smart Suggestions v2 + Publish HTML
 
+- **Smart Suggestions v2** — all suggestions shown simultaneously in a multi-section panel. Cross-collection related entries (not just same collection). AI-generated SEO title & description. Content quality hints (missing image, excerpt, tags, SEO — no AI needed). `suggestedPrompts` generation for dossier entries. Manual trigger button `✦ Suggest` in toolbar, grouped with `✦ AI` as segmented control. Apply feedback with "✓ Applied → Sidebar" hint. All AI tasks run in parallel.
 - **Publish HTML** — generate a complete static website directly from the admin. No Astro, no build tools, no config. Choose a theme, click Generate, download the ZIP and deploy it anywhere.
 - **Two built-in themes** — *Orbit* (modern, floating island header, card layouts) and *Canvas* (editorial whiteboard, Cinzel serif headings, paper-like design). Both with automatic dark mode, responsive layout, reading time, OG meta tags, and SVG favicon.
 - **Smart field detection** — the generator reads your collection schemas and picks the right title, body, excerpt, date, image, and tags fields automatically. Works with any collection, not just blog posts.
