@@ -326,8 +326,10 @@
     });
 
     // Hero date
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
     document.getElementById('hero-date').textContent =
-      new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      `${greeting}, ${me.user.username}  ·  ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`;
 
     // Load data in parallel
     const [collections, meta, recent, mediaList] = await Promise.all([

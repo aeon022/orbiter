@@ -76,6 +76,14 @@
           buildLink.parentNode.insertBefore(pubLink, buildLink.nextSibling);
         }
 
+        // Collection color from name hash — muted, not too bright
+        var COL_HUES = [210, 260, 320, 160, 30, 190, 280, 350, 130, 50];
+        function colColor(id) {
+          var h = 0;
+          for (var ci = 0; ci < id.length; ci++) h = ((h << 5) - h + id.charCodeAt(ci)) | 0;
+          return 'hsl(' + COL_HUES[Math.abs(h) % COL_HUES.length] + ' 45% 55%)';
+        }
+
         // Find "Assets" nav-section to insert before it
         var sections = sidebar.querySelectorAll('.nav-section');
         var assetsSection = null;
@@ -164,8 +172,9 @@
               (col.drafts > 0 ? '<div class="nav-tooltip-row nav-tooltip-draft"><span class="nav-tooltip-num">' + col.drafts + '</span> draft' + (col.drafts !== 1 ? 's' : '') + '</div>' : '') +
               ((col.scheduled||0) > 0 ? '<div class="nav-tooltip-row nav-tooltip-sched"><span class="nav-tooltip-num">' + col.scheduled + '</span> scheduled</div>' : '');
           }
+          var dotColor = colColor(col.id);
           a.innerHTML =
-            '<span class="nav-icon">' + (isSingleton ? '◈' : '▤') + '</span>' +
+            '<span class="nav-icon" style="color:' + dotColor + '">' + (isSingleton ? '◈' : '●') + '</span>' +
             '<span class="nav-label">' + col.label + '</span>' +
             (isSingleton ? '' : (col.drafts > 0 ? '<span class="nav-badge" style="background:color-mix(in srgb,var(--gold,#e6a817) 15%,transparent);border-color:color-mix(in srgb,var(--gold,#e6a817) 40%,transparent);color:var(--gold,#e6a817)">' + col.drafts + '</span>' : '')) +
             (isSingleton ? '' : '<div class="nav-tooltip"><div class="nav-tooltip-title">' + col.label + '</div>' + ttRows + '</div>');
@@ -208,7 +217,13 @@
         var podInfoEl = sidebar.querySelector('#pod-info');
         if (podInfoEl) {
           var total = collections.reduce(function (s, c) { return s + c.total; }, 0);
-          podInfoEl.textContent = collections.length + ' collections · ' + total + ' entries';
+          var sizeStr = '';
+          if (info.podSize) {
+            var b = info.podSize;
+            sizeStr = b < 1024 ? b + ' B' : b < 1048576 ? (b/1024).toFixed(0) + ' KB' : (b/1048576).toFixed(1) + ' MB';
+            sizeStr = ' · ' + sizeStr;
+          }
+          podInfoEl.textContent = collections.length + ' collections · ' + total + ' entries' + sizeStr;
         }
 
         // version line

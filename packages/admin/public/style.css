@@ -1049,6 +1049,14 @@ html[data-style="glass"] .login-card {
 .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* Skeleton loading */
+.skeleton { background: linear-gradient(90deg, var(--bg3) 25%, var(--bg2) 50%, var(--bg3) 75%); background-size: 200% 100%; animation: skeleton-shimmer 1.5s ease infinite; border-radius: var(--radius); }
+.skeleton-line { height: 12px; margin-bottom: 10px; border-radius: 6px; }
+.skeleton-line:last-child { width: 60%; }
+.skeleton-block { height: 80px; margin-bottom: 12px; }
+.skeleton-card { height: 100px; border: 1px solid var(--line); padding: 20px; }
+@keyframes skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
 /* Scheme toggle icon labels (set in JS) */
 [data-scheme="dark"]  .scheme-toggle { color: var(--accent); }
 [data-scheme="light"] .scheme-toggle { color: var(--gold); }

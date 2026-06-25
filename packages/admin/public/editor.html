@@ -240,7 +240,13 @@
     .bp-hint { font-size:9px; color:var(--muted); }
 
     /* Autosave indicator */
-    #autosave-indicator { font-size:10px; color:var(--muted); padding:0 12px 0 8px; border-left:1px solid var(--line); margin-left:8px; }
+    #autosave-indicator { font-size:10px; color:var(--muted); padding:0 12px 0 8px; border-left:1px solid var(--line); margin-left:8px; display:flex; align-items:center; gap:6px; }
+    .autosave-dot { width:6px; height:6px; border-radius:50%; background:var(--muted); flex-shrink:0; transition:background .3s; }
+    .autosave-dot.saved { background:var(--jade); animation:dot-pulse .6s ease; }
+    .autosave-dot.pending { background:var(--gold); }
+    .autosave-dot.error { background:var(--red); }
+    @keyframes dot-pulse { 0%{transform:scale(1)} 50%{transform:scale(1.8)} 100%{transform:scale(1)} }
+    .word-count { font-size:9px; color:var(--muted); margin-left:auto; padding-left:8px; white-space:nowrap; font-family:var(--mono); }
     /* Suggestions panel */
     .suggest-panel { display:none; background:var(--bg1); border-bottom:1px solid var(--line); font-size:11px; color:var(--text); flex-shrink:0; animation:suggest-slide .25s ease; max-height:280px; overflow-y:auto; }
     .suggest-panel.visible { display:block; }
@@ -503,7 +509,7 @@
         <span id="breadcrumb-slug" style="color:var(--text);"></span>
       </div>
       <div class="topbar-right">
-        <span id="autosave-indicator"></span>
+        <span id="autosave-indicator"><span class="autosave-dot" id="autosave-dot"></span><span id="autosave-text"></span></span>
         <span id="wc" style="font-size:10px;color:var(--muted);padding:0 8px;"></span>
         <div class="view-toggle" onmousedown="event.preventDefault()" style="margin-left:0;margin-right:12px;">
           <button type="button" class="view-btn active" id="vbtn-edit"    onclick="setViewMode('edit')">Edit</button>
@@ -531,9 +537,9 @@
         </div>
         <div class="editor-toolbar">
           <div class="tool-group" onmousedown="event.preventDefault()">
-            <button type="button" class="tool-btn" onclick="beCmd('bold')" title="Bold"><b style="font-size:11px;">B</b></button>
-            <button type="button" class="tool-btn" onclick="beCmd('italic')" title="Italic"><i style="font-size:11px;">I</i></button>
-            <button type="button" class="tool-btn" onclick="beCmd('code')" title="Inline code" style="font-size:9px;">&lt;/&gt;</button>
+            <button type="button" class="tool-btn" onclick="beCmd('bold')" title="Bold (⌘B)"><b style="font-size:11px;">B</b></button>
+            <button type="button" class="tool-btn" onclick="beCmd('italic')" title="Italic (⌘I)"><i style="font-size:11px;">I</i></button>
+            <button type="button" class="tool-btn" onclick="beCmd('code')" title="Inline code (⌘E)" style="font-size:9px;">&lt;/&gt;</button>
           </div>
           <div class="tool-sep"></div>
           <div class="tool-group" onmousedown="event.preventDefault()">
@@ -555,15 +561,16 @@
             <button type="button" class="tool-btn" onclick="openFilePicker()" title="Insert file / PDF download link">
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="display:block"><path d="M3.5 1.5h4l3 3V11a.5.5 0 01-.5.5h-6.5a.5.5 0 01-.5-.5V2a.5.5 0 01.5-.5z" stroke="currentColor" stroke-width="1.1"/><path d="M7.5 1.5V4.5H10.5" stroke="currentColor" stroke-width="1.1"/><line x1="5" y1="7" x2="8.5" y2="7" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><line x1="5" y1="9" x2="8.5" y2="9" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>
             </button>
-            <button type="button" class="tool-btn" onclick="exportMarkdown()" title="Export as Markdown" style="font-size:9px;letter-spacing:.04em;">↓ md</button>
+            <button type="button" class="tool-btn" onclick="exportMarkdown()" title="Export Markdown (⌘⇧E)" style="font-size:9px;letter-spacing:.04em;">↓ md</button>
             <div class="tool-sep"></div>
             <div class="ai-btn-group">
               <button type="button" class="ai-toolbar-btn" onclick="openAiPanel()" title="AI Assistant">✦ AI</button>
               <button type="button" class="suggest-toolbar-btn" id="suggest-trigger-btn" onclick="triggerSuggestions()" title="Smart Suggestions">✦ Suggest</button>
             </div>
             <div id="saved-flash" class="saved-flash">Saved</div>
-            <button type="button" class="meta-panel-toggle" id="meta-panel-toggle" onclick="toggleMetaPanel()" title="Toggle sidebar"></button>
-            <span id="autosave-indicator-toolbar" style="font-size:9px;color:var(--muted);margin-left:auto;padding-left:8px;white-space:nowrap;"></span>
+            <button type="button" class="meta-panel-toggle" id="meta-panel-toggle" onclick="toggleMetaPanel()" title="Toggle sidebar (⌘⇧P)"></button>
+            <span class="word-count" id="word-count"></span>
+            <span id="autosave-indicator-toolbar" style="font-size:9px;color:var(--muted);padding-left:8px;white-space:nowrap;display:flex;align-items:center;gap:5px;"><span class="autosave-dot" id="autosave-dot-toolbar"></span><span id="autosave-text-toolbar"></span></span>
           </div>
         </div>
         <div id="locale-bar" class="locale-bar" style="display:none">
@@ -1527,22 +1534,44 @@
     let autosaveTimer = null;
 
     let _dirty = false;
-    function markDirty() { _dirty = true; }
-    function markClean() { _dirty = false; }
+    const _origFavicon = document.querySelector('link[rel="icon"]')?.href || '';
+    function setFaviconBadge(show) {
+      const link = document.querySelector('link[rel="icon"]');
+      if (!link) return;
+      if (!show) { link.href = _origFavicon; return; }
+      const svg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236d28d9'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='18' font-family='sans-serif' font-weight='700' fill='white'%3E%E2%97%86%3C/text%3E%3Ccircle cx='26' cy='6' r='5' fill='%23e6a817'/%3E%3C/svg%3E`;
+      link.href = svg;
+    }
+    function markDirty() { _dirty = true; setFaviconBadge(true); }
+    function markClean() { _dirty = false; setFaviconBadge(false); }
 
     window.addEventListener('beforeunload', e => {
       if (_dirty) { e.preventDefault(); e.returnValue = ''; }
     });
 
     const indicatorToolbar = document.getElementById('autosave-indicator-toolbar');
+    const autosaveDot = document.getElementById('autosave-dot');
+    const autosaveText = document.getElementById('autosave-text');
+    const autosaveDotToolbar = document.getElementById('autosave-dot-toolbar');
+    const autosaveTextToolbar = document.getElementById('autosave-text-toolbar');
+    let _indicatorFadeTimer = null;
     function setIndicator(state) {
-      const states = { pending:{text:'Unsaved',color:'var(--gold)'}, saving:{text:'Saving…',color:'var(--muted)'}, saved:{text:'✓ Saved',color:'var(--jade)'}, error:{text:'Error',color:'var(--red)'} };
-      const s = states[state] ?? {};
-      indicator.textContent = s.text ?? '';
-      indicator.style.color = s.color ?? '';
-      if (indicatorToolbar) { indicatorToolbar.textContent = s.text ?? ''; indicatorToolbar.style.color = s.color ?? ''; }
-      if (state === 'saved') markClean();
-      if (state === 'pending') markDirty();
+      const dots = [autosaveDot, autosaveDotToolbar].filter(Boolean);
+      const texts = [autosaveText, autosaveTextToolbar].filter(Boolean);
+      dots.forEach(d => { d.className = 'autosave-dot ' + state; });
+      clearTimeout(_indicatorFadeTimer);
+      if (state === 'saved') {
+        texts.forEach(t => { t.textContent = 'Saved'; t.style.color = 'var(--jade)'; t.style.opacity = '1'; });
+        _indicatorFadeTimer = setTimeout(() => { texts.forEach(t => { t.style.opacity = '0'; }); }, 2000);
+        markClean();
+      } else if (state === 'pending') {
+        texts.forEach(t => { t.textContent = ''; t.style.opacity = '0'; });
+        markDirty();
+      } else if (state === 'saving') {
+        texts.forEach(t => { t.textContent = 'Saving…'; t.style.color = 'var(--muted)'; t.style.opacity = '1'; });
+      } else if (state === 'error') {
+        texts.forEach(t => { t.textContent = 'Error'; t.style.color = 'var(--red)'; t.style.opacity = '1'; });
+      }
     }
 
     function scheduleAutosave() {
@@ -1705,6 +1734,22 @@
     window.applySeo = applySeo;
     window.applyTags = applyTags;
     window.triggerSuggestions = triggerSuggestions;
+
+    // ── Word count ────────────────────────────────────────────────
+    const wordCountEl = document.getElementById('word-count');
+    function updateWordCount() {
+      if (!wordCountEl) return;
+      const editor = document.getElementById('be-editor');
+      if (!editor) return;
+      const text = editor.innerText || '';
+      const words = text.split(/\s+/).filter(w => w.length > 0).length;
+      wordCountEl.textContent = words > 0 ? words + ' words' : '';
+    }
+    const beEditor = document.getElementById('be-editor');
+    if (beEditor) {
+      beEditor.addEventListener('input', updateWordCount);
+      setTimeout(updateWordCount, 500);
+    }
 
     // ── Markdown export ─────────────────────────────────────────────
     window.exportMarkdown = function() {

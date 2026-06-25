@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
-import { readFileSync } from 'fs';
+import { readFileSync, statSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -31,7 +31,7 @@ infoRoutes.get('/', (c) => {
   let navGroupsParsed = null;
   try { navGroupsParsed = navGroups ? JSON.parse(navGroups) : null; } catch {}
   return c.json({
-    podPath, formatVersion: version, adminVersion, collections: cols,
+    podPath, podSize: statSync(podPath).size, formatVersion: version, adminVersion, collections: cols,
     nav: {
       hidden: navHidden ? navHidden.split(',').map(s => s.trim()).filter(Boolean) : [],
       groups: navGroupsParsed,
