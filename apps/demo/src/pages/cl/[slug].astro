@@ -1,0 +1,49 @@
+---
+import { getCollection, getEntry } from 'astro:content';
+
+const { slug } = Astro.params;
+const entry = await getEntry('posts', slug!);
+if (!entry) return Astro.redirect('/cl/');
+
+const allPosts = await getCollection('posts');
+---
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{entry.data.title} — Content Layer Demo</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; color: #1c1917; line-height: 1.8; }
+    .back { font-size: 13px; color: #78716c; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 24px; }
+    .back:hover { color: #6d28d9; }
+    .back::before { content: '\2190'; }
+    h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 8px; }
+    .meta { font-size: 12px; color: #a8a29e; margin-bottom: 24px; font-family: ui-monospace, monospace; }
+    .excerpt { font-size: 15px; color: #57534e; border-left: 3px solid #6d28d9; padding-left: 16px; margin-bottom: 32px; }
+    .body { font-size: 16px; white-space: pre-wrap; }
+    .tags { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
+    .tag { font-size: 11px; background: #ede9fe; color: #6d28d9; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+    .badge { font-size: 10px; background: #f5f5f4; color: #78716c; padding: 2px 8px; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <a class="back" href="/cl/">All posts</a>
+  <h1>{entry.data.title}</h1>
+  <div class="meta">
+    {entry.id}
+    <span class="badge">via astro:content</span>
+  </div>
+  {entry.data.excerpt && <p class="excerpt">{entry.data.excerpt}</p>}
+  {entry.data.tags?.length && (
+    <div class="tags">
+      {entry.data.tags.map((t: string) => <span class="tag">{t}</span>)}
+    </div>
+  )}
+  {entry.body && (
+    <div class="body" style="margin-top:32px">
+      <Fragment set:html={entry.body} />
+    </div>
+  )}
+</body>
+</html>

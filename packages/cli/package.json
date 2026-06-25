@@ -33,6 +33,7 @@
   },
   "homepage": "https://github.com/aeon022/orbiter#readme",
   "dependencies": {
-    "@a83/orbiter-core": "^0.3.1"
+    "@a83/orbiter-core": "^0.3.1",
+    "adm-zip": "^0.5.16"
   }
 }

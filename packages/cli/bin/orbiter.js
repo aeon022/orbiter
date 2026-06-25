@@ -7,6 +7,8 @@ const commands = {
   init:       () => import('../src/init.js').then(m => m.run(args)),
   'add-user': () => import('../src/add-user.js').then(m => m.run(args)),
   export:     () => import('../src/export.js').then(m => m.run(args)),
+  publish:    () => import('../src/publish.js').then(m => m.run(args)),
+  backup:     () => import('../src/backup.js').then(m => m.run(args)),
   unpack:     () => import('../src/unpack.js').then(m => m.run(args)),
   pack:       () => import('../src/pack.js').then(m => m.run(args)),
   help:       () => printHelp(),
@@ -41,6 +43,11 @@ function printHelp() {
              [--collection <id>]     Export a single collection
              [--locale <code>]       Export a specific locale only
              [--drafts]              Include draft entries
+    publish  [--pod <path>]        Generate a static HTML site from a pod
+             [--out <dir>]           Output directory (default: ./site)
+             [--theme orbit|canvas]  Theme to use (default: orbit)
+    backup   [--pod <path>]        Create a timestamped backup of a pod
+             [--out <dir>]           Backup directory (default: same as pod)
     unpack   [--pod <path>]        Extract media BLOBs to files (pod → git mode)
     pack     [--pod <path>]        Re-insert media files as BLOBs (git → server mode)
 
