@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbiter Admin — Publish</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@300;400;500;600&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+  <script src="/theme.js"></script>
+  <style>
+    .publish-cards { display:flex; flex-direction:column; gap:16px; max-width:560px; }
+    .publish-card { background:var(--bg2); border:1px solid var(--line); border-radius:var(--radius); padding:24px 28px; }
+    .publish-card-header { font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:16px; display:flex; align-items:center; gap:7px; }
+    .publish-card-header::before { content:"\25C6"; color:var(--gold); font-size:5px; }
+    .publish-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:16px; }
+    .publish-stat { text-align:center; padding:14px 8px; background:var(--bg1); border-radius:var(--radius); border:1px solid var(--line); }
+    .publish-stat-num { font-size:22px; font-weight:600; color:var(--heading); font-family:var(--display); letter-spacing:-0.02em; }
+    .publish-stat-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-top:2px; }
+    .publish-site-info { font-size:12px; color:var(--text); display:flex; flex-direction:column; gap:4px; }
+    .publish-site-info span { color:var(--muted); font-size:11px; }
+    .publish-site-info a { color:var(--accent); font-size:11px; }
+    .publish-theme-row { display:flex; align-items:center; gap:12px; }
+    .publish-theme-badge { display:inline-flex; align-items:center; gap:6px; background:var(--bg1); border:1px solid var(--line); border-radius:var(--radius); padding:8px 14px; font-size:12px; font-weight:500; color:var(--heading); }
+    .publish-theme-badge::before { content:"\25C8"; color:var(--gold); font-size:10px; }
+    .publish-theme-desc { font-size:11px; color:var(--muted); margin-top:8px; line-height:1.5; }
+    .publish-generate-wrap { display:flex; flex-direction:column; gap:12px; }
+    .publish-desc { font-size:11px; color:var(--muted); line-height:1.6; }
+    .publish-progress { display:none; align-items:center; gap:10px; }
+    .publish-progress.active { display:flex; }
+    .publish-progress-text { font-size:11px; color:var(--muted); }
+    .banner { padding:8px 16px; font-size:10px; display:flex; align-items:center; gap:6px; border-radius:var(--radius); margin-bottom:14px; max-width:560px; }
+    .banner-ok  { background:var(--jade-bg); color:var(--jade); border:1px solid rgba(45,139,106,.2); }
+    .banner-ok::before { content:"\2713"; }
+    .banner-err { background:rgba(139,38,53,.07); color:var(--red); border:1px solid rgba(139,38,53,.15); }
+    .banner-err::before { content:"\2715"; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="logo" href="/dashboard.html"><div class="logo-mark">OR</div>Orbiter</a>
+      <div class="topbar-right">
+        <button class="search-trigger" id="search-btn" title="Search (⌘K)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Search <kbd>⌘K</kbd>
+        </button>
+        <button class="scheme-toggle" id="scheme-toggle" title="Toggle scheme">&#9684;</button>
+        <span class="user" id="topbar-user"></span>
+        <span class="logout" id="logout-btn">Sign out</span>
+      </div>
+    </header>
+    <nav class="sidebar">
+      <div class="nav-section">Content</div>
+      <a class="nav-item" href="/dashboard.html"><span class="nav-icon">&#9672;</span>Dashboard</a>
+      <a class="nav-item" href="/collections.html"><span class="nav-icon">&#8862;</span>Collections</a>
+      <div class="nav-section">Assets</div>
+      <a class="nav-item" href="/media.html"><span class="nav-icon">&#8863;</span>Media</a>
+      <div class="nav-section">Tools</div>
+      <a class="nav-item" href="/inbox.html"><span class="nav-icon">&#9993;</span>Inbox</a>
+      <a class="nav-item" href="/snippets.html"><span class="nav-icon">&#8935;</span>Snippets</a>
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="/schema.html"><span class="nav-icon">&#9672;</span>Schema</a>
+      <a class="nav-item" href="/build.html"><span class="nav-icon">&#9650;</span>Build</a>
+      <a class="nav-item active" href="/publish.html"><span class="nav-icon">&#9670;</span>Publish</a>
+      <a class="nav-item" href="/settings.html"><span class="nav-icon">&#9678;</span>Settings</a>
+      <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">&#9673;</span>Users</a>
+      <div class="sidebar-footer">
+        <div class="pod-name" id="pod-name">content.pod</div>
+        <div class="pod-info" id="pod-info"></div>
+        <div class="pod-version" id="pod-version"></div>
+        <div class="pod-status"><span class="pod-dot"></span>pod synced</div>
+      </div>
+    </nav>
+    <main class="main">
+      <div class="page-header glass-card">
+        <h1 class="page-title">Publish to Web</h1>
+        <p class="page-sub">Generate a static website from your content</p>
+      </div>
+      <div id="banner" class="banner" style="display:none"></div>
+      <div id="content"><div class="empty"><div class="spinner"></div></div></div>
+
+  <script type="module">
+    const me = await fetch('/api/auth/me',{credentials:'include'}).then(r=>r.json()).catch(()=>null);
+    if (!me?.user) { location.replace('/login.html'); throw new Error('unauthenticated'); }
+    document.getElementById('topbar-user').textContent = me.user.username;
+    if (me.user.role==='admin') document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
+    document.getElementById('logout-btn').addEventListener('click',async()=>{
+      await fetch('/api/auth/logout',{method:'POST',credentials:'include'});
+      location.replace('/login.html');
+    });
+
+    function showBanner(cls, text) {
+      const el = document.getElementById('banner');
+      el.className = 'banner ' + cls;
+      el.textContent = text;
+      el.style.display = '';
+      setTimeout(()=>el.style.display='none', 5000);
+    }
+
+    const [status, themeData] = await Promise.all([
+      fetch('/api/publish/status',{credentials:'include'}).then(r=>r.json()).catch(()=>({collections:0,entries:0,media:0,siteName:'',siteUrl:''})),
+      fetch('/api/publish/themes',{credentials:'include'}).then(r=>r.json()).catch(()=>({themes:[],default:'orbit'})),
+    ]);
+
+    const selectedTheme = themeData.default || 'orbit';
+    const themeInfo = (themeData.themes || []).find(t => t.id === selectedTheme) || { name: 'Orbit', description: '' };
+
+    const wrap = document.getElementById('content');
+    wrap.innerHTML = `
+      <div class="publish-cards">
+
+        <div class="publish-card">
+          <div class="publish-card-header">Site Overview</div>
+          <div class="publish-stats">
+            <div class="publish-stat">
+              <div class="publish-stat-num">${status.entries}</div>
+              <div class="publish-stat-label">Entries</div>
+            </div>
+            <div class="publish-stat">
+              <div class="publish-stat-num">${status.collections}</div>
+              <div class="publish-stat-label">Collections</div>
+            </div>
+            <div class="publish-stat">
+              <div class="publish-stat-num">${status.media}</div>
+              <div class="publish-stat-label">Media</div>
+            </div>
+          </div>
+          <div class="publish-site-info">
+            ${status.siteName
+              ? `<strong>${status.siteName}</strong>`
+              : `<span>No site name configured</span>`}
+            ${status.siteUrl
+              ? `<span>${status.siteUrl}</span>`
+              : `<a href="/settings.html">Configure site URL in Settings</a>`}
+          </div>
+        </div>
+
+        <div class="publish-card">
+          <div class="publish-card-header">Theme</div>
+          <div class="publish-theme-row">
+            <div class="publish-theme-badge">${themeInfo.name}</div>
+          </div>
+          <div class="publish-theme-desc">${themeInfo.description || 'Default theme'}</div>
+        </div>
+
+        <div class="publish-card">
+          <div class="publish-card-header">Generate &amp; Download</div>
+          <div class="publish-generate-wrap">
+            <div class="publish-desc">
+              Generates a complete static website with all published entries, media files, sitemap, and robots.txt.
+              Download as ZIP and deploy to any static hosting (Netlify, Vercel, GitHub Pages, FTP, etc.).
+            </div>
+            ${status.entries > 0
+              ? `<button class="btn btn-primary" id="generate-btn" style="min-width:200px;">&#9670; Generate Static Site</button>`
+              : `<button class="btn btn-primary" disabled style="min-width:200px;opacity:.5;cursor:not-allowed">No published entries</button>`}
+            <div class="publish-progress" id="progress">
+              <div class="spinner" style="width:14px;height:14px;border-width:2px"></div>
+              <span class="publish-progress-text" id="progress-text">Generating...</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    `;
+
+    document.getElementById('generate-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('generate-btn');
+      const progress = document.getElementById('progress');
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+      progress.classList.add('active');
+
+      try {
+        const res = await fetch('/api/publish/generate', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ theme: selectedTheme, siteName: status.siteName || 'site' }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: 'Generation failed' }));
+          throw new Error(err.error || 'Generation failed');
+        }
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const name = (status.siteName || 'site').replace(/[^a-z0-9_-]/gi, '-').toLowerCase();
+        a.download = name + '.zip';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        showBanner('banner-ok', `Site generated — ${status.entries} entries, ${status.media} media files`);
+      } catch (err) {
+        showBanner('banner-err', err.message || 'Generation failed');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '◆ Generate Static Site';
+        progress.classList.remove('active');
+      }
+    });
+  </script>
+</main>
+  </div>
+  <script src="/search.js"></script>
+  <script src="/sidebar.js"></script>
+  <script src="/router.js"></script>
+</body>
+</html>

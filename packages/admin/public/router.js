@@ -44,7 +44,7 @@
     // xfce tools button is a <button> (not an <a>), update separately
     var toolsBtn = document.getElementById('xfce-tools-btn');
     if (toolsBtn) {
-      toolsBtn.classList.toggle('active', ['schema', 'build', 'import'].indexOf(pg) !== -1);
+      toolsBtn.classList.toggle('active', ['schema', 'build', 'publish', 'import'].indexOf(pg) !== -1);
     }
 
     // xfce drawer buttons — active if any child <a> in their popup matches

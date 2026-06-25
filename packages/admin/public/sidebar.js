@@ -66,6 +66,16 @@
           snippetsLink.parentNode.insertBefore(graphLink, snippetsLink.nextSibling);
         }
 
+        // Inject Publish link after Build
+        var buildLink = sidebar.querySelector('a[href="/build.html"]');
+        if (buildLink && !sidebar.querySelector('a[href="/publish.html"]')) {
+          var pubLink = document.createElement('a');
+          pubLink.className = 'nav-item' + (page === 'publish' ? ' active' : '');
+          pubLink.href = '/publish.html';
+          pubLink.innerHTML = '<span class="nav-icon">◆</span>Publish';
+          buildLink.parentNode.insertBefore(pubLink, buildLink.nextSibling);
+        }
+
         // Find "Assets" nav-section to insert before it
         var sections = sidebar.querySelectorAll('.nav-section');
         var assetsSection = null;

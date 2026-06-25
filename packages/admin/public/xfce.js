@@ -28,6 +28,7 @@
     settings:  tblr('<path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37c1 .608 2.296.07 2.572-1.065"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"/>'),
     notes:     tblr('<path d="M4 20h4l10.5-10.5a2.828 2.828 0 1 0-4-4L4 16v4"/><path d="M13.5 6.5l4 4"/>'),
     todos:     tblr('<path d="M9 11l3 3l8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/>'),
+    publish:   tblr('<path d="M12 2L2 7l10 5l10-5l-10-5"/><path d="M2 17l10 5l10-5"/><path d="M2 12l10 5l10-5"/>'),
     tools:     tblr('<path d="M3 21h4l13-13a1.5 1.5 0 0 0-4-4L3 17v4"/><path d="M14.5 5.5l4 4"/><path d="M12 8l-5-5l-4 4l5 5"/><path d="M7 8l-1.5 1.5"/><path d="M16 12l5 5l-4 4l-5-5"/><path d="M16 17l-1.5 1.5"/>'),
   };
 
@@ -46,6 +47,7 @@
     { icon: tblr('<path d="M6 6m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0"/><path d="M18 18m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0"/><path d="M6 18m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0"/><path d="M18 6m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0"/><path d="M7.5 7.5l9 9"/><path d="M7.5 16.5l9-9"/>'), label: 'Graph', href: '/graph.html', key: 'graph' },
     { icon: TI.schema,    label: 'Schema',    href: '/schema.html',   key: 'schema'   },
     { icon: TI.build,     label: 'Build',     href: '/build.html',    key: 'build'    },
+    { icon: TI.publish,   label: 'Publish',   href: '/publish.html',  key: 'publish'  },
     { icon: TI.import,    label: 'Import',    href: '/import.html',   key: 'import'   },
     { icon: TI.settings,  label: 'Settings',  href: '/settings.html', key: 'settings' },
   ];
@@ -57,7 +59,7 @@
 
   // palette items — nav + tools pre-seeded; collections appended after /api/info
   var _palItems = NAV.concat(TOOLS).map(function (n) {
-    return { icon: n.icon, label: n.label, href: n.href, group: n.key in { schema:1, build:1, import:1, settings:1 } ? 'Tools' : 'Nav' };
+    return { icon: n.icon, label: n.label, href: n.href, group: n.key in { schema:1, build:1, publish:1, import:1, settings:1 } ? 'Tools' : 'Nav' };
   });
   var _termCols   = []; // collection metadata for palette commands
   var _activeDrawerTimer = null;
@@ -92,7 +94,7 @@
       '</div>',
       '<div class="xfce-sb-center" id="xfce-sb-title"></div>',
       '<div class="xfce-sb-right">',
-        '<span id="xfce-sb-g-ind" class="xfce-sb-g-ind" style="display:none" title="g mode: d=dashboard k=calendar m=media u=users n=inbox f=forms y=analytics p=snippets c=schema b=build i=import s=settings a=account h=HUD">g ›</span>',
+        '<span id="xfce-sb-g-ind" class="xfce-sb-g-ind" style="display:none" title="g mode: d=dashboard k=calendar m=media u=users n=inbox f=forms y=analytics p=snippets c=schema b=build w=publish i=import s=settings a=account h=HUD">g ›</span>',
         '<button id="xfce-sb-bell" class="xfce-sb-bell" title="Notifications"><span id="xfce-sb-bell-icon">○</span><span id="xfce-sb-bell-badge" class="xfce-sb-bell-badge" style="display:none"></span></button>',
         '<span class="xfce-sb-div">·</span>',
         '<button id="xfce-sb-cheat" class="xfce-sb-cheat" title="Shortcuts (?)">?</button>',
@@ -1783,7 +1785,7 @@
                 u: '/users.html',     b: '/build.html',  i: '/import.html',
                 c: '/schema.html',   a: '/account.html', n: '/inbox.html',
                 p: '/snippets.html',  k: '/calendar.html', y: '/analytics.html',
-                f: '/forms.html' };
+                f: '/forms.html', w: '/publish.html' };
 
   function setGMode(on) {
     _gPending = on;
