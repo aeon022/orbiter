@@ -62,7 +62,7 @@
     /* Wikilinks */
     .be-wikilink { color:var(--accent); border-bottom:1px solid color-mix(in srgb,var(--accent) 50%,transparent); cursor:pointer; padding:0 1px; user-select:none; font-style:normal; white-space:nowrap; }
     .be-wikilink:hover { background:var(--accent-bg); border-radius:2px; }
-    .wikilink-picker { position:fixed; z-index:9999; width:260px; background:var(--bg2); border:1px solid var(--line); box-shadow:0 4px 16px rgba(0,0,0,.15); border-radius:var(--radius); overflow:hidden; display:none; font-family:var(--mono); }
+    .wikilink-picker { position:fixed; z-index:9999; width:260px; background:var(--bg2); border:1px solid var(--line); box-shadow:0 4px 16px rgba(0,0,0,.15); border-radius:var(--radius); overflow-y:auto; display:none; font-family:var(--mono); }
     .wl-search { width:100%; box-sizing:border-box; padding:8px 12px; border:none; border-bottom:1px solid var(--line); background:var(--bg1); color:var(--text); font-family:var(--mono); font-size:11px; outline:none; }
     .wl-item { padding:7px 12px; cursor:pointer; display:flex; flex-direction:column; gap:2px; border-left:2px solid transparent; }
     .wl-item:hover, .wl-item.active { background:var(--hover-bg); border-left-color:var(--accent); }
@@ -2536,7 +2536,17 @@
 
     function wlOpen_(block, rect) {
       wlBlock=block; wlResults=[]; wlIdx=0; wlOpen=true;
-      wlEl.style.top=Math.min(rect.bottom+4,window.innerHeight-220)+'px';
+      const dock=document.getElementById('xfce-dock');
+      const safeBottom=dock ? dock.getBoundingClientRect().top - 8 : window.innerHeight - 8;
+      const spaceBelow=safeBottom - rect.bottom - 4;
+      const spaceAbove=rect.top - 8;
+      const PICK_H=Math.min(260, Math.max(spaceBelow, spaceAbove, 80));
+      wlEl.style.maxHeight=PICK_H+'px';
+      if (spaceBelow >= 120 || spaceBelow >= spaceAbove) {
+        wlEl.style.top=(rect.bottom+4)+'px'; wlEl.style.bottom='';
+      } else {
+        wlEl.style.bottom=(window.innerHeight-rect.top+4)+'px'; wlEl.style.top='';
+      }
       wlEl.style.left=Math.min(rect.left,window.innerWidth-280)+'px';
       wlEl.style.display='block';
       wlListEl.innerHTML='<div class="wl-empty">Type to search entries…</div>';
