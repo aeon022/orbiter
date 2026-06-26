@@ -74,6 +74,23 @@ analyticsRoutes.get('/', (c) => {
   const days = Math.min(parseInt(c.req.query('days') ?? '30'), 365);
   const path = c.req.query('path') || undefined;
   const stats = db.getAnalytics({ days, path });
+
+  // Enrich top pages with entry titles
+  const cols = db.getCollections();
+  stats.topPages = stats.topPages.map(p => {
+    const parts = p.path.replace(/^\//, '').split('/').filter(Boolean);
+    let title = null;
+    if (parts.length >= 2) {
+      const colId = parts[0];
+      const slug  = parts[parts.length - 1];
+      if (cols.find(c => c.id === colId)) {
+        const entry = db.getEntry(colId, slug);
+        if (entry?.data?.title) title = entry.data.title;
+      }
+    }
+    return { ...p, title };
+  });
+
   db.close();
   return c.json(stats);
 });

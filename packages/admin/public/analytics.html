@@ -71,6 +71,12 @@
     .agent-badge.bot         { background:color-mix(in srgb,var(--mid) 10%,transparent); color:var(--muted); }
     .agent-badge.feed-reader { background:color-mix(in srgb,var(--gold) 10%,transparent); color:var(--gold); }
     .an-agent-paths { font-size:9px; color:var(--muted); margin-top:2px; }
+    .an-table tr.clickable { cursor:pointer; }
+    .an-table tr.clickable:hover td { background:var(--hover-bg); }
+    .an-table tr.clickable td:first-child { color:var(--accent); }
+    .an-table td .entry-title { display:block; font-size:10px; color:var(--heading); }
+    .an-table td .entry-path  { display:block; font-size:9px;  color:var(--muted); font-family:var(--mono); }
+    .an-drill-hint { font-size:9px; color:var(--muted); margin-top:4px; }
   </style>
 </head>
 <body>
@@ -117,9 +123,11 @@
       <div class="an-header glass-card">
         <div class="an-header-title">Analytics</div>
         <div class="an-header-controls">
+          <span id="an-filter-label" style="display:none;font-size:10px;color:var(--accent);font-family:var(--mono);margin-right:4px;"></span>
           <button class="an-period-btn" data-days="7">7d</button>
           <button class="an-period-btn active" data-days="30">30d</button>
           <button class="an-period-btn" data-days="90">90d</button>
+          <button class="an-period-btn" id="prune-btn" title="Delete analytics data older than 90 days" style="margin-left:8px;border-color:var(--line)">Prune</button>
         </div>
       </div>
 
@@ -212,12 +220,22 @@
     });
 
     let currentDays = 30;
+    let currentPath = null;
 
-    async function loadStats(days) {
+    async function loadStats(days, path) {
       currentDays = days;
+      currentPath = path ?? null;
+      const filterLabel = document.getElementById('an-filter-label');
+      if (currentPath) {
+        filterLabel.style.display = '';
+        filterLabel.innerHTML = `<span style="cursor:pointer" title="Clear filter" onclick="loadStats(currentDays)">✕</span> ${currentPath}`;
+      } else {
+        filterLabel.style.display = 'none';
+      }
+      const pathParam = path ? `&path=${encodeURIComponent(path)}` : '';
       const [stats, agentData] = await Promise.all([
-        fetch(`/api/analytics?days=${days}`, { credentials: 'include' }).then(r => r.json()).catch(() => null),
-        fetch(`/api/analytics/agents?days=${days}`, { credentials: 'include' }).then(r => r.json()).catch(() => ({ agents: [] })),
+        fetch(`/api/analytics?days=${days}${pathParam}`, { credentials: 'include' }).then(r => r.json()).catch(() => null),
+        path ? null : fetch(`/api/analytics/agents?days=${days}`, { credentials: 'include' }).then(r => r.json()).catch(() => ({ agents: [] })),
       ]);
       if (!stats) return;
 
@@ -250,9 +268,20 @@
 
       // Top pages
       const pagesTbody = document.querySelector('#an-pages tbody');
-      pagesTbody.innerHTML = stats.topPages.map(p =>
-        `<tr><td>${p.path}</td><td>${p.views}</td></tr>`
-      ).join('') || '<tr><td colspan="2" style="color:var(--muted)">No data</td></tr>';
+      pagesTbody.innerHTML = stats.topPages.map(p => {
+        const cell = p.title
+          ? `<span class="entry-title">${p.title}</span><span class="entry-path">${p.path}</span>`
+          : p.path;
+        return `<tr class="clickable" data-path="${p.path}"><td>${cell}</td><td>${p.views}</td></tr>`;
+      }).join('') || '<tr><td colspan="2" style="color:var(--muted)">No data</td></tr>';
+      pagesTbody.querySelectorAll('tr.clickable').forEach(row => {
+        row.addEventListener('click', () => loadStats(currentDays, row.dataset.path));
+      });
+      if (!currentPath) {
+        const hint = document.createElement('div');
+        hint.className = 'an-drill-hint'; hint.textContent = '↑ Click a page to drill down';
+        pagesTbody.closest('table').after(hint);
+      }
 
       // Referrers
       const refsTbody = document.querySelector('#an-refs tbody');
@@ -288,9 +317,9 @@
         `<tr><td>${l.lang}</td><td>${l.count}</td></tr>`
       ).join('') || '<tr><td colspan="2" style="color:var(--muted)">No data</td></tr>';
 
-      // AI Agents
+      // AI Agents (only in non-drill-down mode)
       const agentsTbody = document.querySelector('#an-agents tbody');
-      const agents = agentData.agents || [];
+      const agents = agentData?.agents || [];
       agentsTbody.innerHTML = agents.length ? agents.map(a => `
         <tr>
           <td>
@@ -314,12 +343,24 @@
     }
 
     // Period buttons
-    document.querySelectorAll('.an-period-btn').forEach(btn => {
+    document.querySelectorAll('.an-period-btn[data-days]').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.an-period-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.an-period-btn[data-days]').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         loadStats(parseInt(btn.dataset.days));
       });
+    });
+
+    // Prune button
+    document.getElementById('prune-btn').addEventListener('click', async () => {
+      if (!confirm('Delete all analytics data older than 90 days?')) return;
+      const res = await fetch('/api/analytics/prune?days=90', { method: 'DELETE', credentials: 'include' }).then(r => r.json()).catch(() => null);
+      if (res?.ok) {
+        const btn = document.getElementById('prune-btn');
+        btn.textContent = `Pruned ${res.deleted} rows`;
+        setTimeout(() => { btn.textContent = 'Prune'; }, 2500);
+        loadStats(currentDays, currentPath);
+      }
     });
 
     loadStats(30);
