@@ -51,6 +51,26 @@
     .an-copy-btn { position:absolute; top:8px; right:8px; background:var(--bg2); border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:9px; padding:3px 8px; cursor:pointer; border-radius:var(--radius); transition:all 0.12s; }
     .an-copy-btn:hover { border-color:var(--accent); color:var(--accent); }
     .an-empty { padding:40px; text-align:center; color:var(--muted); font-size:12px; line-height:2; }
+
+    .an-bottom { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; border-top:1px solid var(--line); }
+    .an-bottom > div { padding:20px 24px; border-right:1px solid var(--line); }
+    .an-bottom > div:last-child { border-right:none; }
+
+    .an-device-bars { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+    .an-device-row { display:flex; align-items:center; gap:8px; font-size:11px; }
+    .an-device-label { width:56px; color:var(--muted); font-family:var(--mono); font-size:10px; flex-shrink:0; }
+    .an-device-track { flex:1; height:5px; background:var(--line); border-radius:3px; overflow:hidden; }
+    .an-device-fill { height:100%; border-radius:3px; background:var(--accent); transition:width .4s ease; }
+    .an-device-count { width:32px; text-align:right; color:var(--heading); font-family:var(--mono); font-size:10px; flex-shrink:0; }
+
+    .agent-badge { display:inline-block; font-size:8px; padding:1px 5px; border-radius:3px; font-family:var(--mono); letter-spacing:.04em; margin-left:4px; vertical-align:middle; }
+    .agent-badge.ai-crawler  { background:color-mix(in srgb,var(--accent) 15%,transparent); color:var(--accent); }
+    .agent-badge.ai-agent    { background:color-mix(in srgb,var(--jade) 15%,transparent); color:var(--jade); }
+    .agent-badge.search      { background:color-mix(in srgb,var(--gold) 15%,transparent); color:var(--gold); }
+    .agent-badge.rag-pipeline{ background:color-mix(in srgb,var(--mid) 20%,transparent); color:var(--mid); }
+    .agent-badge.bot         { background:color-mix(in srgb,var(--mid) 10%,transparent); color:var(--muted); }
+    .agent-badge.feed-reader { background:color-mix(in srgb,var(--gold) 10%,transparent); color:var(--gold); }
+    .an-agent-paths { font-size:9px; color:var(--muted); margin-top:2px; }
   </style>
 </head>
 <body>
@@ -157,6 +177,27 @@
           </div>
         </div>
       </div>
+
+      <div class="an-bottom glass-card" id="an-bottom">
+        <div>
+          <div class="section-head"><div class="section-title">Devices</div></div>
+          <div class="an-device-bars" id="an-devices">
+            <div class="an-empty" style="padding:20px 0">No data</div>
+          </div>
+        </div>
+        <div>
+          <div class="section-head"><div class="section-title">Languages</div></div>
+          <table class="an-table" id="an-langs">
+            <tbody></tbody>
+          </table>
+        </div>
+        <div>
+          <div class="section-head"><div class="section-title">AI &amp; Crawlers</div></div>
+          <table class="an-table" id="an-agents">
+            <tbody><tr><td colspan="2" style="color:var(--muted)">No data</td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </main>
   </div>
 
@@ -174,7 +215,10 @@
 
     async function loadStats(days) {
       currentDays = days;
-      const stats = await fetch(`/api/analytics?days=${days}`, { credentials: 'include' }).then(r => r.json()).catch(() => null);
+      const [stats, agentData] = await Promise.all([
+        fetch(`/api/analytics?days=${days}`, { credentials: 'include' }).then(r => r.json()).catch(() => null),
+        fetch(`/api/analytics/agents?days=${days}`, { credentials: 'include' }).then(r => r.json()).catch(() => ({ agents: [] })),
+      ]);
       if (!stats) return;
 
       document.getElementById('stat-total').textContent = stats.total;
@@ -217,6 +261,45 @@
         try { host = new URL(r.referrer).host; } catch {}
         return `<tr><td>${host}</td><td>${r.count}</td></tr>`;
       }).join('') || '<tr><td colspan="2" style="color:var(--muted)">No referrers</td></tr>';
+
+      // Devices
+      const devEl = document.getElementById('an-devices');
+      const d = stats.devices || {};
+      const devTotal = (d.mobile||0) + (d.tablet||0) + (d.desktop||0);
+      if (devTotal > 0) {
+        const rows = [
+          { label:'Mobile',  val:d.mobile||0,  color:'var(--accent)' },
+          { label:'Tablet',  val:d.tablet||0,  color:'var(--jade)' },
+          { label:'Desktop', val:d.desktop||0, color:'var(--gold)' },
+        ];
+        devEl.innerHTML = rows.map(r => `
+          <div class="an-device-row">
+            <div class="an-device-label">${r.label}</div>
+            <div class="an-device-track"><div class="an-device-fill" style="width:${Math.round(r.val/devTotal*100)}%;background:${r.color}"></div></div>
+            <div class="an-device-count">${r.val}</div>
+          </div>`).join('');
+      } else {
+        devEl.innerHTML = '<div style="font-size:11px;color:var(--muted);padding-top:8px">No device data yet</div>';
+      }
+
+      // Languages
+      const langsTbody = document.querySelector('#an-langs tbody');
+      langsTbody.innerHTML = (stats.langs||[]).map(l =>
+        `<tr><td>${l.lang}</td><td>${l.count}</td></tr>`
+      ).join('') || '<tr><td colspan="2" style="color:var(--muted)">No data</td></tr>';
+
+      // AI Agents
+      const agentsTbody = document.querySelector('#an-agents tbody');
+      const agents = agentData.agents || [];
+      agentsTbody.innerHTML = agents.length ? agents.map(a => `
+        <tr>
+          <td>
+            ${a.name}<span class="agent-badge ${a.type}">${a.type}</span>
+            <div class="an-agent-paths">${(a.topPaths||[]).slice(0,2).map(p=>`${p.path} (${p.hits})`).join(' · ')}</div>
+          </td>
+          <td>${a.hits}</td>
+        </tr>`).join('')
+        : '<tr><td colspan="2" style="color:var(--muted)">No AI agents detected</td></tr>';
 
       // Update snippet with actual URL
       const adminUrl = location.origin;

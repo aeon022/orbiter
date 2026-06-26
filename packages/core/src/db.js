@@ -558,7 +558,21 @@ export class OrbiterDB {
       `SELECT DATE(created_at) as date, COUNT(*) as views, SUM(CASE WHEN is_bot = 0 THEN 1 ELSE 0 END) as human_views ${base} GROUP BY DATE(created_at) ORDER BY date DESC LIMIT ?`
     ).all(...args, days);
 
-    return { total, humans, bots, topPages, topReferrers, daily: daily.reverse() };
+    const devices = this.db.prepare(
+      `SELECT
+        SUM(CASE WHEN screen_w IS NULL THEN 1 ELSE 0 END) as unknown,
+        SUM(CASE WHEN screen_w < 768 THEN 1 ELSE 0 END) as mobile,
+        SUM(CASE WHEN screen_w >= 768 AND screen_w < 1024 THEN 1 ELSE 0 END) as tablet,
+        SUM(CASE WHEN screen_w >= 1024 THEN 1 ELSE 0 END) as desktop
+        ${base} AND is_bot = 0`
+    ).get(...args);
+
+    const langs = this.db.prepare(
+      `SELECT lang, COUNT(*) as count ${base} AND is_bot = 0 AND lang IS NOT NULL AND lang != ''
+       GROUP BY lang ORDER BY count DESC LIMIT 8`
+    ).all(...args);
+
+    return { total, humans, bots, topPages, topReferrers, daily: daily.reverse(), devices, langs };
   }
 
   pruneAnalytics(days = 90) {
