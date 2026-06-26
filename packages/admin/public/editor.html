@@ -1098,13 +1098,10 @@
         ${versionsData.length ? `<div class="meta-section"><div class="meta-label">History</div>${versHtml}</div>` : ''}
         ${activityData.length ? `<div class="meta-section"><div class="meta-label">Activity</div>${actHtml}</div>` : ''}
         <div class="meta-section">
-          <div class="meta-label">Template</div>
-          <div style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.5">Save this entry as a reusable template for new entries in this collection.</div>
-          <div style="display:flex;gap:6px;">
-            <input class="field-input" id="tpl-name-input" placeholder="Template name…" style="flex:1;font-size:11px;padding:5px 8px;" />
-            <button type="button" class="btn-draft" style="font-size:10px;padding:5px 10px;white-space:nowrap;" onclick="saveAsTemplate()">Save</button>
-          </div>
-          <div id="tpl-save-msg" style="font-size:10px;color:var(--jade);margin-top:6px;display:none">✓ Template saved</div>
+          <div class="meta-label" style="margin-bottom:6px">Template</div>
+          <input class="field-input" id="tpl-name-input" placeholder="Template name…" style="width:100%;box-sizing:border-box;margin-bottom:6px;" />
+          <button type="button" onclick="saveAsTemplate()" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:10px;font-family:var(--mono);background:none;border:1px solid var(--line);border-radius:var(--radius);color:var(--mid);cursor:pointer;transition:all .12s;" onmouseover="this.style.borderColor='var(--mid)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--mid)'">⌗ Save as template</button>
+          <div id="tpl-save-msg" style="font-size:10px;color:var(--jade);margin-top:6px;display:none">✓ Saved</div>
         </div>
         ${IS_NEW ? '' : `<div class="meta-section" id="comments-section">
           <div class="meta-label">Comments <span id="comment-count" style="color:var(--muted)">${commentsData.length ? '(' + commentsData.length + ')' : ''}</span></div>
