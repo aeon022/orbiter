@@ -639,6 +639,8 @@
       case 'export': palExport(args);           break;
       case 'random': palRandom();               break;
       case '=':      palMath(args.join(' '));   break;
+      case 'readme':
+      case 'docs':   window.open('https://github.com/aeon022/orbiter#readme', '_blank'); palPrint('Opening documentation…', 'dim'); break;
       default: palPrint('unknown: <b>' + escHtml(cmd) + '</b> &mdash; try <b>&gt; help</b>', 'err');
     }
   }
@@ -654,6 +656,7 @@
       '<code>export &lt;col&gt; [--md] [--drafts]</code> &mdash; download',
       '<code>random</code> &mdash; jump to a random entry',
       '<code>= &lt;expr&gt;</code> &mdash; evaluate math expression',
+      '<code>readme</code> &mdash; open documentation',
     ].join('<br>'), 'dim');
   }
 
@@ -1752,7 +1755,11 @@
             cheatRow('&gt; = &lt;expr&gt;', 'Evaluate math'),
             cheatRow('&gt; info', 'Show pod info'),
             cheatRow('&gt; help', 'Show command help'),
+            cheatRow('&gt; readme', 'Open documentation'),
           '</div>',
+        '</div>',
+        '<div style="padding:10px 20px;border-top:1px solid rgba(255,255,255,.06);text-align:center;">',
+          '<a href="https://github.com/aeon022/orbiter#readme" target="_blank" rel="noopener" style="font-size:10px;color:rgba(255,255,255,.3);text-decoration:none;font-family:monospace;letter-spacing:.04em;">↗ Documentation on GitHub</a>',
         '</div>',
       '</div>',
     ].join('');
