@@ -707,6 +707,7 @@
   </div>
 
   <div class="wikilink-picker" id="wikilink-picker">
+    <div style="padding:6px 12px 4px;font-size:9px;color:var(--muted);font-family:var(--mono);border-bottom:1px solid var(--line);">Link to entry — ↑↓ navigate · Enter select</div>
     <div id="wl-list"></div>
   </div>
 
@@ -2579,6 +2580,7 @@
       wlClose(); syncToHidden(); scheduleAutosave();
     }
 
+    wlEl.addEventListener('mousedown', e => e.preventDefault()); // keep editor focus
     document.addEventListener('mousedown',e=>{if(wlOpen&&!wlEl.contains(e.target))wlClose();});
 
     // ── Image blocks ──────────────────────────────────────────────────
