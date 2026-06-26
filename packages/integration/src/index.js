@@ -4,7 +4,8 @@
  * Astro integration that:
  * 1. Opens the .pod file at build/dev time
  * 2. Injects virtual module `orbiter:collections` — read published content in Astro pages
- * 3. Injects virtual module `orbiter:db` — pod path for custom server routes
+ * 3. Injects virtual module `orbiter:media` — read media items with resolved URLs
+ * 4. Injects virtual module `orbiter:db` — pod path for custom server routes
  * 4. Serves media BLOBs at /orbiter/media/[id]
  * 5. Exposes a read-only JSON API at /orbiter/api/[collection]
  *
@@ -105,6 +106,21 @@ function generateTypes(db) {
   out.push('  export const locale: string;');
   out.push('  export const locales: string[];');
   out.push('}');
+  out.push('');
+  out.push("declare module 'orbiter:media' {");
+  out.push('  export interface OrbiterMediaItem {');
+  out.push('    id: string;');
+  out.push('    filename: string;');
+  out.push('    mime_type: string;');
+  out.push('    size: number;');
+  out.push('    alt: string | null;');
+  out.push('    folder: string;');
+  out.push('    url: string;');
+  out.push('    created_at: string;');
+  out.push('  }');
+  out.push('  export function getMedia(folder?: string): Promise<OrbiterMediaItem[]>;');
+  out.push('  export function getMediaItem(id: string): Promise<OrbiterMediaItem | null>;');
+  out.push('}');
   return out.join('\n') + '\n';
 }
 
@@ -113,6 +129,46 @@ const RESOLVED_COLLECTIONS_ID = `\0${VIRTUAL_COLLECTIONS_ID}`;
 
 const VIRTUAL_DB_ID = 'orbiter:db';
 const RESOLVED_DB_ID = `\0${VIRTUAL_DB_ID}`;
+
+const VIRTUAL_MEDIA_ID = 'orbiter:media';
+const RESOLVED_MEDIA_ID = `\0${VIRTUAL_MEDIA_ID}`;
+
+/**
+ * Generate orbiter:media — static snapshot or runtime module.
+ */
+function generateMediaModule(podPath, isSSR) {
+  if (isSSR) {
+    return `
+import { openPod } from '@a83/orbiter-core';
+const _podPath = ${JSON.stringify(podPath)};
+function _url(item) { return item.url || '/orbiter/media/' + item.id; }
+export function getMedia(folder) {
+  const db = openPod(_podPath);
+  const items = db.listMedia(folder ?? null).map(m => ({ ...m, url: _url(m), data: undefined }));
+  db.close();
+  return Promise.resolve(items);
+}
+export function getMediaItem(id) {
+  const db = openPod(_podPath);
+  const item = db.getMediaItem(id);
+  db.close();
+  if (!item) return Promise.resolve(null);
+  const { data: _, ...rest } = item;
+  return Promise.resolve({ ...rest, url: _url(item) });
+}
+`;
+  }
+  return `
+// orbiter:media — baked at build time
+const _items = __MEDIA_SNAPSHOT__;
+export function getMedia(folder) {
+  return Promise.resolve(folder ? _items.filter(m => m.folder === folder) : _items);
+}
+export function getMediaItem(id) {
+  return Promise.resolve(_items.find(m => m.id === id) ?? null);
+}
+`;
+}
 
 /**
  * Generate the runtime version of orbiter:collections.
@@ -283,6 +339,7 @@ export default function orbiter(options = {}) {
                 resolveId(id) {
                   if (id === VIRTUAL_COLLECTIONS_ID) return RESOLVED_COLLECTIONS_ID;
                   if (id === VIRTUAL_DB_ID)          return RESOLVED_DB_ID;
+                  if (id === VIRTUAL_MEDIA_ID)       return RESOLVED_MEDIA_ID;
                 },
                 load(id) {
                   const resolvedPodPath = resolve(
@@ -385,6 +442,20 @@ export async function getPreviewEntry(collection, slug, previewToken) {
                   // orbiter:db — pod path for custom server routes
                   if (id === RESOLVED_DB_ID) {
                     return `export const podPath = ${JSON.stringify(resolvedPodPath)};`;
+                  }
+
+                  // orbiter:media
+                  if (id === RESOLVED_MEDIA_ID) {
+                    const isSSR = config.output === 'server' || config.output === 'hybrid';
+                    if (isSSR) return generateMediaModule(resolvedPodPath, true);
+                    const db = openPod(resolvedPodPath);
+                    const items = db.listMedia(null).map(m => {
+                      const { data: _, ...rest } = m;
+                      return { ...rest, url: m.url || `/orbiter/media/${m.id}` };
+                    });
+                    db.close();
+                    return generateMediaModule(resolvedPodPath, false)
+                      .replace('__MEDIA_SNAPSHOT__', JSON.stringify(items, null, 2));
                   }
                 },
               },
