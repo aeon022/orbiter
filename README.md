@@ -464,6 +464,32 @@ Relation fields are resolved at build time — the raw UUID array is replaced wi
 ))}
 ```
 
+### Wikilinks
+
+In the block editor, typing `[[` opens a floating entry picker. Selecting an entry inserts an inline link chip. In the stored body, wikilinks are serialized as:
+
+```
+[[Title|collection/slug]]
+```
+
+When rendering entry bodies in Astro, replace wikilinks with HTML links:
+
+```astro
+---
+const body = post.data.body?.replace(
+  /\[\[([^\]|]+)\|([^\]]+)\]\]/g,
+  (_, title, href) => `<a href="/${href}">${title}</a>`
+) ?? '';
+---
+<div set:html={body} />
+```
+
+The `collection/slug` part maps directly to your Astro page routes, e.g. `[[Orbiter v0.2|posts/orbiter-v0-2-0]]` → `/posts/orbiter-v0-2-0`.
+
+### Entry Templates
+
+In the admin, editors can save any entry as a reusable template (sidebar → "Template" section). Templates are stored as `templates.{collectionId}` meta keys and are not exposed through `orbiter:collections` — they are admin-only. The `⌗` button in the entries list opens the template picker to pre-fill new entries.
+
 ---
 
 ## Schema Field Types
