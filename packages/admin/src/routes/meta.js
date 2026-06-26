@@ -11,7 +11,7 @@ const ALLOWED_KEYS = [
   'media.backend', 'media.local_path',
   'media.github_token', 'media.github_repo', 'media.github_branch', 'media.github_dir',
   'media.s3_bucket', 'media.s3_region', 'media.s3_endpoint', 'media.s3_access_key', 'media.s3_secret_key', 'media.s3_public_url',
-  'media.img_max_width', 'media.img_quality',
+  'media.img_max_width', 'media.img_quality', 'media.img_convert_webp',
   'api.enabled', 'api.token', 'preview.token',
   'dashboard.notes', 'dashboard.todos',
   'dashboard.show_calendar', 'dashboard.show_recent', 'dashboard.show_collections', 'dashboard.show_workspace',
@@ -48,6 +48,7 @@ const ADMIN_ONLY_KEYS = new Set([
 ]);
 
 const PREVIEW_URL_RE = /^preview_url\.[a-z0-9_-]+$/;
+const TEMPLATES_RE   = /^templates\.[a-z0-9_-]+$/;
 
 function maskSecret(key, val) {
   if (!val || !SECRET_KEYS.has(key)) return val;
@@ -71,7 +72,7 @@ metaRoutes.get('/', (c) => {
 // GET /api/meta/:key — validated against ALLOWED_KEYS; secrets masked for non-admins
 metaRoutes.get('/:key', (c) => {
   const key = c.req.param('key').replace(/~/g, '.');
-  if (!ALLOWED_KEYS.includes(key) && !PREVIEW_URL_RE.test(key)) return c.json({ error: 'Key not allowed' }, 403);
+  if (!ALLOWED_KEYS.includes(key) && !PREVIEW_URL_RE.test(key) && !TEMPLATES_RE.test(key)) return c.json({ error: 'Key not allowed' }, 403);
   const user = c.get('user');
   const isAdmin = user?.role === 'admin';
   const db  = openPod(c.get('podPath'));
@@ -87,7 +88,7 @@ metaRoutes.put('/', async (c) => {
   const isAdmin = user?.role === 'admin';
   const db   = openPod(c.get('podPath'));
   for (const [key, value] of Object.entries(body)) {
-    if (!ALLOWED_KEYS.includes(key) && !PREVIEW_URL_RE.test(key)) continue;
+    if (!ALLOWED_KEYS.includes(key) && !PREVIEW_URL_RE.test(key) && !TEMPLATES_RE.test(key)) continue;
     if (ADMIN_ONLY_KEYS.has(key) && !isAdmin) continue;
     db.setMeta(key, value == null ? '' : String(value));
   }
@@ -98,7 +99,7 @@ metaRoutes.put('/', async (c) => {
 // PUT /api/meta/:key — single key update; admin-only keys require admin role
 metaRoutes.put('/:key', async (c) => {
   const key = c.req.param('key').replace(/~/g, '.');
-  if (!ALLOWED_KEYS.includes(key) && !PREVIEW_URL_RE.test(key)) return c.json({ error: 'Key not allowed' }, 403);
+  if (!ALLOWED_KEYS.includes(key) && !PREVIEW_URL_RE.test(key) && !TEMPLATES_RE.test(key)) return c.json({ error: 'Key not allowed' }, 403);
   const user = c.get('user');
   if (ADMIN_ONLY_KEYS.has(key) && user?.role !== 'admin') return c.json({ error: 'Forbidden' }, 403);
   const { value } = await c.req.json();

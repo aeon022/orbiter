@@ -97,6 +97,12 @@
         <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;margin-top:4px">
           <a id="export-btn" href="#" class="btn btn-ghost btn-sm" title="Export as CSV">↓ CSV</a>
           <label class="btn btn-ghost btn-sm" style="cursor:pointer" title="Import from CSV">↑ CSV<input type="file" id="import-file" accept=".csv" style="display:none" /></label>
+          <div style="position:relative">
+            <button class="btn btn-ghost btn-sm" id="tpl-btn" title="Create from template">⌗</button>
+            <div id="tpl-menu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);min-width:200px;z-index:50;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.12);">
+              <div id="tpl-menu-inner" style="padding:4px 0;font-size:11px;"></div>
+            </div>
+          </div>
           <button class="btn btn-primary" id="new-btn">+ New entry</button>
         </div>
       </div>
@@ -509,9 +515,76 @@
       e.target.value = '';
     });
 
+    // ── Entry templates ──────────────────────────────────────────────
+    let _templates = [];
+    let _activeTpl = null;
+
+    async function loadTemplates() {
+      try {
+        const r = await fetch(`/api/meta/templates~${colId}`, { credentials: 'include' });
+        const d = await r.json();
+        _templates = d.value ? JSON.parse(d.value) : [];
+      } catch { _templates = []; }
+    }
+
+    async function openTplMenu() {
+      await loadTemplates();
+      const inner = document.getElementById('tpl-menu-inner');
+      const menu  = document.getElementById('tpl-menu');
+      if (!_templates.length) {
+        inner.innerHTML = '<div style="padding:8px 14px;color:var(--muted)">No templates yet — save one from the editor sidebar.</div>';
+      } else {
+        inner.innerHTML = _templates.map(t =>
+          `<div class="tpl-item" data-id="${t.id}" style="padding:7px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <span>${escHtml(t.name)}</span>
+            <button class="tpl-del-btn" data-id="${t.id}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0 2px;" title="Delete template">✕</button>
+          </div>`
+        ).join('');
+        inner.querySelectorAll('.tpl-item').forEach(el => {
+          el.addEventListener('click', e => {
+            if (e.target.classList.contains('tpl-del-btn')) return;
+            const tpl = _templates.find(t => t.id === el.dataset.id);
+            if (!tpl) return;
+            _activeTpl = tpl;
+            menu.style.display = 'none';
+            document.getElementById('new-title').value = tpl.name;
+            document.getElementById('new-slug').value  = tpl.name.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'').slice(0,60);
+            document.getElementById('new-slug')._touched = true;
+            overlay.style.display = 'flex';
+            document.getElementById('new-slug').focus();
+          });
+        });
+        inner.querySelectorAll('.tpl-del-btn').forEach(btn => {
+          btn.addEventListener('click', async e => {
+            e.stopPropagation();
+            _templates = _templates.filter(t => t.id !== btn.dataset.id);
+            await fetch(`/api/meta/templates.${colId}`, {
+              method: 'PUT', credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ value: JSON.stringify(_templates) }),
+            });
+            openTplMenu();
+          });
+        });
+      }
+      menu.style.display = '';
+    }
+
+    const tplBtn = document.getElementById('tpl-btn');
+    tplBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const menu = document.getElementById('tpl-menu');
+      if (menu.style.display === 'none' || !menu.style.display) openTplMenu();
+      else menu.style.display = 'none';
+    });
+    document.addEventListener('click', () => { document.getElementById('tpl-menu').style.display = 'none'; });
+
+    function escHtml(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
     // New entry modal
     const overlay = document.getElementById('modal-overlay');
     document.getElementById('new-btn').addEventListener('click', () => {
+      _activeTpl = null;
       overlay.style.display = 'flex';
       document.getElementById('new-slug').focus();
     });
@@ -537,10 +610,11 @@
       if (!slug) { errEl.textContent = 'Slug is required'; errEl.style.display = 'block'; return; }
       errEl.style.display = 'none';
 
+      const entryData = _activeTpl ? { ..._activeTpl.data, title } : { title };
       const res = await fetch(`/api/collections/${colId}/entries`, {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug, data: { title }, status: 'draft', locale: activeLocale }),
+        body: JSON.stringify({ slug, data: entryData, status: 'draft', locale: activeLocale }),
       });
       if (res.ok) {
         overlay.style.display = 'none';

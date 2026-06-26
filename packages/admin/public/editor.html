@@ -1097,6 +1097,15 @@
         </div>
         ${versionsData.length ? `<div class="meta-section"><div class="meta-label">History</div>${versHtml}</div>` : ''}
         ${activityData.length ? `<div class="meta-section"><div class="meta-label">Activity</div>${actHtml}</div>` : ''}
+        <div class="meta-section">
+          <div class="meta-label">Template</div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.5">Save this entry as a reusable template for new entries in this collection.</div>
+          <div style="display:flex;gap:6px;">
+            <input class="field-input" id="tpl-name-input" placeholder="Template name…" style="flex:1;font-size:11px;padding:5px 8px;" />
+            <button type="button" class="btn-draft" style="font-size:10px;padding:5px 10px;white-space:nowrap;" onclick="saveAsTemplate()">Save</button>
+          </div>
+          <div id="tpl-save-msg" style="font-size:10px;color:var(--jade);margin-top:6px;display:none">✓ Template saved</div>
+        </div>
         ${IS_NEW ? '' : `<div class="meta-section" id="comments-section">
           <div class="meta-label">Comments <span id="comment-count" style="color:var(--muted)">${commentsData.length ? '(' + commentsData.length + ')' : ''}</span></div>
           <div id="comments-list">${commentsData.map(cm=>`
@@ -1903,6 +1912,37 @@
         if (document.querySelector('.app.focus-mode')) toggleFocusMode();
       }
     });
+
+    window.saveAsTemplate = async function() {
+      const nameInput = document.getElementById('tpl-name-input');
+      const name = nameInput.value.trim();
+      if (!name) { nameInput.focus(); return; }
+      syncToHidden();
+      const title  = document.getElementById('title-input').value;
+      const body   = document.getElementById('body-input').value;
+      const fields = {};
+      const skipNames = new Set(['slug-input','publish-at-input','unpublish-at-input']);
+      document.querySelectorAll('.meta-field input[name], .meta-field textarea[name], .meta-field select[name]').forEach(el => {
+        if (!skipNames.has(el.id) && el.name && el.value) fields[el.name] = el.value;
+      });
+      const tplData = { title, body, ...fields };
+      const metaKey = `templates.${COLLECTION}`;
+      let existing = [];
+      try {
+        const r = await fetch(`/api/meta/templates~${COLLECTION}`, { credentials: 'include' });
+        const d = await r.json();
+        existing = d.value ? JSON.parse(d.value) : [];
+      } catch {}
+      existing.push({ id: crypto.randomUUID(), name, data: tplData });
+      await fetch(`/api/meta/${metaKey}`, {
+        method: 'PUT', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value: JSON.stringify(existing) }),
+      });
+      nameInput.value = '';
+      const msg = document.getElementById('tpl-save-msg');
+      if (msg) { msg.style.display = ''; setTimeout(() => msg.style.display = 'none', 2500); }
+    };
 
     window.toggleFocusMode = function() {
       document.querySelector('.app').classList.toggle('focus-mode');
