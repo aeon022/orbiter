@@ -165,6 +165,29 @@
     let activeFilter = '';
     let activeLocale = '';  // '' = default/primary locale
     let selected     = new Set();
+    let sortField    = 'updated_at';
+    let sortDir      = -1; // -1 = desc, 1 = asc
+
+    function sortEntries(entries) {
+      return [...entries].sort((a, b) => {
+        let av, bv;
+        if (sortField === 'title') {
+          av = (a.data?.title || a.slug || '').toLowerCase();
+          bv = (b.data?.title || b.slug || '').toLowerCase();
+        } else if (sortField === 'status') {
+          av = a.status || ''; bv = b.status || '';
+        } else {
+          av = a.updated_at || ''; bv = b.updated_at || '';
+        }
+        return av < bv ? -sortDir : av > bv ? sortDir : 0;
+      });
+    }
+
+    window.setSort = function(field) {
+      if (sortField === field) sortDir *= -1;
+      else { sortField = field; sortDir = field === 'updated_at' ? -1 : 1; }
+      renderEntries(allEntries);
+    };
 
     // Render locale tabs if multiple locales configured
     if (siteLocales.length > 1) {
@@ -224,17 +247,22 @@
       }
       const isTrash = activeFilter === 'trash';
       const canSort = !activeFilter;
+      const sorted  = sortEntries(entries);
+      const si = (f) => sortField === f ? (sortDir === 1 ? ' ↑' : ' ↓') : '';
+      const sh = (f, label) => `<th style="cursor:pointer;user-select:none;white-space:nowrap" onclick="setSort('${f}')">${label}${si(f)}</th>`;
+      const statusTh  = isTrash ? '<th>Deleted</th>'  : sh('status','Status');
+      const updatedTh = isTrash ? '<th></th>'          : sh('updated_at','Updated');
       wrap.innerHTML = `
         <table>
           <thead>
             <tr>
               ${canSort ? '<th class="drag-col"></th>' : ''}
               <th class="cb-col"><input type="checkbox" id="check-all" title="Select all" /></th>
-              <th>Title / Slug</th><th>${isTrash ? 'Deleted' : 'Status'}</th><th>${isTrash ? '' : 'Updated'}</th><th></th>
+              ${sh('title','Title / Slug')}${statusTh}${updatedTh}<th></th>
             </tr>
           </thead>
           <tbody>
-            ${entries.map(e => {
+            ${sorted.map(e => {
               const title   = e.data?.title || e.slug;
               const updated = e.updated_at ? relativeTime(e.updated_at) : '—';
               const deleted = e.deleted_at ? e.deleted_at.split(' ')[0] : '—';

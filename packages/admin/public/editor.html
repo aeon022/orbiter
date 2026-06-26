@@ -59,6 +59,13 @@
     .be-block strong { font-weight:600; color:var(--heading); }
     .be-block em { color:var(--mid); font-style:italic; }
 
+    /* Block drag handle */
+    .be-drag-handle { position:absolute; left:-18px; top:50%; transform:translateY(-50%); color:var(--muted); opacity:0; cursor:grab; font-size:11px; user-select:none; padding:0 2px; transition:opacity .1s; }
+    .be-block:hover .be-drag-handle { opacity:0.4; }
+    .be-block.drag-over-top    { border-top:2px solid var(--accent); }
+    .be-block.drag-over-bottom { border-bottom:2px solid var(--accent); }
+    .be-block.dragging { opacity:0.4; }
+
     /* Saved indicator */
     .saved-flash { padding:4px 12px; font-size:10px; color:var(--jade); display:none; align-items:center; gap:4px; flex-shrink:0; font-family:var(--mono); letter-spacing:.03em; margin-left:12px; opacity:0; transition:opacity .3s; }
     .saved-flash.show { display:flex; opacity:1; }
@@ -495,9 +502,52 @@
     .locale-tab.active { background:var(--accent-bg); border-color:var(--accent); color:var(--accent); font-weight:500; }
     .locale-tab.missing { border-style:dashed; opacity:0.55; }
     .locale-tab.missing:hover { opacity:1; border-style:solid; }
+
+    /* Focus mode */
+    .app.focus-mode .topbar,
+    .app.focus-mode .editor-toolbar,
+    .app.focus-mode .locale-bar { display:none !important; }
+    .app.focus-mode .editor-shell { grid-template-columns:1fr 0; }
+    .app.focus-mode .meta-panel { display:none !important; }
+    .app.focus-mode .editor-scroll { padding-top:48px; }
+    .focus-exit-hint { position:fixed; bottom:20px; right:24px; font-size:10px; color:var(--muted); opacity:0; pointer-events:none; font-family:var(--mono); transition:opacity .3s; }
+    .app.focus-mode .focus-exit-hint { opacity:.5; }
+
+    /* Copy slug */
+    .copy-slug-btn { background:none; border:none; color:var(--muted); cursor:pointer; padding:0 0 0 5px; font-size:11px; opacity:0; transition:opacity .15s; vertical-align:middle; }
+    .editor-slug-line:hover .copy-slug-btn { opacity:0.6; }
+    .copy-slug-btn:hover { opacity:1 !important; color:var(--accent); }
+
+    /* Shortcut overlay */
+    .shortcut-overlay { position:fixed; inset:0; background:color-mix(in srgb,var(--bg1) 85%,transparent); backdrop-filter:blur(6px); z-index:9999; display:none; align-items:center; justify-content:center; }
+    .shortcut-overlay.open { display:flex; }
+    .shortcut-box { background:var(--bg2); border:1px solid var(--line); border-radius:12px; padding:28px 32px; min-width:360px; max-width:480px; }
+    .shortcut-box h3 { font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); margin:0 0 18px; font-weight:400; }
+    .shortcut-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid var(--line2); font-size:12px; color:var(--text); }
+    .shortcut-row:last-child { border-bottom:none; }
+    .shortcut-row span { color:var(--muted); font-size:11px; }
+    .shortcut-key { font-family:var(--mono); font-size:10px; background:var(--bg3); border:1px solid var(--line); border-radius:4px; padding:2px 6px; color:var(--text); }
   </style>
 </head>
 <body>
+  <div class="focus-exit-hint">Esc · exit focus mode</div>
+  <div class="shortcut-overlay" id="shortcut-overlay" onclick="this.classList.remove('open')">
+    <div class="shortcut-box" onclick="event.stopPropagation()">
+      <h3>Keyboard shortcuts</h3>
+      <div class="shortcut-row">Save<span class="shortcut-key">⌘S</span></div>
+      <div class="shortcut-row">Publish<span class="shortcut-key">⌘⇧S</span></div>
+      <div class="shortcut-row">Toggle sidebar<span class="shortcut-key">⌘⇧P</span></div>
+      <div class="shortcut-row">Focus mode<span class="shortcut-key">⌘⇧F</span></div>
+      <div class="shortcut-row">Export Markdown<span class="shortcut-key">⌘⇧E</span></div>
+      <div class="shortcut-row">Bold<span class="shortcut-key">⌘B</span></div>
+      <div class="shortcut-row">Italic<span class="shortcut-key">⌘I</span></div>
+      <div class="shortcut-row">Inline code<span class="shortcut-key">⌘E</span></div>
+      <div class="shortcut-row">Search<span class="shortcut-key">⌘K</span></div>
+      <div class="shortcut-row">Block picker<span class="shortcut-key">/</span></div>
+      <div class="shortcut-row">Close / exit<span class="shortcut-key">Esc</span></div>
+      <div class="shortcut-row" style="margin-top:8px;border-top:1px solid var(--line);padding-top:12px;">This overlay<span class="shortcut-key">⌘?</span></div>
+    </div>
+  </div>
   <div class="app">
     <header class="topbar">
       <a class="logo" href="/dashboard.html"><div class="logo-mark">OR</div>Orbiter</a>
@@ -581,7 +631,7 @@
           <div class="editor-page">
             <textarea id="title-input" class="editor-title-input" placeholder="Untitled" rows="1"
               oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';onTitleInput()"></textarea>
-            <div class="editor-slug-line">/<span id="collection-id-display"></span>/<span id="slug-preview">…</span></div>
+            <div class="editor-slug-line">/<span id="collection-id-display"></span>/<span id="slug-preview">…</span><button type="button" class="copy-slug-btn" onclick="copySlug()" title="Copy slug">⧉</button></div>
             <div id="be-editor" class="be-editor" spellcheck="false"></div>
             <textarea id="body-input" style="display:none"></textarea>
             <div class="word-count" id="word-count-display"></div>
@@ -744,7 +794,8 @@
     document.getElementById('back-to-col').href = `/entries.html?col=${COLLECTION}&label=${encodeURIComponent(colData.label)}`;
     const breadcrumbSlug = IS_NEW ? 'New entry' : IS_TRANSLATION_NEW ? `${SLUG} [${LOCALE}] — new translation` : LOCALE ? `${SLUG} [${LOCALE}]` : SLUG;
     document.getElementById('breadcrumb-slug').textContent = breadcrumbSlug;
-    document.title = `${IS_NEW ? 'New entry' : SLUG} — ${colData.label} — Orbiter`;
+    const _initTitle = IS_NEW ? 'New entry' : (entryData?.data?.title || SLUG);
+    document.title = `${_initTitle} — Editor — Orbiter`;
 
     const schema = colData.schema ? (typeof colData.schema==='string'?JSON.parse(colData.schema):colData.schema) : {};
     const extraFields = Object.entries(schema).filter(([k])=>k!=='title'&&k!=='body');
@@ -1582,11 +1633,13 @@
 
     window.onTitleInput = function() {
       const slugInput = document.getElementById('slug-input');
+      const title = document.getElementById('title-input').value;
       if (!slugInput.dataset.manual) {
-        const s = slugify(document.getElementById('title-input').value);
+        const s = slugify(title);
         slugInput.value = s;
         document.getElementById('slug-preview').textContent = s || '…';
       }
+      document.title = (title || 'Untitled') + ' — Editor — Orbiter';
       updateWc(); scheduleAutosave(); updatePreview();
     };
 
@@ -1743,7 +1796,8 @@
       if (!editor) return;
       const text = editor.innerText || '';
       const words = text.split(/\s+/).filter(w => w.length > 0).length;
-      wordCountEl.textContent = words > 0 ? words + ' words' : '';
+      const mins = Math.max(1, Math.round(words / 200));
+      wordCountEl.textContent = words > 0 ? `${words} w · ${mins} min` : '';
     }
     document.getElementById('be-editor')?.addEventListener('input', updateWordCount);
     setTimeout(updateWordCount, 500);
@@ -1833,7 +1887,32 @@
         e.preventDefault();
         toggleMetaPanel();
       }
+      if (mod && e.shiftKey && (e.key==='f' || e.key==='F')) {
+        e.preventDefault();
+        toggleFocusMode();
+      }
+      if (mod && e.key==='?') {
+        e.preventDefault();
+        document.getElementById('shortcut-overlay').classList.toggle('open');
+      }
+      if (e.key==='Escape') {
+        document.getElementById('shortcut-overlay').classList.remove('open');
+        if (document.querySelector('.app.focus-mode')) toggleFocusMode();
+      }
     });
+
+    window.toggleFocusMode = function() {
+      document.querySelector('.app').classList.toggle('focus-mode');
+    };
+
+    window.copySlug = function() {
+      const slug = document.getElementById('slug-preview')?.textContent || '';
+      if (!slug || slug === '…') return;
+      navigator.clipboard.writeText('/' + (COLLECTION || '') + '/' + slug).then(() => {
+        const btn = document.querySelector('.copy-slug-btn');
+        if (btn) { btn.textContent = '✓'; setTimeout(() => btn.textContent = '⧉', 1200); }
+      });
+    };
 
     // ── Block editor ──────────────────────────────────────────────────
     const beEditor = document.getElementById('be-editor');
@@ -1916,6 +1995,10 @@
     function createBlock(type, content) {
       const el = document.createElement('div');
       el.className='be-block'; el.dataset.type=type||'p'; el.dataset.ph=BLK_PH[type]||'Write something…';
+      const handle = document.createElement('span');
+      handle.className='be-drag-handle'; handle.contentEditable='false'; handle.textContent='⠿'; handle.title='Drag to reorder';
+      handle.addEventListener('mousedown', () => { el.setAttribute('draggable','true'); });
+      el.appendChild(handle);
       if (type==='hr') { el.contentEditable='false'; }
       else if (type==='table') {
         el.contentEditable='false';
@@ -2146,6 +2229,40 @@
         if (last&&last.contentEditable!=='false') focusEnd(last);
         else { const p=createBlock('p',''); beEditor.appendChild(p); focusStart(p); }
       }
+    });
+
+    // ── Block drag-to-reorder ────────────────────────────────────────
+    let _dragSrc = null;
+    beEditor.addEventListener('dragstart', e => {
+      const block = e.target.closest?.('.be-block');
+      if (!block) return;
+      _dragSrc = block;
+      block.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    beEditor.addEventListener('dragend', () => {
+      if (_dragSrc) { _dragSrc.removeAttribute('draggable'); _dragSrc.classList.remove('dragging'); _dragSrc = null; }
+      beEditor.querySelectorAll('.be-block').forEach(b => b.classList.remove('drag-over-top','drag-over-bottom'));
+    });
+    beEditor.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (!_dragSrc) return;
+      const block = e.target.closest?.('.be-block');
+      beEditor.querySelectorAll('.be-block').forEach(b => b.classList.remove('drag-over-top','drag-over-bottom'));
+      if (block && block !== _dragSrc) {
+        const mid = block.getBoundingClientRect().top + block.offsetHeight / 2;
+        block.classList.add(e.clientY < mid ? 'drag-over-top' : 'drag-over-bottom');
+      }
+    });
+    beEditor.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!_dragSrc) return;
+      const block = e.target.closest?.('.be-block');
+      if (!block || block === _dragSrc) return;
+      const mid = block.getBoundingClientRect().top + block.offsetHeight / 2;
+      if (e.clientY < mid) beEditor.insertBefore(_dragSrc, block);
+      else block.after(_dragSrc);
+      syncToHidden(); scheduleAutosave(); updatePreview();
     });
 
     function updateWc() {
