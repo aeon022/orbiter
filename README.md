@@ -1085,6 +1085,28 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 
 ## Changelog
 
+### June 2026 · admin@0.3.77 / core@0.3.12 / cli@0.3.8 — Templates, Wikilinks, Analytics
+
+**Entry Templates**
+- Save any entry as a reusable template from the editor sidebar (name input + Save button captures title, body and all fields)
+- `⌗` button in the entries list opens a template picker — click to pre-fill the new-entry modal with all template data
+- Delete templates directly from the picker; stored as `templates.{collectionId}` meta keys
+
+**Wikilinks**
+- Type `[[` in any block to open a floating entry picker (recent entries shown immediately, type-ahead search across all collections)
+- Arrow keys + Enter to select, Escape to dismiss; picker flips above the cursor near the screen bottom
+- Inserts a styled inline link chip; serialized as `[[Title|collection/slug]]` in the body
+
+**Analytics**
+- New bottom row: **Devices** (mobile/tablet/desktop bar chart), **Languages** table, **AI & Crawlers** panel (GPTBot, ClaudeBot, Perplexity etc. with type badges)
+- **Entry title matching** — Top Pages now shows the entry title above the raw path
+- **Page drill-down** — click any page to filter all stats and the chart to that path; `✕` in the header to reset
+- **Prune button** — delete analytics data older than 90 days with one click
+- `core@0.3.12`: `getAnalytics()` now returns `devices` (screen_w buckets) and `langs` breakdown
+
+**CLI**
+- `orbiter docs` — opens the documentation in the default browser (macOS/Linux/Windows)
+
 ### June 2026 · admin@0.3.76 — Editor polish, WebP, Preview URLs
 
 **Editor**
