@@ -59,6 +59,17 @@
     .be-block strong { font-weight:600; color:var(--heading); }
     .be-block em { color:var(--mid); font-style:italic; }
 
+    /* Wikilinks */
+    .be-wikilink { color:var(--accent); border-bottom:1px solid color-mix(in srgb,var(--accent) 50%,transparent); cursor:pointer; padding:0 1px; user-select:none; font-style:normal; white-space:nowrap; }
+    .be-wikilink:hover { background:var(--accent-bg); border-radius:2px; }
+    .wikilink-picker { position:fixed; z-index:9999; width:260px; background:var(--bg2); border:1px solid var(--line); box-shadow:0 4px 16px rgba(0,0,0,.15); border-radius:var(--radius); overflow:hidden; display:none; font-family:var(--mono); }
+    .wl-search { width:100%; box-sizing:border-box; padding:8px 12px; border:none; border-bottom:1px solid var(--line); background:var(--bg1); color:var(--text); font-family:var(--mono); font-size:11px; outline:none; }
+    .wl-item { padding:7px 12px; cursor:pointer; display:flex; flex-direction:column; gap:2px; border-left:2px solid transparent; }
+    .wl-item:hover, .wl-item.active { background:var(--hover-bg); border-left-color:var(--accent); }
+    .wl-title { font-size:11px; color:var(--text); }
+    .wl-meta  { font-size:9px; color:var(--muted); }
+    .wl-empty { padding:12px; font-size:11px; color:var(--muted); text-align:center; }
+
     /* Block drag handle */
     .be-drag-handle { position:absolute; left:-18px; top:50%; transform:translateY(-50%); color:var(--muted); opacity:0; cursor:grab; font-size:11px; user-select:none; padding:0 2px; transition:opacity .1s; }
     .be-block:hover .be-drag-handle { opacity:0.4; }
@@ -693,6 +704,10 @@
   <div class="block-picker" id="block-picker">
     <div class="bp-header">/ Blocks — type to filter</div>
     <div class="bp-list" id="bp-list"></div>
+  </div>
+
+  <div class="wikilink-picker" id="wikilink-picker">
+    <div id="wl-list"></div>
   </div>
 
   <script type="module">
@@ -1958,18 +1973,26 @@
     const beEditor = document.getElementById('be-editor');
     const bodyInput = document.getElementById('body-input');
 
+    function wlSpan(title, href) {
+      return `<span class="be-wikilink" contenteditable="false" data-href="${escHtml(href)}" data-wiki="${escHtml(title+'|'+href)}">${escHtml(title)}</span>`;
+    }
+
     function inlineMd(text) {
-      return text
+      const wls = [];
+      text = text.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, (_,t,h) => { wls.push(wlSpan(t,h)); return `\x00${wls.length-1}\x00`; });
+      let r = text
         .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
         .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
         .replace(/__(.+?)__/g,'<strong>$1</strong>')
         .replace(/\*(.+?)\*/g,'<em>$1</em>')
         .replace(/_(.+?)_/g,'<em>$1</em>')
         .replace(/`(.+?)`/g,'<code>$1</code>');
+      return r.replace(/\x00(\d+)\x00/g, (_,i) => wls[+i]);
     }
 
     function htmlToMd(html) {
       return html
+        .replace(/<span[^>]*class="be-wikilink"[^>]*data-wiki="([^"]+)"[^>]*>[\s\S]*?<\/span>/g, (_,w) => `[[${w.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"')}]]`)
         .replace(/<strong>([\s\S]*?)<\/strong>/gi,'**$1**')
         .replace(/<b>([\s\S]*?)<\/b>/gi,'**$1**')
         .replace(/<em>([\s\S]*?)<\/em>/gi,'_$1_')
@@ -2178,6 +2201,13 @@
     };
 
     beEditor.addEventListener('keydown',e=>{
+      if (wlOpen) {
+        const n=wlResults.length||1;
+        if (e.key==='ArrowDown') { e.preventDefault(); wlIdx=(wlIdx+1)%n; wlRender(); return; }
+        if (e.key==='ArrowUp')   { e.preventDefault(); wlIdx=(wlIdx-1+n)%n; wlRender(); return; }
+        if (e.key==='Enter')     { e.preventDefault(); wlInsert(wlIdx); return; }
+        if (e.key==='Escape')    { e.preventDefault(); wlClose(); return; }
+      }
       if (bpOpen) {
         const items=bpFiltered();
         if (e.key==='ArrowDown') { e.preventDefault(); bpIdx=(bpIdx+1)%(items.length||1); bpRender(); return; }
@@ -2232,6 +2262,19 @@
         const text=bpTargetBlock.innerText; const typed=text.substring(1);
         if (typed.includes('\n')) bpClose(); else { bpQuery=typed; bpIdx=0; bpRender(); } return;
       }
+      // Wikilink picker: detect [[ at cursor
+      if (wlOpen) {
+        const sel=window.getSelection();
+        if (sel.rangeCount) {
+          const range=sel.getRangeAt(0), node=range.startContainer;
+          if (node.nodeType===Node.TEXT_NODE) {
+            const beforeCursor=node.textContent.slice(0,range.startOffset);
+            const m=beforeCursor.match(/\[\[([^\]]*)$/);
+            if (m) { wlSearch(m[1]); syncToHidden(); scheduleAutosave(); return; }
+          }
+        }
+        wlClose();
+      }
       const text=b.innerText;
       if (text==='# ')   { b.innerHTML=''; changeBlockType('h1',b); return; }
       if (text==='## ')  { b.innerHTML=''; changeBlockType('h2',b); return; }
@@ -2240,6 +2283,15 @@
       if (text==='- ')   { b.innerHTML=''; changeBlockType('ul',b); return; }
       if (text==='---')  { const hr=createBlock('hr',''); const next=createBlock('p',''); b.replaceWith(hr); hr.after(next); focusStart(next); syncToHidden(); scheduleAutosave(); updatePreview(); return; }
       if (text==='/') { bpOpen_(b); return; }
+      // Check for [[ trigger
+      const sel=window.getSelection();
+      if (sel.rangeCount) {
+        const range=sel.getRangeAt(0), node=range.startContainer;
+        if (node.nodeType===Node.TEXT_NODE) {
+          const before=node.textContent.slice(0,range.startOffset);
+          if (before.endsWith('[[')) { wlOpen_(b, b.getBoundingClientRect()); wlSearch(''); syncToHidden(); scheduleAutosave(); return; }
+        }
+      }
       syncToHidden(); scheduleAutosave(); updatePreview();
     });
 
@@ -2450,6 +2502,73 @@
     }
 
     document.addEventListener('mousedown',e=>{if(bpOpen&&!bpEl.contains(e.target))bpClose();});
+
+    // ── Wikilink picker ───────────────────────────────────────────────
+    let wlOpen=false, wlIdx=0, wlResults=[], wlBlock=null, wlSearchTimer=null;
+    const wlEl=document.getElementById('wikilink-picker');
+    const wlListEl=document.getElementById('wl-list');
+
+    function wlRender() {
+      wlListEl.innerHTML='';
+      if (!wlResults.length) { wlListEl.innerHTML='<div class="wl-empty">No entries found</div>'; return; }
+      wlResults.forEach((r,i)=>{
+        const row=document.createElement('div');
+        row.className='wl-item'+(i===wlIdx?' active':'');
+        row.innerHTML=`<div class="wl-title">${escHtml(r.title||r.slug)}</div><div class="wl-meta">${escHtml(r.label||r.collection)} · ${escHtml(r.slug)}</div>`;
+        row.addEventListener('mousedown',ev=>{ev.preventDefault();wlInsert(i);});
+        row.addEventListener('mouseover',()=>{wlIdx=i;wlRender();});
+        wlListEl.appendChild(row);
+      });
+    }
+
+    async function wlSearch(q) {
+      clearTimeout(wlSearchTimer);
+      wlSearchTimer=setTimeout(async()=>{
+        try {
+          const url=q ? `/api/search?q=${encodeURIComponent(q)}` : `/api/search/recent?limit=8`;
+          const res=await fetch(url,{credentials:'include'});
+          const data=await res.json();
+          wlResults=(Array.isArray(data)?data:data.entries||[]).slice(0,8);
+        } catch { wlResults=[]; }
+        wlIdx=0; wlRender();
+      }, q ? 120 : 0);
+    }
+
+    function wlOpen_(block, rect) {
+      wlBlock=block; wlResults=[]; wlIdx=0; wlOpen=true;
+      wlEl.style.top=Math.min(rect.bottom+4,window.innerHeight-220)+'px';
+      wlEl.style.left=Math.min(rect.left,window.innerWidth-280)+'px';
+      wlEl.style.display='block';
+      wlListEl.innerHTML='<div class="wl-empty">Type to search entries…</div>';
+    }
+
+    function wlClose() { wlOpen=false; wlEl.style.display='none'; clearTimeout(wlSearchTimer); }
+
+    function wlInsert(idx) {
+      const r=wlResults[idx]; if (!r||!wlBlock) { wlClose(); return; }
+      const sel=window.getSelection(); if (!sel.rangeCount) { wlClose(); return; }
+      const range=sel.getRangeAt(0);
+      const node=range.startContainer;
+      if (node.nodeType!==Node.TEXT_NODE) { wlClose(); return; }
+      const text=node.textContent, offset=range.startOffset;
+      const wlStart=text.lastIndexOf('[[',offset);
+      if (wlStart===-1) { wlClose(); return; }
+      const before=text.slice(0,wlStart), after=text.slice(offset);
+      const span=document.createElement('span');
+      span.className='be-wikilink'; span.contentEditable='false';
+      span.dataset.href='/'+r.collection+'/'+r.slug;
+      span.dataset.wiki=(r.title||r.slug)+'|'+r.collection+'/'+r.slug;
+      span.textContent=r.title||r.slug;
+      node.textContent=before;
+      const afterNode=document.createTextNode(' '+after);
+      node.after(span,afterNode);
+      const newRange=document.createRange();
+      newRange.setStart(afterNode,1); newRange.collapse(true);
+      sel.removeAllRanges(); sel.addRange(newRange);
+      wlClose(); syncToHidden(); scheduleAutosave();
+    }
+
+    document.addEventListener('mousedown',e=>{if(wlOpen&&!wlEl.contains(e.target))wlClose();});
 
     // ── Image blocks ──────────────────────────────────────────────────
     let pickerAnchor = null;
