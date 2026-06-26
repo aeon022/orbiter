@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 import { argv, exit } from 'node:process';
+import { exec } from 'node:child_process';
 
 const [,, command, ...args] = argv;
+const DOCS_URL = 'https://github.com/aeon022/orbiter#readme';
 
 const commands = {
   init:       () => import('../src/init.js').then(m => m.run(args)),
@@ -11,6 +13,7 @@ const commands = {
   backup:     () => import('../src/backup.js').then(m => m.run(args)),
   unpack:     () => import('../src/unpack.js').then(m => m.run(args)),
   pack:       () => import('../src/pack.js').then(m => m.run(args)),
+  docs:       () => openDocs(),
   help:       () => printHelp(),
 };
 
@@ -26,6 +29,14 @@ async function main() {
     exit(1);
   }
   await handler();
+}
+
+function openDocs() {
+  const opener = process.platform === 'darwin' ? 'open'
+               : process.platform === 'win32'  ? 'start'
+               : 'xdg-open';
+  exec(`${opener} ${DOCS_URL}`);
+  console.log(`  Opening docs → ${DOCS_URL}`);
 }
 
 function printHelp() {
@@ -50,6 +61,7 @@ function printHelp() {
              [--out <dir>]           Backup directory (default: same as pod)
     unpack   [--pod <path>]        Extract media BLOBs to files (pod → git mode)
     pack     [--pod <path>]        Re-insert media files as BLOBs (git → server mode)
+    docs                           Open the Orbiter documentation in your browser
 
   Options:
     -h, --help    Show this help message

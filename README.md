@@ -1085,6 +1085,28 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 
 ## Changelog
 
+### June 2026 · admin@0.3.76 — Editor polish, WebP, Preview URLs
+
+**Editor**
+- **Focus mode** (`⌘⇧F`) — hides topbar and toolbar, clean distraction-free writing surface. `Esc` to exit.
+- **Keyboard shortcut overlay** (`⌘?`) — all shortcuts at a glance, with link to docs.
+- **Copy slug** — `⧉` button appears on hover next to the slug line, copies the full path to clipboard.
+- **Reading time** — word count in toolbar now shows `N w · X min` alongside the existing topbar display.
+- **Live tab title** — browser tab updates as you type the entry title.
+- **Block drag-to-reorder** — `⠿` handle appears on hover on each block; drag to rearrange without cut/paste.
+- **Entries column sort** — click Title, Status, or Updated headers to sort; click again to reverse.
+
+**Media**
+- **WebP auto-conversion** — new toggle in Settings → Image optimization: JPEG and PNG uploads are auto-converted to WebP on ingest, filename updated accordingly.
+
+**Settings**
+- **Preview URLs per collection** — new section in Settings to configure the `↗ Preview` URL template per collection. Use `{slug}` as placeholder (e.g. `http://localhost:4321/blog/{slug}`).
+
+**CLI**
+- **`orbiter docs`** — opens the Orbiter documentation in your browser.
+
+---
+
 ### June 2026 · Content Layer, Publish HTML, Smart Suggestions v2, CLI, UI Polish
 
 **Astro Content Layer Adapter**
