@@ -2540,12 +2540,13 @@
       const safeBottom=dock ? dock.getBoundingClientRect().top - 8 : window.innerHeight - 8;
       const spaceBelow=safeBottom - rect.bottom - 4;
       const spaceAbove=rect.top - 8;
-      const PICK_H=Math.min(260, Math.max(spaceBelow, spaceAbove, 80));
-      wlEl.style.maxHeight=PICK_H+'px';
-      if (spaceBelow >= 120 || spaceBelow >= spaceAbove) {
-        wlEl.style.top=(rect.bottom+4)+'px'; wlEl.style.bottom='';
+      const PICK_H=260;
+      if (spaceBelow >= PICK_H) {
+        wlEl.style.top=(rect.bottom+4)+'px'; wlEl.style.bottom=''; wlEl.style.maxHeight=PICK_H+'px';
+      } else if (spaceAbove > spaceBelow) {
+        wlEl.style.bottom=(window.innerHeight-rect.top+4)+'px'; wlEl.style.top=''; wlEl.style.maxHeight=Math.min(PICK_H,spaceAbove)+'px';
       } else {
-        wlEl.style.bottom=(window.innerHeight-rect.top+4)+'px'; wlEl.style.top='';
+        wlEl.style.top=(rect.bottom+4)+'px'; wlEl.style.bottom=''; wlEl.style.maxHeight=Math.max(spaceBelow,80)+'px';
       }
       wlEl.style.left=Math.min(rect.left,window.innerWidth-280)+'px';
       wlEl.style.display='block';
