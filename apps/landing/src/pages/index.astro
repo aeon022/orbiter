@@ -35,7 +35,7 @@ const features = [
   { icon: '⬛', title: 'Desktop App — Mac &amp; Windows',  body: 'Download the installer, double-click to launch. Pick a template (Blog, Portfolio, Business, Events) — the app creates collections and demo content automatically. No terminal, no Node.js, no npm.' },
   { icon: '⊕', title: 'WordPress importer',            body: 'Export your WordPress site as WXR and import it directly in the admin. HTML body text converts to Markdown automatically. Post dates, categories, and slugs are preserved. No CLI, no scripts.' },
   { icon: '⊘', title: 'Entry locking',                 body: 'When two editors open the same entry simultaneously, a lock warning appears before any changes are made. 90-second lock with automatic heartbeat refresh. Prevents silent last-write-wins overwrites.' },
-  { icon: '⌨', title: 'CLI',                           body: '<code>orbiter init</code> scaffolds a new Astro + Orbiter project. <code>orbiter add-user</code> creates users. <code>orbiter pack / unpack</code> syncs media BLOBs to files for git-friendly workflows.' },
+  { icon: '⌨', title: 'CLI',                           body: '<code>orbiter init</code> scaffolds a new project with starter templates. <code>orbiter status</code> shows pod health. <code>orbiter sync</code> pushes/pulls via rsync. <code>orbiter encrypt/decrypt</code> wraps the pod in AES-256-GCM for git-safe storage.' },
   { icon: '◆', title: 'Publish HTML',                  body: 'One-click static site generator. Choose a built-in theme (Orbit or Canvas), click Generate, download a ZIP with a complete website. Dark mode, responsive, OG tags, sitemap — no Astro or build tools needed.' },
 ];
 
@@ -127,7 +127,7 @@ const faqs = [
   },
   {
     q: 'Is it production-ready?',
-    a: 'Orbiter is at v0.3.47 — published to npm, actively maintained, and used in real projects. The API may evolve before v1.0. It\'s suitable for personal sites, client projects, and small teams. Check the GitHub issues for anything relevant to your use case.',
+    a: 'Orbiter is at v0.3.78 — published to npm, actively maintained, and used in real projects. The API may evolve before v1.0. It\'s suitable for personal sites, client projects, and small teams. Check the GitHub issues for anything relevant to your use case.',
   },
   {
     q: 'What\'s the license?',
@@ -276,7 +276,7 @@ const faqs = [
     </div>
 
     <div class="hero-inner">
-      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">Astro Content Layer + Publish HTML + Smart Suggestions v2 — standard astro:content API, static sites, AI panel · Changelog →</a>
+      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">Team-ready: content validation, permissions, quality dashboard, AES-256-GCM encryption, SvelteKit — admin@0.3.78 · Changelog →</a>
       <h1>Your entire CMS<br />in <span>one file.</span></h1>
       <p class="hero-sub">
         Content, media, schema, users — all in a single POD.
@@ -466,11 +466,30 @@ const faqs = [
 
     <div class="updates-feed">
 
+      <div class="update-card reveal" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
+        <div class="update-date">Jun<br />2026</div>
+        <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.78 · cli@0.3.9 — Latest</div>
+          <div class="update-title">Team-ready: content validation, permissions, quality dashboard, encryption, SvelteKit</div>
+          <ul class="update-items">
+            <li><strong>Content validation</strong> — schema fields support <code>required</code>, <code>min</code>, <code>max</code>, and <code>regex</code>. Drafts always save freely. Publish/Schedule shows an inline error banner. Server enforces the same rules via 422.</li>
+            <li><strong>Collection permissions</strong> — restrict editor users to specific collections. Configured per-user in a checkbox modal. Admins are always unrestricted.</li>
+            <li><strong>Content quality dashboard</strong> — sidebar panel scans all published entries for missing body, short body, no image, and no SEO metadata. Issue counts at a glance.</li>
+            <li><strong>Schema migration</strong> — rename a field including all entry data in one atomic transaction. Also: change-type and delete-field routes.</li>
+            <li><strong>Multi-pod dashboard</strong> — link multiple pod files, see published count, collections, size, and last modified across all projects in one page.</li>
+            <li><strong><code>orbiter encrypt/decrypt</code></strong> — AES-256-GCM with scrypt key derivation. Commit the <code>.pod.enc</code> to git, decrypt in CI with a secret.</li>
+            <li><strong><code>orbiter sync</code></strong> — rsync push/pull in one command. <strong><code>orbiter status</code></strong> — pod health in the terminal.</li>
+            <li><strong>SvelteKit support</strong> — <code>@a83/orbiter-client</code> opens the pod directly from any Node.js framework. <strong><code>&lt;OrbiterImage&gt;</code></strong> Astro component with auto lazy, alt, and dimensions.</li>
+          </ul>
+        </div>
+      </div>
+
       <div class="update-card reveal" style="border-color:color-mix(in srgb,var(--gold) 50%,var(--line))">
         <div class="update-date">Jun<br />2026</div>
         <div class="update-dot" style="background:var(--gold);box-shadow:0 0 0 4px color-mix(in srgb,var(--gold) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--gold) 14%,transparent);color:var(--gold);border-color:color-mix(in srgb,var(--gold) 30%,transparent)">Content Layer + Publish HTML + Suggestions v2 — Latest</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--gold) 14%,transparent);color:var(--gold);border-color:color-mix(in srgb,var(--gold) 30%,transparent)">Content Layer + Publish HTML + Suggestions v2</div>
           <div class="update-title">Standard astro:content API, static site generator, AI suggestions, CLI, UI polish</div>
           <ul class="update-items">
             <li><strong>Astro Content Layer</strong> — <code>orbiterLoader()</code> for build-time, <code>orbiterLiveLoader()</code> for SSR. Use <code>getCollection()</code> from <code>astro:content</code> instead of the custom virtual module. Auto Zod schema, hot reload on pod changes.</li>
