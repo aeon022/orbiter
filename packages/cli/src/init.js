@@ -16,6 +16,56 @@ import { ask, askSecret, closeRl } from './prompt.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const templatesDir = resolve(__dirname, '../templates');
 
+const POD_TEMPLATES = {
+  blog: [
+    { id: 'posts', label: 'Posts', schema: {
+        title:    { type: 'string',   label: 'Title',      required: true },
+        body:     { type: 'richtext', label: 'Body' },
+        excerpt:  { type: 'string',   label: 'Excerpt' },
+        cover:    { type: 'image',    label: 'Cover image' },
+        tags:     { type: 'array',    label: 'Tags' },
+        author:   { type: 'relation', label: 'Author', collection: 'authors', multiple: false },
+    }},
+    { id: 'authors', label: 'Authors', schema: {
+        title:  { type: 'string', label: 'Name',   required: true },
+        bio:    { type: 'string', label: 'Bio' },
+        avatar: { type: 'image',  label: 'Avatar' },
+    }},
+    { id: 'pages', label: 'Pages', schema: {
+        title: { type: 'string',   label: 'Title', required: true },
+        body:  { type: 'richtext', label: 'Body' },
+    }},
+  ],
+  portfolio: [
+    { id: 'projects', label: 'Projects', schema: {
+        title:       { type: 'string',   label: 'Title',        required: true },
+        body:        { type: 'richtext', label: 'Description' },
+        cover:       { type: 'image',    label: 'Cover image' },
+        url:         { type: 'url',      label: 'Live URL' },
+        tags:        { type: 'array',    label: 'Tech stack' },
+        year:        { type: 'number',   label: 'Year' },
+        featured:    { type: 'boolean',  label: 'Featured' },
+    }},
+    { id: 'pages', label: 'Pages', schema: {
+        title: { type: 'string',   label: 'Title', required: true },
+        body:  { type: 'richtext', label: 'Body' },
+    }},
+  ],
+  docs: [
+    { id: 'docs', label: 'Docs', schema: {
+        title:   { type: 'string',   label: 'Title',   required: true },
+        body:    { type: 'richtext', label: 'Body' },
+        section: { type: 'string',   label: 'Section' },
+        order:   { type: 'number',   label: 'Order' },
+    }},
+    { id: 'changelog', label: 'Changelog', schema: {
+        title:   { type: 'string',   label: 'Version', required: true },
+        body:    { type: 'richtext', label: 'Changes' },
+        date:    { type: 'date',     label: 'Date' },
+    }},
+  ],
+};
+
 export async function run(args) {
   console.log(`\n  ◆  Orbiter — Init\n`);
 
@@ -30,8 +80,11 @@ export async function run(args) {
     process.exit(1);
   }
 
-  const siteName = await ask('Site name', name);
-  const locale   = await ask('Default locale', 'en');
+  const siteName  = await ask('Site name', name);
+  const locale    = await ask('Default locale', 'en');
+  const tmplInput = await ask('Starter template [blog / portfolio / docs / blank]', 'blog');
+  const template  = ['blog','portfolio','docs'].includes(tmplInput.trim().toLowerCase())
+    ? tmplInput.trim().toLowerCase() : 'blog';
 
   console.log(`\n  Create admin user:\n`);
   const adminUser = await ask('Admin username', 'admin');
@@ -89,14 +142,13 @@ export async function run(args) {
     site: { name: siteName, locale },
   });
 
-  // Seed a default "posts" collection
-  db.db.prepare(
+  // Seed collections based on starter template
+  const seedCollections = POD_TEMPLATES[template] ?? POD_TEMPLATES.blog;
+  const colStmt = db.db.prepare(
     `INSERT OR IGNORE INTO _collections (id, label, schema, created_at)
      VALUES (?, ?, ?, datetime('now'))`
-  ).run('posts', 'Posts', JSON.stringify({
-    title: { type: 'string',   label: 'Title' },
-    body:  { type: 'richtext', label: 'Body'  },
-  }));
+  );
+  for (const col of seedCollections) colStmt.run(col.id, col.label, JSON.stringify(col.schema));
 
   // Create admin user
   const hash = await hashPassword(adminPw);

@@ -1,0 +1,74 @@
+---
+/**
+ * <OrbiterImage> — renders an Orbiter media item or URL as a properly attributed <img>.
+ * Pulls width/height/alt from the media item when not explicitly passed.
+ *
+ * Usage:
+ *   import OrbiterImage from '@a83/orbiter-integration/OrbiterImage';
+ *   import { getMediaItem } from 'orbiter:media';
+ *
+ *   const photo = getMediaItem('abc123');
+ *   <OrbiterImage src={photo} alt="A photo" />
+ *   <OrbiterImage src="/orbiter/media/abc123" width={800} height={600} alt="A photo" />
+ */
+
+interface MediaLike {
+  url?: string;
+  width?: number | null;
+  height?: number | null;
+  alt?: string | null;
+  mime?: string | null;
+  filename?: string | null;
+}
+
+interface Props {
+  src: string | MediaLike | null | undefined;
+  alt?: string;
+  width?: number;
+  height?: number;
+  loading?: 'lazy' | 'eager';
+  decoding?: 'async' | 'sync' | 'auto';
+  class?: string;
+  style?: string;
+  sizes?: string;
+}
+
+const {
+  src,
+  alt,
+  width,
+  height,
+  loading = 'lazy',
+  decoding = 'async',
+  class: className,
+  style,
+  sizes,
+} = Astro.props;
+
+let url: string = '';
+let resolvedAlt: string = alt ?? '';
+let resolvedWidth: number | undefined = width;
+let resolvedHeight: number | undefined = height;
+
+if (typeof src === 'string') {
+  url = src;
+} else if (src && typeof src === 'object') {
+  url = src.url ?? '';
+  resolvedAlt   = alt   ?? src.alt   ?? src.filename?.replace(/\.[^.]+$/, '') ?? '';
+  resolvedWidth  = width  ?? (src.width  ?? undefined);
+  resolvedHeight = height ?? (src.height ?? undefined);
+}
+---
+{url && (
+  <img
+    src={url}
+    alt={resolvedAlt}
+    width={resolvedWidth}
+    height={resolvedHeight}
+    loading={loading}
+    decoding={decoding}
+    sizes={sizes}
+    class={className}
+    style={style}
+  />
+)}

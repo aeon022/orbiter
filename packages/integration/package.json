@@ -6,7 +6,8 @@
   "main": "./src/index.js",
   "exports": {
     ".": "./src/index.js",
-    "./loader": "./src/loader.js"
+    "./loader": "./src/loader.js",
+    "./OrbiterImage": "./src/OrbiterImage.astro"
   },
   "files": [
     "src",

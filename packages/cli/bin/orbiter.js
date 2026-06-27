@@ -14,6 +14,7 @@ const commands = {
   unpack:     () => import('../src/unpack.js').then(m => m.run(args)),
   pack:       () => import('../src/pack.js').then(m => m.run(args)),
   status:     () => import('../src/status.js').then(m => m.run(args)),
+  sync:       () => import('../src/sync.js').then(m => m.run(args)),
   docs:       () => openDocs(),
   help:       () => printHelp(),
 };
@@ -63,6 +64,8 @@ function printHelp() {
     unpack   [--pod <path>]        Extract media BLOBs to files (pod → git mode)
     pack     [--pod <path>]        Re-insert media files as BLOBs (git → server mode)
     status   [pod-path]            Show pod health — entry counts, size, last modified
+    sync     --remote user@host:/path/content.pod
+             [--pod <path>] [--pull]  Push or pull pod via rsync
     docs                           Open the Orbiter documentation in your browser
 
   Options:

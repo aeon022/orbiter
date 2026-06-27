@@ -80,6 +80,7 @@
       <a class="nav-item" href="/build.html"><span class="nav-icon">▲</span>Build</a>
       <a class="nav-item" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
       <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
+            <a class="nav-item admin-only" href="/pods.html" style="display:none"><span class="nav-icon">◈</span>Pods</a>
       <div class="sidebar-footer">
         <div class="pod-name" id="pod-name">content.pod</div>
         <div class="pod-info" id="pod-info"></div>
@@ -440,6 +441,7 @@
               <option value="authors">Authors (name, bio, avatar, social)</option>
             </select>
           </div>
+          <button class="btn" id="btn-rename-field" title="Rename a field key in schema + all entry data">↔ Rename field</button>
           <button class="btn" id="btn-del-col" style="color:var(--red);border-color:var(--red);">Delete collection</button>
         </div>
       `;
@@ -487,6 +489,22 @@
       fetch(`/api/meta/preview_url~${col.id}`,{credentials:'include'}).then(r=>r.json()).then(d=>{
         const inp=document.getElementById('edit-preview-url'); if(inp)inp.value=d.value??'';
       }).catch(()=>{});
+      document.getElementById('btn-rename-field').addEventListener('click', async () => {
+        const from = prompt('Current field key (internal name):');
+        if (!from) return;
+        const to = prompt(`New field key for "${from}":`);
+        if (!to || to === from) return;
+        if (!confirm(`Rename field "${from}" → "${to}" in schema AND all entry data?\nThis cannot be undone.`)) return;
+        const res = await fetch(`/api/collections/${col.id}/schema/rename-field`, {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ from, to }),
+        });
+        const j = await res.json();
+        if (res.ok) { await loadColls(); showBannerIn('banner','banner-ok',`Renamed "${from}" → "${to}" in ${j.renamed} entries`); }
+        else showBannerIn('banner','banner-err', j.error ?? 'Failed');
+      });
+
       document.getElementById('btn-save-edit').addEventListener('click',async()=>{
         const label=document.getElementById('edit-label').value.trim();
         const schema=serializeSchema(rowsEl);

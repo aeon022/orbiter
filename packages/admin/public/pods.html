@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbiter Admin — Pods</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@300;400;500;600&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+  <script src="/theme.js"></script>
+  <style>
+    .pods-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; margin-bottom:24px; }
+    .pod-card { background:var(--bg1); border:1px solid var(--line); border-radius:var(--radius); padding:18px; display:flex; flex-direction:column; gap:10px; }
+    .pod-card.current { border-color:var(--accent); }
+    .pod-name { font-size:14px; font-weight:600; color:var(--text); }
+    .pod-path { font-size:10px; color:var(--muted); font-family:var(--mono); word-break:break-all; }
+    .pod-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    .pod-stat { background:var(--bg2); border-radius:4px; padding:8px; text-align:center; }
+    .pod-stat-n { font-size:18px; font-weight:600; color:var(--text); font-family:var(--mono); }
+    .pod-stat-l { font-size:9px; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; }
+    .pod-date { font-size:10px; color:var(--mid); }
+    .pod-actions { display:flex; gap:8px; }
+    .current-tag { font-size:9px; color:var(--accent); background:var(--accent-bg); border:1px solid rgba(90,122,240,.2); padding:2px 8px; border-radius:2px; margin-left:8px; }
+    .add-pod { background:var(--bg2); border:1px solid var(--line); border-radius:var(--radius); padding:16px 20px; margin-bottom:20px; }
+    .add-pod-row { display:flex; gap:10px; align-items:center; }
+    .banner { padding:8px 16px; font-size:10px; display:flex; align-items:center; gap:6px; border-radius:var(--radius); margin-bottom:14px; }
+    .banner-ok  { background:var(--jade-bg); color:var(--jade); border:1px solid rgba(45,139,106,.2); }
+    .banner-ok::before { content:"✓"; }
+    .banner-err { background:rgba(139,38,53,.07); color:var(--red); border:1px solid rgba(139,38,53,.15); }
+    .banner-err::before { content:"✕"; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="logo" href="/dashboard.html"><div class="logo-mark">OR</div>Orbiter</a>
+      <div class="topbar-right">
+        <button class="search-trigger" id="search-btn" title="Search (⌘K)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Search <kbd>⌘K</kbd>
+        </button>
+        <button class="scheme-toggle" id="scheme-toggle" title="Toggle scheme">◐</button>
+        <span class="user" id="topbar-user"></span>
+        <span class="logout" id="logout-btn">Sign out</span>
+      </div>
+    </header>
+    <nav class="sidebar">
+      <div class="nav-section">Content</div>
+      <a class="nav-item" href="/dashboard.html"><span class="nav-icon">◈</span>Dashboard</a>
+      <a class="nav-item" href="/collections.html"><span class="nav-icon">⊞</span>Collections</a>
+      <div class="nav-section">Assets</div>
+      <a class="nav-item" href="/media.html"><span class="nav-icon">⊟</span>Media</a>
+      <div class="nav-section">Tools</div>
+      <a class="nav-item" href="/inbox.html"><span class="nav-icon">✉</span>Inbox</a>
+      <a class="nav-item" href="/snippets.html"><span class="nav-icon">⌗</span>Snippets</a>
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="/schema.html"><span class="nav-icon">◈</span>Schema</a>
+      <a class="nav-item" href="/build.html"><span class="nav-icon">▲</span>Build</a>
+      <a class="nav-item" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
+      <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
+      <a class="nav-item active admin-only" href="/pods.html" style="display:none"><span class="nav-icon">◈</span>Pods</a>
+      <div class="sidebar-footer">
+        <div class="pod-name" id="pod-name">content.pod</div>
+        <div class="pod-info" id="pod-info"></div>
+        <div class="pod-version" id="pod-version"></div>
+        <div class="pod-status"><span class="pod-dot"></span>pod synced</div>
+      </div>
+    </nav>
+    <main class="main">
+      <div class="page-header glass-card">
+        <h1 class="page-title">Pods</h1>
+        <p class="page-sub">Multi-pod overview — linked pods on this server</p>
+      </div>
+      <div id="banner" class="banner" style="display:none"></div>
+      <div class="add-pod">
+        <div style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Link a pod</div>
+        <div class="add-pod-row">
+          <input type="text" id="pod-path-input" class="meta-input" placeholder="/absolute/path/to/other.pod" style="flex:1" />
+          <button class="btn btn-primary" id="btn-add-pod">+ Link</button>
+        </div>
+      </div>
+      <div class="pods-grid" id="pods-grid"><div class="empty"><div class="spinner"></div></div></div>
+    </main>
+  </div>
+
+  <script type="module">
+    const me = await fetch('/api/auth/me',{credentials:'include'}).then(r=>r.json()).catch(()=>null);
+    if (!me?.user) { location.replace('/login.html'); throw new Error(); }
+    if (me.user.role !== 'admin') { location.replace('/dashboard.html'); throw new Error(); }
+    document.getElementById('topbar-user').textContent = me.user.username;
+    document.querySelectorAll('.admin-only').forEach(el=>el.style.removeProperty('display'));
+    document.getElementById('logout-btn').addEventListener('click',async()=>{
+      await fetch('/api/auth/logout',{method:'POST',credentials:'include'});
+      location.replace('/login.html');
+    });
+    const info = await fetch('/api/info',{credentials:'include'}).then(r=>r.json()).catch(()=>({}));
+    if (info.pod) document.getElementById('pod-name').textContent = info.pod.split('/').pop();
+
+    function fmtBytes(b) {
+      if (!b) return '—';
+      if (b < 1024) return b + ' B';
+      if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+      return (b/1024/1024).toFixed(2) + ' MB';
+    }
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      return new Date(iso).toLocaleDateString();
+    }
+    function showBanner(cls, msg) {
+      const el=document.getElementById('banner');
+      el.className='banner '+cls; el.textContent=msg; el.style.display='';
+      setTimeout(()=>el.style.display='none',4000);
+    }
+
+    async function loadPods() {
+      const pods = await fetch('/api/pods',{credentials:'include'}).then(r=>r.json()).catch(()=>[]);
+      const grid = document.getElementById('pods-grid');
+      if (!pods.length) { grid.innerHTML='<div class="empty-state">No pods yet.</div>'; return; }
+      grid.innerHTML = pods.map(p => `
+        <div class="pod-card ${p.current?'current':''}">
+          <div style="display:flex;align-items:baseline;gap:4px;">
+            <div class="pod-name">${p.name}</div>
+            ${p.current?'<span class="current-tag">current</span>':''}
+          </div>
+          <div class="pod-stats">
+            <div class="pod-stat">
+              <div class="pod-stat-n">${p.published}</div>
+              <div class="pod-stat-l">Published</div>
+            </div>
+            <div class="pod-stat">
+              <div class="pod-stat-n">${p.collections}</div>
+              <div class="pod-stat-l">Collections</div>
+            </div>
+            <div class="pod-stat">
+              <div class="pod-stat-n">${fmtBytes(p.fileSize)}</div>
+              <div class="pod-stat-l">Size</div>
+            </div>
+          </div>
+          <div class="pod-date">Last modified: ${fmtDate(p.lastModified)}</div>
+          <div class="pod-path">${p.path}</div>
+          ${!p.current?`<div class="pod-actions"><button class="btn btn-sm" data-unlink="${p.path}">Unlink</button></div>`:''}
+        </div>
+      `).join('');
+      grid.querySelectorAll('[data-unlink]').forEach(btn => btn.addEventListener('click', async () => {
+        if (!confirm(`Unlink "${btn.dataset.unlink}"?`)) return;
+        const all = await fetch('/api/pods',{credentials:'include'}).then(r=>r.json()).catch(()=>[]);
+        const paths = all.filter(p=>!p.current && p.path!==btn.dataset.unlink).map(p=>p.path);
+        await fetch('/api/pods/linked',{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({paths})});
+        loadPods();
+      }));
+    }
+
+    document.getElementById('btn-add-pod').addEventListener('click', async () => {
+      const path = document.getElementById('pod-path-input').value.trim();
+      if (!path) return;
+      const all = await fetch('/api/pods',{credentials:'include'}).then(r=>r.json()).catch(()=>[]);
+      const paths = [...all.filter(p=>!p.current).map(p=>p.path), path];
+      const res = await fetch('/api/pods/linked',{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({paths})});
+      if (res.ok) { document.getElementById('pod-path-input').value=''; loadPods(); showBanner('banner-ok','Pod linked'); }
+      else showBanner('banner-err','Failed to link pod');
+    });
+
+    loadPods();
+  </script>
+</body>
+</html>

@@ -60,6 +60,30 @@ userRoutes.put('/:id', async (c) => {
 });
 
 // DELETE /api/users/:id
+// GET /api/users/:id/permissions
+userRoutes.get('/:id/permissions', (c) => {
+  const db  = openPod(c.get('podPath'));
+  const raw = db.getMeta(`user.${c.req.param('id')}.allowed_collections`);
+  db.close();
+  let allowed = null;
+  try { if (raw) allowed = JSON.parse(raw); } catch {}
+  return c.json({ allowed }); // null = unrestricted
+});
+
+// PUT /api/users/:id/permissions
+// Body: { allowed: ['posts','pages'] }  or  { allowed: null }  (unrestricted)
+userRoutes.put('/:id/permissions', async (c) => {
+  const { allowed } = await c.req.json();
+  const db = openPod(c.get('podPath'));
+  if (allowed === null || allowed === undefined) {
+    db.setMeta(`user.${c.req.param('id')}.allowed_collections`, '');
+  } else {
+    db.setMeta(`user.${c.req.param('id')}.allowed_collections`, JSON.stringify(allowed));
+  }
+  db.close();
+  return c.json({ ok: true });
+});
+
 userRoutes.delete('/:id', (c) => {
   const currentUser = c.get('user');
   if (currentUser.id === c.req.param('id')) {

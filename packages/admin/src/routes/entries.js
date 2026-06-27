@@ -1,8 +1,12 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
 import { sendNotification } from '../email.js';
+import { requireCollectionAccess } from '../middleware/auth.js';
 
 export const entryRoutes = new Hono();
+
+// Collection-level permission check for non-admin users
+entryRoutes.use('/:collectionId/*', requireCollectionAccess);
 
 function fireWebhook(podPath, event = 'publish', payload = {}) {
   const db  = openPod(podPath);

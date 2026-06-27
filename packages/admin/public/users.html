@@ -129,6 +129,7 @@
               <div class="user-date">${u.last_login ? new Date(u.last_login).toLocaleDateString() : '—'}</div>
               <div class="user-actions">
                 <button class="btn-action btn-role" data-id="${u.id}" data-role="${u.role}" ${u.id===me.user.id?'disabled':''}>${u.role==='admin'?'Role → Editor':'Role → Admin'}</button>
+                ${u.role==='editor'?`<button class="btn-action btn-perms" data-id="${u.id}" data-name="${u.username}">Collections</button>`:''}
                 <button class="btn-action btn-reset-pw" data-id="${u.id}" data-name="${u.username}" ${u.id===me.user.id?'disabled':''}>Reset PW</button>
                 <button class="btn-del" data-id="${u.id}" ${u.id===me.user.id?'disabled':''}>Delete</button>
               </div>
@@ -151,6 +152,42 @@
         const res = await fetch(`/api/users/${btn.dataset.id}`,{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({role:newRole})});
         if (res.ok) { showBanner('banner-ok', `✓ Role changed to ${newRole}`); loadUsers(); }
         else showBanner('banner-err', '✕ Could not change role');
+      }));
+
+      wrap.querySelectorAll('.btn-perms').forEach(btn=>btn.addEventListener('click', async ()=>{
+        const userId = btn.dataset.id;
+        const [permsRes, colsRes] = await Promise.all([
+          fetch(`/api/users/${userId}/permissions`, { credentials: 'include' }).then(r=>r.json()),
+          fetch('/api/collections', { credentials: 'include' }).then(r=>r.json()),
+        ]);
+        const cols = Array.isArray(colsRes) ? colsRes : [];
+        const current = permsRes.allowed; // null = unrestricted, array = restricted
+        const list = cols.map(c =>
+          `<label style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line2);font-size:12px;cursor:pointer;">
+            <input type="checkbox" value="${c.id}" ${(!current||current.includes(c.id))?'checked':''} style="accent-color:var(--jade)">
+            ${c.label} <span style="color:var(--muted);font-size:10px">${c.id}</span>
+          </label>`
+        ).join('');
+        const modal = document.createElement('div');
+        modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;';
+        modal.innerHTML=`<div style="background:var(--bg1);border:1px solid var(--line);border-radius:var(--radius);padding:24px;min-width:320px;max-width:400px;max-height:80vh;overflow-y:auto;">
+          <div style="font-weight:600;margin-bottom:4px;">Collection access</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">for ${btn.dataset.name} — uncheck to restrict</div>
+          <div id="perms-list">${list}</div>
+          <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+            <button class="btn" id="perm-cancel">Cancel</button>
+            <button class="btn btn-primary" id="perm-save">Save</button>
+          </div>
+        </div>`;
+        document.body.appendChild(modal);
+        modal.querySelector('#perm-cancel').addEventListener('click', ()=>modal.remove());
+        modal.querySelector('#perm-save').addEventListener('click', async ()=>{
+          const checked = [...modal.querySelectorAll('#perms-list input:checked')].map(i=>i.value);
+          const allowed = checked.length === cols.length ? null : checked;
+          await fetch(`/api/users/${userId}/permissions`,{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({allowed})});
+          modal.remove();
+          showBanner('banner-ok', '✓ Permissions updated');
+        });
       }));
 
       wrap.querySelectorAll('.btn-reset-pw').forEach(btn=>btn.addEventListener('click', async ()=>{

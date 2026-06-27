@@ -166,6 +166,7 @@
       <a class="nav-item" href="/build.html"><span class="nav-icon">▲</span>Build</a>
       <a class="nav-item" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
       <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
+            <a class="nav-item admin-only" href="/pods.html" style="display:none"><span class="nav-icon">◈</span>Pods</a>
       <div class="sidebar-footer">
         <div class="pod-name" id="pod-name">content.pod</div>
         <div class="pod-info" id="pod-info"></div>
@@ -249,6 +250,13 @@
               <div class="section-title">Collections</div>
             </div>
             <div id="coll-cards"><div class="empty"><div class="spinner"></div></div></div>
+          </div>
+          <div class="side-section" id="quality-section" style="display:none;margin-top:20px">
+            <div class="section-head">
+              <div class="section-title">Content Quality</div>
+              <a href="quality.html" style="font-size:10px;color:var(--muted);text-decoration:none">All issues →</a>
+            </div>
+            <div id="quality-body"></div>
           </div>
         </div>
       </div>
@@ -349,22 +357,35 @@
       urlEl.href = siteUrl; urlEl.style.display = '';
     }
 
-    // Deploy button
+    // Deploy button + persistent status
     if (meta['build.webhook_url']) {
-      const deployBtn = document.getElementById('deploy-btn');
+      const deployBtn  = document.getElementById('deploy-btn');
+      const statusEl   = document.getElementById('deploy-status');
       deployBtn.style.display = '';
+
+      function renderBuildStatus(s) {
+        if (!s?.lastTriggered) { statusEl.textContent = ''; return; }
+        const ago = Math.round((Date.now() - new Date(s.lastTriggered).getTime()) / 60000);
+        const agoStr = ago < 1 ? 'just now' : ago < 60 ? `${ago}m ago` : `${Math.round(ago/60)}h ago`;
+        const icons = { success:'✓', failed:'✕', building:'↻', triggered:'↑' };
+        const cols  = { success:'var(--jade)', failed:'var(--red)', building:'var(--gold)', triggered:'var(--muted)' };
+        const st = s.lastStatus ?? 'triggered';
+        statusEl.textContent = `${icons[st]??'·'} ${st} · ${agoStr}`;
+        statusEl.style.color = cols[st] ?? 'var(--muted)';
+      }
+
+      fetch('/api/build/status', { credentials: 'include' })
+        .then(r => r.json()).then(renderBuildStatus).catch(() => {});
+
       deployBtn.addEventListener('click', async () => {
         deployBtn.disabled = true;
         deployBtn.textContent = '↑ Deploying…';
-        const statusEl = document.getElementById('deploy-status');
         try {
           const res = await fetch('/api/build/trigger', { method: 'POST', credentials: 'include' });
-          if (res.ok) { statusEl.textContent = '✓ triggered'; statusEl.style.color = 'var(--jade)'; }
-          else        { statusEl.textContent = '✕ failed';    statusEl.style.color = 'var(--red)'; }
+          renderBuildStatus({ lastTriggered: new Date().toISOString(), lastStatus: res.ok ? 'triggered' : 'failed' });
         } catch { statusEl.textContent = 'network error'; }
         deployBtn.textContent = '↑ Deploy';
         deployBtn.disabled = false;
-        setTimeout(() => { statusEl.textContent = ''; }, 3000);
       });
     }
 
@@ -444,6 +465,27 @@
         </div>`;
       }).join('');
     }
+    // ── Content Quality panel ─────────────────────────────────────────
+    fetch('/api/quality', { credentials: 'include' }).then(r => r.json()).then(q => {
+      if (!q.total) return;
+      const sec = document.getElementById('quality-section');
+      const body = document.getElementById('quality-body');
+      sec.style.display = '';
+      const TYPE_LABELS = {
+        'no-body':      'No body',
+        'short-body':   'Body too short',
+        'no-image':     'No image',
+        'no-seo-title': 'No SEO title',
+        'no-seo-desc':  'No SEO description',
+      };
+      body.innerHTML = Object.entries(q.byType).map(([type, count]) =>
+        `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--bg2);font-size:11px;">
+          <span style="color:var(--fg1)">${TYPE_LABELS[type]??type}</span>
+          <span style="color:var(--red);font-family:var(--mono)">${count}</span>
+        </div>`
+      ).join('') + `<div style="padding-top:8px;font-size:10px;color:var(--muted)">${q.total} total issue${q.total!==1?'s':''} across published entries</div>`;
+    }).catch(() => {});
+
     // ── Calendar strip ────────────────────────────────────────────────
     if (showCalendar) {
       const calEntries = await fetch('/api/search/calendar', { credentials: 'include' }).then(r => r.json()).catch(() => []);
