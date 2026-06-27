@@ -233,11 +233,13 @@ This plan covers the release of Orbiter admin@0.3.64 and Desktop v0.2.0 features
 - [x] `screenshots/c3-11-cli-orbiter-status.png` — Terminal: `orbiter status` → **Tweet 5**
 - [x] `screenshots/c3-12-cli-orbiter-encrypt.png` — Terminal: `orbiter encrypt/decrypt` → **Tweet 4**
 - [x] `screenshots/c3-13-cli-orbiter-sync.png` — Terminal: `orbiter sync` → **Tweet 4**
+- [x] `screenshots/c3-gif-orbiter-status.gif` — Animated: `orbiter status` line-by-line reveal → **Tweet 5**
+- [x] `screenshots/c3-gif-orbiter-encrypt-sync.gif` — Animated: encrypt → sync → decrypt → **Tweet 4**
 
 ### To-Do
 
 - [x] Take new screenshots (quality panel, validation banner, permissions modal, pods page)
-- [ ] Record terminal GIF: `orbiter status` + `orbiter encrypt` (optional, PNGs already done)
+- [x] Record terminal GIF: `orbiter status` + `orbiter encrypt`
 - [ ] Bump version numbers in posts to 0.3.78
 - [ ] Day 1 Mon AM: Post Twitter thread EN (`25-campaign3-twitter-en.md`)
 - [ ] Day 1 Mon PM: Post Threads EN (`27-campaign3-threads-en.md`)
