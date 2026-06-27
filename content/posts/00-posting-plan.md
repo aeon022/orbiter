@@ -1,4 +1,4 @@
-# Orbiter v0.3.64 — Posting Plan
+# Orbiter — Posting Plan (updated June 2026)
 
 ## Overview
 
@@ -171,3 +171,74 @@ This plan covers the release of Orbiter admin@0.3.64 and Desktop v0.2.0 features
 - [ ] Cross-link: add Dev.to article URL to LinkedIn/Twitter posts as comment
 - [ ] Track: note which platform gets most engagement for next campaign
 - [ ] Respond to Dev.to comments within 24h
+
+---
+
+## Campaign 3: Orbiter 0.3.78 — Team-Ready Release
+
+### Key Highlights
+
+1. **Content Validation** — required/min/max/regex per schema field, inline error banner, server safety net
+2. **Collection Permissions** — editor users restricted to specific collections
+3. **Content Quality Dashboard** — auto-audit: missing body, image, SEO across all published entries
+4. **Schema Migration** — rename field + all entry data in one atomic transaction
+5. **Multi-Pod Dashboard** — link multiple pods, stats in one place
+6. **`orbiter encrypt`** — AES-256-GCM for git-safe pod storage
+7. **`orbiter sync`** — rsync push/pull
+8. **`orbiter status`** — pod health in terminal
+9. **SvelteKit support** — `@a83/orbiter-client` framework-agnostic
+10. **`<OrbiterImage>`** Astro component
+11. **Starter templates** at `orbiter init` (blog / portfolio / docs)
+
+### Posts
+
+| # | File | Platform | Language |
+|---|------|----------|----------|
+| 21 | `21-campaign3-devto-en.md` | Dev.to | EN |
+| 22 | `22-campaign3-devto-de.md` | Dev.to | DE |
+| 23 | `23-campaign3-linkedin-en.md` | LinkedIn | EN |
+| 24 | `24-campaign3-linkedin-de.md` | LinkedIn | DE |
+| 25 | `25-campaign3-twitter-en.md` | Twitter/X (6 tweets) | EN |
+| 26 | `26-campaign3-twitter-de.md` | Twitter/X (6 tweets) | DE |
+| 27 | `27-campaign3-threads-en.md` | Threads | EN |
+| 28 | `28-campaign3-threads-de.md` | Threads | DE |
+| 29 | `29-campaign3-hackernews.md` | Hacker News | EN |
+
+### Posting Schedule (Week 3)
+
+| Day | Platform | Post | Notes |
+|-----|----------|------|-------|
+| Day 1 Mon AM | Twitter/X | Thread EN (`25`) | Attach dashboard + quality panel screenshot |
+| Day 1 Mon PM | Threads | Short EN (`27`) | |
+| Day 2 Tue AM | Dev.to | Long article EN (`21`) | Embed screenshots |
+| Day 2 Tue PM | Hacker News | Show HN (`29`) | US afternoon timing |
+| Day 3 Wed AM | LinkedIn | Post EN (`23`) | Attach dashboard screenshot |
+| Day 4 Thu AM | Twitter/X | Thread DE (`26`) | |
+| Day 4 Thu PM | Threads | Short DE (`28`) | |
+| Day 5 Fri AM | Dev.to | Article DE (`22`) | Cross-link to EN |
+| Day 5 Fri AM | LinkedIn | Post DE (`24`) | |
+
+### Asset Checklist
+
+- [ ] Screenshot: Dashboard with quality panel visible (sidebar)
+- [ ] Screenshot: Editor with validation error banner
+- [ ] Screenshot: Users page with Collection permissions modal open
+- [ ] Screenshot: Pods page with stat cards
+- [ ] Terminal recording: `orbiter status` output
+- [ ] Terminal recording: `orbiter encrypt` + `orbiter sync`
+
+### To-Do
+
+- [ ] Take new screenshots (quality panel, validation banner, permissions modal, pods page)
+- [ ] Record terminal GIF: `orbiter status` + `orbiter encrypt`
+- [ ] Bump version numbers in posts to 0.3.78
+- [ ] Day 1 Mon AM: Post Twitter thread EN (`25-campaign3-twitter-en.md`)
+- [ ] Day 1 Mon PM: Post Threads EN (`27-campaign3-threads-en.md`)
+- [ ] Day 2 Tue AM: Publish Dev.to article EN (`21-campaign3-devto-en.md`)
+- [ ] Day 2 Tue PM: Submit Hacker News (`29-campaign3-hackernews.md`)
+- [ ] Day 3 Wed AM: Post LinkedIn EN (`23-campaign3-linkedin-en.md`)
+- [ ] Day 4 Thu AM: Post Twitter thread DE (`26-campaign3-twitter-de.md`)
+- [ ] Day 4 Thu PM: Post Threads DE (`28-campaign3-threads-de.md`)
+- [ ] Day 5 Fri AM: Publish Dev.to article DE (`22-campaign3-devto-de.md`)
+- [ ] Day 5 Fri AM: Post LinkedIn DE (`24-campaign3-linkedin-de.md`)
+- [ ] Monitor HN comments — respond within 1h if it gets traction
