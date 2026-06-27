@@ -1,0 +1,72 @@
+<!DOCTYPE html><html lang="en"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>orbiter:collections — Orbiter Docs</title><link rel="icon" href="/favicon.svg" type="image/svg+xml"><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CDGfc0hd.js"></script><link rel="stylesheet" href="/_astro/activity-log.ZcgM2Bc3.css">
+<style>.astro-route-announcer{position:absolute;left:0;top:0;clip:rect(0 0 0 0);clip-path:inset(50%);overflow:hidden;white-space:nowrap;width:1px;height:1px}
+</style></head> <body> <header class="docs-header"> <a class="docs-header-logo" href="/"> <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"> <circle cx="20" cy="20" r="3" fill="currentColor" opacity=".9"></circle> <ellipse cx="20" cy="20" rx="17" ry="6" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".7" transform="rotate(-15 20 20)"> <animateTransform attributeName="transform" type="rotate" from="-15 20 20" to="345 20 20" dur="4s" repeatCount="indefinite"></animateTransform> </ellipse> <ellipse cx="20" cy="20" rx="17" ry="6" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".45" transform="rotate(75 20 20)"> <animateTransform attributeName="transform" type="rotate" from="75 20 20" to="435 20 20" dur="6s" repeatCount="indefinite"></animateTransform> </ellipse> </svg>
+Orbiter
+</a> <div class="docs-header-sep"></div> <span class="docs-header-label">Docs</span> <nav class="docs-header-links"> <a href="/">Home</a> <a href="https://github.com/aeon022/orbiter" class="btn-gh" target="_blank" rel="noopener"> <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.021c0 4.428 2.865 8.185 6.839 9.504.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.605-3.369-1.342-3.369-1.342-.454-1.154-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.026 2.747-1.026.546 1.378.202 2.397.1 2.65.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.2 22 16.447 22 12.021 22 6.484 17.522 2 12 2z"></path></svg> <span>GitHub</span> </a> </nav> </header> <div class="docs-layout"> <aside class="docs-sidebar"> <div class="nav-section"> <div class="nav-section-label">Getting started</div> <a href="/docs/" class="nav-link"> Overview </a><a href="/docs/quick-start" class="nav-link"> Quick start </a><a href="/docs/desktop" class="nav-link"> Desktop App </a> </div><div class="nav-section"> <div class="nav-section-label">Content</div> <a href="/docs/collections" class="nav-link"> Collections &amp; fields </a><a href="/docs/editor" class="nav-link"> Editor </a><a href="/docs/trash" class="nav-link"> Trash </a><a href="/docs/activity-log" class="nav-link"> Activity log </a><a href="/docs/draft-preview" class="nav-link"> Draft preview </a><a href="/docs/scheduled-publishing" class="nav-link"> Scheduled publishing </a><a href="/docs/calendar" class="nav-link"> Calendar </a><a href="/docs/comments" class="nav-link"> Comments </a><a href="/docs/schema-tools" class="nav-link"> Schema, CSV &amp; pod export </a><a href="/docs/i18n" class="nav-link"> Multilingual (i18n) </a><a href="/docs/appearance" class="nav-link"> Appearance &amp; themes </a> </div><div class="nav-section"> <div class="nav-section-label">Media</div> <a href="/docs/media" class="nav-link"> Media library </a><a href="/docs/media-backends" class="nav-link"> Media backends </a> </div><div class="nav-section"> <div class="nav-section-label">Tools</div> <a href="/docs/inbox" class="nav-link"> Form inbox </a><a href="/docs/seo" class="nav-link"> Built-in SEO </a><a href="/docs/analytics" class="nav-link"> Simple Analytics </a><a href="/docs/snippets" class="nav-link"> Code snippets </a> </div><div class="nav-section"> <div class="nav-section-label">API &amp; Integration</div> <a href="/docs/collections-api" class="nav-link active"> orbiter:collections </a><a href="/docs/client" class="nav-link"> orbiter-client (SvelteKit, Next.js…) </a><a href="/docs/typescript" class="nav-link"> TypeScript </a><a href="/docs/json-api" class="nav-link"> JSON API </a><a href="/docs/rss-sitemap" class="nav-link"> RSS &amp; Sitemap </a> </div><div class="nav-section"> <div class="nav-section-label">Deployment</div> <a href="/docs/deployment" class="nav-link"> Deployment </a><a href="/docs/ftp-deploy" class="nav-link"> FTP deploy </a><a href="/docs/git-sync" class="nav-link"> Git sync mode </a><a href="/docs/build-webhook" class="nav-link"> Build webhook </a> </div><div class="nav-section"> <div class="nav-section-label">CLI</div> <a href="/docs/cli" class="nav-link"> CLI reference </a> </div> </aside> <main class="docs-main"> <article class="prose">  <h1>orbiter:collections</h1> <p class="lead">A Vite virtual module that gives you typed access to your published content in Astro pages. Works in both static (build-time snapshot) and SSR (live queries at request time) output modes.</p> <h2>Setup</h2> <p>The module is available automatically after adding <code>@a83/orbiter-integration</code> to your Astro config. No additional imports needed.</p> <h3>Static output (default)</h3> <p>Content is snapshotted when <code>astro build</code> runs. Pages reflect the pod state at build time — republish to pick up new content.</p> <pre>// astro.config.mjs
+import orbiter from '@a83/orbiter-integration';
+export default defineConfig(&#123;
+  integrations: [orbiter(&#123; pod: './content.pod' &#125;)],
+&#125;);</pre> <h3>SSR / hybrid output</h3> <p>When <code>output</code> is <code>'server'</code> or <code>'hybrid'</code>, <code>getCollection</code> and friends query the POD at <strong>request time</strong>. Content changes are reflected immediately — no rebuild needed.</p> <pre>import node from '@astrojs/node';
+import orbiter from '@a83/orbiter-integration';
+export default defineConfig(&#123;
+  output: 'server',
+  adapter: node(&#123; mode: 'standalone' &#125;),
+  integrations: [orbiter(&#123; pod: './content.pod' &#125;)],
+&#125;);</pre> <div class="callout">In SSR mode the POD must be readable at runtime (i.e. on the server). The API surface is identical — only when queries run changes.</div> <h2>API</h2> <pre>import &#123; getCollection, getEntry, getLocaleCollection, getLocaleEntry, locale, locales &#125; from 'orbiter:collections';</pre> <h3>getCollection(name)</h3> <p>Returns all published entries in a collection, sorted by <code>updated_at</code> descending.</p> <pre>const posts = await getCollection('posts');
+// → Entry[]</pre> <h3>getEntry(collection, slug)</h3> <p>Returns a single entry by slug, or <code>null</code> if not found or not published.</p> <pre>const post = await getEntry('posts', 'my-first-post');
+// → Entry | null</pre> <h3>getLocaleCollection(name, locale?)</h3> <p>Returns published entries for a specific locale. The default locale (first entry in Settings → Locales) is stored as <code>locale = ''</code> in the database — pass its code and it maps correctly.</p> <pre>const dePosts = await getLocaleCollection('posts', 'de');
+// → Entry[] with locale 'de'</pre> <h3>getLocaleEntry(collection, baseSlug, locale)</h3> <p>Returns a locale variant of an entry. Falls back to the default locale if the translation doesn't exist yet.</p> <pre>const post = await getLocaleEntry('posts', 'my-post', 'de');
+// → German variant if it exists, otherwise default locale</pre> <h3>locale and locales</h3> <pre>import &#123; locale, locales &#125; from 'orbiter:collections';
+// locale  → 'en'          (default locale from Settings)
+// locales → ['en', 'de']  (all configured locales)</pre> <h2>Entry shape</h2> <pre>&#123;
+  id:         string,        // UUID
+  slug:       string,        // URL-safe identifier
+  status:     'published',
+  created_at: string,        // ISO datetime
+  updated_at: string,        // ISO datetime
+  data: &#123;
+    // all fields from your schema, e.g.:
+    title:    string,
+    body:     string,        // richtext → rendered HTML
+    image:    string,        // media field → UUID
+    tags:     string[],      // array field
+    author:   Entry,         // relation → resolved Entry object
+  &#125;
+&#125;</pre> <h2>Static paths</h2> <pre>---
+export async function getStaticPaths() &#123;
+  const posts = await getCollection('posts');
+  return posts.map(post => (&#123; params: &#123; slug: post.slug &#125; &#125;));
+&#125;
+
+const post = await getEntry('posts', Astro.params.slug);
+---</pre> <h2>Multilingual static paths</h2> <pre>---
+import &#123; getCollection, locales &#125; from 'orbiter:collections';
+
+export async function getStaticPaths() &#123;
+  const posts = await getCollection('posts'); // default locale only
+  return posts.flatMap(post =>
+    locales.map(loc => (&#123;
+      params: &#123; slug: post.slug, lang: loc &#125;
+    &#125;))
+  );
+&#125;
+---</pre> <h2>Media URLs</h2> <pre>&lt;img src=&#123;`/orbiter/media/$&#123;post.data.image&#125;`&#125; alt="" /&gt;</pre> <p>Works regardless of which media backend is configured. For external backends, <code>/orbiter/media/[id]</code> issues a <code>302</code> redirect to the CDN or original URL.</p> <h2>orbiter:db</h2> <p>A second virtual module that exposes the resolved pod path for use in your own Astro server routes or API endpoints.</p> <pre>import &#123; podPath &#125; from 'orbiter:db';
+import &#123; openPod &#125; from '@a83/orbiter-core';
+
+// src/pages/api/my-endpoint.js
+export async function GET() &#123;
+  const db      = openPod(podPath);
+  const entries = db.getEntries('posts');
+  db.close();
+  return new Response(JSON.stringify(entries), &#123;
+    headers: &#123; 'Content-Type': 'application/json' &#125;
+  &#125;);
+&#125;</pre> <div class="callout"><code>orbiter:db</code> only works in server-rendered routes (<code>output: 'server'</code> or <code>'hybrid'</code>). In static output there is no runtime to open the pod.</div> <h2>Relation fields</h2> <p>Relation fields are resolved automatically — at build time in static mode, at request time in SSR mode. The raw UUID reference is replaced with the full <code>Entry</code> object of the related entry.</p> <pre>&#123;posts.map(post => (
+  &lt;div&gt;
+    &lt;h2&gt;&#123;post.data.title&#125;&lt;/h2&gt;
+    &lt;p&gt;by &#123;post.data.author?.data?.name&#125;&lt;/p&gt;
+    &#123;post.data.categories?.map(cat => (
+      &lt;span&gt;&#123;cat.data.name&#125;&lt;/span&gt;
+    ))&#125;
+  &lt;/div&gt;
+))&#125;</pre>  </article> <nav class="docs-page-nav"> <a href="/docs/seo"> <span class="nav-dir">← Previous</span> <span class="nav-title">Built-in SEO</span> </a> <a href="/docs/typescript" class="next"> <span class="nav-dir">Next →</span> <span class="nav-title">TypeScript</span> </a> </nav> </main> </div> </body></html>
