@@ -1,16 +1,19 @@
 export const prerender = false;
 
 /**
- * GET /llms.txt
- * Machine-readable content index for AI agents.
- * Lists all published entries with summaries, grouped by collection.
+ * GET /llms-full.txt
+ * Full content dump for AI agents — complete entry bodies, grouped by collection.
  * Follows the llms.txt convention: https://llmstxt.org
- * Full content available at /llms-full.txt
+ * Lightweight index available at /llms.txt
  */
 import { podPath } from 'orbiter:db';
 import { openPod } from '@a83/orbiter-core';
 
 const TEXT_H = { 'Content-Type': 'text/plain; charset=utf-8' };
+
+function stripHtml(html = '') {
+  return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+}
 
 export async function GET() {
   const db = openPod(podPath);
@@ -33,22 +36,27 @@ export async function GET() {
     const entries = db.getEntries(col.id, { status: 'published' });
     if (!entries.length) continue;
 
-    const schema = col.schema ? JSON.parse(col.schema) : {};
-    const hasSummaryMachine = !!schema.summaryMachine;
-    const hasExcerpt = !!schema.excerpt;
+    const entryBlocks = [];
 
-    const lines = [];
     for (const e of entries) {
       const d = e.data;
-      const summary = d.summaryMachine || d.excerpt || d.humanSummary || d.title || '';
       const url = siteUrl ? `${siteUrl}/${col.id}/${e.slug}` : `/${col.id}/${e.slug}`;
+      const title = d.title || e.slug;
+      const body = d.body ? stripHtml(d.body) : (d.content ? stripHtml(d.content) : '');
+      const excerpt = d.excerpt || d.summaryMachine || '';
+      const author = d.author || d.authorName || '';
+      const date = (e.updated_at || e.created_at || '').split(' ')[0];
 
-      let line = `- [${d.title || e.slug}](${url})`;
-      if (summary && summary !== d.title) line += `: ${summary.replace(/\n/g, ' ').slice(0, 300)}`;
-      lines.push(line);
+      const lines = [`### ${title}`, `URL: ${url}`];
+      if (date)    lines.push(`Date: ${date}`);
+      if (author)  lines.push(`Author: ${author}`);
+      if (excerpt) lines.push(`Summary: ${excerpt}`);
+      if (body)    lines.push('', body);
+
+      entryBlocks.push(lines.join('\n'));
     }
 
-    sections.push(`## ${col.label || col.id}\n\n${lines.join('\n')}`);
+    sections.push(`## ${col.label || col.id}\n\n${entryBlocks.join('\n\n---\n\n')}`);
   }
 
   db.close();
@@ -56,12 +64,8 @@ export async function GET() {
   const header = `# ${siteName}\n\n` +
     (siteDesc ? `> ${siteDesc}\n\n` : '') +
     (siteUrl ? `- Home: ${siteUrl}\n` : '') +
-    (siteUrl ? `- Full content: ${siteUrl}/llms-full.txt\n` : '') +
-    (siteUrl ? `- JSON Feed: ${siteUrl}/orbiter/feed.json\n` : '') +
-    (siteUrl ? `- Sitemap: ${siteUrl}/orbiter/sitemap.xml\n` : '') +
+    (siteUrl ? `- Index: ${siteUrl}/llms.txt\n` : '') +
     '\n';
 
-  const body = sections.join('\n\n');
-
-  return new Response(header + body + '\n', { headers: TEXT_H });
+  return new Response(header + sections.join('\n\n') + '\n', { headers: TEXT_H });
 }

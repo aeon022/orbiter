@@ -318,10 +318,15 @@ export default function orbiter(options = {}) {
           entrypoint: resolve(routesDir, 'sitemap.js'),
         });
 
-        // llms.txt — machine-readable content map for AI agents
+        // llms.txt — standard root path (llmstxt.org convention)
         injectRoute({
-          pattern:    '/orbiter/llms.txt',
+          pattern:    '/llms.txt',
           entrypoint: resolve(routesDir, 'llms-txt.js'),
+        });
+        // llms-full.txt — full body content for agents that want raw text
+        injectRoute({
+          pattern:    '/llms-full.txt',
+          entrypoint: resolve(routesDir, 'llms-full-txt.js'),
         });
 
         // JSON Feed v1.1 — structured content for agents and feed readers
