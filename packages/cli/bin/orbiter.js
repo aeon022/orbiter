@@ -15,6 +15,8 @@ const commands = {
   pack:       () => import('../src/pack.js').then(m => m.run(args)),
   status:     () => import('../src/status.js').then(m => m.run(args)),
   sync:       () => import('../src/sync.js').then(m => m.run(args)),
+  encrypt:    () => import('../src/encrypt.js').then(m => m.runEncrypt(args)),
+  decrypt:    () => import('../src/encrypt.js').then(m => m.runDecrypt(args)),
   docs:       () => openDocs(),
   help:       () => printHelp(),
 };
@@ -66,6 +68,12 @@ function printHelp() {
     status   [pod-path]            Show pod health — entry counts, size, last modified
     sync     --remote user@host:/path/content.pod
              [--pod <path>] [--pull]  Push or pull pod via rsync
+    encrypt  [--pod <path>]        Encrypt a .pod file → .pod.enc (AES-256-GCM)
+             [--out <path>]          Output path (default: <pod>.enc)
+             [--key <passphrase>]    Passphrase (prompted if omitted)
+    decrypt  [--in <path>]         Decrypt a .pod.enc file → .pod
+             [--out <path>]          Output path (default: strip .enc)
+             [--key <passphrase>]    Passphrase (prompted if omitted)
     docs                           Open the Orbiter documentation in your browser
 
   Options:
