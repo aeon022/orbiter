@@ -453,6 +453,27 @@
             <input class="input" type="password" name="api.token" value="${get('api.token')}" autocomplete="off" placeholder="Leave blank for open access" />
           </div>
           <div class="setting-row">
+            <div><div class="setting-label">Public API collections</div><div class="setting-desc">Collections exposed at <code>/api/public/[collection]</code> without auth. Comma-separated IDs, or <code>*</code> for all. Leave blank to disable.</div></div>
+            <input class="input" type="text" name="public.collections" value="${get('public.collections')??''}" placeholder="posts, pages  or  *" style="font-family:var(--mono);font-size:12px;" />
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Require API key</div><div class="setting-desc">When enabled, all <code>/api/public/</code> requests need a valid Bearer token</div></div>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="checkbox" name="api.requireKey" value="1" ${get('api.requireKey')==='1'?'checked':''} style="accent-color:var(--accent);width:14px;height:14px;" />
+              <span style="font-size:11px;color:var(--text);font-family:var(--mono);">Enabled</span>
+            </label>
+          </div>
+          <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:12px">
+            <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
+              <div>
+                <div class="setting-label">API Keys</div>
+                <div class="setting-desc">Scoped keys for the Public Content API. Keys are shown once on creation.</div>
+              </div>
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-gen-api-key">Generate key</button>
+            </div>
+            <div id="api-keys-list" style="width:100%;display:flex;flex-direction:column;gap:6px;font-size:11px;color:var(--muted)">Loading…</div>
+          </div>
+          <div class="setting-row">
             <div><div class="setting-label">Preview token</div><div class="setting-desc">Appended to Preview URLs — allows viewing draft entries on your site</div></div>
             <div style="display:flex;gap:8px;align-items:center">
               <input class="input" type="text" id="preview-token-display" value="${get('preview.token')??''}" readonly style="flex:1;font-family:var(--mono);font-size:11px;" placeholder="No token generated" />
@@ -945,6 +966,8 @@
         ['media.s3_public_url', fd.get('media.s3_public_url')],
         ['api.enabled',              fd.get('api.enabled') ? '1' : '0'],
         ['api.token',                fd.get('api.token')],
+        ['public.collections',       fd.get('public.collections')],
+        ['api.requireKey',           fd.get('api.requireKey') ? '1' : '0'],
         ['preview.token',            document.getElementById('preview-token-display').value || null],
         ['media.img_max_width',      fd.get('media.img_max_width')],
         ['media.img_quality',        fd.get('media.img_quality')],
@@ -985,6 +1008,45 @@
     });
 
     // Preview token generator
+    // API Keys
+    async function renderApiKeys() {
+      const list = document.getElementById('api-keys-list');
+      if (!list) return;
+      const res = await fetch('/api/api-keys', { credentials: 'include' }).catch(() => null);
+      if (!res?.ok) { list.innerHTML = '<span style="color:var(--muted)">Could not load keys</span>'; return; }
+      const { keys } = await res.json();
+      if (!keys.length) { list.innerHTML = '<span style="color:var(--muted)">No keys yet</span>'; return; }
+      list.innerHTML = keys.map(k => `
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--panel-alt,var(--sidebar-bg));border-radius:6px;border:1px solid var(--line)">
+          <span style="flex:1;font-family:var(--mono);font-size:10px;color:var(--heading)">${k.label}</span>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">${k.key}</span>
+          <span style="font-size:9px;color:var(--muted)">${k.hits} hits</span>
+          <span style="font-size:9px;color:var(--muted)">${k.created}</span>
+          <button type="button" class="btn btn-ghost btn-sm" style="color:var(--danger,#e55)" data-key-id="${k.id}">Revoke</button>
+        </div>`).join('');
+      list.querySelectorAll('[data-key-id]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Revoke this API key?')) return;
+          await fetch(`/api/api-keys/${btn.dataset.keyId}`, { method: 'DELETE', credentials: 'include' });
+          renderApiKeys();
+        });
+      });
+    }
+    renderApiKeys();
+
+    document.getElementById('btn-gen-api-key')?.addEventListener('click', async () => {
+      const label = prompt('Label for this key (e.g. "Frontend", "Mobile app"):');
+      if (label === null) return;
+      const res = await fetch('/api/api-keys', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label: label || 'API Key' }),
+      });
+      const { key } = await res.json();
+      prompt(`New API key (copy it now — shown once):\n`, key.key);
+      renderApiKeys();
+    });
+
     document.getElementById('btn-gen-preview-token')?.addEventListener('click', async () => {
       const token = Array.from(crypto.getRandomValues(new Uint8Array(24))).map(b=>b.toString(16).padStart(2,'0')).join('');
       document.getElementById('preview-token-display').value = token;

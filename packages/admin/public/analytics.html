@@ -56,6 +56,20 @@
     .an-bottom > div { padding:20px 24px; border-right:1px solid var(--line); }
     .an-bottom > div:last-child { border-right:none; }
 
+    .an-agent-section { border-top:1px solid var(--line); padding:20px 24px; }
+    .an-agent-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:12px; }
+    .an-split-bar { display:flex; height:6px; border-radius:4px; overflow:hidden; margin:10px 0 6px; gap:2px; }
+    .an-split-human { background:var(--accent); transition:width .4s; }
+    .an-split-agent { background:var(--jade); transition:width .4s; }
+    .an-split-legend { display:flex; gap:14px; font-size:10px; color:var(--muted); }
+    .an-split-legend span::before { content:''; display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:4px; vertical-align:middle; }
+    .an-split-legend .lh::before { background:var(--accent); }
+    .an-split-legend .la::before { background:var(--jade); }
+    .an-trend-mini { display:flex; align-items:flex-end; gap:2px; height:40px; margin-top:10px; }
+    .an-trend-bar { flex:1; min-width:2px; border-radius:1px 1px 0 0; opacity:.8; }
+    .an-trend-bar.human { background:var(--accent); }
+    .an-trend-bar.agent { background:var(--jade); }
+
     .an-device-bars { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
     .an-device-row { display:flex; align-items:center; gap:8px; font-size:11px; }
     .an-device-label { width:56px; color:var(--muted); font-family:var(--mono); font-size:10px; flex-shrink:0; }
@@ -207,6 +221,34 @@
           </table>
         </div>
       </div>
+
+      <div class="an-agent-section glass-card" id="an-agent-section" style="display:none">
+        <div class="section-head">
+          <div class="section-title">Agent Traffic</div>
+          <div style="font-size:10px;color:var(--muted)" id="an-agent-totals"></div>
+        </div>
+        <div class="an-agent-grid">
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:4px">Human vs. Agent split</div>
+            <div class="an-split-bar">
+              <div class="an-split-human" id="an-split-human" style="width:50%"></div>
+              <div class="an-split-agent" id="an-split-agent" style="width:50%"></div>
+            </div>
+            <div class="an-split-legend">
+              <span class="lh" id="an-split-label-h">Human</span>
+              <span class="la" id="an-split-label-a">Agent</span>
+            </div>
+            <div style="font-size:10px;color:var(--muted);margin-top:14px;margin-bottom:4px">Daily trend</div>
+            <div class="an-trend-mini" id="an-trend-mini"></div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Top pages by agents</div>
+            <table class="an-table" id="an-agent-pages">
+              <tbody><tr><td colspan="2" style="color:var(--muted)">No data</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 
@@ -318,7 +360,7 @@
         `<tr><td>${l.lang}</td><td>${l.count}</td></tr>`
       ).join('') || '<tr><td colspan="2" style="color:var(--muted)">No data</td></tr>';
 
-      // AI Agents (only in non-drill-down mode)
+      // AI Agents breakdown (compact)
       const agentsTbody = document.querySelector('#an-agents tbody');
       const agents = agentData?.agents || [];
       agentsTbody.innerHTML = agents.length ? agents.map(a => `
@@ -330,6 +372,44 @@
           <td>${a.hits}</td>
         </tr>`).join('')
         : '<tr><td colspan="2" style="color:var(--muted)">No AI agents detected</td></tr>';
+
+      // Agent trend section (only in non-drill-down mode)
+      if (!path) {
+        const trendData = await fetch(`/api/analytics/agent-trend?days=${days}`, { credentials: 'include' }).then(r => r.json()).catch(() => null);
+        const agentSection = document.getElementById('an-agent-section');
+        if (trendData && (trendData.totals.human + trendData.totals.agent) > 0) {
+          agentSection.style.display = '';
+          const { human, agent } = trendData.totals;
+          const total = human + agent || 1;
+          const hPct = Math.round(human / total * 100);
+          const aPct = 100 - hPct;
+          document.getElementById('an-split-human').style.width = hPct + '%';
+          document.getElementById('an-split-agent').style.width = aPct + '%';
+          document.getElementById('an-split-label-h').textContent = `Human ${hPct}%`;
+          document.getElementById('an-split-label-a').textContent = `Agent ${aPct}%`;
+          document.getElementById('an-agent-totals').textContent = `${human + agent} total hits · ${days}d`;
+
+          // Mini trend chart
+          const trend = trendData.trend;
+          const maxVal = Math.max(...trend.map(d => d.human + d.agent), 1);
+          document.getElementById('an-trend-mini').innerHTML = trend.map(d => {
+            const hH = Math.round(d.human / maxVal * 40);
+            const aH = Math.round(d.agent / maxVal * 40);
+            return `<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:1px">
+              <div class="an-trend-bar human" style="height:${hH}px" title="${d.day} human:${d.human}"></div>
+              <div class="an-trend-bar agent" style="height:${aH}px" title="${d.day} agent:${d.agent}"></div>
+            </div>`;
+          }).join('');
+
+          // Top agent pages
+          document.querySelector('#an-agent-pages tbody').innerHTML =
+            trendData.topAgentPaths.length
+              ? trendData.topAgentPaths.map(p => `<tr><td style="font-family:var(--mono);font-size:10px">${p.path}</td><td>${p.hits}</td></tr>`).join('')
+              : '<tr><td colspan="2" style="color:var(--muted)">No data</td></tr>';
+        } else {
+          agentSection.style.display = 'none';
+        }
+      }
 
       // Update snippet with actual URL
       const adminUrl = location.origin;

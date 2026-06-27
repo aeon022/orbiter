@@ -218,6 +218,30 @@ article h1{font-family:var(--serif);font-size:clamp(1.8rem,4vw,2.6rem);line-heig
     const siteUrl = (site.url || '').replace(/\/+$/, '');
     const ogImage = meta.ogImage || '';
 
+    const jsonLd = meta.type === 'article'
+      ? JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'BlogPosting',
+          'headline': meta.title || '',
+          'description': desc,
+          ...(meta.canonical ? { 'url': meta.canonical } : {}),
+          ...(meta.datePublished ? { 'datePublished': meta.datePublished.split(' ')[0] } : {}),
+          ...(meta.dateModified  ? { 'dateModified':  meta.dateModified.split(' ')[0]  } : {}),
+          ...(meta.author ? { 'author': { '@type': 'Person', 'name': meta.author } } : {
+              'author': { '@type': 'Organization', 'name': site.name, 'url': siteUrl || undefined },
+          }),
+          ...(ogImage ? { 'image': ogImage } : {}),
+          ...(Array.isArray(meta.tags) && meta.tags.length ? { 'keywords': meta.tags.join(', ') } : {}),
+          'publisher': { '@type': 'Organization', 'name': site.name, ...(siteUrl ? { 'url': siteUrl } : {}) },
+        })
+      : JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'WebSite',
+          'name': site.name,
+          ...(siteUrl ? { 'url': siteUrl } : {}),
+          ...(desc ? { 'description': desc } : {}),
+        });
+
     return `<!DOCTYPE html>
 <html lang="${esc(site.locale || 'en')}">
 <head>
@@ -234,6 +258,7 @@ article h1{font-family:var(--serif);font-size:clamp(1.8rem,4vw,2.6rem);line-heig
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="${FAVICON}">
   <link rel="stylesheet" href="${r}style.css">
+  <script type="application/ld+json">${jsonLd}</script>
 </head>
 <body>
   <div class="board">

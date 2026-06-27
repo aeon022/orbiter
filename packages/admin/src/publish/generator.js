@@ -58,6 +58,10 @@ function findImageField(schema) {
 function findTagsField(schema) {
   return findField(schema, TAG_KEYS, d => d.type === 'array');
 }
+const AUTHOR_KEYS = ['author', 'authorName', 'author_name', 'by', 'byline'];
+function findAuthorField(schema) {
+  return findField(schema, AUTHOR_KEYS, d => d.type === 'string');
+}
 
 // Fields to display as metadata on entry detail pages
 const SKIP_FIELD_TYPES = new Set(['richtext', 'table', 'relation', 'weekdays']);
@@ -260,6 +264,7 @@ export async function generateStaticSite(podPath, { themeId } = {}) {
     const imageKey = findImageField(col.schema);
     const bodyKey = findBodyField(col.schema);
     const tagsKey = findTagsField(col.schema);
+    const authorKey = findAuthorField(col.schema);
 
     // Listing entries
     const listItems = col.entries.map(e => ({
@@ -310,6 +315,10 @@ export async function generateStaticSite(podPath, { themeId } = {}) {
         canonical: site.url ? `${site.url.replace(/\/+$/, '')}/${col.id}/${entry.slug}/` : '',
         type: 'article',
         ogImage,
+        author: (authorKey && entry.data[authorKey]) || '',
+        datePublished: entryData.date || '',
+        dateModified: entry.updated_at || entryData.date || '',
+        tags: entryData.tags,
       }, navSummaries, rootFor(2)), { name: `${col.id}/${entry.slug}/index.html` });
 
       sitemapPages.push({ path: `/${col.id}/${entry.slug}/`, updated: entry.updated_at || entry.created_at });

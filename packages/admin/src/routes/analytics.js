@@ -129,6 +129,45 @@ analyticsRoutes.get('/agents', (c) => {
   return c.json({ agents, period: days });
 });
 
+// GET /api/analytics/agent-trend — daily agent vs human traffic (auth required)
+analyticsRoutes.get('/agent-trend', (c) => {
+  const db   = openPod(c.get('podPath'));
+  const days = Math.min(parseInt(c.req.query('days') ?? '30'), 365);
+  const since = `datetime('now', '-${days} days')`;
+
+  // Daily totals split by is_bot
+  const rows = db.db.prepare(
+    `SELECT date(created_at) as day, is_bot, COUNT(*) as hits
+     FROM _analytics WHERE created_at >= ${since}
+     GROUP BY day, is_bot ORDER BY day ASC`
+  ).all();
+
+  // Top paths accessed by agents
+  const topAgentPaths = db.db.prepare(
+    `SELECT path, COUNT(*) as hits
+     FROM _analytics WHERE is_bot = 1 AND created_at >= ${since}
+     GROUP BY path ORDER BY hits DESC LIMIT 10`
+  ).all();
+
+  db.close();
+
+  // Build daily series
+  const dayMap = {};
+  for (const r of rows) {
+    if (!dayMap[r.day]) dayMap[r.day] = { day: r.day, human: 0, agent: 0 };
+    if (r.is_bot) dayMap[r.day].agent += r.hits;
+    else          dayMap[r.day].human += r.hits;
+  }
+  const trend = Object.values(dayMap).sort((a, b) => a.day.localeCompare(b.day));
+  const totals = trend.reduce((acc, d) => {
+    acc.human += d.human;
+    acc.agent += d.agent;
+    return acc;
+  }, { human: 0, agent: 0 });
+
+  return c.json({ trend, totals, topAgentPaths, period: days });
+});
+
 // DELETE /api/analytics/prune — clean old data (auth required)
 analyticsRoutes.delete('/prune', (c) => {
   const db = openPod(c.get('podPath'));

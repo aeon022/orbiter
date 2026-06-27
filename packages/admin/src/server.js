@@ -36,6 +36,7 @@ import { publishRoutes }  from './routes/publish.js';
 import { qualityRoutes }       from './routes/quality.js';
 import { schemaMigrateRoutes } from './routes/schema_migrate.js';
 import { podRoutes }           from './routes/pods.js';
+import { apiKeyRoutes }        from './routes/api-keys.js';
 import { requireAuth }      from './middleware/auth.js';
 import { csrfMiddleware }  from './middleware/csrf.js';
 
@@ -130,6 +131,7 @@ export function createApp(podPath) {
   api.route('/quality',      qualityRoutes);
   api.route('/collections',  schemaMigrateRoutes);
   api.route('/pods',         podRoutes);
+  api.route('/api-keys',     apiKeyRoutes);
 
   app.route('/api', api);
 

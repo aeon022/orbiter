@@ -318,6 +318,16 @@ export default function orbiter(options = {}) {
           entrypoint: resolve(routesDir, 'sitemap.js'),
         });
 
+        // Public read-only API — unauthenticated, per-collection opt-in
+        injectRoute({
+          pattern:    '/api/public/[collection]',
+          entrypoint: resolve(routesDir, 'public-collection.js'),
+        });
+        injectRoute({
+          pattern:    '/api/public/[collection]/[slug]',
+          entrypoint: resolve(routesDir, 'public-entry.js'),
+        });
+
         // llms.txt — standard root path (llmstxt.org convention)
         injectRoute({
           pattern:    '/llms.txt',
