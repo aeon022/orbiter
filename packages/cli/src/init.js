@@ -61,8 +61,13 @@ export async function run(args) {
   // tsconfig.json
   copyFileSync(join(templatesDir, 'tsconfig.json'), join(targetDir, 'tsconfig.json'));
 
-  // src/pages/index.astro
+  // src/content.config.ts (Content Layer)
+  copyFileSync(join(templatesDir, 'content.config.ts'), join(targetDir, 'src/content.config.ts'));
+
+  // src/pages/index.astro + posts/[slug].astro
+  mkdirSync(join(targetDir, 'src/pages/posts'), { recursive: true });
   copyFileSync(join(templatesDir, 'index.astro'), join(targetDir, 'src/pages/index.astro'));
+  copyFileSync(join(templatesDir, 'post.astro'),  join(targetDir, 'src/pages/posts/[slug].astro'));
 
   // .github/workflows/orbiter-build.yml
   copyFileSync(
@@ -90,7 +95,7 @@ export async function run(args) {
      VALUES (?, ?, ?, datetime('now'))`
   ).run('posts', 'Posts', JSON.stringify({
     title: { type: 'string',   label: 'Title' },
-    body:  { type: 'markdown', label: 'Body'  },
+    body:  { type: 'richtext', label: 'Body'  },
   }));
 
   // Create admin user

@@ -763,6 +763,7 @@ npm install -g @a83/orbiter-cli
 | `orbiter export` | Export content to JSON or Markdown files |
 | `orbiter unpack` | Extract media BLOBs from pod to files (Git sync) |
 | `orbiter pack` | Restore media BLOBs from files into pod (Git sync) |
+| `orbiter status [pod]` | Show pod health: entry counts, size, last modified |
 
 ```bash
 orbiter init my-site
@@ -770,6 +771,66 @@ orbiter add-user --pod ./content.pod
 orbiter export --pod ./content.pod --out ./export --format md
 orbiter unpack --pod ./content.pod --out ./media
 orbiter pack   --pod ./content.pod --dir ./media
+orbiter status                      # reads ./content.pod by default
+orbiter status ./path/to/content.pod
+```
+
+---
+
+## Using Orbiter with SvelteKit
+
+Orbiter ships a framework-agnostic client: [`@a83/orbiter-client`](https://www.npmjs.com/package/@a83/orbiter-client).
+
+```bash
+npm install @a83/orbiter-client
+```
+
+### Server-side (SSR / `+page.server.ts`)
+
+```ts
+import { createClient } from '@a83/orbiter-client';
+
+const orb = createClient('./content.pod');
+
+export async function load() {
+  const posts = orb.getCollection('posts');       // all published entries
+  return { posts };
+}
+```
+
+### Static pre-rendering (`+page.ts`)
+
+Same API — call it in a `load()` function. For `prerender = true` the client opens the pod at build time.
+
+```ts
+// src/routes/posts/[slug]/+page.ts
+import { createClient } from '@a83/orbiter-client';
+
+export const prerender = true;
+
+export async function load({ params }) {
+  const orb  = createClient('./content.pod');
+  const post  = orb.getEntry('posts', params.slug);
+  if (!post) throw error(404);
+  return { post };
+}
+
+export async function entries() {
+  const orb = createClient('./content.pod');
+  return orb.getCollection('posts').map(p => ({ slug: p.slug }));
+}
+```
+
+### Available methods
+
+```ts
+const orb = createClient(podPath);
+
+orb.getCollections()                   // → Collection[]
+orb.getCollection(id)                  // → Entry[]  (published, all locales)
+orb.getEntry(collectionId, slug)       // → Entry | null
+orb.getMedia()                         // → MediaItem[]
+orb.getMediaItem(id)                   // → MediaItem | null
 ```
 
 ---
@@ -1110,6 +1171,27 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 ---
 
 ## Changelog
+
+### June 2026 · admin@0.3.78 / cli@0.3.9 — Content Validation, orbiter status, SvelteKit Guide
+
+**Content Validation**
+- Schema editor: `min`, `max`, `regex` inputs per field (visible for string / number / url / email / richtext types)
+- Client: validates on publish/scheduled — shows an inline error banner in the sidebar listing all violations; drafts are always saved without validation
+- Server: `validateFields()` safety net in POST/PUT; returns 422 with `errors[]` array when publishing/scheduling an entry that fails schema constraints
+
+**CLI: `orbiter status`**
+- New command — shows pod file size, last-published timestamp, user count, and per-collection entry counts by status (published / draft / scheduled / trashed)
+- Usage: `orbiter status` (reads `./content.pod`) or `orbiter status ./path/to/content.pod`
+
+**`orbiter init` — Content Layer scaffold**
+- Generated project now includes `src/content.config.ts` wiring up the `orbiterLoader` for the default `posts` collection
+- `src/pages/posts/[slug].astro` added as a starter entry page
+- Seeds `body` field as `richtext` (was `markdown`)
+
+**SvelteKit Guide**
+- Added usage guide to README: server-side and static pre-rendering examples with `@a83/orbiter-client`
+
+---
 
 ### June 2026 · admin@0.3.77 / core@0.3.12 / cli@0.3.8 — Templates, Wikilinks, Analytics
 

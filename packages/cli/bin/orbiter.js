@@ -13,6 +13,7 @@ const commands = {
   backup:     () => import('../src/backup.js').then(m => m.run(args)),
   unpack:     () => import('../src/unpack.js').then(m => m.run(args)),
   pack:       () => import('../src/pack.js').then(m => m.run(args)),
+  status:     () => import('../src/status.js').then(m => m.run(args)),
   docs:       () => openDocs(),
   help:       () => printHelp(),
 };
@@ -61,6 +62,7 @@ function printHelp() {
              [--out <dir>]           Backup directory (default: same as pod)
     unpack   [--pod <path>]        Extract media BLOBs to files (pod → git mode)
     pack     [--pod <path>]        Re-insert media files as BLOBs (git → server mode)
+    status   [pod-path]            Show pod health — entry counts, size, last modified
     docs                           Open the Orbiter documentation in your browser
 
   Options:

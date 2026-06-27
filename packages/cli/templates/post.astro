@@ -1,0 +1,25 @@
+---
+import { getCollection, getEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts');
+  return posts.map(p => ({ params: { slug: p.id } }));
+}
+
+const { slug } = Astro.params;
+const post = await getEntry('posts', slug!);
+if (!post) return Astro.redirect('/404');
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{post.data.title}</title>
+</head>
+<body>
+  <a href="/">← Back</a>
+  <h1>{post.data.title}</h1>
+  <div set:html={post.data.body} />
+</body>
+</html>

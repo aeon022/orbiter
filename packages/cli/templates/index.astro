@@ -1,5 +1,5 @@
 ---
-import { getCollection } from 'orbiter:collections';
+import { getCollection } from 'astro:content';
 
 const posts = await getCollection('posts');
 ---
@@ -14,7 +14,7 @@ const posts = await getCollection('posts');
   <h1>My Orbiter Site</h1>
   <ul>
     {posts.map(p => (
-      <li><a href={`/posts/${p.slug}`}>{p.data.title ?? p.slug}</a></li>
+      <li><a href={`/posts/${p.id}`}>{p.data.title ?? p.id}</a></li>
     ))}
   </ul>
   <p><a href="/orbiter">→ Admin</a></p>
