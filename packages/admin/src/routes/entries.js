@@ -95,6 +95,32 @@ entryRoutes.get('/:collectionId/entries/:slug/locales', (c) => {
   return c.json(locales);
 });
 
+function validateFields(schema, data) {
+  const errors = [];
+  for (const [key, field] of Object.entries(schema ?? {})) {
+    const val = data?.[key];
+    const isEmpty = Array.isArray(val) ? val.length === 0 : (val === '' || val == null);
+    const lbl = field.label || key;
+    if (field.required && isEmpty) { errors.push(`${lbl}: required`); continue; }
+    if (isEmpty) continue;
+    const strVal = String(val);
+    if (field.min != null) {
+      const min = Number(field.min);
+      if (field.type === 'number' ? Number(val) < min : strVal.length < min)
+        errors.push(`${lbl}: minimum ${field.type === 'number' ? 'value' : 'length'} is ${min}`);
+    }
+    if (field.max != null) {
+      const max = Number(field.max);
+      if (field.type === 'number' ? Number(val) > max : strVal.length > max)
+        errors.push(`${lbl}: maximum ${field.type === 'number' ? 'value' : 'length'} is ${max}`);
+    }
+    if (field.regex) {
+      try { if (!new RegExp(field.regex).test(strVal)) errors.push(`${lbl}: format invalid`); } catch {}
+    }
+  }
+  return errors;
+}
+
 // POST /api/collections/:id/entries
 entryRoutes.post('/:collectionId/entries', async (c) => {
   const { collectionId } = c.req.param();
@@ -104,6 +130,13 @@ entryRoutes.post('/:collectionId/entries', async (c) => {
   const db = openPod(c.get('podPath'));
   if (!db.getCollection(collectionId)) { db.close(); return c.json({ error: 'Collection not found' }, 404); }
   if (db.getEntry(collectionId, slug, locale)) { db.close(); return c.json({ error: `Entry "${slug}" (${locale || 'default'}) already exists` }, 409); }
+
+  if (status === 'published' || status === 'scheduled') {
+    const col = db.getCollection(collectionId);
+    const schema = col?.schema ? JSON.parse(col.schema) : {};
+    const errors = validateFields(schema, data);
+    if (errors.length) { db.close(); return c.json({ error: 'Validation failed', errors }, 422); }
+  }
 
   const id    = db.createEntry(collectionId, slug, data, status, locale);
   const entry = db.getEntry(collectionId, slug, locale);
@@ -119,6 +152,14 @@ entryRoutes.put('/:collectionId/entries/:slug', async (c) => {
   const locale = body.locale ?? c.req.query('locale') ?? '';
 
   const db     = openPod(c.get('podPath'));
+
+  if (body.status === 'published' || body.status === 'scheduled') {
+    const col = db.getCollection(collectionId);
+    const schema = col?.schema ? JSON.parse(col.schema) : {};
+    const errors = validateFields(schema, body.data ?? {});
+    if (errors.length) { db.close(); return c.json({ error: 'Validation failed', errors }, 422); }
+  }
+
   const before = db.getEntry(collectionId, slug, locale);
   const ok     = db.updateEntry(collectionId, slug, { ...body, locale });
   if (!ok) { db.close(); return c.json({ error: 'Not found' }, 404); }

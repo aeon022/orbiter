@@ -1536,18 +1536,32 @@
         ogImage:     document.getElementById('seo-inp-_ogimage')?.value ?? '',
       };
 
-      // Required field validation (skip on autosave)
-      if (!isAutosave) {
-        const missing = extraFields
-          .filter(([key, field]) => {
-            if (!field.required) return false;
-            const val = data[key];
-            if (Array.isArray(val)) return val.length === 0;
-            return val === '' || val === null || val === undefined;
-          })
-          .map(([key, field]) => field.label || key);
-        if (missing.length) {
-          alert(`Required field${missing.length > 1 ? 's' : ''} missing: ${missing.join(', ')}`);
+      // Field validation (skip on autosave and draft saves)
+      if (!isAutosave && status !== 'draft') {
+        const errs = [];
+        for (const [key, field] of extraFields) {
+          const val = data[key];
+          const isEmpty = Array.isArray(val) ? val.length === 0 : (val === '' || val == null);
+          const lbl = field.label || key;
+          if (field.required && isEmpty) { errs.push(`${lbl}: required`); continue; }
+          if (isEmpty) continue;
+          const strVal = String(val);
+          if (field.min != null) {
+            const min = Number(field.min);
+            if (field.type === 'number' ? Number(val) < min : strVal.length < min)
+              errs.push(`${lbl}: minimum ${field.type === 'number' ? 'value' : 'length'} is ${min}`);
+          }
+          if (field.max != null) {
+            const max = Number(field.max);
+            if (field.type === 'number' ? Number(val) > max : strVal.length > max)
+              errs.push(`${lbl}: maximum ${field.type === 'number' ? 'value' : 'length'} is ${max}`);
+          }
+          if (field.regex) {
+            try { if (!new RegExp(field.regex).test(strVal)) errs.push(`${lbl}: format invalid`); } catch {}
+          }
+        }
+        if (errs.length) {
+          showValidationErrors(errs);
           return;
         }
       }
@@ -1925,6 +1939,19 @@
         if (document.querySelector('.app.focus-mode')) toggleFocusMode();
       }
     });
+
+    function showValidationErrors(errs) {
+      let el = document.getElementById('validation-banner');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'validation-banner';
+        el.style.cssText = 'margin:0 0 12px;padding:10px 14px;background:color-mix(in srgb,var(--red) 10%,var(--bg2));border:1px solid color-mix(in srgb,var(--red) 30%,transparent);border-radius:var(--radius);font-size:11px;font-family:var(--mono);color:var(--red);line-height:1.7;';
+        document.querySelector('.meta-panel-inner')?.prepend(el);
+      }
+      el.innerHTML = '<strong>Cannot publish:</strong><br>' + errs.map(e => '· ' + e).join('<br>');
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      setTimeout(() => el?.remove(), 6000);
+    }
 
     window.saveAsTemplate = async function() {
       const nameInput = document.getElementById('tpl-name-input');
