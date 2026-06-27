@@ -113,13 +113,13 @@ This plan covers the release of Orbiter admin@0.3.64 and Desktop v0.2.0 features
 
 ## Asset Checklist
 
-- [x] `screenshots/01-dashboard.png` — Dashboard with calendar widget, Station mode
-- [x] `screenshots/02-calendar.png` — Calendar page, month grid with color-coded entries
-- [x] `screenshots/03-import-pod.png` — Import page, Pod/JSON tab
-- [x] `screenshots/04-station-dock-hud-tools.png` — Station mode with HUD + Tools open
-- [x] `screenshots/05-vision-hero.png` — Vision page hero with planet eclipse
-- [x] `screenshots/06-vision-diagram.png` — Dual Render diagram (Human/POD/Agent)
-- [x] `screenshots/vision-page.png` — Full vision page
+- [x] `screenshots/c2-01-dashboard-station.png` — Dashboard with calendar widget, Station mode
+- [x] `screenshots/c2-02-calendar.png` — Calendar page, month grid with color-coded entries
+- [x] `screenshots/c2-03-import-pod.png` — Import page, Pod/JSON tab
+- [x] `screenshots/c2-04-station-dock-hud-tools.png` — Station mode with HUD + Tools open
+- [x] `screenshots/c2-05-vision-hero.png` — Vision page hero with planet eclipse
+- [x] `screenshots/c2-06-vision-diagram.png` — Dual Render diagram (Human/POD/Agent)
+- [x] `screenshots/c2-vision-page.png` — Full vision page
 - [ ] GIF/Video: Calendar navigation (prev/next/click day)
 - [ ] GIF/Video: Vision page scroll effect
 - [x] Repo link: https://github.com/aeon022/orbiter
@@ -143,11 +143,11 @@ This plan covers the release of Orbiter admin@0.3.64 and Desktop v0.2.0 features
 
 ### Campaign 1: Orbiter Features (Week 1)
 
-- [ ] Day 1 Mon AM: Post Twitter thread EN (`06-twitter-en.md`) + attach `02-calendar.png`, `01-dashboard.png`
+- [ ] Day 1 Mon AM: Post Twitter thread EN (`06-twitter-en.md`) + attach `c2-02-calendar.png`, `c2-01-dashboard-station.png`
 - [ ] Day 1 Mon PM: Post Threads EN (`08-threads-en.md`)
 - [ ] Day 2 Tue AM: Publish Dev.to article EN (`01-devto-en.md`) + embed screenshots
 - [ ] Day 2 Tue PM: Submit Hacker News (`03-hackernews.md`) — US afternoon timing
-- [ ] Day 3 Wed AM: Post LinkedIn EN (`04-linkedin-en.md`) + attach `01-dashboard.png`
+- [ ] Day 3 Wed AM: Post LinkedIn EN (`04-linkedin-en.md`) + attach `c2-01-dashboard-station.png`
 - [ ] Day 4 Thu AM: Post Twitter thread DE (`07-twitter-de.md`)
 - [ ] Day 4 Thu PM: Post Threads DE (`09-threads-de.md`)
 - [ ] Day 5 Fri AM: Publish Dev.to article DE (`02-devto-de.md`)
@@ -155,11 +155,11 @@ This plan covers the release of Orbiter admin@0.3.64 and Desktop v0.2.0 features
 
 ### Campaign 2: Dual Render (Week 2)
 
-- [ ] Day 1 Mon AM: Post Twitter thread EN (`16-dual-render-twitter-en.md`) + attach `06-vision-diagram.png`
+- [ ] Day 1 Mon AM: Post Twitter thread EN (`16-dual-render-twitter-en.md`) + attach `c2-06-vision-diagram.png`
 - [ ] Day 1 Mon PM: Post Threads EN (`18-dual-render-threads-en.md`)
-- [ ] Day 2 Tue AM: Publish Dev.to article EN (`12-dual-render-devto-en.md`) + embed `05-vision-hero.png`, `06-vision-diagram.png`
+- [ ] Day 2 Tue AM: Publish Dev.to article EN (`12-dual-render-devto-en.md`) + embed `c2-05-vision-hero.png`, `c2-06-vision-diagram.png`
 - [ ] Day 2 Tue PM: Submit Hacker News (`20-dual-render-hackernews.md`)
-- [ ] Day 3 Wed AM: Post LinkedIn EN (`14-dual-render-linkedin-en.md`) + attach `05-vision-hero.png`
+- [ ] Day 3 Wed AM: Post LinkedIn EN (`14-dual-render-linkedin-en.md`) + attach `c2-05-vision-hero.png`
 - [ ] Day 4 Thu AM: Post Twitter thread DE (`17-dual-render-twitter-de.md`)
 - [ ] Day 4 Thu PM: Post Threads DE (`19-dual-render-threads-de.md`)
 - [ ] Day 5 Fri AM: Publish Dev.to article DE (`13-dual-render-devto-de.md`)
@@ -208,29 +208,36 @@ This plan covers the release of Orbiter admin@0.3.64 and Desktop v0.2.0 features
 
 | Day | Platform | Post | Notes |
 |-----|----------|------|-------|
-| Day 1 Mon AM | Twitter/X | Thread EN (`25`) | Attach dashboard + quality panel screenshot |
+| Day 1 Mon AM | Twitter/X | Thread EN (`25`) | Tweet 2: attach `c3-08-editor-validation-banner.png` + `c3-09-users-permissions-modal.png` |
 | Day 1 Mon PM | Threads | Short EN (`27`) | |
-| Day 2 Tue AM | Dev.to | Long article EN (`21`) | Embed screenshots |
+| Day 2 Tue AM | Dev.to | Long article EN (`21`) | cover: `c3-08-editor-validation-banner.png`; embed `c3-01-dashboard-quality.png`, `c3-05-pods.png`, `c3-11-cli-orbiter-status.png` |
 | Day 2 Tue PM | Hacker News | Show HN (`29`) | US afternoon timing |
-| Day 3 Wed AM | LinkedIn | Post EN (`23`) | Attach dashboard screenshot |
-| Day 4 Thu AM | Twitter/X | Thread DE (`26`) | |
+| Day 3 Wed AM | LinkedIn | Post EN (`23`) | Attach `c3-01-dashboard-quality.png` |
+| Day 4 Thu AM | Twitter/X | Thread DE (`26`) | Tweet 2: attach `c3-08-editor-validation-banner.png` + `c3-09-users-permissions-modal.png` |
 | Day 4 Thu PM | Threads | Short DE (`28`) | |
-| Day 5 Fri AM | Dev.to | Article DE (`22`) | Cross-link to EN |
-| Day 5 Fri AM | LinkedIn | Post DE (`24`) | |
+| Day 5 Fri AM | Dev.to | Article DE (`22`) | cover: `c3-08-editor-validation-banner.png`; Cross-link to EN |
+| Day 5 Fri AM | LinkedIn | Post DE (`24`) | Attach `c3-01-dashboard-quality.png` |
 
 ### Asset Checklist
 
-- [ ] Screenshot: Dashboard with quality panel visible (sidebar)
-- [ ] Screenshot: Editor with validation error banner
-- [ ] Screenshot: Users page with Collection permissions modal open
-- [ ] Screenshot: Pods page with stat cards
-- [ ] Terminal recording: `orbiter status` output
-- [ ] Terminal recording: `orbiter encrypt` + `orbiter sync`
+- [x] `screenshots/c3-01-dashboard-quality.png` — Dashboard quality panel (11 issues)
+- [x] `screenshots/c3-02-analytics.png` — Analytics page
+- [x] `screenshots/c3-03-schema-validation.png` — Schema editor
+- [x] `screenshots/c3-04-users.png` — Users page
+- [x] `screenshots/c3-05-pods.png` — Multi-pod dashboard (3 pods with stat cards)
+- [x] `screenshots/c3-06-editor.png` — Editor with entry open
+- [x] `screenshots/c3-07-media.png` — Media page
+- [x] `screenshots/c3-08-editor-validation-banner.png` — Editor with red validation banner → **Tweet 2, cover_image Dev.to**
+- [x] `screenshots/c3-09-users-permissions-modal.png` — Collection permissions modal → **Tweet 2**
+- [x] `screenshots/c3-10-schema-validation-fields.png` — Schema field validation inputs
+- [x] `screenshots/c3-11-cli-orbiter-status.png` — Terminal: `orbiter status` → **Tweet 5**
+- [x] `screenshots/c3-12-cli-orbiter-encrypt.png` — Terminal: `orbiter encrypt/decrypt` → **Tweet 4**
+- [x] `screenshots/c3-13-cli-orbiter-sync.png` — Terminal: `orbiter sync` → **Tweet 4**
 
 ### To-Do
 
-- [ ] Take new screenshots (quality panel, validation banner, permissions modal, pods page)
-- [ ] Record terminal GIF: `orbiter status` + `orbiter encrypt`
+- [x] Take new screenshots (quality panel, validation banner, permissions modal, pods page)
+- [ ] Record terminal GIF: `orbiter status` + `orbiter encrypt` (optional, PNGs already done)
 - [ ] Bump version numbers in posts to 0.3.78
 - [ ] Day 1 Mon AM: Post Twitter thread EN (`25-campaign3-twitter-en.md`)
 - [ ] Day 1 Mon PM: Post Threads EN (`27-campaign3-threads-en.md`)

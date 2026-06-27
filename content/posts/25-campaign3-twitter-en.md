@@ -12,7 +12,7 @@ Now it's encrypted. Team-permissioned. Quality-audited. And syncable to any serv
 
 Just shipped Orbiter 0.3.78 🧵
 
-## Tweet 2 (Validation + Permissions — attach dashboard screenshot)
+## Tweet 2 (Validation + Permissions — attach: c3-08-editor-validation-banner.png + c3-09-users-permissions-modal.png)
 
 Content gates that actually work:
 

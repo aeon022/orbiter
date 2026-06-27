@@ -12,7 +12,7 @@ Jetzt verschlüsselt. Mit Team-Berechtigungen. Automatisch quality-geprüft. Und
 
 Orbiter 0.3.78 ist draußen 🧵
 
-## Tweet 2 (Validierung + Berechtigungen — Dashboard-Screenshot anhängen)
+## Tweet 2 (Validierung + Berechtigungen — anhängen: c3-08-editor-validation-banner.png + c3-09-users-permissions-modal.png)
 
 Content-Gates die funktionieren:
 

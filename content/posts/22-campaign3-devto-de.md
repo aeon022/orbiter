@@ -2,7 +2,7 @@
 title: "Orbiter CMS ist jetzt team-ready — Validierung, Berechtigungen, Qualität und Verschlüsselung"
 tags: opensource, webdev, cms, sqlite
 canonical_url: https://github.com/aeon022/orbiter
-cover_image: # TODO: Dashboard-Screenshot mit Quality-Panel
+cover_image: screenshots/c3-08-editor-validation-banner.png
 ---
 
 # Orbiter CMS ist jetzt team-ready — Validierung, Berechtigungen, Qualität und Verschlüsselung
