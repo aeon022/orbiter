@@ -1553,10 +1553,20 @@ const revealObserver = new IntersectionObserver(
       revealObserver.unobserve(e.target);
     }
   }),
-  { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+  { threshold: 0.05, rootMargin: '0px 0px 0px 0px' }
 );
 
 document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+// Immediately reveal anything already in view on load (prevents empty space at bottom of page)
+window.addEventListener('load', () => {
+  document.querySelectorAll('.reveal:not(.visible)').forEach(el => {
+    const r = el.getBoundingClientRect();
+    if (r.top < window.innerHeight && r.bottom > 0) {
+      el.classList.add('visible');
+    }
+  });
+});
 
 // ── SCREENSHOT GALLERY ─────────────────────────────────────
 const mainImg     = document.getElementById('ss-main-img')     as HTMLImageElement;
