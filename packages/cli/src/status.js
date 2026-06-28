@@ -41,6 +41,13 @@ export function run(args) {
     `SELECT MAX(updated_at) AS t FROM _entries WHERE status = 'published'`
   ).get();
 
+  // Public API info
+  const publicCols   = db.getMeta('public.collections') ?? '';
+  const requireKey   = db.getMeta('api.requireKey') === '1';
+  const apiKeys      = (() => { try { return JSON.parse(db.getMeta('api.keys') ?? '[]'); } catch { return []; } })();
+  const siteUrl      = (db.getMeta('site.url') ?? '').replace(/\/$/, '');
+  const publicActive = publicCols.trim().length > 0;
+
   console.log(`\n  ◆  ${basename(podPath)}\n`);
   console.log(`  Site      ${siteMeta.name ?? '—'}  (${siteMeta.locale ?? '?'})`);
   console.log(`  File      ${fmtBytes(stat.size)}  →  ${podPath}`);
@@ -68,6 +75,23 @@ export function run(args) {
       console.log(`  ${lbl}  ${parts.join('  ·  ')}`);
     }
     console.log('');
+  }
+
+  // Public API section
+  if (publicActive) {
+    const colList = publicCols.trim() === '*' ? 'all collections' : publicCols;
+    const authNote = requireKey
+      ? `key required  (${apiKeys.length} key${apiKeys.length !== 1 ? 's' : ''} active)`
+      : 'open (no key required)';
+    console.log(`  Public API  ${authNote}`);
+    console.log(`  Collections ${colList}`);
+    if (siteUrl) {
+      console.log(`  Endpoint    ${siteUrl}/api/public`);
+      console.log(`  OpenAPI     ${siteUrl}/api/public/openapi.json`);
+    }
+    console.log('');
+  } else {
+    console.log(`  Public API  disabled\n`);
   }
 
   db.close();

@@ -320,6 +320,14 @@ export default function orbiter(options = {}) {
 
         // Public read-only API — unauthenticated, per-collection opt-in
         injectRoute({
+          pattern:    '/api/public',
+          entrypoint: resolve(routesDir, 'public-index.js'),
+        });
+        injectRoute({
+          pattern:    '/api/public/openapi.json',
+          entrypoint: resolve(routesDir, 'public-openapi.js'),
+        });
+        injectRoute({
           pattern:    '/api/public/[collection]',
           entrypoint: resolve(routesDir, 'public-collection.js'),
         });
