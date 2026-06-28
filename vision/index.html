@@ -1,0 +1,244 @@
+<!DOCTYPE html><html lang="en" data-astro-cid-ywlweo73> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Orbiter Vision — Dual Render &amp; the future of CMS</title><meta name="description" content="One content source, two audiences. Orbiter is building Dual Render: structured content for humans and AI agents from a single POD file."><link rel="canonical" href="https://orbiter.sh/vision"><!-- Open Graph --><meta property="og:type" content="website"><meta property="og:title" content="Orbiter Vision — Dual Render & the future of CMS"><meta property="og:description" content="One content source, two audiences. Orbiter is building Dual Render: structured content for humans and AI agents from a single POD file."><meta property="og:url" content="https://orbiter.sh/vision"><meta property="og:image" content="https://orbiter.sh/og-card.png"><meta property="og:image:alt" content="Orbiter — CMS in one file for Astro"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:site_name" content="Orbiter"><meta property="og:locale" content="en_US"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Orbiter Vision — Dual Render & the future of CMS"><meta name="twitter:description" content="One content source, two audiences. Orbiter is building Dual Render: structured content for humans and AI agents from a single POD file."><meta name="twitter:image" content="https://orbiter.sh/og-card.png"><meta name="twitter:image:alt" content="Orbiter — CMS in one file for Astro"><meta name="twitter:site" content="@gerwinweiher"><!-- Icons & PWA --><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="#8b7cf8"><!-- Structured data --><script type="application/ld+json">{JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Orbiter Vision — Dual Render & the future of CMS",
+    "url": "https://orbiter.sh/vision",
+    "description": "One content source, two audiences. Orbiter is building Dual Render: structured content for humans and AI agents from a single POD file.",
+    "isPartOf": { "@type": "WebSite", "name": "Orbiter", "url": "https://orbiter.sh" },
+    "publisher": { "@type": "Organization", "name": "Abteilung83", "url": "https://abteilung83.at" },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Orbiter", "item": "https://orbiter.sh" },
+        { "@type": "ListItem", "position": 2, "name": "Vision", "item": "https://orbiter.sh/vision" }
+      ]
+    }
+  })}</script><link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CDGfc0hd.js"></script><link rel="stylesheet" href="/_astro/vision.CioPVqpw.css">
+<style>.astro-route-announcer{position:absolute;left:0;top:0;clip:rect(0 0 0 0);clip-path:inset(50%);overflow:hidden;white-space:nowrap;width:1px;height:1px}
+</style></head> <body data-astro-cid-ywlweo73> <div class="page-curtain" data-astro-cid-ywlweo73></div> <div class="vision-bg" data-astro-cid-ywlweo73></div> <canvas id="starfield" aria-hidden="true" data-astro-cid-ywlweo73></canvas> <div class="nebula nebula-1" aria-hidden="true" data-astro-cid-ywlweo73></div> <div class="nebula nebula-2" aria-hidden="true" data-astro-cid-ywlweo73></div> <div class="nebula nebula-3" aria-hidden="true" data-astro-cid-ywlweo73></div> <div class="light-beam" id="light-beam" data-astro-cid-ywlweo73></div> <div class="light-beam-glow" id="light-beam-glow" data-astro-cid-ywlweo73></div> <div class="planet-scene" id="planet-scene" data-astro-cid-ywlweo73> <div class="planet-wrap" data-astro-cid-ywlweo73> <div class="planet-atmo" data-astro-cid-ywlweo73></div> <div class="planet-glow" data-astro-cid-ywlweo73></div> <div class="planet-glow-2" data-astro-cid-ywlweo73></div> <div class="planet-glow-warm" data-astro-cid-ywlweo73></div> <div class="planet-aurora" data-astro-cid-ywlweo73></div> <div class="planet-aurora-2" data-astro-cid-ywlweo73></div> <div class="planet-horizon-line" data-astro-cid-ywlweo73></div> <div class="planet-shimmer" data-astro-cid-ywlweo73></div> <div class="planet-shimmer-2" data-astro-cid-ywlweo73></div> <div class="planet-flare" data-astro-cid-ywlweo73></div> <div class="planet-flare-spot" data-astro-cid-ywlweo73></div> <div class="planet-flare-spot-2" data-astro-cid-ywlweo73></div> <div class="planet-flare-wide" data-astro-cid-ywlweo73></div> <div class="planet-body" data-astro-cid-ywlweo73></div> </div> </div> <!-- Nav --> <header class="vision-nav" data-astro-cid-ywlweo73> <a href="/" class="vision-nav-logo" data-astro-cid-ywlweo73> <svg viewBox="0 0 32 32" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg" data-astro-cid-ywlweo73> <circle cx="16" cy="16" r="6.5" fill="url(#vg)" data-astro-cid-ywlweo73></circle> <ellipse cx="16" cy="16" rx="12" ry="4.5" stroke="#8b7cf8" stroke-width="1.5" transform="rotate(-22 16 16)" stroke-dasharray="20 18" stroke-dashoffset="-18" data-astro-cid-ywlweo73></ellipse> <defs data-astro-cid-ywlweo73><radialGradient id="vg" cx="40%" cy="35%" r="65%" data-astro-cid-ywlweo73><stop offset="0%" stop-color="#a89eff" data-astro-cid-ywlweo73></stop><stop offset="100%" stop-color="#6c5ce7" data-astro-cid-ywlweo73></stop></radialGradient></defs> </svg>
+Orbiter
+</a> <div class="vision-nav-links" data-astro-cid-ywlweo73> <a href="/" data-astro-cid-ywlweo73>Home</a> <a href="/docs/" data-astro-cid-ywlweo73>Docs</a> <a href="https://github.com/aeon022/orbiter" class="btn-sm" data-astro-cid-ywlweo73>GitHub</a> </div> </header> <!-- Hero --> <section class="vision-hero" data-astro-cid-ywlweo73> <a href="/" class="hud-back" data-astro-cid-ywlweo73>orbiter.sh</a> <div class="vision-eyebrow" data-astro-cid-ywlweo73>Where we're going</div> <h1 class="vision-h1" aria-label="One content source. Two audiences." data-astro-cid-ywlweo73>One content source.<br data-astro-cid-ywlweo73><em id="typed-target" data-astro-cid-ywlweo73></em><span class="typed-cursor" id="typed-cursor" data-astro-cid-ywlweo73></span><noscript>Two audiences.</noscript></h1> <p class="vision-sub" data-astro-cid-ywlweo73>The web is splitting into two layers: one for humans, one for AI agents. Orbiter is building for both — from a single POD.</p> <div class="vision-scroll-hint" data-astro-cid-ywlweo73><span data-astro-cid-ywlweo73>↓</span> Scroll to explore</div> </section> <!-- Dual Render --> <section class="dual-section" data-astro-cid-ywlweo73> <div class="dual-label reveal" data-astro-cid-ywlweo73>The Dual Render Concept</div> <h2 class="dual-h2 reveal reveal-d1" data-astro-cid-ywlweo73>Humans read stories.<br data-astro-cid-ywlweo73>Agents read structure.</h2> <p class="dual-body reveal reveal-d2" data-astro-cid-ywlweo73>Today, websites serve one audience. Tomorrow, half your "visitors" will be AI agents — searching, comparing, summarizing. They don't need your CSS. They need your data. Dual Render serves both from the same DOM.</p> <div class="dual-diagram reveal-scale" data-astro-cid-ywlweo73> <div class="dual-col reveal-left" data-astro-cid-ywlweo73> <div class="dual-col-label" data-astro-cid-ywlweo73>Human Layer</div> <div class="dual-col-icon" data-astro-cid-ywlweo73>👁</div> <div class="dual-col-title" data-astro-cid-ywlweo73>Visual & Narrative</div> <ul class="dual-col-items" data-astro-cid-ywlweo73> <li data-astro-cid-ywlweo73>CSS layout & typography</li> <li data-astro-cid-ywlweo73>Images, video, animation</li> <li data-astro-cid-ywlweo73>Narrative flow & hierarchy</li> <li data-astro-cid-ywlweo73>Progressive disclosure</li> </ul> </div> <div class="dual-col dual-col-center reveal reveal-d2" data-astro-cid-ywlweo73> <div class="dual-col-label" data-astro-cid-ywlweo73>Single Source</div> <div class="dual-col-icon" data-astro-cid-ywlweo73>◈</div> <div class="dual-col-title" data-astro-cid-ywlweo73>One POD</div> <ul class="dual-col-items" data-astro-cid-ywlweo73> <li data-astro-cid-ywlweo73>Structured content</li> <li data-astro-cid-ywlweo73>Schema-aware fields</li> <li data-astro-cid-ywlweo73>Semantic depth tags</li> <li data-astro-cid-ywlweo73>One build, two outputs</li> </ul> </div> <div class="dual-col reveal-right" data-astro-cid-ywlweo73> <div class="dual-col-label" data-astro-cid-ywlweo73>Agent Layer</div> <div class="dual-col-icon" data-astro-cid-ywlweo73>⚡</div> <div class="dual-col-title" data-astro-cid-ywlweo73>Structured & Semantic</div> <ul class="dual-col-items" data-astro-cid-ywlweo73> <li data-astro-cid-ywlweo73><code data-astro-cid-ywlweo73>/llms.txt</code> content map</li> <li data-astro-cid-ywlweo73><code data-astro-cid-ywlweo73>/feed.json</code> structured API</li> <li data-astro-cid-ywlweo73>Semantic depth metadata</li> <li data-astro-cid-ywlweo73>RAG-ready format</li> </ul> </div> </div> <div class="dual-label reveal" data-astro-cid-ywlweo73>The Stack</div> <div class="dual-flow reveal reveal-d1" data-astro-cid-ywlweo73> <div class="flow-node accent" data-astro-cid-ywlweo73>Orbiter POD</div> <span class="flow-arrow" data-astro-cid-ywlweo73>→</span> <div class="flow-node" data-astro-cid-ywlweo73>Astro Build</div> <span class="flow-arrow" data-astro-cid-ywlweo73>→</span> <div class="flow-node gold" data-astro-cid-ywlweo73>Dual Render</div> </div> <p class="dual-body reveal reveal-d2" style="text-align:center;max-width:700px;margin:0 auto;" data-astro-cid-ywlweo73>
+Content lives in the POD. Astro builds the site. Dual Render splits the output — CSS-controlled visual layer for humans, structured semantic layer for AI agents. Same content, zero duplication.
+</p> </section> <!-- Research Platform --> <section class="research-section" data-astro-cid-ywlweo73> <div class="dual-label reveal" data-astro-cid-ywlweo73>Research Tool</div> <h2 class="dual-h2 reveal reveal-d1" data-astro-cid-ywlweo73>Orbiter as a<br data-astro-cid-ywlweo73>Research Platform</h2> <p class="dual-body reveal reveal-d2" data-astro-cid-ywlweo73>The Dossier template turns Orbiter into a structured research tool. 39 fields organized in collapsible groups — Content, Research, Evidence, Meta, Provenance, Agent — capture everything from narrative body text to machine-readable claims and APA7 sources. Dual Render makes it real: the same dossier serves humans a readable story and gives AI agents structured data.</p> <div class="dual-label reveal" data-astro-cid-ywlweo73>The Depth Model</div> <div class="depth-model reveal-scale" data-astro-cid-ywlweo73> <div class="depth-row" data-astro-cid-ywlweo73> <div class="depth-num d0" data-astro-cid-ywlweo73>0</div> <div class="depth-info" data-astro-cid-ywlweo73> <div class="depth-label" data-astro-cid-ywlweo73>Narrative</div> <div class="depth-desc" data-astro-cid-ywlweo73>Body text, title, summary — the human-readable story. What you'd read on a webpage.</div> </div> <div class="depth-audience" data-astro-cid-ywlweo73>Humans, browsers, social cards</div> </div> <div class="depth-row" data-astro-cid-ywlweo73> <div class="depth-num d1" data-astro-cid-ywlweo73>1</div> <div class="depth-info" data-astro-cid-ywlweo73> <div class="depth-label" data-astro-cid-ywlweo73>Research</div> <div class="depth-desc" data-astro-cid-ywlweo73>Structured claims, hypotheses, methodology, key findings — the analytical layer behind the narrative.</div> </div> <div class="depth-audience" data-astro-cid-ywlweo73>Researchers, reviewers, collaborators</div> </div> <div class="depth-row" data-astro-cid-ywlweo73> <div class="depth-num d2" data-astro-cid-ywlweo73>2</div> <div class="depth-info" data-astro-cid-ywlweo73> <div class="depth-label" data-astro-cid-ywlweo73>Evidence</div> <div class="depth-desc" data-astro-cid-ywlweo73>APA7 sources, datasets, confidence scores, contradictions — the verifiable foundation.</div> </div> <div class="depth-audience" data-astro-cid-ywlweo73>Fact-checkers, citation managers, RAG pipelines</div> </div> <div class="depth-row" data-astro-cid-ywlweo73> <div class="depth-num d3" data-astro-cid-ywlweo73>3</div> <div class="depth-info" data-astro-cid-ywlweo73> <div class="depth-label" data-astro-cid-ywlweo73>Machine Mode</div> <div class="depth-desc" data-astro-cid-ywlweo73>Machine summary, processing notes, provenance chain — structured data for AI agents to ingest directly.</div> </div> <div class="depth-audience" data-astro-cid-ywlweo73>AI agents, <code data-astro-cid-ywlweo73>/llms.txt</code>, RAG systems</div> </div> </div> <div class="research-features" data-astro-cid-ywlweo73> <div class="research-card reveal" data-astro-cid-ywlweo73> <div class="research-card-icon" data-astro-cid-ywlweo73>◫</div> <div class="research-card-title" data-astro-cid-ywlweo73>Field Groups</div> <div class="research-card-desc" data-astro-cid-ywlweo73>Complex schemas collapse into manageable sections. First two groups auto-open; the rest expand on click. Works on any collection — not just dossiers.</div> </div> <div class="research-card reveal reveal-d1" data-astro-cid-ywlweo73> <div class="research-card-icon" data-astro-cid-ywlweo73>📖</div> <div class="research-card-title" data-astro-cid-ywlweo73>APA7 Citations</div> <div class="research-card-desc" data-astro-cid-ywlweo73>Table fields with <code data-astro-cid-ywlweo73>format: 'apa7'</code> render formatted citations in real time. Book, article, chapter, report, website — all standard academic formats.</div> </div> <div class="research-card reveal reveal-d2" data-astro-cid-ywlweo73> <div class="research-card-icon" data-astro-cid-ywlweo73>⇄</div> <div class="research-card-title" data-astro-cid-ywlweo73>Template System</div> <div class="research-card-desc" data-astro-cid-ywlweo73>Export and import research schemas as JSON. Share dossier templates across teams. Install built-in templates into any existing POD with one click.</div> </div> <div class="research-card reveal reveal-d3" data-astro-cid-ywlweo73> <div class="research-card-icon" data-astro-cid-ywlweo73>◈</div> <div class="research-card-title" data-astro-cid-ywlweo73>Dual Render Ready</div> <div class="research-card-desc" data-astro-cid-ywlweo73>Dossiers serve humans the narrative body and AI agents the structured claims, machine summary, and source data — from a single entry, zero duplication.</div> </div> </div> </section> <!-- Roadmap --> <section class="roadmap-section" data-astro-cid-ywlweo73> <div class="dual-label reveal" data-astro-cid-ywlweo73>Roadmap</div> <h2 class="dual-h2 reveal reveal-d1" data-astro-cid-ywlweo73><span class="counter" data-target="30" style="font-weight:500;color:var(--accent)" data-astro-cid-ywlweo73>0</span> features shipped.<br data-astro-cid-ywlweo73>Where we're going.</h2> <div class="roadmap-track" id="roadmap-track" style="margin-top:48px;" data-astro-cid-ywlweo73> <div class="roadmap-track-energy" id="track-energy" data-astro-cid-ywlweo73></div> <div class="roadmap-glow" id="roadmap-glow" data-astro-cid-ywlweo73></div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot done" data-astro-cid-ywlweo73>✓</div> <div class="rm-phase" data-astro-cid-ywlweo73>Phase 01–12 · Complete</div> <div class="rm-title" data-astro-cid-ywlweo73>Foundation → Launch Pad</div> <div class="rm-desc" data-astro-cid-ywlweo73>Core DB, admin UI, block editor, media library, auth, themes, CLI, i18n, scheduled publishing, FTP deploy, desktop app, Station dock mode, file &amp; table fields, calendar view, cross-pod copy.</div> <span class="rm-tag done" data-astro-cid-ywlweo73><span class="counter" data-target="30" data-astro-cid-ywlweo73>0</span> features shipped</span> </div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot done" data-astro-cid-ywlweo73>✓</div> <div class="rm-phase" data-astro-cid-ywlweo73>Phase 14 · Complete</div> <div class="rm-title" data-astro-cid-ywlweo73>Simple Analytics, OG Image Picker, Dashboard Toggles</div> <div class="rm-desc" data-astro-cid-ywlweo73>Privacy-friendly pageview tracking in the POD. Bot detection (GPTBot, ClaudeBot). Analytics dashboard with daily chart, top pages, referrers. OG Image picker modal. Dashboard widget toggles in Settings. Keyboard nav expanded.</div> <span class="rm-tag done" data-astro-cid-ywlweo73>admin@0.3.66</span> </div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot done" data-astro-cid-ywlweo73>✓</div> <div class="rm-phase" data-astro-cid-ywlweo73>Phase 15 · Complete</div> <div class="rm-title" data-astro-cid-ywlweo73>Form Builder UI</div> <div class="rm-desc" data-astro-cid-ywlweo73>Visual form builder — drag fields, set validation, configure email templates. Generates the HTML snippet for your Astro page. The form inbox already exists; this completes the loop.</div> <span class="rm-tag done" data-astro-cid-ywlweo73>shipped</span> </div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot done" data-astro-cid-ywlweo73>✓</div> <div class="rm-phase" data-astro-cid-ywlweo73>Phase 15 · Complete</div> <div class="rm-title" data-astro-cid-ywlweo73>Dossier Template & Research Platform</div> <div class="rm-desc" data-astro-cid-ywlweo73>39-field dossier template with field groups, APA7 citation system, and nav grouping. Collapsible editor sections, live citation previews, dock drawers with hover popups. The Depth Model: structured research content from narrative to machine mode.</div> <span class="rm-tag done" data-astro-cid-ywlweo73>shipped</span> </div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot done" data-astro-cid-ywlweo73>✓</div> <div class="rm-phase" data-astro-cid-ywlweo73>Phase 15 · Complete</div> <div class="rm-title" data-astro-cid-ywlweo73>Template Import/Export</div> <div class="rm-desc" data-astro-cid-ywlweo73>Export collections as shareable JSON, import template files, install built-in templates into any existing POD. Settings UI with template buttons and export/import controls.</div> <span class="rm-tag done" data-astro-cid-ywlweo73>shipped</span> </div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot next" data-astro-cid-ywlweo73>→</div> <div class="rm-phase" data-astro-cid-ywlweo73>Next</div> <div class="rm-title" data-astro-cid-ywlweo73>Multi-POD Dashboard</div> <div class="rm-desc" data-astro-cid-ywlweo73>Manage multiple PODs from one desktop app window. Quick-switch between client sites, see entry counts and last-edit dates at a glance. Built for freelancers and agencies.</div> <span class="rm-tag next" data-astro-cid-ywlweo73>~2 days</span> </div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot done" data-astro-cid-ywlweo73>✓</div> <div class="rm-phase" data-astro-cid-ywlweo73>Phase 15 · Complete</div> <div class="rm-title" data-astro-cid-ywlweo73>AI Content Assistant</div> <div class="rm-desc" data-astro-cid-ywlweo73>Summarize, translate, generate SEO text, adjust tone — directly in the block editor via <code data-astro-cid-ywlweo73>/ai</code>. Supports Ollama (local, free) or OpenAI/Anthropic API keys. No cloud required.</div> <span class="rm-tag done" data-astro-cid-ywlweo73>shipped</span> </div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot done" data-astro-cid-ywlweo73>✓</div> <div class="rm-phase" data-astro-cid-ywlweo73>Phase 16 · Complete</div> <div class="rm-title" data-astro-cid-ywlweo73>llms.txt Auto-Generator</div> <div class="rm-desc" data-astro-cid-ywlweo73>Orbiter generates <code data-astro-cid-ywlweo73>/orbiter/llms.txt</code> — a machine-readable content map listing all published entries with summaries. AI agents get a curated entry point. Configurable per collection.</div> <span class="rm-tag done" data-astro-cid-ywlweo73>shipped</span> </div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot done" data-astro-cid-ywlweo73>✓</div> <div class="rm-phase" data-astro-cid-ywlweo73>Phase 16 · Complete</div> <div class="rm-title" data-astro-cid-ywlweo73>Semantic Depth Fields + JSON Feed</div> <div class="rm-desc" data-astro-cid-ywlweo73><code data-astro-cid-ywlweo73>depth: 0-3</code> on schema fields (Narrative → Research → Evidence → Machine). <code data-astro-cid-ywlweo73>/orbiter/feed.json</code> serves JSON Feed v1.1 with <code data-astro-cid-ywlweo73>?depth=</code> filter for progressive disclosure to AI agents.</div> <span class="rm-tag done" data-astro-cid-ywlweo73>shipped</span> </div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot done" data-astro-cid-ywlweo73>✓</div> <div class="rm-phase" data-astro-cid-ywlweo73>Phase 16 · Complete</div> <div class="rm-title" data-astro-cid-ywlweo73>Agent Analytics</div> <div class="rm-desc" data-astro-cid-ywlweo73>Classify bot traffic by type: AI crawler (GPTBot, ClaudeBot), AI agent (Perplexity, ChatGPT), RAG pipeline (Cohere), feed reader, search. Per-agent hit counts and top paths.</div> <span class="rm-tag done" data-astro-cid-ywlweo73>shipped</span> </div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot done" data-astro-cid-ywlweo73>✓</div> <div class="rm-phase" data-astro-cid-ywlweo73>Phase 17 · Complete</div> <div class="rm-title" data-astro-cid-ywlweo73>Astro Content Layer Adapter</div> <div class="rm-desc" data-astro-cid-ywlweo73><code data-astro-cid-ywlweo73>orbiterLoader()</code> and <code data-astro-cid-ywlweo73>orbiterLiveLoader()</code> — standard <code data-astro-cid-ywlweo73>astro:content</code> API with auto Zod schemas, incremental digest caching, and hot reload via file watcher. Plus <code data-astro-cid-ywlweo73>orbiter publish</code> and <code data-astro-cid-ywlweo73>orbiter backup</code> CLI commands.</div> <span class="rm-tag done" data-astro-cid-ywlweo73>shipped</span> </div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot future" data-astro-cid-ywlweo73>◇</div> <div class="rm-phase" data-astro-cid-ywlweo73>Future</div> <div class="rm-title" data-astro-cid-ywlweo73>SvelteKit Integration</div> <div class="rm-desc" data-astro-cid-ywlweo73><code data-astro-cid-ywlweo73>@a83/orbiter-sveltekit</code> — same virtual module API as the Astro integration, but as a Vite plugin for SvelteKit projects.</div> <span class="rm-tag future" data-astro-cid-ywlweo73>planned</span> </div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot future" data-astro-cid-ywlweo73>◇</div> <div class="rm-phase" data-astro-cid-ywlweo73>Future · Collaboration</div> <div class="rm-title" data-astro-cid-ywlweo73>Live Collaboration</div> <div class="rm-desc" data-astro-cid-ywlweo73>WebSocket-based real-time editing. See who's editing, cursor positions, live changes. Built on the existing entry-locking system.</div> <span class="rm-tag future" data-astro-cid-ywlweo73>planned</span> </div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot done" data-astro-cid-ywlweo73>✓</div> <div class="rm-phase" data-astro-cid-ywlweo73>Phase 17 · Complete</div> <div class="rm-title" data-astro-cid-ywlweo73>Smart Suggestions v2</div> <div class="rm-desc" data-astro-cid-ywlweo73>Multi-section suggestion panel: AI tags, cross-collection related entries, SEO title &amp; description, content quality hints, missing field fills, suggested prompts. Manual trigger button in toolbar. All AI tasks run in parallel.</div> <span class="rm-tag done" data-astro-cid-ywlweo73>shipped</span> </div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot done" data-astro-cid-ywlweo73>✓</div> <div class="rm-phase" data-astro-cid-ywlweo73>Phase 17 · Complete</div> <div class="rm-title" data-astro-cid-ywlweo73>Publish HTML</div> <div class="rm-desc" data-astro-cid-ywlweo73>One-click static site generator with two built-in themes (Orbit, Canvas). Dark mode, responsive design, reading time, OG tags, SVG favicon. Choose a theme, click Generate, deploy the ZIP anywhere. No Astro needed.</div> <span class="rm-tag done" data-astro-cid-ywlweo73>shipped</span> </div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot next" data-astro-cid-ywlweo73>→</div> <div class="rm-phase" data-astro-cid-ywlweo73>Next · Sync</div> <div class="rm-title" data-astro-cid-ywlweo73>POD Sync</div> <div class="rm-desc" data-astro-cid-ywlweo73>Synchronize two PODs — laptop to server, local to cloud. Git-based or CouchDB-style replication with conflict resolution UI.</div> <span class="rm-tag next" data-astro-cid-ywlweo73>next up</span> </div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot next" data-astro-cid-ywlweo73>→</div> <div class="rm-phase" data-astro-cid-ywlweo73>Next · Embeddable</div> <div class="rm-title" data-astro-cid-ywlweo73>Widget SDK</div> <div class="rm-desc" data-astro-cid-ywlweo73>Drop <code data-astro-cid-ywlweo73>&lt;script src="orbiter.js"&gt;</code> on any website to display POD content — blog feed, event list, portfolio grid. No framework required.</div> <span class="rm-tag next" data-astro-cid-ywlweo73>next up</span> </div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot future" data-astro-cid-ywlweo73>◇</div> <div class="rm-phase" data-astro-cid-ywlweo73>Future · Automation</div> <div class="rm-title" data-astro-cid-ywlweo73>Webhooks &amp; Automations</div> <div class="rm-desc" data-astro-cid-ywlweo73>Trigger actions when content is published — Slack notifications, social media posts, newsletter sends. Visual webhook chain builder in Settings.</div> <span class="rm-tag future" data-astro-cid-ywlweo73>planned</span> </div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot future" data-astro-cid-ywlweo73>◇</div> <div class="rm-phase" data-astro-cid-ywlweo73>Future · Collaboration</div> <div class="rm-title" data-astro-cid-ywlweo73>Live Collaboration</div> <div class="rm-desc" data-astro-cid-ywlweo73>WebSocket-based real-time editing. See who's editing, cursor positions, live changes. Built on the existing entry-locking system.</div> <span class="rm-tag future" data-astro-cid-ywlweo73>planned</span> </div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot future" data-astro-cid-ywlweo73>◇</div> <div class="rm-phase" data-astro-cid-ywlweo73>Future · Extensibility</div> <div class="rm-title" data-astro-cid-ywlweo73>Plugin System</div> <div class="rm-desc" data-astro-cid-ywlweo73>Load custom field types as JS modules. A dossier plugin could auto-extract claims from body text, or a map plugin could render location fields.</div> <span class="rm-tag future" data-astro-cid-ywlweo73>planned</span> </div> <div class="rm-item reveal" data-astro-cid-ywlweo73> <div class="rm-dot future" data-astro-cid-ywlweo73>◇</div> <div class="rm-phase" data-astro-cid-ywlweo73>Future · Cloud</div> <div class="rm-title" data-astro-cid-ywlweo73>Orbiter Cloud</div> <div class="rm-desc" data-astro-cid-ywlweo73>Hosted Orbiter — create a POD with one click, no server needed. Custom domains, automatic backups, team access. Your POD is always downloadable and portable.</div> <span class="rm-tag future" data-astro-cid-ywlweo73>planned</span> </div> </div> </section> <!-- Warp Footer --> <footer class="warp-footer" data-astro-cid-ywlweo73> <div class="warp-scene" data-astro-cid-ywlweo73> <div class="warp-nebula" data-astro-cid-ywlweo73></div> <div class="warp-corona" data-astro-cid-ywlweo73></div> <div class="warp-corona-accent" data-astro-cid-ywlweo73></div> <div class="warp-line" data-astro-cid-ywlweo73></div> <div class="warp-shimmer" data-astro-cid-ywlweo73></div> <div class="warp-flare" data-astro-cid-ywlweo73></div> <div class="warp-content reveal" data-astro-cid-ywlweo73> <div class="warp-quote" data-astro-cid-ywlweo73>"The best way to predict the future is to <em data-astro-cid-ywlweo73>build it</em>."</div> <div class="warp-attr" data-astro-cid-ywlweo73>— Alan Kay</div> <div class="vision-cta-links" style="margin-bottom:32px;" data-astro-cid-ywlweo73> <a href="https://github.com/aeon022/orbiter" class="btn-primary" data-astro-cid-ywlweo73>View on GitHub →</a> <a href="/docs/quick-start" class="btn-ghost" data-astro-cid-ywlweo73>Quick Start</a> <a href="https://a83tech.com" class="btn-ghost" data-astro-cid-ywlweo73>Dual Render ↗</a> </div> <div class="warp-links" data-astro-cid-ywlweo73> <a href="/" data-astro-cid-ywlweo73>Home</a> <a href="/docs/" data-astro-cid-ywlweo73>Documentation</a> <a href="https://github.com/aeon022/orbiter/releases" data-astro-cid-ywlweo73>Releases</a> <a href="https://www.npmjs.com/package/@a83/orbiter-integration" data-astro-cid-ywlweo73>npm</a> <a href="/privacy" data-astro-cid-ywlweo73>Privacy</a> </div> <div class="warp-copy" data-astro-cid-ywlweo73>🪐 Orbiter · MIT License · Built by <a href="https://abteilung83.at" data-astro-cid-ywlweo73>Abteilung83</a> · Graz, Austria</div> </div> </div> </footer> <button class="btt" id="btt" aria-label="Back to top" title="Back to top" data-astro-cid-ywlweo73>↑</button> <div class="warp-jump" id="warp-jump" data-astro-cid-ywlweo73> <div class="warp-jump-streaks" data-astro-cid-ywlweo73></div> <div class="warp-jump-flash" data-astro-cid-ywlweo73></div> </div> <script>
+  // Reveal observer — handles all animated elements
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale, .rm-item').forEach(el => observer.observe(el));
+
+  // Remove page curtain + clear planet animation after intro
+  const curtain = document.querySelector('.page-curtain');
+  if (curtain) setTimeout(() => curtain.remove(), 2000);
+
+  // Scroll parallax
+  const planetScene = document.getElementById('planet-scene');
+  // Clear CSS animation so JS can control transform/opacity
+  if (planetScene) {
+    planetScene.addEventListener('animationend', () => {
+      planetScene.style.animation = 'none';
+    });
+  }
+  const lightBeam = document.getElementById('light-beam');
+  const lightBeamGlow = document.getElementById('light-beam-glow');
+  const nav = document.querySelector('.vision-nav');
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        const scrollY = window.scrollY;
+        const vh = window.innerHeight;
+
+        // Nav appears after hero
+        if (nav) nav.classList.toggle('visible', scrollY > vh * 0.6);
+
+        // Planet sinks and fades — smooth parallax
+        if (planetScene) {
+          const progress = Math.min(scrollY / (vh * 1.5), 1);
+          const translateY = progress * vh * 0.6;
+          const scale = 1 - progress * 0.12;
+          const finalOpacity = Math.max(1 - progress * 1.5, 0);
+          planetScene.style.transform = `translateY(${translateY}px) scale(${scale})`;
+          planetScene.style.opacity = finalOpacity;
+          planetScene.style.visibility = finalOpacity <= 0 ? 'hidden' : 'visible';
+        }
+
+        // Vertical light beam grows from top
+        if (lightBeam) {
+          const beamStart = vh * 0.4;
+          const beamScroll = Math.max(scrollY - beamStart, 0);
+          const beamProgress = Math.min(beamScroll / (vh * 3), 1);
+          const beamHeight = beamProgress * vh * 2.5;
+          const beamOpacity = Math.min(beamProgress * 1.2, 0.5);
+          lightBeam.style.height = beamHeight + 'px';
+          lightBeam.style.opacity = beamOpacity;
+          lightBeamGlow.style.height = beamHeight * 0.5 + 'px';
+          lightBeamGlow.style.opacity = beamOpacity * 0.3;
+        }
+
+        // Roadmap scan glow + energy line
+        const track = document.getElementById('roadmap-track');
+        const glow = document.getElementById('roadmap-glow');
+        const energy = document.getElementById('track-energy');
+        if (track && glow) {
+          const trackRect = track.getBoundingClientRect();
+          const trackTop = trackRect.top;
+          const trackH = trackRect.height;
+
+          if (trackTop < vh && trackTop + trackH > 0) {
+            glow.classList.add('active');
+            const scanPos = Math.max(0, Math.min(vh * 0.45 - trackTop, trackH - 200));
+            glow.style.top = scanPos + 'px';
+
+            if (energy) {
+              const energyH = Math.max(0, Math.min(scanPos + 100, trackH));
+              energy.style.height = energyH + 'px';
+            }
+          } else {
+            glow.classList.remove('active');
+          }
+        }
+
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+
+  // ── Canvas Starfield ──
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+  let W = 0, H = 0, stars = [];
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  function initStars(n) {
+    stars = Array.from({ length: n || 180 }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.3 + 0.2,
+      vx: (Math.random() - 0.5) * 0.1,
+      vy: (Math.random() - 0.5) * 0.1,
+      base: Math.random() * 0.5 + 0.1,
+      phase: Math.random() * Math.PI * 2,
+      speed: Math.random() * 0.015 + 0.003,
+    }));
+  }
+  function drawStars() {
+    ctx.clearRect(0, 0, W, H);
+    for (const s of stars) {
+      s.phase += s.speed;
+      const a = s.base + Math.sin(s.phase) * 0.2;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(210,215,255,' + a + ')';
+      ctx.fill();
+      s.x += s.vx;
+      s.y += s.vy;
+      if (s.x < -2) s.x = W + 2;
+      if (s.x > W + 2) s.x = -2;
+      if (s.y < -2) s.y = H + 2;
+      if (s.y > H + 2) s.y = -2;
+    }
+    requestAnimationFrame(drawStars);
+  }
+  resize();
+  initStars();
+  drawStars();
+  window.addEventListener('resize', () => { resize(); initStars(); });
+
+  // Back to top
+  const btt = document.getElementById('btt');
+  const warpJump = document.getElementById('warp-jump');
+  if (btt) {
+    window.addEventListener('scroll', () => {
+      btt.classList.toggle('visible', window.scrollY > window.innerHeight * 0.5);
+    });
+    btt.addEventListener('click', () => {
+      if (warpJump) {
+        warpJump.classList.add('active');
+        setTimeout(() => {
+          window.scrollTo({ top: 0, behavior: 'auto' });
+          setTimeout(() => warpJump.classList.remove('active'), 300);
+        }, 250);
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+  }
+
+  // ── 1. Typed text effect ──
+  const typedEl = document.getElementById('typed-target');
+  const cursorEl = document.getElementById('typed-cursor');
+  if (typedEl) {
+    const text = 'Two audiences.';
+    let i = 0;
+    function typeNext() {
+      if (i < text.length) {
+        typedEl.textContent += text[i];
+        i++;
+        setTimeout(typeNext, 70 + Math.random() * 40);
+      } else if (cursorEl) {
+        setTimeout(() => cursorEl.style.display = 'none', 2000);
+      }
+    }
+    setTimeout(typeNext, 2000);
+  }
+
+  // ── 2. Counter animation ──
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const el = e.target;
+      const target = parseInt(el.dataset.target);
+      if (el.dataset.counted) return;
+      el.dataset.counted = '1';
+      let n = 0;
+      const step = Math.max(1, Math.floor(target / 30));
+      const interval = setInterval(() => {
+        n = Math.min(n + step, target);
+        el.textContent = n;
+        if (n >= target) clearInterval(interval);
+      }, 40);
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('.counter').forEach(el => counterObserver.observe(el));
+
+  // ── 3. 3D tilt on diagram ──
+  const diagram = document.querySelector('.dual-diagram');
+  if (diagram && !window.matchMedia('(max-width:700px)').matches) {
+    diagram.addEventListener('mousemove', (e) => {
+      const rect = diagram.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      diagram.style.transform = `perspective(800px) rotateY(${x * 6}deg) rotateX(${-y * 4}deg)`;
+    });
+    diagram.addEventListener('mouseleave', () => {
+      diagram.style.transform = 'perspective(800px) rotateY(0) rotateX(0)';
+    });
+  }
+
+  // ── 4. Nebula color shift on scroll — lila→gold ──
+  const nebulas = document.querySelectorAll('.nebula');
+  if (nebulas.length) {
+    let nebTicking = false;
+    window.addEventListener('scroll', () => {
+      if (nebTicking) return;
+      nebTicking = true;
+      requestAnimationFrame(() => {
+        const progress = Math.min(window.scrollY / (document.body.scrollHeight - window.innerHeight), 1);
+        // Nebula 1 (top-left, purple): rotate towards warm, fade slightly
+        nebulas[0].style.filter = 'blur(60px) hue-rotate(' + Math.round(progress * 90) + 'deg) brightness(' + (1 + progress * 0.5) + ')';
+        // Nebula 2 (bottom-right, gold): grow brighter and more saturated
+        nebulas[1].style.filter = 'blur(50px) saturate(' + (1 + progress * 2) + ') brightness(' + (1 + progress * 0.8) + ')';
+        nebulas[1].style.opacity = 0.4 + progress * 0.8;
+        // Nebula 3 (center, accent): shift hue + scale up
+        nebulas[2].style.filter = 'blur(70px) hue-rotate(' + Math.round(progress * 120) + 'deg) brightness(' + (1 + progress * 0.3) + ')';
+        nebulas[2].style.opacity = 0.5 + progress * 0.6;
+        nebulas[2].style.transform = 'translate(' + (30 - progress * 60) + 'px, ' + (-25 + progress * 50) + 'px) scale(' + (1.1 + progress * 0.3) + ')';
+        nebTicking = false;
+      });
+    });
+  }
+</script> </body> </html>
