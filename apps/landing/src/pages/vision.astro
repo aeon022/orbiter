@@ -6,16 +6,52 @@ import { ViewTransitions } from 'astro:transitions';
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Vision — Orbiter</title>
-  <meta name="description" content="Where Orbiter is going: Dual Render, AI-native content, agent-ready publishing. The future of CMS." />
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <title>Orbiter Vision — Dual Render &amp; the future of CMS</title>
+  <meta name="description" content="One content source, two audiences. Orbiter is building Dual Render: structured content for humans and AI agents from a single POD file." />
+  <link rel="canonical" href="https://orbiter.sh/vision" />
 
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="Orbiter Vision — Dual Render & the future of CMS" />
-  <meta property="og:description" content="One DOM, two audiences. Content for humans and AI agents from a single source." />
-  <meta property="og:url" content="https://orbiter.sh/vision" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Orbiter Vision — Dual Render & the future of CMS" />
+  <!-- Open Graph -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:title"       content="Orbiter Vision — Dual Render &amp; the future of CMS" />
+  <meta property="og:description" content="One content source, two audiences. Orbiter is building Dual Render: structured content for humans and AI agents from a single POD file." />
+  <meta property="og:url"         content="https://orbiter.sh/vision" />
+  <meta property="og:image"       content="https://orbiter.sh/og-card.png" />
+  <meta property="og:image:alt"   content="Orbiter — CMS in one file for Astro" />
+  <meta property="og:image:width"  content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:site_name"   content="Orbiter" />
+  <meta property="og:locale"      content="en_US" />
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content="Orbiter Vision — Dual Render &amp; the future of CMS" />
+  <meta name="twitter:description" content="One content source, two audiences. Orbiter is building Dual Render: structured content for humans and AI agents from a single POD file." />
+  <meta name="twitter:image"       content="https://orbiter.sh/og-card.png" />
+  <meta name="twitter:image:alt"   content="Orbiter — CMS in one file for Astro" />
+  <meta name="twitter:site"        content="@gerwinweiher" />
+
+  <!-- Icons & PWA -->
+  <link rel="icon"     href="/favicon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#8b7cf8" />
+
+  <!-- Structured data -->
+  <script type="application/ld+json">{JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Orbiter Vision — Dual Render & the future of CMS",
+    "url": "https://orbiter.sh/vision",
+    "description": "One content source, two audiences. Orbiter is building Dual Render: structured content for humans and AI agents from a single POD file.",
+    "isPartOf": { "@type": "WebSite", "name": "Orbiter", "url": "https://orbiter.sh" },
+    "publisher": { "@type": "Organization", "name": "Abteilung83", "url": "https://abteilung83.at" },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Orbiter", "item": "https://orbiter.sh" },
+        { "@type": "ListItem", "position": 2, "name": "Vision", "item": "https://orbiter.sh/vision" }
+      ]
+    }
+  })}</script>
 
   <link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
   <ViewTransitions />
@@ -913,7 +949,7 @@ import { ViewTransitions } from 'astro:transitions';
 <section class="vision-hero">
   <a href="/" class="hud-back">orbiter.sh</a>
   <div class="vision-eyebrow">Where we're going</div>
-  <h1 class="vision-h1">One content source.<br /><em id="typed-target"></em><span class="typed-cursor" id="typed-cursor"></span></h1>
+  <h1 class="vision-h1" aria-label="One content source. Two audiences.">One content source.<br /><em id="typed-target"></em><span class="typed-cursor" id="typed-cursor"></span><noscript>Two audiences.</noscript></h1>
   <p class="vision-sub">The web is splitting into two layers: one for humans, one for AI agents. Orbiter is building for both — from a single POD.</p>
   <div class="vision-scroll-hint"><span>↓</span> Scroll to explore</div>
 </section>

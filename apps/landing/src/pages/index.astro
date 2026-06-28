@@ -155,12 +155,14 @@ const faqs = [
   <meta property="og:image:width"  content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:site_name"   content="Orbiter" />
+  <meta property="og:locale"      content="en_US" />
 
   <!-- Twitter / X -->
   <meta name="twitter:card"        content="summary_large_image" />
   <meta name="twitter:title"       content="Orbiter — CMS in one file" />
   <meta name="twitter:description" content="Content, media, schema, users — all in a single POD. One SQLite file. Copy it anywhere. Built for Astro." />
   <meta name="twitter:image"       content="https://orbiter.sh/og-card.png" />
+  <meta name="twitter:image:alt"   content="Orbiter CMS — content, media, schema, users in one POD" />
   <meta name="twitter:site"        content="@gerwinweiher" />
 
   <!-- Icons & PWA -->
@@ -174,6 +176,20 @@ const faqs = [
   <!-- Structured data -->
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Orbiter",
+    "url": "https://orbiter.sh",
+    "description": "A CMS for Astro where your entire site — content, media, schema, users — lives in one portable SQLite file.",
+    "publisher": { "@type": "Organization", "name": "Abteilung83", "url": "https://abteilung83.at" },
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": { "@type": "EntryPoint", "urlTemplate": "https://orbiter.sh/docs?q={search_term_string}" },
+      "query-input": "required name=search_term_string"
+    }
+  })} />
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Orbiter",
     "url": "https://orbiter.sh",
@@ -182,6 +198,8 @@ const faqs = [
     "operatingSystem": "Any",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
     "license": "https://opensource.org/licenses/MIT",
+    "downloadUrl": "https://www.npmjs.com/package/@a83/orbiter-integration",
+    "softwareVersion": "0.3.80",
     "author": { "@type": "Organization", "name": "Abteilung83", "url": "https://abteilung83.at" }
   })} />
 
@@ -276,7 +294,7 @@ const faqs = [
     </div>
 
     <div class="hero-inner">
-      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">Team-ready: content validation, permissions, quality dashboard, AES-256-GCM encryption, SvelteKit — admin@0.3.78 · Changelog →</a>
+      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">Team-ready: content validation, permissions, quality dashboard, AES-256-GCM encryption, SvelteKit — admin@0.3.80 · Changelog →</a>
       <h1>Your entire CMS<br />in <span>one file.</span></h1>
       <p class="hero-sub">
         Content, media, schema, users — all in a single POD.
@@ -388,27 +406,27 @@ const faqs = [
 
     <div class="screenshot-grid">
       <button class="screenshot-thumb active" data-src="/screenshots/xfce-dashboard.webp" data-caption="Space Station mode — glass cards, stats sidebar, notes &amp; to-do, floating dock" aria-label="Space Station dashboard">
-        <div class="screenshot-frame"><img src="/screenshots/xfce-dashboard.webp" alt="" width="1440" height="900" loading="lazy" /></div>
+        <div class="screenshot-frame"><img src="/screenshots/xfce-dashboard.webp" alt="Orbiter Space Station mode dashboard" width="1440" height="900" loading="lazy" /></div>
         <div class="screenshot-caption">Station dashboard</div>
       </button>
       <button class="screenshot-thumb" data-src="/screenshots/dashboard.webp" data-caption="Dashboard — entry counts per collection, recently changed, live/draft status" aria-label="Dashboard">
-        <div class="screenshot-frame"><img src="/screenshots/dashboard.webp" alt="" width="1390" height="839" loading="lazy" /></div>
+        <div class="screenshot-frame"><img src="/screenshots/dashboard.webp" alt="Orbiter classic dashboard view" width="1390" height="839" loading="lazy" /></div>
         <div class="screenshot-caption">Classic dashboard</div>
       </button>
       <button class="screenshot-thumb" data-src="/screenshots/login.webp" data-caption="Login screen" aria-label="Login">
-        <div class="screenshot-frame"><img src="/screenshots/login.webp" alt="" width="1390" height="839" loading="lazy" /></div>
+        <div class="screenshot-frame"><img src="/screenshots/login.webp" alt="Orbiter admin login screen" width="1390" height="839" loading="lazy" /></div>
         <div class="screenshot-caption">Login</div>
       </button>
       <button class="screenshot-thumb" data-src="/screenshots/settings.webp" data-caption="Settings — site config, GitHub sync mode, API token" aria-label="Settings &amp; GitHub sync">
-        <div class="screenshot-frame"><img src="/screenshots/settings.webp" alt="" width="1390" height="839" loading="lazy" /></div>
+        <div class="screenshot-frame"><img src="/screenshots/settings.webp" alt="Orbiter settings page" width="1390" height="839" loading="lazy" /></div>
         <div class="screenshot-caption">Settings &amp; GitHub sync</div>
       </button>
       <button class="screenshot-thumb" data-src="/screenshots/import.webp" data-caption="Import Tool — WordPress WXR and Markdown files" aria-label="Import Tool">
-        <div class="screenshot-frame"><img src="/screenshots/import.webp" alt="" width="1390" height="839" loading="lazy" /></div>
+        <div class="screenshot-frame"><img src="/screenshots/import.webp" alt="Orbiter WordPress import tool" width="1390" height="839" loading="lazy" /></div>
         <div class="screenshot-caption">Import Tool</div>
       </button>
       <button class="screenshot-thumb" data-src="/screenshots/xfce-editor-locale.webp" data-caption="Multilingual editor — locale tab bar with DE / EN / FR variants, dashed tab = untranslated" aria-label="i18n locale editor">
-        <div class="screenshot-frame"><img src="/screenshots/xfce-editor-locale.webp" alt="" width="1440" height="900" loading="lazy" /></div>
+        <div class="screenshot-frame"><img src="/screenshots/xfce-editor-locale.webp" alt="Orbiter block editor with multilingual locale tabs" width="1440" height="900" loading="lazy" /></div>
         <div class="screenshot-caption">i18n locale switcher</div>
       </button>
     </div>
