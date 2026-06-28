@@ -388,9 +388,15 @@ The integration injects a complete admin UI under `/orbiter` via Astro's `inject
 | `/orbiter/users` | User management (admin only) |
 | `/orbiter/build` | Build trigger |
 | `/orbiter/import` | WordPress importer |
-| `/orbiter/api/[collection]` | JSON API |
+| `/orbiter/api/[collection]` | JSON API (authenticated) |
 | `/orbiter/rss/[collection].xml` | RSS 2.0 feed per collection |
 | `/orbiter/sitemap.xml` | XML sitemap of all published entries |
+| `/api/public` | Discovery — lists all public collections, auth mode, links |
+| `/api/public/openapi.json` | Auto-generated OpenAPI 3.1 spec |
+| `/api/public/[collection]` | Public read-only API — list published entries |
+| `/api/public/[collection]/[slug]` | Public read-only API — single entry with full body |
+| `/llms.txt` | Machine-readable content index (llmstxt.org) |
+| `/llms-full.txt` | Full body content dump for AI/RAG pipelines |
 | `/orbiter/login` | Login |
 | `/orbiter/logout` | Logout |
 | `/orbiter/setup` | First-run setup wizard |
@@ -617,6 +623,82 @@ Response shape:
 
 ---
 
+## Public Content API
+
+Orbiter exposes a public, unauthenticated read-only API for AI agents, mobile apps, and third-party frontends. Unlike the admin JSON API, it requires no session cookie and supports wide CORS.
+
+### Enable
+
+In **Settings → Public API collections**, enter a comma-separated list of collection IDs to expose, or `*` to expose all:
+
+```
+posts, pages
+```
+
+### Discover
+
+```bash
+curl https://your-site.com/api/public
+```
+
+Returns the site name, auth mode, all public collections with entry counts, and links to the OpenAPI spec and `llms.txt`.
+
+### List entries
+
+```bash
+curl https://your-site.com/api/public/posts
+curl https://your-site.com/api/public/posts?limit=10&offset=0&q=astro
+```
+
+Response:
+
+```json
+{
+  "collection": "posts",
+  "total": 42,
+  "limit": 10,
+  "offset": 0,
+  "entries": [
+    {
+      "slug": "hello-world",
+      "title": "Hello World",
+      "excerpt": "...",
+      "date": "2026-06-28",
+      "author": "Ada Lovelace",
+      "image": null,
+      "tags": ["astro", "cms"],
+      "url": "https://your-site.com/posts/hello-world"
+    }
+  ]
+}
+```
+
+### Single entry
+
+```bash
+curl https://your-site.com/api/public/posts/hello-world
+```
+
+Returns the full entry including `body` (HTML), `publishedAt`, and `seo` fields.
+
+### OpenAPI spec
+
+```bash
+curl https://your-site.com/api/public/openapi.json
+```
+
+Auto-generated OpenAPI 3.1 spec from your live pod schema. Import into Postman, Swagger UI, or any AI tool.
+
+### API Keys (optional)
+
+Enable **Require API key** in Settings to restrict access. Generate named keys in **Settings → API Keys** and pass them as a Bearer token:
+
+```bash
+curl -H "Authorization: Bearer orb_xxxxx" https://your-site.com/api/public/posts
+```
+
+---
+
 ## Git Sync Mode
 
 ### When to use it
@@ -763,7 +845,7 @@ npm install -g @a83/orbiter-cli
 | `orbiter export` | Export content to JSON or Markdown files |
 | `orbiter unpack` | Extract media BLOBs from pod to files (Git sync) |
 | `orbiter pack` | Restore media BLOBs from files into pod (Git sync) |
-| `orbiter status [pod]` | Show pod health: entry counts, size, last modified |
+| `orbiter status [pod]` | Show pod health: entry counts, size, users, Public API info |
 
 ```bash
 orbiter init my-site
@@ -1171,6 +1253,40 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 ---
 
 ## Changelog
+
+### June 2026 · admin@0.3.80 / integration@0.3.18 / cli@0.3.10 — Public Content API, JSON-LD, API Keys, Agent Analytics
+
+**Public Content API**
+- `GET /api/public` — discovery endpoint: lists all publicly accessible collections with entry counts, auth mode, and links to OpenAPI spec and `/llms.txt`
+- `GET /api/public/[collection]` — unauthenticated paginated list of published entries (`?limit`, `?offset`, `?q` keyword search). Returns clean JSON: slug, title, excerpt, date, author, image, tags, url.
+- `GET /api/public/[collection]/[slug]` — single entry with full body content and SEO fields
+- `GET /api/public/openapi.json` — auto-generated OpenAPI 3.1 spec derived from pod schema. Per-collection paths, query parameter docs, Bearer auth scheme if API keys are required.
+- Per-collection opt-in via **Settings → Public API collections** (`posts, pages` or `*` for all). Wide CORS — fetch from any origin.
+
+**API Keys**
+- Generate named API keys in **Settings → API Keys** — shown once at creation, then masked
+- Optional enforcement: toggle **Require API key** in Settings to require `Authorization: Bearer <key>` on all `/api/public/` requests
+- Hit counter and last-used date per key, tracked on every request
+- Revoke individual keys from the Settings UI
+
+**JSON-LD / schema.org**
+- Published HTML sites (both *Orbit* and *Canvas* themes) now include `<script type="application/ld+json">` in every page
+- Entry pages: `BlogPosting` — headline, description, datePublished, dateModified, author (Person or Organization), image, keywords, publisher
+- Index and collection pages: `WebSite` — name, url, description
+
+**Agent Analytics**
+- New `/api/analytics/agent-trend` endpoint: daily human vs. agent traffic split + top pages by agent hits
+- Analytics page now shows **Agent Traffic** section (below the bottom grid) with: human/agent split bar with percentages, stacked daily trend minichart, top agent pages table
+- Section only appears when actual bot traffic exists in the database
+
+**CLI: `orbiter status` — Public API info**
+- Status output now includes a **Public API** block: auth mode, active key count, which collections are exposed, and the endpoint + OpenAPI URLs (when `site.url` is configured)
+
+**`llms.txt` + `llms-full.txt`** *(integration@0.3.16)*
+- Standard-path `GET /llms.txt` — machine-readable content index for AI agents (llmstxt.org convention). Lists all published entries with URLs and summaries, grouped by collection.
+- `GET /llms-full.txt` — full body content dump for RAG pipelines. Opt-in per collection via `llms.collections` meta key.
+
+---
 
 ### June 2026 · admin@0.3.78 / cli@0.3.9 — Content Validation, orbiter status, SvelteKit Guide
 
