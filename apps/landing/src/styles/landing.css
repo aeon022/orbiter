@@ -1298,29 +1298,33 @@ h2 {
 
 .grid .feature { opacity: 0; transform: translateY(18px); transition: opacity .5s ease, transform .5s ease, background .2s, box-shadow .25s; }
 .grid.visible .feature:nth-child(1)  { opacity: 1; transform: translateY(0); transition-delay: 0ms; }
-.grid.visible .feature:nth-child(2)  { opacity: 1; transform: translateY(0); transition-delay: 55ms; }
-.grid.visible .feature:nth-child(3)  { opacity: 1; transform: translateY(0); transition-delay: 110ms; }
-.grid.visible .feature:nth-child(4)  { opacity: 1; transform: translateY(0); transition-delay: 165ms; }
-.grid.visible .feature:nth-child(5)  { opacity: 1; transform: translateY(0); transition-delay: 220ms; }
-.grid.visible .feature:nth-child(6)  { opacity: 1; transform: translateY(0); transition-delay: 275ms; }
-.grid.visible .feature:nth-child(7)  { opacity: 1; transform: translateY(0); transition-delay: 330ms; }
-.grid.visible .feature:nth-child(8)  { opacity: 1; transform: translateY(0); transition-delay: 385ms; }
-.grid.visible .feature:nth-child(9)  { opacity: 1; transform: translateY(0); transition-delay: 440ms; }
-.grid.visible .feature:nth-child(10) { opacity: 1; transform: translateY(0); transition-delay: 495ms; }
-.grid.visible .feature:nth-child(11) { opacity: 1; transform: translateY(0); transition-delay: 550ms; }
-.grid.visible .feature:nth-child(12) { opacity: 1; transform: translateY(0); transition-delay: 605ms; }
-.grid.visible .feature:nth-child(13) { opacity: 1; transform: translateY(0); transition-delay: 660ms; }
-.grid.visible .feature:nth-child(14) { opacity: 1; transform: translateY(0); transition-delay: 715ms; }
-.grid.visible .feature:nth-child(15) { opacity: 1; transform: translateY(0); transition-delay: 770ms; }
-.grid.visible .feature:nth-child(16) { opacity: 1; transform: translateY(0); transition-delay: 825ms; }
-.grid.visible .feature:nth-child(17) { opacity: 1; transform: translateY(0); transition-delay: 880ms; }
-.grid.visible .feature:nth-child(18) { opacity: 1; transform: translateY(0); transition-delay: 935ms; }
-.grid.visible .feature:nth-child(19) { opacity: 1; transform: translateY(0); transition-delay: 990ms; }
-.grid.visible .feature:nth-child(20) { opacity: 1; transform: translateY(0); transition-delay: 1045ms; }
-.grid.visible .feature:nth-child(21) { opacity: 1; transform: translateY(0); transition-delay: 1100ms; }
-.grid.visible .feature:nth-child(22) { opacity: 1; transform: translateY(0); transition-delay: 1155ms; }
-.grid.visible .feature:nth-child(23) { opacity: 1; transform: translateY(0); transition-delay: 1210ms; }
-.grid.visible .feature:nth-child(24) { opacity: 1; transform: translateY(0); transition-delay: 1265ms; }
+.grid.visible .feature:nth-child(2)  { opacity: 1; transform: translateY(0); transition-delay: 40ms; }
+.grid.visible .feature:nth-child(3)  { opacity: 1; transform: translateY(0); transition-delay: 80ms; }
+.grid.visible .feature:nth-child(4)  { opacity: 1; transform: translateY(0); transition-delay: 120ms; }
+.grid.visible .feature:nth-child(5)  { opacity: 1; transform: translateY(0); transition-delay: 160ms; }
+.grid.visible .feature:nth-child(6)  { opacity: 1; transform: translateY(0); transition-delay: 200ms; }
+.grid.visible .feature:nth-child(7)  { opacity: 1; transform: translateY(0); transition-delay: 240ms; }
+.grid.visible .feature:nth-child(8)  { opacity: 1; transform: translateY(0); transition-delay: 280ms; }
+.grid.visible .feature:nth-child(9)  { opacity: 1; transform: translateY(0); transition-delay: 320ms; }
+.grid.visible .feature:nth-child(10) { opacity: 1; transform: translateY(0); transition-delay: 360ms; }
+.grid.visible .feature:nth-child(11) { opacity: 1; transform: translateY(0); transition-delay: 400ms; }
+.grid.visible .feature:nth-child(12) { opacity: 1; transform: translateY(0); transition-delay: 440ms; }
+.grid.visible .feature:nth-child(13) { opacity: 1; transform: translateY(0); transition-delay: 480ms; }
+.grid.visible .feature:nth-child(14) { opacity: 1; transform: translateY(0); transition-delay: 520ms; }
+.grid.visible .feature:nth-child(15) { opacity: 1; transform: translateY(0); transition-delay: 560ms; }
+.grid.visible .feature:nth-child(16) { opacity: 1; transform: translateY(0); transition-delay: 600ms; }
+.grid.visible .feature:nth-child(17) { opacity: 1; transform: translateY(0); transition-delay: 640ms; }
+.grid.visible .feature:nth-child(18) { opacity: 1; transform: translateY(0); transition-delay: 680ms; }
+.grid.visible .feature:nth-child(19) { opacity: 1; transform: translateY(0); transition-delay: 720ms; }
+.grid.visible .feature:nth-child(20) { opacity: 1; transform: translateY(0); transition-delay: 760ms; }
+.grid.visible .feature:nth-child(21) { opacity: 1; transform: translateY(0); transition-delay: 800ms; }
+.grid.visible .feature:nth-child(22) { opacity: 1; transform: translateY(0); transition-delay: 840ms; }
+.grid.visible .feature:nth-child(23) { opacity: 1; transform: translateY(0); transition-delay: 880ms; }
+.grid.visible .feature:nth-child(24) { opacity: 1; transform: translateY(0); transition-delay: 920ms; }
+.grid.visible .feature:nth-child(25) { opacity: 1; transform: translateY(0); transition-delay: 960ms; }
+.grid.visible .feature:nth-child(26) { opacity: 1; transform: translateY(0); transition-delay: 1000ms; }
+.grid.visible .feature:nth-child(27) { opacity: 1; transform: translateY(0); transition-delay: 1040ms; }
+.grid.visible .feature:nth-child(28) { opacity: 1; transform: translateY(0); transition-delay: 1080ms; }
 
 /* ===== COMPARISON TABLE ===== */
 
