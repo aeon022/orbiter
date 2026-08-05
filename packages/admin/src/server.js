@@ -141,8 +141,16 @@ export function createApp(podPath) {
     return c.json({ ok: podOk, version: adminVersion, pod: podPath, uptime: Math.floor(process.uptime()) });
   });
 
-  // Redirect root to login
+  // Redirect root and extensionless URLs to .html files
   app.get('/', (c) => c.redirect('/login.html'));
+  app.get('/login', (c) => c.redirect('/login.html'));
+  app.get('/dashboard', (c) => c.redirect('/dashboard.html'));
+  app.get('/entries', (c) => c.redirect('/entries.html'));
+  app.get('/editor', (c) => c.redirect('/editor.html'));
+  app.get('/schema', (c) => c.redirect('/schema.html'));
+  app.get('/media', (c) => c.redirect('/media.html'));
+  app.get('/settings', (c) => c.redirect('/settings.html'));
+  app.get('/users', (c) => c.redirect('/users.html'));
 
   // Serve static frontend files from public/
   app.use('/*', serveStatic({ root: join(ADMIN_ROOT, 'public') }));
