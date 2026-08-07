@@ -1,7 +1,7 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
 ---
-<DocsLayout title="JSON API" current="/docs/json-api" prev={{ href: '/docs/typescript', title: 'TypeScript' }} next={{ href: '/docs/deployment', title: 'Deployment' }}>
+<DocsLayout title="JSON API" current="/docs/json-api" prev={{ href: '/docs/typescript', title: 'TypeScript' }} next={{ href: '/docs/public-api', title: 'Public Content API' }}>
 
 <h1>JSON API</h1>
 <p class="lead">A read-only public API at <code>/orbiter/api/[collection]</code>. Returns all published entries as JSON.</p>
@@ -36,7 +36,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <p>Requests without the token return <code>401 Unauthorized</code>.</p>
 
 <h2>Enabling / disabling</h2>
-<p>The API is enabled by default. Disable it in <strong>Settings → Public API → Enable public API</strong>.</p>
+<p>The API is <strong>disabled by default</strong>. Turn it on in <strong>Settings → Public API → Enable public API</strong>.</p>
 
 <h2>Use cases</h2>
 <ul>
@@ -47,5 +47,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 </ul>
 
 <div class="callout"><strong>Note:</strong> The JSON API is served by the Astro integration, not the standalone admin. It requires the integration to be running (i.e. your Astro site must be deployed in SSR or hybrid mode).</div>
+
+<div class="callout"><strong>Looking for per-collection opt-in, scoped API keys, or an OpenAPI spec?</strong> See the <a href="/docs/public-api">Public Content API</a> — a newer, separate endpoint served by the admin server with finer-grained access control.</div>
 
 </DocsLayout>

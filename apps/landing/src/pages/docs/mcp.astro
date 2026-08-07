@@ -1,0 +1,59 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="MCP Server" current="/docs/mcp" prev={{ href: '/docs/public-api', title: 'Public Content API' }} next={{ href: '/docs/llms-txt', title: 'llms.txt & Depth Model' }}>
+
+<h1>MCP Server</h1>
+<p class="lead"><code>@a83/orbiter-mcp</code> exposes a pod's content as tools for AI agents — Claude Desktop, Claude Code, or any MCP (Model Context Protocol) client — over stdio or HTTP.</p>
+
+<h2>Install</h2>
+<pre>npm install -g @a83/orbiter-mcp</pre>
+
+<h2>Tools</h2>
+<table>
+  <thead><tr><th>Tool</th><th>Params</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code>list_collections</code></td><td>—</td><td>List accessible collections with entry counts</td></tr>
+    <tr><td><code>get_entries</code></td><td><code>collection</code>, <code>status?</code>, <code>locale?</code>, <code>limit?</code>, <code>offset?</code></td><td>List entries in a collection</td></tr>
+    <tr><td><code>get_entry</code></td><td><code>collection</code>, <code>slug</code>, <code>locale?</code></td><td>Fetch a single entry with full body</td></tr>
+    <tr><td><code>search_content</code></td><td><code>collection?</code>, <code>query</code>, <code>limit?</code></td><td>Substring search over title/excerpt/body</td></tr>
+  </tbody>
+</table>
+
+<h2>stdio — local (Claude Desktop)</h2>
+<p>Full access to all collections and statuses. No authentication — same trust level as running <code>orbiter-admin</code> on your own machine.</p>
+
+<pre>&#123;
+  "mcpServers": &#123;
+    "orbiter": &#123;
+      "command": "orbiter-mcp",
+      "env": &#123; "ORBITER_POD": "/absolute/path/to/content.pod" &#125;
+    &#125;
+  &#125;
+&#125;</pre>
+
+<p>Add this to Claude Desktop's config file, or run directly:</p>
+<pre>ORBITER_POD=/path/to/content.pod orbiter-mcp</pre>
+
+<p>If exactly one <code>.pod</code> file exists in the current directory, <code>ORBITER_POD</code> can be omitted — it's auto-detected.</p>
+
+<h2>HTTP — remote</h2>
+<pre>orbiter-mcp --http --port 4500</pre>
+<p>Carries the <strong>same restrictions as the <a href="/docs/public-api">Public Content API</a></strong>: requires a Bearer API key when <strong>Require API key</strong> is enabled in Settings, only exposes collections listed in <strong>Public API collections</strong>, and only ever returns <code>status: 'published'</code> entries. Remote MCP access is deliberately "the Public Content API as tools" — no elevated privileges over the REST endpoints.</p>
+
+<p>Endpoint: <code>POST http://host:4500/mcp</code>. Health check: <code>GET /health</code>.</p>
+
+<h2>Why two trust levels?</h2>
+<p>stdio access assumes the caller already has filesystem access to your pod — the same assumption <code>orbiter-admin</code> makes when run locally. HTTP access assumes an untrusted network caller, so it's scoped exactly like the Public Content API rather than granting broader access just because it's speaking MCP instead of REST.</p>
+
+<h2>Env vars</h2>
+<table>
+  <thead><tr><th>Variable</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code>ORBITER_POD</code></td><td>Path to the <code>.pod</code> file (auto-detected if a single <code>*.pod</code> file sits in the current directory)</td></tr>
+    <tr><td><code>PORT</code></td><td>HTTP port (default <code>4500</code>, only used with <code>--http</code>)</td></tr>
+    <tr><td><code>ORBITER_NO_TELEMETRY=1</code></td><td>Disable the anonymous startup ping</td></tr>
+  </tbody>
+</table>
+
+</DocsLayout>

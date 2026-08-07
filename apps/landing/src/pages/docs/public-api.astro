@@ -1,0 +1,89 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Public Content API" current="/docs/public-api" prev={{ href: '/docs/json-api', title: 'JSON API' }} next={{ href: '/docs/mcp', title: 'MCP Server' }}>
+
+<h1>Public Content API</h1>
+<p class="lead">A read-only JSON API served by the standalone admin server, with per-collection opt-in, scoped API keys, and an auto-generated OpenAPI spec. Built for AI agents, integrations, and external tools.</p>
+
+<div class="callout"><strong>Not the same as the JSON API.</strong> This is a separate, newer endpoint served by <code>@a83/orbiter-admin</code> (not the Astro integration), with finer-grained access control. See <a href="/docs/json-api">JSON API</a> for the simpler, integration-served endpoint.</div>
+
+<h2>Enabling</h2>
+<p>Open <strong>Settings → Public API</strong> in the admin. Set <strong>Public API collections</strong> to a comma-separated list of collection IDs (e.g. <code>posts, pages</code>), or <code>*</code> to expose every collection. Leave blank to keep the API disabled — no collections are exposed by default.</p>
+
+<h2>Endpoints</h2>
+
+<h3>Discovery</h3>
+<pre>GET /api/public</pre>
+<p>Lists all publicly accessible collections, entry counts, and links to the OpenAPI spec and <code>llms.txt</code>. This is the entry point for an agent exploring your site.</p>
+<pre>&#123;
+  "name": "My Site",
+  "description": "...",
+  "url": "https://your-site.com",
+  "auth": "bearer",
+  "collections": [
+    &#123; "id": "posts", "label": "Posts", "total": 12, "url": "https://your-site.com/api/public/posts" &#125;
+  ],
+  "links": &#123;
+    "openapi": "https://your-site.com/api/public/openapi.json",
+    "llms": "https://your-site.com/llms.txt"
+  &#125;
+&#125;</pre>
+
+<h3>List entries</h3>
+<pre>GET /api/public/[collection]?limit=20&offset=0&q=keyword</pre>
+<p><code>limit</code> defaults to 20, max 100. <code>q</code> does a simple case-insensitive substring match against title, excerpt, and body.</p>
+<pre>&#123;
+  "collection": "posts",
+  "total": 12,
+  "limit": 20,
+  "offset": 0,
+  "entries": [
+    &#123;
+      "slug": "my-first-post",
+      "title": "My First Post",
+      "excerpt": "...",
+      "date": "2026-06-01",
+      "author": "Jane Doe",
+      "image": "https://your-site.com/media/...",
+      "tags": ["astro", "cms"],
+      "url": "https://your-site.com/posts/my-first-post"
+    &#125;
+  ]
+&#125;</pre>
+
+<h3>Single entry</h3>
+<pre>GET /api/public/[collection]/[slug]</pre>
+<p>Same shape as the list, plus <code>body</code> (full HTML), <code>publishedAt</code>, and <code>seo &#123; title, description &#125;</code>. Returns <code>404</code> if the entry doesn't exist or isn't published.</p>
+
+<h3>OpenAPI spec</h3>
+<pre>GET /api/public/openapi.json</pre>
+<p>An OpenAPI 3.1 document auto-generated from your opted-in collections — paths, parameters, and response schemas for every endpoint above. Feed it to any OpenAPI-aware tool or agent for structured discovery.</p>
+
+<h2>Authentication (API keys)</h2>
+<p>By default the Public Content API is open to anyone once a collection is opted in. To require a Bearer token, enable <strong>Require API key</strong> in <strong>Settings → Public API</strong>, then generate one or more keys under <strong>API Keys</strong>. Each key is shown once on creation — copy it immediately.</p>
+
+<pre>curl -H "Authorization: Bearer orb_..." https://your-site.com/api/public/posts</pre>
+
+<p>Requests without a valid key return <code>401 Unauthorized</code> when a key is required. Each key tracks a hit counter and last-used date, visible in Settings, so you can see which integrations are actually using the API and revoke unused keys.</p>
+
+<h2>Access control summary</h2>
+<table>
+  <thead><tr><th>Setting</th><th>Meta key</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td>Public API collections</td><td><code>public.collections</code></td><td>Comma list or <code>*</code>. Collections not listed return <code>403</code>.</td></tr>
+    <tr><td>Require API key</td><td><code>api.requireKey</code></td><td>When <code>1</code>, all <code>/api/public/*</code> requests need a valid Bearer key.</td></tr>
+  </tbody>
+</table>
+<p>Only <code>status: 'published'</code> entries are ever returned — drafts and scheduled entries are never exposed through this API.</p>
+
+<h2>Use cases</h2>
+<ul>
+  <li>AI agents and RAG pipelines pulling structured content (also see the <a href="/docs/mcp">MCP Server</a> for tool-based access)</li>
+  <li>Third-party integrations that need scoped, revocable credentials instead of a single shared token</li>
+  <li>Search or discovery tools that consume the OpenAPI spec directly</li>
+</ul>
+
+<div class="callout"><strong>CORS:</strong> All Public Content API responses include <code>Access-Control-Allow-Origin: *</code> — safe to call from client-side JavaScript on any domain.</div>
+
+</DocsLayout>

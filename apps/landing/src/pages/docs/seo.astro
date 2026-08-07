@@ -72,4 +72,12 @@ const ogImage  = entry.seo.ogImage
 
 <div class="callout"><strong>Schema SEO fields:</strong> If you previously added <code>meta_title</code>, <code>seo_title</code>, or <code>meta_description</code> fields to your collection schema, they still work as before and appear in the Fields section. The built-in <code>_seo</code> panel is separate and does not replace them.</div>
 
+<h2>Structured data (JSON-LD)</h2>
+<p>Only applies to sites generated with <a href="/docs/deployment"><code>orbiter publish</code></a> (the built-in static site generator). Every page gets a <code>&lt;script type="application/ld+json"&gt;</code> block in <code>&lt;head&gt;</code> automatically — no configuration needed:</p>
+<ul>
+  <li><strong>Entry pages</strong> — <code>schema.org/BlogPosting</code>: <code>headline</code>, <code>description</code>, <code>datePublished</code>, <code>dateModified</code>, <code>author</code> (falls back to the site as an <code>Organization</code> if no entry author is set), <code>image</code>, <code>keywords</code> from tags, and <code>publisher</code>.</li>
+  <li><strong>Index / listing pages</strong> — <code>schema.org/WebSite</code>: <code>name</code>, <code>url</code>, <code>description</code>.</li>
+</ul>
+<p>Both built-in themes (<em>Orbit</em> and <em>Canvas</em>) generate the same structured data — it's derived from the entry's SEO panel and metadata fields above, so there's nothing extra to fill in.</p>
+
 </DocsLayout>

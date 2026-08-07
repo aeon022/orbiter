@@ -31,6 +31,41 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <p>The tracking endpoint automatically flags known bot and AI agent user agents. The analytics dashboard shows human vs. bot traffic separately — so you can see what percentage of your readers are AI systems.</p>
 <p>Detected agents include: Googlebot, Bingbot, GPTBot, ClaudeBot, PerplexityBot, FacebookExternalHit, LinkedInBot, TwitterBot, and others.</p>
 
+<h2>Agent Analytics</h2>
+<p>Beyond the human/bot split, flagged traffic is further classified into categories — visible as a human-vs-agent split bar, a daily trend chart, and a top-agent-pages table on the Analytics dashboard:</p>
+<table>
+  <thead><tr><th>Category</th><th>Examples</th></tr></thead>
+  <tbody>
+    <tr><td><code>ai-crawler</code></td><td>GPTBot, ClaudeBot, Anthropic, Meta AI — training/indexing crawlers</td></tr>
+    <tr><td><code>ai-agent</code></td><td>Perplexity, ChatGPT — user-driven agent fetches</td></tr>
+    <tr><td><code>rag-pipeline</code></td><td>Cohere — retrieval pipelines</td></tr>
+    <tr><td><code>search</code></td><td>Googlebot, Bingbot</td></tr>
+    <tr><td><code>feed-reader</code></td><td>Feedbin, Feedly, NewsBlur, Miniflux, Inoreader</td></tr>
+    <tr><td><code>bot</code></td><td>Anything else matching a generic bot pattern</td></tr>
+  </tbody>
+</table>
+
+<h3>Per-agent breakdown (auth required)</h3>
+<pre>GET /api/analytics/agents?days=30
+
+&#123;
+  "agents": [
+    &#123; "type": "ai-crawler", "name": "ClaudeBot", "hits": 340, "lastSeen": "2026-08-06 10:00:00",
+      "topPaths": [&#123; "path": "/posts/my-post", "hits": 120 &#125;] &#125;
+  ],
+  "period": 30
+&#125;</pre>
+
+<h3>Daily agent-vs-human trend (auth required)</h3>
+<pre>GET /api/analytics/agent-trend?days=30
+
+&#123;
+  "trend": [&#123; "day": "2026-08-01", "human": 210, "agent": 45 &#125;, ...],
+  "totals": &#123; "human": 6300, "agent": 1340 &#125;,
+  "topAgentPaths": [&#123; "path": "/posts/my-post", "hits": 120 &#125;, ...],
+  "period": 30
+&#125;</pre>
+
 <h2>Dashboard</h2>
 <p>Open <strong>Analytics</strong> from the admin sidebar (or <kbd>g</kbd> + <kbd>y</kbd> in Station mode). The dashboard shows:</p>
 <ul>

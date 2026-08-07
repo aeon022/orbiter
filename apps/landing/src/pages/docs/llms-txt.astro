@@ -1,0 +1,68 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="llms.txt & Depth Model" current="/docs/llms-txt" prev={{ href: '/docs/mcp', title: 'MCP Server' }} next={{ href: '/docs/deployment', title: 'Deployment' }}>
+
+<h1>llms.txt & Depth Model</h1>
+<p class="lead">Two build-time endpoints, served by the Astro integration, that give AI agents a curated map of your published content — no crawling required.</p>
+
+<h2>llms.txt</h2>
+<pre>GET /llms.txt</pre>
+<p>Follows the <a href="https://llmstxt.org" target="_blank" rel="noopener noreferrer">llms.txt convention</a>: a plain-text, Markdown-formatted index of every published entry, grouped by collection, with a one-line summary per entry (<code>summaryMachine</code>, falling back to <code>excerpt</code>, then <code>humanSummary</code>, then the title).</p>
+
+<pre># My Site
+
+&gt; A site about things.
+
+- Home: https://your-site.com
+- Full content: https://your-site.com/llms-full.txt
+- JSON Feed: https://your-site.com/orbiter/feed.json
+- Sitemap: https://your-site.com/orbiter/sitemap.xml
+
+## Posts
+
+- [My First Post](https://your-site.com/posts/my-first-post): A short summary.
+- [Another Post](https://your-site.com/posts/another-post): ...</pre>
+
+<p>All collections are included by default. To restrict which collections appear, set the <code>llms.collections</code> setting (comma-separated collection IDs) — there's no dedicated UI for this yet, so set it via the meta API:</p>
+<pre>curl -X PUT https://your-site.com:4322/api/meta/llms.collections \
+  -H "Authorization: Bearer &lt;admin-session-token&gt;" \
+  -H "Content-Type: application/json" \
+  -d '&#123;"value": "posts,pages"&#125;'</pre>
+
+<h3>llms-full.txt</h3>
+<pre>GET /llms-full.txt</pre>
+<p>Same index, but with full body content inlined instead of one-line summaries — for agents that want everything in a single fetch.</p>
+
+<h2>JSON Feed + Depth Model</h2>
+<pre>GET /orbiter/feed.json</pre>
+<p>A <a href="https://jsonfeed.org/version/1.1" target="_blank" rel="noopener noreferrer">JSON Feed v1.1</a> document. Every item includes an <code>_orbiter</code> block (<code>collection</code>, <code>slug</code>, and — when present — <code>author</code>, <code>authorship</code>, <code>contentType</code>, <code>dossierId</code>).</p>
+
+<h3>Progressive disclosure with <code>?depth=</code></h3>
+<p>Schema fields can carry a <code>depth</code> property (<code>0</code>–<code>3</code>), letting you tier how much detail a request gets:</p>
+<table>
+  <thead><tr><th>Depth</th><th>Intent</th></tr></thead>
+  <tbody>
+    <tr><td><code>0</code></td><td>Narrative — title, body, excerpt. What a human reader sees.</td></tr>
+    <tr><td><code>1</code></td><td>Research — supporting fields (hypothesis, test setup, findings, ...)</td></tr>
+    <tr><td><code>2</code></td><td>Evidence — claims, sources, relationships</td></tr>
+    <tr><td><code>3</code></td><td>Machine — provenance and agent-facing fields (authorship, machine summary, suggested prompts, ...)</td></tr>
+  </tbody>
+</table>
+
+<pre>GET /orbiter/feed.json?depth=1          # narrative + research fields only
+GET /orbiter/feed.json?depth=3          # everything
+GET /orbiter/feed.json?collections=posts,dossiers</pre>
+
+<p>Fields without an explicit <code>depth</code> are treated as depth <code>0</code>. Omit <code>?depth=</code> entirely to get every field regardless of tier.</p>
+
+<div class="callout"><strong>Where to set <code>depth</code>:</strong> it's a per-field schema property, same place as <code>type</code> and <code>label</code>. The built-in Dossier template (<a href="/docs/schema-tools">Schema tools</a>) is the reference example — its fields span all four depth levels, grouped into Content, Research, Evidence, Meta, Provenance, and Agent sections.</div>
+
+<h2>Use cases</h2>
+<ul>
+  <li>Give an AI agent a single entry point (<code>/llms.txt</code>) instead of expecting it to crawl your sitemap</li>
+  <li>Serve different levels of detail to different consumers — a chat agent might want depth 0, a research pipeline depth 3</li>
+  <li>Combine with the <a href="/docs/mcp">MCP Server</a> or <a href="/docs/public-api">Public Content API</a> for agents that need to query rather than just fetch a static index</li>
+</ul>
+
+</DocsLayout>
