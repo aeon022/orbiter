@@ -114,6 +114,10 @@ const faqs = [
     a: '<code>GET /orbiter/api/[collection]</code> returns all published entries as JSON. Supports optional Bearer token authentication. Works from any frontend, mobile app, or external service without extra setup.',
   },
   {
+    q: 'Can AI agents access my content directly?',
+    a: 'Yes — <code>@a83/orbiter-mcp</code> is an MCP (Model Context Protocol) server exposing <code>list_collections</code>, <code>get_entries</code>, <code>get_entry</code>, and <code>search_content</code> tools. Run it via stdio for local tools like Claude Desktop, or <code>--http</code> for remote access, using the same API-key and collection-scoping rules as the Public Content API.',
+  },
+  {
     q: 'Can I import from WordPress?',
     a: 'Yes. Export your WordPress site as WXR (the standard WordPress XML export) and import it via the Orbiter admin. Text content, post dates, and categories are converted. HTML body text is transformed to Markdown automatically.',
   },
@@ -127,7 +131,7 @@ const faqs = [
   },
   {
     q: 'Is it production-ready?',
-    a: 'Orbiter is at v0.3.78 — published to npm, actively maintained, and used in real projects. The API may evolve before v1.0. It\'s suitable for personal sites, client projects, and small teams. Check the GitHub issues for anything relevant to your use case.',
+    a: 'Orbiter is at v0.3.81 — published to npm, actively maintained, and used in real projects. The API may evolve before v1.0. It\'s suitable for personal sites, client projects, and small teams. Check the GitHub issues for anything relevant to your use case.',
   },
   {
     q: 'What\'s the license?',
@@ -294,7 +298,7 @@ const faqs = [
     </div>
 
     <div class="hero-inner">
-      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">Team-ready: content validation, permissions, quality dashboard, AES-256-GCM encryption, SvelteKit — admin@0.3.80 · Changelog →</a>
+      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">New: MCP server for AI agents, Public Content API, API keys, JSON-LD — admin@0.3.81 · Changelog →</a>
       <h1>Your entire CMS<br />in <span>one file.</span></h1>
       <p class="hero-sub">
         Content, media, schema, users — all in a single POD.
@@ -485,10 +489,27 @@ const faqs = [
     <div class="updates-feed">
 
       <div class="update-card reveal" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
+        <div class="update-date">Aug<br />2026</div>
+        <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">mcp@0.1.0 · admin@0.3.81 — Latest</div>
+          <div class="update-title">MCP server for AI agents, Public Content API, JSON-LD, API keys</div>
+          <ul class="update-items">
+            <li><strong><code>@a83/orbiter-mcp</code></strong> — new MCP server package. <code>list_collections</code>, <code>get_entries</code>, <code>get_entry</code>, <code>search_content</code> tools for Claude Desktop and other MCP clients. stdio for local trusted access, <code>--http</code> for remote (same auth as the Public Content API).</li>
+            <li><strong>Public Content API</strong> — <code>/api/public/[collection]</code> read-only JSON endpoints, opt-in per collection, CORS enabled.</li>
+            <li><strong>API keys</strong> — generate/revoke Bearer tokens in Settings, optional enforcement on the Public Content API and MCP HTTP transport, hit counters and last-used tracking.</li>
+            <li><strong>JSON-LD / schema.org</strong> — <code>BlogPosting</code> and <code>WebSite</code> structured data on published HTML, both themes.</li>
+            <li><strong>OpenAPI spec + API discovery</strong> — auto-generated spec and a discovery endpoint listing available collections and auth requirements.</li>
+            <li><strong>Admin panel routing fix</strong> — clean extensionless URLs (<code>/login</code>, <code>/dashboard</code>, etc.) now redirect correctly.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="update-card reveal" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
         <div class="update-date">Jun<br />2026</div>
         <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.78 · cli@0.3.9 — Latest</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.78 · cli@0.3.9</div>
           <div class="update-title">Team-ready: content validation, permissions, quality dashboard, encryption, SvelteKit</div>
           <ul class="update-items">
             <li><strong>Content validation</strong> — schema fields support <code>required</code>, <code>min</code>, <code>max</code>, and <code>regex</code>. Drafts always save freely. Publish/Schedule shows an inline error banner. Server enforces the same rules via 422.</li>
