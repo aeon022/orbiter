@@ -12,7 +12,8 @@
     "src"
   ],
   "scripts": {
-    "build": "echo 'No build step'"
+    "build": "echo 'No build step'",
+    "prepublishOnly": "node ../../scripts/check-published-version.mjs"
   },
   "engines": {
     "node": ">=20.0.0"

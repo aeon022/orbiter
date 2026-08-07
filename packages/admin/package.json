@@ -9,7 +9,8 @@
   },
   "scripts": {
     "start": "node src/cli.js",
-    "dev": "node --watch src/cli.js"
+    "dev": "node --watch src/cli.js",
+    "prepublishOnly": "node ../../scripts/check-published-version.mjs"
   },
   "engines": {
     "node": ">=20.0.0"
