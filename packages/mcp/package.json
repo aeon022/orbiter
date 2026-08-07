@@ -1,0 +1,37 @@
+{
+  "name": "@a83/orbiter-mcp",
+  "version": "0.1.0",
+  "description": "MCP server exposing Orbiter pod content as tools for AI agents",
+  "type": "module",
+  "main": "./src/server.js",
+  "bin": {
+    "orbiter-mcp": "src/cli.js"
+  },
+  "scripts": {
+    "start": "node src/cli.js",
+    "prepublishOnly": "node ../../scripts/check-published-version.mjs"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "cms",
+    "sqlite",
+    "headless-cms",
+    "orbiter"
+  ],
+  "author": "ABTEILUNG83",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aeon022/orbiter.git",
+    "directory": "packages/mcp"
+  },
+  "dependencies": {
+    "@a83/orbiter-core": "^0.3.12",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.4.3"
+  }
+}

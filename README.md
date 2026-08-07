@@ -917,6 +917,37 @@ orb.getMediaItem(id)                   // → MediaItem | null
 
 ---
 
+## MCP Server
+
+Expose a pod's content as tools for AI agents (Claude Desktop, Claude Code, or any MCP client) via [`@a83/orbiter-mcp`](https://www.npmjs.com/package/@a83/orbiter-mcp): `list_collections`, `get_entries`, `get_entry`, `search_content`.
+
+```bash
+npm install -g @a83/orbiter-mcp
+```
+
+**stdio (local, Claude Desktop)** — full access, no auth, same trust level as running `orbiter-admin` locally:
+
+```json
+{
+  "mcpServers": {
+    "orbiter": {
+      "command": "orbiter-mcp",
+      "env": { "ORBITER_POD": "/absolute/path/to/content.pod" }
+    }
+  }
+}
+```
+
+**HTTP (remote)** — same restrictions as the Public Content API (API key + `public.collections` opt-in, published entries only):
+
+```bash
+orbiter-mcp --http --port 4500
+```
+
+See [`packages/mcp/README.md`](./packages/mcp/README.md) for the full tool reference.
+
+---
+
 ## Admin UI
 
 ### Dashboard
@@ -1719,6 +1750,7 @@ The block editor gains full rich-media embedding:
 | `@a83/orbiter-admin` | [![npm](https://img.shields.io/npm/v/@a83/orbiter-admin?color=8b7cf8)](https://www.npmjs.com/package/@a83/orbiter-admin) | Standalone Hono admin server (port 4322), vanilla JS + CSS UI |
 | `@a83/orbiter-integration` | [![npm](https://img.shields.io/npm/v/@a83/orbiter-integration?color=8b7cf8)](https://www.npmjs.com/package/@a83/orbiter-integration) | Astro integration, virtual modules, PWA |
 | `@a83/orbiter-cli` | [![npm](https://img.shields.io/npm/v/@a83/orbiter-cli?color=8b7cf8)](https://www.npmjs.com/package/@a83/orbiter-cli) | `orbiter init`, `add-user`, `export`, `pack`, `unpack` |
+| `@a83/orbiter-mcp` | [![npm](https://img.shields.io/npm/v/@a83/orbiter-mcp?color=8b7cf8)](https://www.npmjs.com/package/@a83/orbiter-mcp) | MCP server — pod content as tools for AI agents (stdio + HTTP) |
 
 ---
 

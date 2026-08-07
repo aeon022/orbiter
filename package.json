@@ -19,7 +19,8 @@
     "publish:integration": "npm publish --workspace=packages/integration --access=public",
     "publish:cli": "npm publish --workspace=packages/cli --access=public",
     "publish:client": "npm publish --workspace=packages/client --access=public",
-    "publish:all": "npm run publish:core && npm run publish:admin && npm run publish:integration && npm run publish:cli && npm run publish:client"
+    "publish:mcp": "npm publish --workspace=packages/mcp --access=public",
+    "publish:all": "npm run publish:core && npm run publish:admin && npm run publish:integration && npm run publish:cli && npm run publish:client && npm run publish:mcp"
   },
   "engines": {
     "node": ">=20.0.0",
