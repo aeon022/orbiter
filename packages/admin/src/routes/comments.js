@@ -1,8 +1,20 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
 import { sendNotification } from '../email.js';
+import { requireCollectionAccess, userCanAccessCollection } from '../middleware/auth.js';
 
 export const commentRoutes = new Hono();
+
+// /comments/:id routes below don't carry collectionId in the URL — resolve it
+// via the comment's entry before checking access.
+function commentCollectionId(db, commentId) {
+  const row = db.db.prepare(
+    `SELECT e.collection_id FROM _comments c JOIN _entries e ON e.id = c.entry_id WHERE c.id = ?`
+  ).get(commentId);
+  return row?.collection_id ?? null;
+}
+
+commentRoutes.use('/:collectionId/entries/*', requireCollectionAccess);
 
 // GET /api/collections/:id/entries/:slug/comments
 commentRoutes.get('/:collectionId/entries/:slug/comments', (c) => {
@@ -35,6 +47,8 @@ commentRoutes.patch('/comments/:id/resolve', async (c) => {
   const { id } = c.req.param();
   const { resolved } = await c.req.json();
   const db = openPod(c.get('podPath'));
+  const colId = commentCollectionId(db, id);
+  if (!userCanAccessCollection(c.get('user'), c.get('podPath'), colId)) { db.close(); return c.json({ error: 'Forbidden' }, 403); }
   db.resolveComment(id, resolved !== false);
   db.close();
   return c.json({ ok: true });
@@ -44,6 +58,8 @@ commentRoutes.patch('/comments/:id/resolve', async (c) => {
 commentRoutes.delete('/comments/:id', (c) => {
   const { id } = c.req.param();
   const db = openPod(c.get('podPath'));
+  const colId = commentCollectionId(db, id);
+  if (!userCanAccessCollection(c.get('user'), c.get('podPath'), colId)) { db.close(); return c.json({ error: 'Forbidden' }, 403); }
   db.deleteComment(id);
   db.close();
   return c.json({ ok: true });

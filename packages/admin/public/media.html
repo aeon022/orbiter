@@ -111,6 +111,7 @@
     });
 
     const fmtSize = b => b < 1048576 ? (b/1024).toFixed(1)+' KB' : (b/1048576).toFixed(1)+' MB';
+    const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     let allMedia = [];
 
     async function loadMedia() {
@@ -122,7 +123,7 @@
       // Populate folder datalist
       const folders = [...new Set(allMedia.map(m=>m.folder).filter(Boolean))].sort();
       const dl = document.getElementById('folder-list');
-      dl.innerHTML = folders.map(f=>`<option value="${f}">`).join('');
+      dl.innerHTML = folders.map(f=>`<option value="${esc(f)}">`).join('');
     }
 
     function renderFilterBar() {
@@ -138,7 +139,7 @@
         ${hasImage ? `<button class="filter-btn" data-f="image">Images</button>` : ''}
         ${hasVideo ? `<button class="filter-btn" data-f="video">Video</button>` : ''}
         ${hasPdf   ? `<button class="filter-btn" data-f="pdf">PDF</button>` : ''}
-        ${folders.map(f=>`<button class="filter-btn" data-f="folder:${f}">${f}</button>`).join('')}
+        ${folders.map(f=>`<button class="filter-btn" data-f="folder:${esc(f)}">${esc(f)}</button>`).join('')}
       `;
       bar.querySelectorAll('.filter-btn').forEach(btn=>btn.addEventListener('click', ()=>{
         bar.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
@@ -160,15 +161,15 @@
         const isImg  = m.mime_type.startsWith('image/');
         const isVid  = m.mime_type.startsWith('video/');
         const thumb  = isImg
-          ? `<img class="media-thumb" src="/api/media/${m.id}/raw" alt="${m.alt??''}" loading="lazy" />`
+          ? `<img class="media-thumb" src="/api/media/${m.id}/raw" alt="${esc(m.alt??'')}" loading="lazy" />`
           : isVid
           ? `<video class="media-thumb" src="/api/media/${m.id}/raw" muted preload="metadata"></video>`
           : `<div class="media-thumb-ph"><div class="media-thumb-icon">${m.mime_type==='application/pdf'?'⊠':'◫'}</div><div class="media-thumb-type">${m.mime_type.split('/')[1]?.toUpperCase()}</div></div>`;
         return `<div class="media-card" data-id="${m.id}">
           ${thumb}
           <div class="media-info">
-            <div class="media-name" title="${m.filename}">${m.filename}</div>
-            <div class="media-meta"><span>${fmtSize(m.size)}</span><span>${m.folder||m.created_at?.split(' ')[0]||''}</span></div>
+            <div class="media-name" title="${esc(m.filename)}">${esc(m.filename)}</div>
+            <div class="media-meta"><span>${fmtSize(m.size)}</span><span>${esc(m.folder||m.created_at?.split(' ')[0]||'')}</span></div>
           </div>
           <div class="media-overlay">
             <button class="btn-copy-url" data-id="${m.id}">Copy URL</button>

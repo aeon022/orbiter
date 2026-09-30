@@ -1,7 +1,9 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
+import { requireCollectionAccess } from '../middleware/auth.js';
 
 export const lockRoutes = new Hono();
+lockRoutes.use('/:collection/*', requireCollectionAccess);
 
 const STALE_MS = 90_000; // lock expires after 90 s without refresh
 

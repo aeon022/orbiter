@@ -55,7 +55,16 @@ function maskSecret(key, val) {
   return val.length > 6 ? val.slice(0, 3) + '•'.repeat(Math.min(val.length - 3, 20)) : '••••••';
 }
 
-// GET /api/meta — returns all allowed keys; secrets masked for non-admins
+// Read-side view of a value for the current role: admins see everything,
+// non-admins get secrets masked and admin-only (non-secret) keys withheld —
+// mirrors the write-side ADMIN_ONLY_KEYS check below.
+function visibleValue(key, val, isAdmin) {
+  if (isAdmin) return val;
+  if (ADMIN_ONLY_KEYS.has(key)) return SECRET_KEYS.has(key) ? maskSecret(key, val) : null;
+  return val;
+}
+
+// GET /api/meta — returns all allowed keys; secrets masked, admin-only keys withheld for non-admins
 metaRoutes.get('/', (c) => {
   const db   = openPod(c.get('podPath'));
   const user = c.get('user');
@@ -63,13 +72,13 @@ metaRoutes.get('/', (c) => {
   const out = {};
   for (const key of ALLOWED_KEYS) {
     const val = db.getMeta(key) ?? null;
-    out[key] = isAdmin ? val : maskSecret(key, val);
+    out[key] = visibleValue(key, val, isAdmin);
   }
   db.close();
   return c.json(out);
 });
 
-// GET /api/meta/:key — validated against ALLOWED_KEYS; secrets masked for non-admins
+// GET /api/meta/:key — validated against ALLOWED_KEYS; secrets masked, admin-only keys withheld for non-admins
 metaRoutes.get('/:key', (c) => {
   const key = c.req.param('key').replace(/~/g, '.');
   if (!ALLOWED_KEYS.includes(key) && !PREVIEW_URL_RE.test(key) && !TEMPLATES_RE.test(key)) return c.json({ error: 'Key not allowed' }, 403);
@@ -78,7 +87,7 @@ metaRoutes.get('/:key', (c) => {
   const db  = openPod(c.get('podPath'));
   const val = db.getMeta(key);
   db.close();
-  return c.json({ key, value: isAdmin ? val : maskSecret(key, val) });
+  return c.json({ key, value: visibleValue(key, val, isAdmin) });
 });
 
 // PUT /api/meta — batch update; admin-only keys require admin role

@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
-import { requireAdmin } from '../middleware/auth.js';
+import { requireAdmin, requireCollectionAccess } from '../middleware/auth.js';
 
 export const collectionRoutes = new Hono();
 
@@ -27,10 +27,10 @@ collectionRoutes.get('/:id', (c) => {
 });
 
 // GET /api/collections/:id/singleton — get or auto-create the single entry
-collectionRoutes.get('/:id/singleton', (c) => {
+collectionRoutes.get('/:id/singleton', requireCollectionAccess, (c) => {
   const db  = openPod(c.get('podPath'));
   const col = db.getCollection(c.req.param('id'));
-  if (!col) { db.close(); return c.json({ error: 'Not found' }, 404); }
+  if (!col || !col.singleton) { db.close(); return c.json({ error: 'Not found' }, 404); }
   let entries = db.getEntries(col.id);
   if (entries.length === 0) {
     db.createEntry(col.id, 'index', {}, 'draft');

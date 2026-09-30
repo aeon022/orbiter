@@ -264,6 +264,7 @@
 
     let currentDays = 30;
     let currentPath = null;
+    const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
     async function loadStats(days, path) {
       currentDays = days;
@@ -313,9 +314,9 @@
       const pagesTbody = document.querySelector('#an-pages tbody');
       pagesTbody.innerHTML = stats.topPages.map(p => {
         const cell = p.title
-          ? `<span class="entry-title">${p.title}</span><span class="entry-path">${p.path}</span>`
-          : p.path;
-        return `<tr class="clickable" data-path="${p.path}"><td>${cell}</td><td>${p.views}</td></tr>`;
+          ? `<span class="entry-title">${esc(p.title)}</span><span class="entry-path">${esc(p.path)}</span>`
+          : esc(p.path);
+        return `<tr class="clickable" data-path="${esc(p.path)}"><td>${cell}</td><td>${p.views}</td></tr>`;
       }).join('') || '<tr><td colspan="2" style="color:var(--muted)">No data</td></tr>';
       pagesTbody.querySelectorAll('tr.clickable').forEach(row => {
         row.addEventListener('click', () => loadStats(currentDays, row.dataset.path));
@@ -331,7 +332,7 @@
       refsTbody.innerHTML = stats.topReferrers.map(r => {
         let host = r.referrer;
         try { host = new URL(r.referrer).host; } catch {}
-        return `<tr><td>${host}</td><td>${r.count}</td></tr>`;
+        return `<tr><td>${esc(host)}</td><td>${r.count}</td></tr>`;
       }).join('') || '<tr><td colspan="2" style="color:var(--muted)">No referrers</td></tr>';
 
       // Devices
@@ -366,8 +367,8 @@
       agentsTbody.innerHTML = agents.length ? agents.map(a => `
         <tr>
           <td>
-            ${a.name}<span class="agent-badge ${a.type}">${a.type}</span>
-            <div class="an-agent-paths">${(a.topPaths||[]).slice(0,2).map(p=>`${p.path} (${p.hits})`).join(' · ')}</div>
+            ${esc(a.name)}<span class="agent-badge ${esc(a.type)}">${esc(a.type)}</span>
+            <div class="an-agent-paths">${(a.topPaths||[]).slice(0,2).map(p=>`${esc(p.path)} (${p.hits})`).join(' · ')}</div>
           </td>
           <td>${a.hits}</td>
         </tr>`).join('')
@@ -404,7 +405,7 @@
           // Top agent pages
           document.querySelector('#an-agent-pages tbody').innerHTML =
             trendData.topAgentPaths.length
-              ? trendData.topAgentPaths.map(p => `<tr><td style="font-family:var(--mono);font-size:10px">${p.path}</td><td>${p.hits}</td></tr>`).join('')
+              ? trendData.topAgentPaths.map(p => `<tr><td style="font-family:var(--mono);font-size:10px">${esc(p.path)}</td><td>${p.hits}</td></tr>`).join('')
               : '<tr><td colspan="2" style="color:var(--muted)">No data</td></tr>';
         } else {
           agentSection.style.display = 'none';
