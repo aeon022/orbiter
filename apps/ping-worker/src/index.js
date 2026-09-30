@@ -7,7 +7,11 @@ export default {
       return new Response(null, { status: 204, headers: cors() });
     }
 
-    // POST /ping  — count active installs
+    // POST /ping — count active installs. No rate limiting here: it only
+    // increments a counter (no data exposure), so unbounded calls are a
+    // cost/integrity nuisance at worst. If that becomes a real problem, add
+    // a Cloudflare Rate Limiting rule on this route — not fixable in-worker
+    // without also rate-limiting legitimate installs.
     if (request.method === 'POST' && url.pathname === '/ping') {
       const body = await request.json().catch(() => ({}));
       const day  = new Date().toISOString().slice(0, 10);          // YYYY-MM-DD
@@ -29,8 +33,9 @@ export default {
 
     // GET /stats  — simple JSON view of last 30 days + versions
     if (request.method === 'GET' && url.pathname === '/stats') {
+      // Fail closed: no STATS_SECRET configured means no access, not open access.
       const secret = env.STATS_SECRET;
-      if (secret && request.headers.get('x-stats-key') !== secret) {
+      if (!secret || request.headers.get('x-stats-key') !== secret) {
         return new Response('Forbidden', { status: 403 });
       }
 

@@ -11,7 +11,7 @@ export const prerender = false;
  *   ?q=keyword  simple title/body search
  */
 import { podPath } from 'orbiter:db';
-import { openPod } from '@a83/orbiter-core';
+import { openPod, checkApiKey } from '@a83/orbiter-core';
 
 const JSON_H = {
   'Content-Type': 'application/json',
@@ -20,30 +20,13 @@ const JSON_H = {
 };
 const err = (msg, status) => new Response(JSON.stringify({ error: msg }), { status, headers: JSON_H });
 
-function checkApiKey(db, request) {
-  const requireKey = db.getMeta('api.requireKey');
-  if (requireKey !== '1') return true;
-  const authHeader = request.headers.get('authorization') ?? '';
-  const bearer = authHeader.replace(/^Bearer\s+/i, '').trim();
-  if (!bearer) return false;
-  try {
-    const keys = JSON.parse(db.getMeta('api.keys') ?? '[]');
-    const found = keys.find(k => k.key === bearer);
-    if (!found) return false;
-    found.hits = (found.hits || 0) + 1;
-    found.lastUsed = new Date().toISOString().split('T')[0];
-    db.setMeta('api.keys', JSON.stringify(keys));
-    return true;
-  } catch { return false; }
-}
-
 export async function GET({ params, request }) {
   const { collection } = params;
   const url = new URL(request.url);
 
   const db = openPod(podPath);
 
-  if (!checkApiKey(db, request)) {
+  if (!checkApiKey(db, request.headers.get('authorization'))) {
     db.close();
     return err('Unauthorized — provide a valid API key as Bearer token', 401);
   }

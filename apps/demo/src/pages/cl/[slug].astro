@@ -13,6 +13,7 @@ const allPosts = await getCollection('posts');
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{entry.data.title} — Content Layer Demo</title>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; color: #1c1917; line-height: 1.8; }
     .back { font-size: 13px; color: #78716c; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 24px; }
@@ -41,9 +42,10 @@ const allPosts = await getCollection('posts');
     </div>
   )}
   {entry.body && (
-    <div class="body" style="margin-top:32px">
-      <Fragment set:html={entry.body} />
-    </div>
+    <div class="body" id="body" style="margin-top:32px"></div>
   )}
+  <script define:vars={{ body: entry.body ?? '' }}>
+    if (body) document.getElementById('body').innerHTML = DOMPurify.sanitize(body);
+  </script>
 </body>
 </html>

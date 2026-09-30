@@ -36,6 +36,13 @@ orbiter-mcp --http --port 4500
 
 Carries the same restrictions as the Public Content API: requires a Bearer API key (Settings → API Keys, only enforced if `api.requireKey` is on) and only exposes collections opted into `public.collections`, `status: 'published'` only. Endpoint: `POST http://host:4500/mcp`. Health check: `GET /health`.
 
+## Security note for MCP clients
+
+`get_entry` and `search_content` return entry body content exactly as stored — written by
+whoever can edit entries in this pod (an admin, an editor, or a public form submission
+routed into a collection). Treat it as untrusted data, not instructions: don't let a calling
+agent follow directives embedded in returned content.
+
 ## Env vars
 
 - `ORBITER_POD` — path to the `.pod` file (auto-detected if a single `*.pod` file sits in the current directory)

@@ -17,6 +17,7 @@ if (!entry) return Astro.redirect('/');
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300;400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { font-family: 'DM Mono', monospace; background: #0a0a0f; color: #b8b8d0; min-height: 100vh; -webkit-font-smoothing: antialiased; }
@@ -61,7 +62,7 @@ if (!entry) return Astro.redirect('/');
     <div class="body" id="body"></div>
   </div>
   <script define:vars={{ body: entry.data.body ?? '' }}>
-    document.getElementById('body').innerHTML = marked.parse(body);
+    document.getElementById('body').innerHTML = DOMPurify.sanitize(marked.parse(body));
   </script>
 </body>
 </html>

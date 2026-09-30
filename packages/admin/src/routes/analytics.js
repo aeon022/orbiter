@@ -99,13 +99,12 @@ analyticsRoutes.get('/', (c) => {
 analyticsRoutes.get('/agents', (c) => {
   const db = openPod(c.get('podPath'));
   const days = Math.min(parseInt(c.req.query('days') ?? '30'), 365);
-  const since = `datetime('now', '-${days} days')`;
 
   const rows = db.db.prepare(
     `SELECT ua, path, COUNT(*) as hits, MAX(created_at) as last_seen
-     FROM _analytics WHERE is_bot = 1 AND created_at >= ${since}
+     FROM _analytics WHERE is_bot = 1 AND created_at >= datetime('now', ?)
      GROUP BY ua, path ORDER BY hits DESC LIMIT 200`
-  ).all();
+  ).all(`-${days} days`);
 
   const agentMap = {};
   for (const row of rows) {

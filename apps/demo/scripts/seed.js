@@ -8,7 +8,7 @@
  * Run: npm run seed --workspace=apps/demo
  */
 import { createPod, openPod, hashPassword } from '@a83/orbiter-core';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, randomBytes } from 'node:crypto';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readFileSync, existsSync, unlinkSync } from 'node:fs';
@@ -42,9 +42,16 @@ const db = createPod(podPath, {
 
 // ── Admin User ───────────────────────────────────────────
 
-const adminPassword = await hashPassword('admin');
+// Random by default — this pod can end up publicly hosted (see astro.config.mjs's
+// PORT/HOST env override for Railway etc.), so a fixed admin/admin would be an open
+// door. Set DEMO_ADMIN_PASSWORD to pin it for local dev/CI convenience.
+const adminPasswordPlain = process.env.DEMO_ADMIN_PASSWORD || randomBytes(9).toString('base64url');
+const adminPassword = await hashPassword(adminPasswordPlain);
 db.insertUser(randomUUID(), 'admin', adminPassword, 'admin');
-console.log('  ✓ Admin user created (admin / admin)');
+console.log(`  ✓ Admin user created (admin / ${adminPasswordPlain})`);
+if (!process.env.DEMO_ADMIN_PASSWORD) {
+  console.log('    (random password — set DEMO_ADMIN_PASSWORD to pin it)');
+}
 
 // ── Collections ──────────────────────────────────────────
 
