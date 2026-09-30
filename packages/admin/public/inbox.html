@@ -196,6 +196,10 @@
       return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
+    function esc(s) {
+      return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    }
+
     function previewText(data) {
       const vals = Object.values(data).filter(v => typeof v === 'string' && v.trim());
       return vals.slice(0, 3).join(' · ').slice(0, 120);
@@ -298,8 +302,8 @@
 
             const fields = Object.entries(r.data).map(([k, v]) =>
               `<div class="sub-field">
-                <div class="sub-field-key">${k}</div>
-                <div class="sub-field-val">${String(v).replace(/</g, '&lt;')}</div>
+                <div class="sub-field-key">${esc(k)}</div>
+                <div class="sub-field-val">${esc(v)}</div>
               </div>`
             ).join('');
 
@@ -314,7 +318,7 @@
 
             const replyPanel = hasEmail ? `
               <div class="reply-panel" id="reply-${r.id}">
-                <div class="reply-meta">To: ${emailVal.replace(/</g, '&lt;')}</div>
+                <div class="reply-meta">To: ${esc(emailVal)}</div>
                 <input placeholder="Subject" id="reply-subj-${r.id}" value="Re: your inquiry" />
                 <textarea placeholder="Your reply…" id="reply-body-${r.id}"></textarea>
                 <div class="sub-action-row" style="margin-top:8px">
@@ -327,7 +331,7 @@
             return `<div class="sub-row" data-id="${r.id}">
               <div class="sub-row-head">
                 <div class="sub-dot ${r.status}"></div>
-                <div class="sub-preview"><em>${statusPill(r.status)}</em>${previewText(r.data).replace(/</g, '&lt;')}</div>
+                <div class="sub-preview"><em>${statusPill(r.status)}</em>${esc(previewText(r.data))}</div>
                 <div class="sub-time">${fmtTime(r.created_at)}</div>
                 <div class="sub-actions">
                   ${r.status === 'new' ? `<button class="btn btn-ghost btn-sm" data-set-status="${r.id}" data-status="read">Mark read</button>` : ''}
@@ -343,7 +347,7 @@
                 ${replyPanel}
                 <div class="sub-meta">
                   <span>id: ${r.id}</span>
-                  ${r.ip ? `<span>ip: ${r.ip}</span>` : ''}
+                  ${r.ip ? `<span>ip: ${esc(r.ip)}</span>` : ''}
                   <span>${r.created_at}</span>
                 </div>
               </div>

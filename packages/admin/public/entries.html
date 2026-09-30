@@ -282,8 +282,8 @@
                 ${canSort ? `<td class="drag-col"><span class="drag-handle" title="Drag to reorder">⠿</span></td>` : ''}
                 <td class="cb-col"><input type="checkbox" class="row-cb" data-slug="${e.slug}" data-locale="${e.locale ?? ''}" ${selected.has(e.slug) ? 'checked' : ''} /></td>
                 <td>
-                  <div style="color:var(--heading);font-weight:500">${title}${localeBadge}</div>
-                  <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px">${e.slug}</div>
+                  <div style="color:var(--heading);font-weight:500">${escHtml(title)}${localeBadge}</div>
+                  <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px">${escHtml(e.slug)}</div>
                 </td>
                 <td>${isTrash ? `<span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${deleted}</span>` : `<span class="badge badge-${e.status}">${e.status}${schedInfo}</span>`}</td>
                 <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${isTrash ? '' : updated}</td>

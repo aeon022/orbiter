@@ -332,6 +332,7 @@
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
       location.replace('/login.html');
     });
+    const escHtml = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
     // Hero date
     const hour = new Date().getHours();
@@ -431,10 +432,10 @@
     } else {
       recentBody.innerHTML = `<div class="entry-list">${recent.map(e => {
         const date = e.updated_at ? e.updated_at.split(' ')[0] : '';
-        return `<a class="entry-row" href="/editor.html?collection=${e.collection}&slug=${e.slug}">
+        return `<a class="entry-row" href="/editor.html?collection=${encodeURIComponent(e.collection)}&slug=${encodeURIComponent(e.slug)}">
           <div>
-            <div class="entry-name">${e.title || e.slug}</div>
-            <div class="entry-coll">${e.label || e.collection}</div>
+            <div class="entry-name">${escHtml(e.title || e.slug)}</div>
+            <div class="entry-coll">${escHtml(e.label || e.collection)}</div>
           </div>
           <div class="entry-date">${date}</div>
           <div class="pill ${e.status}">${e.status}</div>
@@ -451,7 +452,7 @@
         const pct = col.total > 0 ? Math.round(col.published / col.total * 100) : 0;
         return `<div class="coll-card">
           <div class="coll-card-head">
-            <div class="coll-card-name">${col.label}</div>
+            <div class="coll-card-name">${escHtml(col.label)}</div>
             <div class="coll-card-count">${col.total}</div>
           </div>
           <div class="coll-progress"><div class="coll-progress-fill" style="width:${pct}%"></div></div>

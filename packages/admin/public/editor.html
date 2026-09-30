@@ -1202,7 +1202,7 @@
           const zone   = document.getElementById('file-drop-'+key);
           const dlWrap = document.getElementById('file-dl-'+key);
           hidden.value = opt.value;
-          info.innerHTML = `${opt.dataset.name} <small style="color:var(--muted)">${fmtBytes(opt.dataset.size)}</small>`;
+          info.innerHTML = `${escHtml(opt.dataset.name)} <small style="color:var(--muted)">${fmtBytes(opt.dataset.size)}</small>`;
           zone.classList.add('has-file');
           if (dlWrap) dlWrap.innerHTML = `<a href="/api/media/${opt.value}/raw" target="_blank" style="font-size:9px;color:var(--muted);">↓ download</a>`;
           markDirty();

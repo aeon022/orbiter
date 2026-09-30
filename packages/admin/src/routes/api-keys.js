@@ -1,8 +1,12 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
 import { randomBytes } from 'node:crypto';
+import { requireAdmin } from '../middleware/auth.js';
 
 export const apiKeyRoutes = new Hono();
+
+// Public Content API credentials — admin only.
+apiKeyRoutes.use('*', requireAdmin);
 
 function readKeys(db) {
   try { return JSON.parse(db.getMeta('api.keys') ?? '[]'); } catch { return []; }

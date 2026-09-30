@@ -3,17 +3,31 @@ import { openPod } from '@a83/orbiter-core';
 
 export const searchRoutes = new Hono();
 
+// Collection ids the current user may see. Admins and unrestricted editors get null
+// (no filter); a restricted editor gets the explicit allow-list.
+function allowedIds(db, user) {
+  if (!user || user.role === 'admin') return null;
+  const raw = db.getMeta(`user.${user.id}.allowed_collections`);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return []; }
+}
+
 // GET /api/search/recent — last N entries across all collections
 searchRoutes.get('/recent', (c) => {
   const limit  = Math.min(parseInt(c.req.query('limit') ?? '10', 10), 50);
   const status = c.req.query('status') ?? null;
   const db     = openPod(c.get('podPath'));
-  const cols   = db.getCollections();
+  const allowed = allowedIds(db, c.get('user'));
+  const cols   = db.getCollections().filter(col => !allowed || allowed.includes(col.id));
   const colMap = Object.fromEntries(cols.map(c => [c.id, c.label]));
 
-  const rows = status
+  let rows = status
     ? db.db.prepare(`SELECT * FROM _entries WHERE status = ? ORDER BY updated_at DESC LIMIT ?`).all(status, limit)
     : db.db.prepare(`SELECT * FROM _entries ORDER BY updated_at DESC LIMIT ?`).all(limit);
+  // ponytail: filters after LIMIT, so a restricted editor may see fewer than `limit`
+  // results even if more exist in their allowed collections; widen the SQL LIMIT
+  // (or add a WHERE collection_id IN (...)) if that under-fill matters later.
+  if (allowed) rows = rows.filter(r => allowed.includes(r.collection_id)).slice(0, limit);
 
   const results = rows.map(r => {
     let data = {};
@@ -34,12 +48,14 @@ searchRoutes.get('/recent', (c) => {
 // GET /api/search/calendar — all entries with date info for calendar views
 searchRoutes.get('/calendar', (c) => {
   const db   = openPod(c.get('podPath'));
-  const cols = db.getCollections();
+  const allowed = allowedIds(db, c.get('user'));
+  const cols = db.getCollections().filter(col => !allowed || allowed.includes(col.id));
   const colMap = Object.fromEntries(cols.map(c => [c.id, c.label]));
 
-  const rows = db.db.prepare(
+  let rows = db.db.prepare(
     "SELECT id, collection_id, slug, status, data, publish_at, unpublish_at, created_at, updated_at FROM _entries WHERE deleted_at IS NULL ORDER BY updated_at DESC"
   ).all();
+  if (allowed) rows = rows.filter(r => allowed.includes(r.collection_id));
 
   const results = rows.map(r => {
     let data = {};
@@ -77,7 +93,8 @@ searchRoutes.get('/', (c) => {
   if (!q) return c.json([]);
 
   const db          = openPod(c.get('podPath'));
-  const collections = db.getCollections();
+  const allowed     = allowedIds(db, c.get('user'));
+  const collections = db.getCollections().filter(col => !allowed || allowed.includes(col.id));
   const results     = [];
 
   for (const col of collections) {

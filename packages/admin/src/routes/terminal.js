@@ -1,10 +1,11 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
+import { requireCollectionAccess } from '../middleware/auth.js';
 
 export const terminalRoutes = new Hono();
 
 // GET /api/terminal/export?col=<id>&format=json|md&drafts=0|1
-terminalRoutes.get('/export', (c) => {
+terminalRoutes.get('/export', requireCollectionAccess, (c) => {
   const podPath    = c.get('podPath');
   const colId      = c.req.query('col');
   const format     = c.req.query('format') || 'json';

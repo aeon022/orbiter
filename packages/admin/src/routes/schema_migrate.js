@@ -1,7 +1,12 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
+import { requireAdmin } from '../middleware/auth.js';
 
 export const schemaMigrateRoutes = new Hono();
+
+// Schema mutation is a structural change to the collection, same trust level
+// as collection CRUD in collections.js — admin only.
+schemaMigrateRoutes.use('/:collectionId/schema/*', requireAdmin);
 
 // POST /api/collections/:id/schema/rename-field
 // Body: { from: 'oldKey', to: 'newKey' }

@@ -1,5 +1,5 @@
 import { readFile, writeFile, mkdir, unlink } from 'node:fs/promises';
-import { join, extname } from 'node:path';
+import { join, extname, resolve, sep } from 'node:path';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 /**
@@ -42,11 +42,14 @@ class BlobBackend {
 class LocalBackend {
   constructor(db) {
     this.db   = db;
-    this.root = db.getMeta('media.local_path') ?? './media';
+    this.root = resolve(db.getMeta('media.local_path') ?? './media');
   }
 
   async upload(id, filename, mimeType, size, buffer, alt, folder) {
-    const dir      = join(this.root, folder || '');
+    const dir = resolve(this.root, folder || '');
+    if (dir !== this.root && !dir.startsWith(this.root + sep)) {
+      throw new Error('Invalid folder path');
+    }
     await mkdir(dir, { recursive: true });
     const ext      = extname(filename) || '';
     const diskPath = join(dir, `${id}${ext}`);
@@ -72,6 +75,13 @@ class LocalBackend {
   }
 }
 
+// Strips `.`/`..` segments from a user-supplied folder so it can't escape the
+// configured base dir/prefix when joined into a GitHub repo path or S3 key.
+function safeFolder(folder) {
+  if (!folder) return '';
+  return String(folder).split('/').filter(p => p && p !== '.' && p !== '..').join('/');
+}
+
 // ── GitHub — store files via GitHub Contents API, serve from jsDelivr CDN ───
 
 class GitHubBackend {
@@ -87,7 +97,7 @@ class GitHubBackend {
     if (!this.token || !this.repo) throw new Error('GitHub token and repo are required for github backend');
 
     const ext        = extname(filename) || '';
-    const remotePath = [this.dir, folder, `${id}${ext}`].filter(Boolean).join('/');
+    const remotePath = [this.dir, safeFolder(folder), `${id}${ext}`].filter(Boolean).join('/');
     const content    = buffer.toString('base64');
 
     const res = await fetch(`https://api.github.com/repos/${this.repo}/contents/${remotePath}`, {
@@ -162,7 +172,7 @@ class S3Backend {
 
   #key(id, filename, folder) {
     const ext = extname(filename) || '';
-    return [folder, `${id}${ext}`].filter(Boolean).join('/');
+    return [safeFolder(folder), `${id}${ext}`].filter(Boolean).join('/');
   }
 
   async upload(id, filename, mimeType, size, buffer, alt, folder) {

@@ -148,6 +148,7 @@
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
       location.replace('/login.html');
     });
+    const escHtml = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
     const allEntries = await fetch('/api/search/calendar', { credentials: 'include' }).then(r => r.json()).catch(() => []);
 
@@ -290,8 +291,8 @@
         const time = (e.publish_at || e.updated_at || '').split(' ')[1] || '';
         const typeLabel = e.eventType === 'sched' ? '↑ publish' : e.eventType === 'expire' ? '↓ expire' : e.status;
         return `<div class="cal-side-entry">
-          <a href="/editor.html?collection=${e.collection}&slug=${e.slug}">
-            <div class="cal-side-entry-title">${e.title}</div>
+          <a href="/editor.html?collection=${encodeURIComponent(e.collection)}&slug=${encodeURIComponent(e.slug)}">
+            <div class="cal-side-entry-title">${escHtml(e.title)}</div>
             <div class="cal-side-entry-meta">
               <span class="pill ${e.status}">${typeLabel}</span>
               <span>${e.label}</span>
