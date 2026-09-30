@@ -6,5 +6,5 @@ compatibility_date = "2024-09-23"
 binding = "PINGS"
 id = "REPLACE_WITH_KV_NAMESPACE_ID"
 
-# Optional: set STATS_SECRET via `wrangler secret put STATS_SECRET`
-# to protect the /stats endpoint.
+# Required for /stats to respond at all (fails closed without it):
+# set via `wrangler secret put STATS_SECRET`.

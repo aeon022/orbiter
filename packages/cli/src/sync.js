@@ -7,7 +7,7 @@
  */
 import { resolve } from 'node:path';
 import { existsSync } from 'node:fs';
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 
 function arg(args, flag) {
   const i = args.indexOf(flag);
@@ -35,7 +35,9 @@ export function run(args) {
 
   console.log(`\n  ◆  Orbiter Sync — ${dir}\n  ${src}  →  ${dst}\n`);
   try {
-    execSync(`rsync -avz --progress "${src}" "${dst}"`, { stdio: 'inherit' });
+    // execFileSync (no shell) — src/dst passed as argv entries, not interpolated
+    // into a shell string, so a value containing `"`, `` ` `` or `;` can't break out.
+    execFileSync('rsync', ['-avz', '--progress', src, dst], { stdio: 'inherit' });
     console.log('\n  ✓  Sync complete.\n');
   } catch {
     process.exit(1);

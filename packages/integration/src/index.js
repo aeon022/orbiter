@@ -177,7 +177,7 @@ export function getMediaItem(id) {
  */
 function generateRuntimeModule(podPath, defaultLocale, locales, schemas) {
   return `
-import { openPod } from '@a83/orbiter-core';
+import { openPod, safeEqual } from '@a83/orbiter-core';
 
 const _podPath = ${JSON.stringify(podPath)};
 
@@ -253,7 +253,7 @@ export function getLocaleEntry(collection, baseSlug, loc) {
 export async function getPreviewEntry(collection, slug, previewToken) {
   const db          = openPod(_podPath);
   const storedToken = db.getMeta('preview.token');
-  if (!previewToken || previewToken !== storedToken) { db.close(); return null; }
+  if (!previewToken || !storedToken || !safeEqual(previewToken, storedToken)) { db.close(); return null; }
   const row = db.db
     .prepare('SELECT * FROM _entries WHERE collection_id = ? AND slug = ? AND deleted_at IS NULL')
     .get(collection, slug);
@@ -294,7 +294,9 @@ export default function orbiter(options = {}) {
 
         const routesDir = resolve(__dirname, '../routes');
 
-        // Media BLOB serving — public, no auth required
+        // Media BLOB serving — public, no auth required by design. Security
+        // boundary is the unguessable randomUUID() id, same model as an S3
+        // bucket with random object keys — not collection/draft permissions.
         injectRoute({
           pattern:    '/orbiter/media/[id]',
           entrypoint: resolve(routesDir, 'media-serve.astro'),
@@ -448,10 +450,10 @@ export function getLocaleEntry(collection, baseSlug, loc) {
 }
 
 export async function getPreviewEntry(collection, slug, previewToken) {
-  const { openPod } = await import('@a83/orbiter-core');
+  const { openPod, safeEqual } = await import('@a83/orbiter-core');
   const db = openPod(_podPath);
   const storedToken = db.getMeta('preview.token');
-  if (!previewToken || previewToken !== storedToken) { db.close(); return null; }
+  if (!previewToken || !storedToken || !safeEqual(previewToken, storedToken)) { db.close(); return null; }
   const row = db.db.prepare(
     'SELECT * FROM _entries WHERE collection_id = ? AND slug = ? AND deleted_at IS NULL'
   ).get(collection, slug);

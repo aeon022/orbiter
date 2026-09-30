@@ -59,6 +59,10 @@ authRoutes.post('/login', async (c) => {
   const isSecure = c.req.url.startsWith('https') || c.req.header('x-forwarded-proto') === 'https';
   setCookie(c, 'orb_sess', token, {
     httpOnly: true,
+    // csrf.js relies on this being 'Strict' to safely allow requests with no
+    // Origin/Referer header through — loosening this (e.g. for a cross-subdomain
+    // admin/preview setup) reopens that exception as a real CSRF gap. Update
+    // csrf.js's check alongside any change here.
     sameSite: 'Strict',
     secure: isSecure,
     path: '/',

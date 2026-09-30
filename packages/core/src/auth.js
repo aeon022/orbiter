@@ -2,7 +2,7 @@
  * auth.js — Password hashing and session token utilities
  * Uses Node.js built-in crypto (no external deps)
  */
-import { scrypt, randomBytes, timingSafeEqual } from 'node:crypto';
+import { scrypt, randomBytes, timingSafeEqual, createHash } from 'node:crypto';
 import { promisify } from 'node:util';
 
 const scryptAsync = promisify(scrypt);
@@ -45,4 +45,77 @@ export async function verifyPassword(password, stored) {
  */
 export function generateToken(bytes = 32) {
   return randomBytes(bytes).toString('hex');
+}
+
+/**
+ * Constant-time string equality — for comparing a request-supplied secret
+ * (preview token, etc.) against a stored one without leaking its length/
+ * prefix through response timing. Returns false on any length mismatch
+ * (timingSafeEqual itself throws on that).
+ * @param {string} a
+ * @param {string} b
+ * @returns {boolean}
+ */
+export function safeEqual(a, b) {
+  const bufA = Buffer.from(String(a ?? ''));
+  const bufB = Buffer.from(String(b ?? ''));
+  return bufA.length === bufB.length && timingSafeEqual(bufA, bufB);
+}
+
+/**
+ * Hash an API key (already high-entropy, random) with plain SHA-256 — fast
+ * on purpose, unlike hashPassword's deliberately slow scrypt for low-entropy
+ * user passwords. Stored instead of the raw key so a leaked `.pod` file
+ * (e.g. committed to git, per Orbiter's own workflow templates) doesn't
+ * hand out working bearer tokens.
+ * @param {string} key
+ * @returns {string} hex digest
+ */
+export function hashApiKey(key) {
+  return createHash('sha256').update(String(key)).digest('hex');
+}
+
+/**
+ * Checks a request's Authorization header against `api.requireKey` /
+ * `api.keys` in pod meta. Shared by the admin API-key routes, the Public
+ * Content API (packages/integration), and orbiter-mcp's HTTP transport —
+ * keep this the single implementation rather than re-copying it.
+ *
+ * Records store a `hash` (see hashApiKey) rather than the raw key. A record
+ * from before this existed may still only have a plaintext `key`; it's
+ * checked (by hashing on the fly) and then lazily migrated to `hash`-only
+ * storage on first successful use, so existing issued keys keep working
+ * without a forced re-issue.
+ * @param {import('./db.js').OrbiterDB} db
+ * @param {string} authHeaderValue
+ * @returns {boolean}
+ */
+export function checkApiKey(db, authHeaderValue) {
+  const requireKey = db.getMeta('api.requireKey');
+  if (requireKey !== '1') return true;
+
+  const bearer = (authHeaderValue ?? '').replace(/^Bearer\s+/i, '').trim();
+  if (!bearer) return false;
+
+  let keys;
+  try { keys = JSON.parse(db.getMeta('api.keys') ?? '[]'); } catch { return false; }
+
+  const bearerBuf = Buffer.from(hashApiKey(bearer), 'hex');
+  const found = keys.find(k => {
+    const storedHash = k.hash ?? (k.key ? hashApiKey(k.key) : null);
+    if (!storedHash) return false;
+    const storedBuf = Buffer.from(storedHash, 'hex');
+    return storedBuf.length === bearerBuf.length && timingSafeEqual(storedBuf, bearerBuf);
+  });
+  if (!found) return false;
+
+  if (found.key) {
+    found.hash = found.hash ?? hashApiKey(found.key);
+    found.preview = found.preview ?? (found.key.slice(0, 10) + '…');
+    delete found.key; // migrate off plaintext storage
+  }
+  found.hits = (found.hits || 0) + 1;
+  found.lastUsed = new Date().toISOString().split('T')[0];
+  db.setMeta('api.keys', JSON.stringify(keys));
+  return true;
 }

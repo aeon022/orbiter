@@ -9,7 +9,7 @@
  *   const orb = createClient('./content.pod');
  *   const posts = await orb.getCollection('posts');
  */
-import { openPod } from '@a83/orbiter-core';
+import { openPod, safeEqual } from '@a83/orbiter-core';
 import { resolve } from 'node:path';
 
 /**
@@ -110,7 +110,7 @@ export function createClient(podPath) {
      */
     getPreviewEntry(collection, slug, previewToken) {
       const storedToken = db.getMeta('preview.token');
-      if (!previewToken || previewToken !== storedToken) return Promise.resolve(null);
+      if (!previewToken || !storedToken || !safeEqual(previewToken, storedToken)) return Promise.resolve(null);
       const row = db.db
         .prepare('SELECT * FROM _entries WHERE collection_id = ? AND slug = ? AND deleted_at IS NULL')
         .get(collection, slug);

@@ -85,10 +85,21 @@ async function startHttp() {
   });
 }
 
+const MAX_BODY_BYTES = 1024 * 1024; // 1 MB — plenty for an MCP JSON-RPC request
+
 function readJsonBody(req) {
   return new Promise((resolveBody, reject) => {
     let data = '';
-    req.on('data', chunk => { data += chunk; });
+    let bytes = 0;
+    req.on('data', chunk => {
+      bytes += chunk.length;
+      if (bytes > MAX_BODY_BYTES) {
+        req.destroy();
+        reject(new Error('Request body too large'));
+        return;
+      }
+      data += chunk;
+    });
     req.on('end', () => {
       if (!data) return resolveBody(undefined);
       try { resolveBody(JSON.parse(data)); } catch (e) { reject(e); }

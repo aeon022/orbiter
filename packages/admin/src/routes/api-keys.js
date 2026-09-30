@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { openPod } from '@a83/orbiter-core';
+import { openPod, hashApiKey } from '@a83/orbiter-core';
 import { randomBytes } from 'node:crypto';
 import { requireAdmin } from '../middleware/auth.js';
 
@@ -18,7 +18,9 @@ function writeKeys(db, keys) {
 // GET /api/api-keys
 apiKeyRoutes.get('/', (c) => {
   const db = openPod(c.get('podPath'));
-  const keys = readKeys(db).map(k => ({ ...k, key: k.key.slice(0, 10) + '…' }));
+  // Legacy records (created before hashing) still hold a plaintext `key`;
+  // show the same truncated preview either way. Never return the full key.
+  const keys = readKeys(db).map(k => ({ ...k, key: k.preview ?? (k.key ? k.key.slice(0, 10) + '…' : '') }));
   db.close();
   return c.json({ keys });
 });
@@ -32,7 +34,8 @@ apiKeyRoutes.post('/', async (c) => {
   const entry = {
     id:      'k_' + randomBytes(6).toString('hex'),
     label:   label || 'API Key',
-    key:     rawKey,
+    hash:    hashApiKey(rawKey), // raw key is never persisted — shown once below
+    preview: rawKey.slice(0, 10) + '…',
     created: new Date().toISOString().split('T')[0],
     hits:    0,
     lastUsed: null,
@@ -40,7 +43,7 @@ apiKeyRoutes.post('/', async (c) => {
   keys.push(entry);
   writeKeys(db, keys);
   db.close();
-  return c.json({ key: entry });
+  return c.json({ key: { ...entry, key: rawKey } });
 });
 
 // DELETE /api/api-keys/:id — revoke
