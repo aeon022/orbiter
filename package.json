@@ -23,7 +23,7 @@
     "publish:all": "npm run publish:core && npm run publish:admin && npm run publish:integration && npm run publish:cli && npm run publish:client && npm run publish:mcp"
   },
   "engines": {
-    "node": ">=20.0.0",
+    "node": ">=22.12.0",
     "npm": ">=10.0.0"
   }
 }
