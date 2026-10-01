@@ -4,22 +4,33 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <DocsLayout title="Knowledge Graph" current="/docs/knowledge-graph" prev={{ href: '/docs/content-quality', title: 'Content quality' }} next={{ href: '/docs/snippets', title: 'Code snippets' }}>
 
 <h1>Knowledge Graph</h1>
-<p class="lead">A force-directed, pannable, zoomable map of every relation field across your pod — every entry that links to another entry, drawn as a node graph instead of buried in dropdowns.</p>
+<p class="lead">A force-directed, pannable, zoomable map of the connections you've recorded between entries — built to pair with a <code>relationships</code> table field, so citation and cross-reference work (research notes, a dossier, a linked wiki) gets a visual instead of staying a flat list.</p>
+
+<img src="/screenshots/knowledge-graph.webp" alt="Orbiter Knowledge Graph — nodes and labeled edges showing relationships between entries" width="1440" height="813" loading="lazy" style="width:100%;height:auto;border-radius:8px;border:1px solid var(--border);margin:8px 0 24px" />
 
 <h2>Where to find it</h2>
-<p><strong>Graph</strong> in the sidebar. It builds the whole map on load by walking every collection's entries and their relation fields, so it reflects whatever's actually in the pod right now — nothing pre-computed or cached.</p>
+<p><strong>Graph</strong> in the sidebar. It builds the map on load by scanning every collection's entries for a field literally named <code>relationships</code>, so it reflects whatever's actually filled in right now — nothing pre-computed.</p>
+
+<h2>Setting it up</h2>
+<p>Add a field of type <strong>table</strong> named <code>relationships</code> to any collection's schema (<strong>Schema</strong> in the sidebar). Each row is three columns:</p>
+<table>
+  <thead><tr><th>Column</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><code>from</code></td><td>Slug of the entry the relation starts at</td></tr>
+    <tr><td><code>relation</code></td><td>Free-text label — "cites", "responds to", "supersedes", whatever fits</td></tr>
+    <tr><td><code>to</code></td><td>Slug of the entry (or external reference) the relation points to</td></tr>
+  </tbody>
+</table>
+<p>The <strong>Dossier</strong> template (Tools → Templates) ships with this field pre-configured if you'd rather start from that than build the schema by hand.</p>
 
 <h2>Reading the graph</h2>
 <ul>
   <li><strong>Accent-colored nodes</strong> — entries that exist in this pod. Labeled with their collection underneath.</li>
-  <li><strong>Gold nodes</strong> — relation targets that don't resolve to an entry in this pod (a stale reference, or one pointing outside it). Still shown, so broken links are visible instead of silently dropped.</li>
-  <li><strong>Labeled edges</strong> — the relation field's name, so you can tell "author" apart from "related_posts" at a glance.</li>
+  <li><strong>Gold nodes</strong> — a <code>from</code>/<code>to</code> slug that doesn't resolve to an entry in this pod. Still shown, so a typo'd slug or a reference to something outside the pod is visible instead of silently dropped.</li>
+  <li><strong>Labeled edges</strong> — the relation column's text.</li>
 </ul>
 
 <h2>Controls</h2>
 <p>Drag to pan, scroll or use the <strong>+</strong> / <strong>−</strong> buttons to zoom. The layout is a live physics simulation — nodes settle into place and gently repel each other, so dense clusters spread themselves out instead of overlapping.</p>
-
-<h2>Why it exists</h2>
-<p>Relation fields are easy to lose track of once a pod has more than a handful of entries — which post references which author, which page links to which other page. The graph is the fastest way to answer "what's connected to this" without opening every entry one at a time.</p>
 
 </DocsLayout>
