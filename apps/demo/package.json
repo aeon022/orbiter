@@ -11,7 +11,7 @@
   "dependencies": {
     "@a83/orbiter-core": "*",
     "@a83/orbiter-integration": "*",
-    "@astrojs/node": "^9.5.5",
+    "@astrojs/node": "^11.1.3",
     "astro": "^5.18.1"
   }
 }
