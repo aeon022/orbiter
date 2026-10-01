@@ -5,8 +5,13 @@ import CookieBanner from '../components/CookieBanner.astro';
 import PageTransition from '../components/PageTransition.astro';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
 
-const _aiMdRaw = readFileSync(new URL('../../../../AI_SETUP.md', import.meta.url), 'utf-8');
+// cwd-relative, not import.meta.url-relative: Astro's build moves this page's
+// compiled chunk to a different directory depth per version (broke across the
+// astro 7 bump since the prerender output structure changed), but `astro
+// build`/`astro dev` always run with cwd = this package's own directory.
+const _aiMdRaw = readFileSync(resolve(process.cwd(), '../../AI_SETUP.md'), 'utf-8');
 const _aiMatch = _aiMdRaw.match(/^```\n([\s\S]+)\n```\s*$/m);
 const aiPromptText = _aiMatch ? _aiMatch[1] : _aiMdRaw;
 

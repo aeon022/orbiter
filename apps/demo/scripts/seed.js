@@ -636,7 +636,7 @@ console.log(`
   Pages:       ${pages.length} (2 published, 1 draft)
   Events:      ${events.length} (2 published, 1 draft)
   Media:       2 placeholder assets
-  Login:       admin / admin
+  Login:       admin / ${adminPasswordPlain}
 ────────────────────────────────
 
   Run: npm run dev

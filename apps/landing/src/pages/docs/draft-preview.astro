@@ -40,7 +40,7 @@ if (!entry) return Astro.redirect('/404');
   <li>The token is a 48-character hex string generated with <code>crypto.getRandomValues</code>. Regenerating it in Settings immediately invalidates any existing preview links.</li>
   <li>Only one token exists at a time — it is shared across all editors who have access to the admin.</li>
   <li>Preview URLs should only be shared with trusted reviewers.</li>
-  <li>The <code>set:html={entry.data.body}</code> example above renders rich-text content as-is — sanitize it (e.g. with <a href="https://github.com/cure53/DOMPurify" target="_blank" rel="noopener">DOMPurify</a>) before rendering if any non-admin can edit entries, so a malicious field value can't run as script in your visitors' browsers.</li>
+  <li>The <code>set:html=&#123;entry.data.body&#125;</code> example above renders rich-text content as-is — sanitize it (e.g. with <a href="https://github.com/cure53/DOMPurify" target="_blank" rel="noopener">DOMPurify</a>) before rendering if any non-admin can edit entries, so a malicious field value can't run as script in your visitors' browsers.</li>
 </ul>
 
 <h2>TypeScript</h2>
