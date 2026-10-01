@@ -39,7 +39,7 @@
   },
   "homepage": "https://github.com/aeon022/orbiter#readme",
   "peerDependencies": {
-    "astro": ">=6.0.0"
+    "astro": "^7.2.8"
   },
   "dependencies": {
     "@a83/orbiter-core": "^0.3.1",
