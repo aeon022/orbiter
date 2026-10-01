@@ -1,0 +1,37 @@
+name: Security Audit
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  schedule:
+    # Catch newly-disclosed CVEs in dependencies we didn't touch ourselves.
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: npm audit (high/critical)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: npm audit
+        # ponytail: non-blocking for now — apps/demo, apps/landing and
+        # packages/integration pin astro@^5 / @astrojs/node@^9, and the fix for
+        # the one remaining critical/high pair (astro RCE/XSS chain) is a
+        # semver-major bump (astro 7, @astrojs/node 11) that needs its own
+        # build-verification pass, not a CI gate sprung on an unrelated PR.
+        # Flip continue-on-error to false once that bump lands.
+        continue-on-error: true
+        run: npm audit --audit-level=high
