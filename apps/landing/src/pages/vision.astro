@@ -1127,18 +1127,42 @@ import { ClientRouter } from 'astro:transitions';
     </div>
 
     <div class="rm-item reveal">
-      <div class="rm-dot next">→</div>
-      <div class="rm-phase">Next</div>
+      <div class="rm-dot done">✓</div>
+      <div class="rm-phase">Phase 15 · Complete</div>
       <div class="rm-title">Multi-POD Dashboard</div>
-      <div class="rm-desc">Manage multiple PODs from one desktop app window. Quick-switch between client sites, see entry counts and last-edit dates at a glance. Built for freelancers and agencies.</div>
-      <span class="rm-tag next">~2 days</span>
+      <div class="rm-desc">The web admin's <strong>Pods</strong> page links multiple PODs on the same server, showing entry counts and last-modified dates at a glance — works in any browser today. <a href="/docs/multi-pod">Docs →</a> A native multi-window switcher inside the <strong>Desktop app</strong> itself, for freelancers juggling client sites on different machines, is still next up.</div>
+      <span class="rm-tag done">shipped</span>
     </div>
 
     <div class="rm-item reveal">
       <div class="rm-dot done">✓</div>
       <div class="rm-phase">Phase 15 · Complete</div>
       <div class="rm-title">AI Content Assistant</div>
-      <div class="rm-desc">Summarize, translate, generate SEO text, adjust tone — directly in the block editor via <code>/ai</code>. Supports Ollama (local, free) or OpenAI/Anthropic API keys. No cloud required.</div>
+      <div class="rm-desc">Summarize, translate, generate SEO text, adjust tone — directly in the block editor via the <strong>✦ AI</strong> panel. Supports Ollama (local, free), Google Gemini, or OpenAI/Anthropic API keys. No cloud required. <a href="/docs/ai-assistant">Docs →</a></div>
+      <span class="rm-tag done">shipped</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot done">✓</div>
+      <div class="rm-phase">Phase 15 · Complete</div>
+      <div class="rm-title">Knowledge Graph</div>
+      <div class="rm-desc">Force-directed, pannable canvas view of every relation field across the pod — entries as nodes, relations as labeled edges, broken references surfaced instead of hidden. <a href="/docs/knowledge-graph">Docs →</a></div>
+      <span class="rm-tag done">shipped</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot done">✓</div>
+      <div class="rm-phase">Phase 15 · Complete</div>
+      <div class="rm-title">Content Quality Dashboard</div>
+      <div class="rm-desc">Scans every published entry for missing body, thin content, no image, no SEO metadata. Issue counts on the dashboard, click through to fix. <a href="/docs/content-quality">Docs →</a></div>
+      <span class="rm-tag done">shipped</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot done">✓</div>
+      <div class="rm-phase">Phase 15 · Complete</div>
+      <div class="rm-title">User Roles &amp; Collection Permissions</div>
+      <div class="rm-desc">Admin / editor roles, plus a per-editor allow-list restricting which collections they can see — enforced across every entry-level route, not just the main editor view. <a href="/docs/permissions">Docs →</a></div>
       <span class="rm-tag done">shipped</span>
     </div>
 
@@ -1215,19 +1239,19 @@ import { ClientRouter } from 'astro:transitions';
     </div>
 
     <div class="rm-item reveal">
-      <div class="rm-dot next">→</div>
-      <div class="rm-phase">Next · Sync</div>
+      <div class="rm-dot done">✓</div>
+      <div class="rm-phase">Phase 15 · Complete</div>
       <div class="rm-title">POD Sync</div>
-      <div class="rm-desc">Synchronize two PODs — laptop to server, local to cloud. Git-based or CouchDB-style replication with conflict resolution UI.</div>
-      <span class="rm-tag next">next up</span>
+      <div class="rm-desc"><code>orbiter sync --remote user@host:/path/content.pod</code> — rsync push/pull in one command, <code>--pull</code> to reverse direction. Git-based or CouchDB-style replication with a conflict-resolution UI for simultaneous multi-writer setups is still future work.</div>
+      <span class="rm-tag done">shipped</span>
     </div>
 
     <div class="rm-item reveal">
-      <div class="rm-dot next">→</div>
-      <div class="rm-phase">Next · Embeddable</div>
+      <div class="rm-dot done">✓</div>
+      <div class="rm-phase">Phase 15 · Complete</div>
       <div class="rm-title">Widget SDK</div>
-      <div class="rm-desc">Drop <code>&lt;script src="orbiter.js"&gt;</code> on any website to display POD content — blog feed, event list, portfolio grid. No framework required.</div>
-      <span class="rm-tag next">next up</span>
+      <div class="rm-desc">Drop <code>&lt;div data-orbiter="…" data-collection="posts"&gt;&lt;/div&gt;</code> plus <code>&lt;script src="widget.js"&gt;</code> on any website to display POD content — blog feed, event list, portfolio grid. No framework required. <a href="/docs/widget">Docs →</a></div>
+      <span class="rm-tag done">shipped</span>
     </div>
 
     <div class="rm-item reveal">

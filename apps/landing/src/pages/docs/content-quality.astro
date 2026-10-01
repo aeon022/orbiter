@@ -1,0 +1,25 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Content quality" current="/docs/content-quality" prev={{ href: '/docs/analytics', title: 'Simple Analytics' }} next={{ href: '/docs/knowledge-graph', title: 'Knowledge Graph' }}>
+
+<h1>Content quality</h1>
+<p class="lead">A sidebar report that scans every published entry across every collection and flags the obvious gaps — missing body, thin content, no image, no SEO metadata — so you find them before a reader does.</p>
+
+<h2>Where to find it</h2>
+<p>The quality panel on the <strong>Dashboard</strong> (enable it in Settings → Dashboard widgets if it's hidden). Shows an issue count per type; click through to the affected entries.</p>
+
+<h2>What it checks</h2>
+<table>
+  <thead><tr><th>Issue</th><th>Trigger</th></tr></thead>
+  <tbody>
+    <tr><td>No body content</td><td>Collection has a <code>body</code> field, entry's is empty</td></tr>
+    <tr><td>Body too short</td><td>Body is under 100 characters</td></tr>
+    <tr><td>No image</td><td>Collection has an image/media field, entry has none set</td></tr>
+    <tr><td>No SEO title</td><td>Collection has an SEO field, entry's title is empty</td></tr>
+    <tr><td>No SEO description</td><td>Collection has an SEO field, entry's description is empty</td></tr>
+  </tbody>
+</table>
+<p>Only checks apply where the relevant field actually exists in that collection's schema — a collection with no image field never gets flagged for a missing image. Only <code>published</code> entries are scanned; drafts are exempt since they're not live for readers yet.</p>
+
+</DocsLayout>

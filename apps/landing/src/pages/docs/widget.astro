@@ -1,0 +1,30 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Embeddable widget" current="/docs/widget" prev={{ href: '/docs/json-api', title: 'JSON API' }} next={{ href: '/docs/public-api', title: 'Public Content API' }}>
+
+<h1>Embeddable widget</h1>
+<p class="lead">Drop a few lines of HTML on <em>any</em> site — not just Astro, not even necessarily your own — and it renders a live list of entries from a pod. No build step, no framework required.</p>
+
+<h2>Usage</h2>
+<pre>&lt;div data-orbiter="https://your-admin.example.com" data-collection="posts" data-limit="5" data-style="cards"&gt;&lt;/div&gt;
+&lt;script src="https://your-admin.example.com/widget.js" defer&gt;&lt;/script&gt;</pre>
+
+<h2>Attributes</h2>
+<table>
+  <thead><tr><th>Attribute</th><th>Required</th><th>Default</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td><code>data-orbiter</code></td><td>Yes</td><td>—</td><td>Your admin server's origin</td></tr>
+    <tr><td><code>data-collection</code></td><td>Yes</td><td>—</td><td>Collection id to pull from</td></tr>
+    <tr><td><code>data-limit</code></td><td>No</td><td><code>5</code></td><td>Max entries shown</td></tr>
+    <tr><td><code>data-style</code></td><td>No</td><td><code>cards</code></td><td><code>cards</code> / <code>list</code> / <code>minimal</code></td></tr>
+  </tbody>
+</table>
+
+<h2>What it talks to</h2>
+<p>Its own endpoint, <code>/api/widget/:collection</code> — not the <a href="/docs/public-api">Public Content API</a>. It only ever returns <code>published</code> entries, but the access model is coarser: one global <strong>Enable API</strong> toggle in Settings → API, not a per-collection opt-in. Turn it on and every collection's published entries become embeddable anywhere via this script; there's no <code>public.collections</code> allow-list on this path. If you want some collections embeddable and others not, that's a job for the <a href="/docs/public-api">Public Content API</a> (which does support per-collection opt-in) plus your own fetch code instead of this widget.</p>
+
+<h2>When to reach for this instead of the Astro integration</h2>
+<p>The <a href="/docs/collections-api">Astro integration</a> is the better fit whenever you control the build — it's faster (static, no client-side fetch) and type-safe. Use the widget for everything else: a WordPress site, a static HTML page with no build pipeline, an iframe-free embed on a partner's site, or anywhere adding a build step isn't realistic.</p>
+
+</DocsLayout>

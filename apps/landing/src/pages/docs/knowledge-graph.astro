@@ -1,0 +1,25 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Knowledge Graph" current="/docs/knowledge-graph" prev={{ href: '/docs/content-quality', title: 'Content quality' }} next={{ href: '/docs/snippets', title: 'Code snippets' }}>
+
+<h1>Knowledge Graph</h1>
+<p class="lead">A force-directed, pannable, zoomable map of every relation field across your pod — every entry that links to another entry, drawn as a node graph instead of buried in dropdowns.</p>
+
+<h2>Where to find it</h2>
+<p><strong>Graph</strong> in the sidebar. It builds the whole map on load by walking every collection's entries and their relation fields, so it reflects whatever's actually in the pod right now — nothing pre-computed or cached.</p>
+
+<h2>Reading the graph</h2>
+<ul>
+  <li><strong>Accent-colored nodes</strong> — entries that exist in this pod. Labeled with their collection underneath.</li>
+  <li><strong>Gold nodes</strong> — relation targets that don't resolve to an entry in this pod (a stale reference, or one pointing outside it). Still shown, so broken links are visible instead of silently dropped.</li>
+  <li><strong>Labeled edges</strong> — the relation field's name, so you can tell "author" apart from "related_posts" at a glance.</li>
+</ul>
+
+<h2>Controls</h2>
+<p>Drag to pan, scroll or use the <strong>+</strong> / <strong>−</strong> buttons to zoom. The layout is a live physics simulation — nodes settle into place and gently repel each other, so dense clusters spread themselves out instead of overlapping.</p>
+
+<h2>Why it exists</h2>
+<p>Relation fields are easy to lose track of once a pod has more than a handful of entries — which post references which author, which page links to which other page. The graph is the fastest way to answer "what's connected to this" without opening every entry one at a time.</p>
+
+</DocsLayout>

@@ -1,0 +1,41 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="AI Assistant" current="/docs/ai-assistant" prev={{ href: '/docs/editor', title: 'Editor' }} next={{ href: '/docs/trash', title: 'Trash' }}>
+
+<h1>AI Assistant</h1>
+<p class="lead">A writing assistant built into the block editor — select text, pick a preset or write your own instruction, and insert or replace the result. Works with a local model (Ollama) or an API key, your choice.</p>
+
+<h2>Where to find it</h2>
+<p>The <strong>✦ AI</strong> button in the editor toolbar. Select some text first if you want the assistant to work on it specifically — otherwise it has the whole entry body as context.</p>
+
+<h2>Presets</h2>
+<p>Eight one-click prompts cover the common cases:</p>
+<ul>
+  <li>Shorten</li>
+  <li>Professional</li>
+  <li>Casual</li>
+  <li>Fix grammar</li>
+  <li>→ Deutsch / → English (translate)</li>
+  <li>Summarize</li>
+  <li>SEO desc (meta description, 160 chars max)</li>
+</ul>
+<p>Or skip the presets and type your own instruction in the prompt box — "turn this into three bullet points," "add a call to action at the end," anything.</p>
+
+<h2>After it generates</h2>
+<p>Three actions on the result: <strong>Insert</strong> (adds it to the document), <strong>Replace selection</strong> (swaps out the text you had selected), <strong>Retry</strong> (same prompt, new generation — useful when the first pass wasn't quite right).</p>
+
+<h2>Providers</h2>
+<p>Configured once in <strong>Settings → AI Assistant</strong>, used everywhere in the editor:</p>
+<table>
+  <thead><tr><th>Provider</th><th>Needs</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Google Gemini</strong></td><td>API key (free tier available)</td><td>Recommended default — <code>gemini-2.5-flash</code></td></tr>
+    <tr><td><strong>Ollama</strong></td><td>Nothing — runs locally</td><td>Free, private, no API key, no cloud round-trip. Point it at any Ollama host via <code>ai.ollama_url</code> if it's not on <code>localhost:11434</code>.</td></tr>
+    <tr><td><strong>Anthropic (Claude)</strong></td><td>API key</td><td></td></tr>
+    <tr><td><strong>OpenAI (GPT)</strong></td><td>API key</td><td></td></tr>
+  </tbody>
+</table>
+<p>The API key is stored in the pod's meta table like any other setting — it travels with the pod, so treat a pod containing a real API key the same way you'd treat any other secret-bearing file.</p>
+
+</DocsLayout>

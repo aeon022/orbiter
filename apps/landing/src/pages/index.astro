@@ -136,7 +136,11 @@ const faqs = [
   },
   {
     q: 'Is it production-ready?',
-    a: 'Orbiter is at v0.3.81 — published to npm, actively maintained, and used in real projects. The API may evolve before v1.0. It\'s suitable for personal sites, client projects, and small teams. Check the GitHub issues for anything relevant to your use case.',
+    a: 'Orbiter is at v0.3.8x — published to npm, actively maintained, and used in real projects. The API may evolve before v1.0. It\'s suitable for personal sites, client projects, and small teams. Check the GitHub issues for anything relevant to your use case.',
+  },
+  {
+    q: 'How do I report a security issue?',
+    a: 'Through <a href="https://github.com/aeon022/orbiter/security/advisories/new" target="_blank" rel="noopener">GitHub\'s private vulnerability reporting</a> — opens a draft advisory only the maintainer can see, with a CVE request built in once a fix ships. See <a href="https://github.com/aeon022/orbiter/security/policy" target="_blank" rel="noopener">SECURITY.md</a> for details. Please don\'t open a public issue for a vulnerability.',
   },
   {
     q: 'What\'s the license?',
@@ -493,11 +497,30 @@ const faqs = [
 
     <div class="updates-feed">
 
+      <div class="update-card reveal" style="border-color:color-mix(in srgb,var(--red) 55%,var(--border))">
+        <div class="update-date">Oct<br />2026</div>
+        <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.85 · core@0.3.18 · mcp@0.1.2 · client@0.1.3 · integration@0.3.20 · cli@0.3.13 — Latest</div>
+          <div class="update-title">Security hardening pass: 3 privately-disclosed bugs fixed, full-repo audit, 0 known dependency vulnerabilities</div>
+          <p style="font-size:12px;color:var(--muted);margin:2px 0 10px;line-height:1.6">A researcher privately reported three vulnerabilities in the admin and core packages. All three are fixed and released. Finding them prompted a broader audit of the rest of the codebase, which turned up more of the same pattern — all fixed below, plus a dependency and process cleanup so the next one is easier to report and faster to close.</p>
+          <ul class="update-items">
+            <li><strong>Stored XSS</strong> — unescaped field names/IPs in the Inbox, unescaped media filenames and analytics paths from fully unauthenticated endpoints, and the same pattern in <code>apps/demo</code>'s public post/page/event pages. Fixed with consistent escaping (and DOMPurify on the demo frontend) everywhere user- or visitor-supplied text reaches <code>innerHTML</code>.</li>
+            <li><strong>Collection permission bypass</strong> — an editor restricted to specific collections could still reach draft content via the singleton endpoint, the terminal CSV/JSON export, search/calendar widgets, comments, and edit-locks. All now enforce the same <code>requireCollectionAccess</code> check as the main entry routes. See the new <a href="/docs/permissions">permissions docs</a>.</li>
+            <li><strong>Path traversal</strong> — the local media backend's <code>folder</code> parameter could write outside the configured media directory; the GitHub and S3 backends had the same unvalidated join. All three now resolve and reject anything that would escape the configured root.</li>
+            <li><strong>Plaintext API keys</strong> — Bearer tokens for the Public Content API and MCP server were stored and compared in plaintext, inside a <code>.pod</code> file that Orbiter's own <code>orbiter init</code> template commits to git by design. Now hashed (SHA-256, constant-time compare), with transparent migration for already-issued keys.</li>
+            <li><strong>Missing/inverted access checks</strong> — <code>api-keys</code> management, schema field rename/delete, and the embeddable-widget endpoint (<code>/api/widget/:collection</code> — inverted logic made it allow-by-default instead of deny-by-default like every other API gate) each had a broken or missing permission check. All fixed.</li>
+            <li><strong>Dependency audit</strong> — <code>npm audit</code> went from 40 vulnerabilities to 0: removed an unused, outdated <code>electron-builder</code> devDependency pulling in most of them on its own, bumped nodemailer/sharp/adm-zip/electron to patched versions, and — the big one — <strong>Astro 5 → 7</strong> and <strong>@astrojs/node 9 → 11</strong> across <code>apps/demo</code>, <code>apps/landing</code>, and the <code>orbiter init</code> scaffold template, closing a critical RCE in Astro's AVIF image optimization.</li>
+            <li><strong>Process</strong> — new <a href="https://github.com/aeon022/orbiter/security/policy" target="_blank" rel="noopener">SECURITY.md</a>, GitHub private vulnerability reporting and Dependabot security updates turned on for the repo, and a weekly <code>npm audit</code> CI check.</li>
+          </ul>
+        </div>
+      </div>
+
       <div class="update-card reveal" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
         <div class="update-date">Aug<br />2026</div>
         <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">mcp@0.1.0 · admin@0.3.81 — Latest</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">mcp@0.1.0 · admin@0.3.81</div>
           <div class="update-title">MCP server for AI agents, Public Content API, JSON-LD, API keys</div>
           <ul class="update-items">
             <li><strong><code>@a83/orbiter-mcp</code></strong> — new MCP server package. <code>list_collections</code>, <code>get_entries</code>, <code>get_entry</code>, <code>search_content</code> tools for Claude Desktop and other MCP clients. stdio for local trusted access, <code>--http</code> for remote (same auth as the Public Content API).</li>

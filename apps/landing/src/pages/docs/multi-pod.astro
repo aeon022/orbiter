@@ -1,0 +1,21 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Multi-POD dashboard" current="/docs/multi-pod" prev={{ href: '/docs/desktop', title: 'Desktop App' }} next={{ href: '/docs/collections', title: 'Collections & fields' }}>
+
+<h1>Multi-POD dashboard</h1>
+<p class="lead">If you run more than one Orbiter site — client projects, a personal blog plus a company site, whatever — <strong>Pods</strong> gives you a linked overview of every pod this admin server knows about, without switching terminals or ports.</p>
+
+<h2>Where to find it</h2>
+<p>Admin-only. Appears in the sidebar as <strong>Pods</strong> once you're logged in as <code>admin</code>.</p>
+
+<h2>What it shows</h2>
+<p>One card per linked pod: collection count, last-modified date, and the full filesystem path. The pod you're currently browsing is marked <strong>current</strong> and can't be unlinked.</p>
+
+<h2>Linking a pod</h2>
+<p>Paste the path to another <code>.pod</code> file and click <strong>Link</strong>. It doesn't move or copy anything — this just adds the path to a list stored in the current pod's own meta, so the dashboard knows where to look. Unlink removes it from the list the same way, and doesn't touch the other pod's file.</p>
+
+<h2>Scope</h2>
+<p>This is a <em>this-server</em> overview: it lists pods reachable from the machine running this admin instance, not a hosted directory of every Orbiter pod anywhere. For switching between pods that live on different machines entirely (a freelancer with five client servers), the <a href="/docs/desktop">Desktop app</a> is the better fit — a native multi-window experience for that is on the <a href="/vision">roadmap</a>.</p>
+
+</DocsLayout>
