@@ -12,6 +12,6 @@
   "dependencies": {
     "@a83/orbiter-integration": "latest",
     "@a83/orbiter-admin": "latest",
-    "astro": "^6.0.0"
+    "astro": "^7.3.5"
   }
 }
