@@ -1,0 +1,28 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="User roles & permissions" current="/docs/permissions" prev={{ href: '/docs/snippets', title: 'Code snippets' }} next={{ href: '/docs/collections-api', title: 'orbiter:collections' }}>
+
+<h1>User roles & permissions</h1>
+<p class="lead">Two roles — <strong>admin</strong> and <strong>editor</strong> — and an optional per-editor allow-list restricting which collections they can touch. Enough for a small team without a full permissions matrix to configure.</p>
+
+<h2>Where to find it</h2>
+<p><strong>Users</strong> in the sidebar, visible to admins only.</p>
+
+<h2>Roles</h2>
+<table>
+  <thead><tr><th>Role</th><th>Can do</th></tr></thead>
+  <tbody>
+    <tr><td><strong>admin</strong></td><td>Everything — users, settings, API keys, schema changes, every collection, every entry status including drafts. Always unrestricted; you can't limit an admin's collection access.</td></tr>
+    <tr><td><strong>editor</strong></td><td>Content work — create/edit/publish entries in whichever collections they're allowed to see. No access to Users, Settings, or schema structure changes.</td></tr>
+  </tbody>
+</table>
+<p>Switch a user's role from the Users list — toggles between admin and editor on the same account.</p>
+
+<h2>Restricting an editor to specific collections</h2>
+<p>Click <strong>Collections</strong> next to an editor to open the permissions modal: a checkbox per collection. Leave everything checked (or don't touch it at all) and that editor is <strong>unrestricted</strong> — the default for a new editor account. Uncheck some and they lose access to exactly those collections: list views, entries, drafts, exports, all of it.</p>
+
+<h2>What "no access" actually means</h2>
+<p>An editor without access to a collection gets a 403 from every entry-level route for it — list, read, write, delete, comments, edit-locks, singleton pages, the terminal/CSV export, search and the dashboard's recent-entries and calendar widgets. Drafts and unpublished content in a restricted collection don't leak through any of those surfaces, not just the obvious "Entries" page.</p>
+
+</DocsLayout>

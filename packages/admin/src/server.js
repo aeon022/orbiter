@@ -88,8 +88,12 @@ export function createApp(podPath) {
   app.use('/api/widget/*', async (c, next) => { c.set('podPath', podPath); await next(); });
   app.get('/api/widget/:collection', (c) => {
     const db = openPod(c.get('podPath'));
+    // Deny-by-default, matching packages/integration/routes/api-collection.js's
+    // check on the same meta key — this used to check `=== '0'`, which let every
+    // collection through unless the toggle was explicitly turned off, the
+    // opposite of how "Enable API" reads in Settings.
     const enabled = db.getMeta('api.enabled');
-    if (enabled === '0') { db.close(); return c.json({ error: 'API disabled' }, 403); }
+    if (enabled !== '1') { db.close(); return c.json({ error: 'API disabled' }, 403); }
     const colId = c.req.param('collection');
     const col = db.getCollection(colId);
     if (!col) { db.close(); return c.json({ error: 'Not found' }, 404); }
