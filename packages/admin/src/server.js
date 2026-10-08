@@ -40,6 +40,7 @@ import { podRoutes }           from './routes/pods.js';
 import { apiKeyRoutes }        from './routes/api-keys.js';
 import { securityRoutes }      from './routes/security.js';
 import { webhookRoutes }       from './routes/webhooks.js';
+import { previewRoutes }       from './routes/preview.js';
 import { requireAuth }      from './middleware/auth.js';
 import { csrfMiddleware }  from './middleware/csrf.js';
 
@@ -141,6 +142,7 @@ export function createApp(podPath) {
   api.route('/api-keys',     apiKeyRoutes);
   api.route('/security-check', securityRoutes);
   api.route('/webhooks',     webhookRoutes);
+  api.route('/preview-token', previewRoutes);
 
   app.route('/api', api);
 

@@ -177,7 +177,7 @@ export function getMediaItem(id) {
  */
 function generateRuntimeModule(podPath, defaultLocale, locales, schemas) {
   return `
-import { openPod, safeEqual } from '@a83/orbiter-core';
+import { openPod, checkPreviewToken } from '@a83/orbiter-core';
 
 const _podPath = ${JSON.stringify(podPath)};
 
@@ -253,7 +253,7 @@ export function getLocaleEntry(collection, baseSlug, loc) {
 export async function getPreviewEntry(collection, slug, previewToken) {
   const db          = openPod(_podPath);
   const storedToken = db.getMeta('preview.token');
-  if (!previewToken || !storedToken || !safeEqual(previewToken, storedToken)) { db.close(); return null; }
+  if (!checkPreviewToken(storedToken, previewToken, collection, slug)) { db.close(); return null; }
   const row = db.db
     .prepare('SELECT * FROM _entries WHERE collection_id = ? AND slug = ? AND deleted_at IS NULL')
     .get(collection, slug);
@@ -450,10 +450,10 @@ export function getLocaleEntry(collection, baseSlug, loc) {
 }
 
 export async function getPreviewEntry(collection, slug, previewToken) {
-  const { openPod, safeEqual } = await import('@a83/orbiter-core');
+  const { openPod, checkPreviewToken } = await import('@a83/orbiter-core');
   const db = openPod(_podPath);
   const storedToken = db.getMeta('preview.token');
-  if (!previewToken || !storedToken || !safeEqual(previewToken, storedToken)) { db.close(); return null; }
+  if (!checkPreviewToken(storedToken, previewToken, collection, slug)) { db.close(); return null; }
   const row = db.db.prepare(
     'SELECT * FROM _entries WHERE collection_id = ? AND slug = ? AND deleted_at IS NULL'
   ).get(collection, slug);

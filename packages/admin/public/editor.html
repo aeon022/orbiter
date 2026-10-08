@@ -861,20 +861,26 @@
     }
 
     // Fetch preview URL + token for this collection
-    const [previewMeta, previewTokenMeta] = await Promise.all([
-      fetch(`/api/meta/preview_url~${COLLECTION}`,{credentials:'include'}).then(r=>r.json()).catch(()=>null),
-      fetch('/api/meta/preview~token',{credentials:'include'}).then(r=>r.json()).catch(()=>null),
-    ]);
+    const previewMeta = await fetch(`/api/meta/preview_url~${COLLECTION}`,{credentials:'include'}).then(r=>r.json()).catch(()=>null);
     const previewUrlTemplate = previewMeta?.value || '';
-    const previewToken = previewTokenMeta?.value || '';
     function updatePreviewLink() {
       const btn = document.getElementById('btn-preview-link');
       if (!btn || !previewUrlTemplate) return;
       const slug = document.getElementById('slug-input')?.value || currentSlug || SLUG;
       const base = previewUrlTemplate.replace('{slug}', slug);
       const sep  = base.includes('?') ? '&' : '?';
-      btn.href = previewToken ? base + sep + 'preview_token=' + previewToken : base;
+      btn.href = base;
+      btn.dataset.sep = sep;
       btn.style.display = '';
+      if (!btn.dataset.wired) {
+        btn.dataset.wired = '1';
+        // A short-lived token for exactly this entry is minted on click; the master token never leaves the server.
+        btn.addEventListener('click', async (ev) => {
+          const s = document.getElementById('slug-input')?.value || currentSlug || SLUG;
+          const r = await fetch(`/api/preview-token?collection=${encodeURIComponent(COLLECTION)}&slug=${encodeURIComponent(s)}`, { credentials: 'include' }).then(x => x.ok ? x.json() : null).catch(() => null);
+          if (r?.token) { ev.preventDefault(); window.open(btn.href + btn.dataset.sep + 'preview_token=' + encodeURIComponent(r.token), btn.target || '_blank'); }
+        });
+      }
     }
 
     // Set title + slug

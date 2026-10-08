@@ -511,6 +511,7 @@ const faqs = [
             <li><strong>2FA (TOTP)</strong> — turn it on under Account with any authenticator app. Eight one-time recovery codes, codes can't be replayed, and an admin can reset a locked-out user. <a href="/docs/security">Docs →</a></li>
             <li><strong>Active sessions</strong> — see every signed-in device (browser, IP, time) and sign out one or all others.</li>
             <li><strong>API key limits</strong> — restrict a key to collections, give it an expiry date or a requests-per-minute limit. Applies to the REST API and MCP. A new dialog replaces the prompt chain.</li>
+            <li><strong>Preview links</strong> — the editor's Preview button now uses a one-hour token bound to that entry instead of the master preview token (which also fixes previews for editors, who only got a masked token before).</li>
             <li><strong>Version diff</strong> — see field by field what a restore would change. Restoring now keeps the content it replaces, so a restore can be undone (previously the replaced content was lost, and the newest snapshot couldn't be restored at all).</li>
             <li><strong>Media usage</strong> — each file shows where it is used; filter <em>Unused</em> files and <em>Broken refs</em>; deleting a file that is in use warns first.</li>
             <li><strong>Signed webhooks</strong> — HMAC-SHA256 signatures, retries (5 s, 30 s, 5 min) and a delivery log, managed in Settings. Webhook URLs are now admin-only (editors could previously set them). <a href="/docs/webhooks">Docs →</a></li>

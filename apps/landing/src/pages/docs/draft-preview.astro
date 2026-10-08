@@ -11,6 +11,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
   <li>Generate a <strong>Preview token</strong> in <strong>Settings → API</strong>.</li>
   <li>Set a <strong>Preview URL</strong> for a collection in <strong>Schema → (collection)</strong>. Use <code>&#123;slug&#125;</code> as a placeholder.</li>
   <li>The editor's <strong>↗ Preview</strong> button opens <code>https://yoursite.com/posts/&#123;slug&#125;?preview_token=…</code>.</li>
+  <li>The button doesn't put the master token in the URL: the admin signs a <strong>short-lived token (about an hour) for exactly that collection and slug</strong>, so a leaked link expires and can't preview other entries. Restricted editors can only get tokens for collections they may open. The master token itself still works if you build preview links by hand.</li>
   <li>Your Astro page calls <code>getPreviewEntry()</code> with the token — which reads directly from the pod, bypassing the published-only snapshot.</li>
 </ol>
 

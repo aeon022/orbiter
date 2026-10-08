@@ -2,7 +2,7 @@
  * auth.js — Password hashing and session token utilities
  * Uses Node.js built-in crypto (no external deps)
  */
-import { scrypt, randomBytes, timingSafeEqual, createHash } from 'node:crypto';
+import { scrypt, randomBytes, timingSafeEqual, createHash, createHmac } from 'node:crypto';
 import { promisify } from 'node:util';
 
 const scryptAsync = promisify(scrypt);
@@ -60,6 +60,24 @@ export function safeEqual(a, b) {
   const bufA = Buffer.from(String(a ?? ''));
   const bufB = Buffer.from(String(b ?? ''));
   return bufA.length === bufB.length && timingSafeEqual(bufA, bufB);
+}
+
+/**
+ * Short-lived preview tokens. The stored `preview.token` is a master secret; the admin hands the
+ * editor's browser a token that only works for one collection+slug and expires (default 1 h),
+ * so the master never travels in URLs and a restricted editor can't preview other collections.
+ * checkPreviewToken also still accepts the master itself, so existing preview links keep working.
+ */
+export function signPreviewToken(master, collection, slug, ttlSec = 3600) {
+  const exp = Math.floor(Date.now() / 1000) + ttlSec;
+  return `${exp}.${createHmac('sha256', master).update(`${exp}|${collection}|${slug}`).digest('hex')}`;
+}
+export function checkPreviewToken(master, given, collection, slug) {
+  if (!master || !given) return false;
+  if (safeEqual(given, master)) return true;
+  const [exp, sig] = String(given).split('.');
+  if (!sig || !(Number(exp) > Date.now() / 1000)) return false;
+  return safeEqual(sig, createHmac('sha256', master).update(`${exp}|${collection}|${slug}`).digest('hex'));
 }
 
 const TOKEN_PREFIX = 'sha256:';

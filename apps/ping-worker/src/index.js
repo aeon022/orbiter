@@ -21,7 +21,8 @@ export default {
       await env.PINGS.put(key, String(cur + 1), { expirationTtl: 60 * 60 * 24 * 120 }); // keep 120 days
 
       // Also keep a per-version counter
-      const ver = String(body.version ?? 'unknown').replace(/[^0-9.]/g, '').slice(0, 10);
+      // Only real-looking versions get their own counter, so junk can't create unlimited KV keys.
+      const ver = /^\d{1,2}\.\d{1,3}\.\d{1,3}$/.test(String(body.version ?? '')) ? String(body.version) : '';
       if (ver) {
         const vkey = `ver:${ver}`;
         const vcur = parseInt((await env.PINGS.get(vkey)) ?? '0', 10);

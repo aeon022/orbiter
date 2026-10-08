@@ -69,3 +69,17 @@ test('checkApiToken: open when unset, hashed match, plaintext legacy migrates, d
   assert.equal(checkApiToken(fakeDb(legacy), 'Bearer plain').ok, true);
   assert.ok(legacy['api.token'].startsWith('sha256:'));
 });
+
+import { signPreviewToken, checkPreviewToken } from './auth.js';
+test('preview tokens: bound to collection+slug, expire, master still accepted, garbage rejected', () => {
+  const master = 'master-secret';
+  const t = signPreviewToken(master, 'posts', 'hello');
+  assert.equal(checkPreviewToken(master, t, 'posts', 'hello'), true);
+  assert.equal(checkPreviewToken(master, t, 'posts', 'other'), false, 'other slug');
+  assert.equal(checkPreviewToken(master, t, 'private', 'hello'), false, 'other collection');
+  assert.equal(checkPreviewToken(master, signPreviewToken(master, 'posts', 'hello', -1), 'posts', 'hello'), false, 'expired');
+  assert.equal(checkPreviewToken('different', t, 'posts', 'hello'), false, 'wrong master');
+  assert.equal(checkPreviewToken(master, master, 'posts', 'anything'), true, 'legacy master token');
+  assert.equal(checkPreviewToken(master, '', 'posts', 'hello'), false);
+  assert.equal(checkPreviewToken('', t, 'posts', 'hello'), false);
+});
