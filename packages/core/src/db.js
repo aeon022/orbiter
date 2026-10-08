@@ -202,6 +202,11 @@ export class OrbiterDB {
       `);
     }
 
+    // Focal point (0..1) used when cropping image variants
+    for (const col of ['focal_x REAL', 'focal_y REAL']) {
+      try { this.db.exec(`ALTER TABLE _media ADD COLUMN ${col}`); } catch {}
+    }
+
     // Set format version if not present
     const existing = this.db
       .prepare("SELECT value FROM _meta WHERE key = 'format_version'")
@@ -472,9 +477,13 @@ export class OrbiterDB {
   // ── Media ──────────────────────────────────────────
   listMedia(folder = null) {
     const sql = folder !== null
-      ? 'SELECT id, filename, mime_type, size, alt, folder, url, created_at FROM _media WHERE folder = ? ORDER BY created_at DESC'
-      : 'SELECT id, filename, mime_type, size, alt, folder, url, created_at FROM _media ORDER BY created_at DESC';
+      ? 'SELECT id, filename, mime_type, size, alt, folder, url, focal_x, focal_y, created_at FROM _media WHERE folder = ? ORDER BY created_at DESC'
+      : 'SELECT id, filename, mime_type, size, alt, folder, url, focal_x, focal_y, created_at FROM _media ORDER BY created_at DESC';
     return folder !== null ? this.db.prepare(sql).all(folder) : this.db.prepare(sql).all();
+  }
+
+  setMediaFocal(id, x, y) {
+    return this.db.prepare('UPDATE _media SET focal_x = ?, focal_y = ? WHERE id = ?').run(x, y, id).changes > 0;
   }
 
   getMediaItem(id) {

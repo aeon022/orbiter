@@ -6,3 +6,4 @@ export { getMediaBackend, mediaResponseHeaders } from './media-backend.js';
 export { secretsEnabled, isEncrypted, migrateSecrets, SECRET_META_KEYS } from './secrets.js';
 export { securityChecks, isTrackedByGit } from './doctor.js';
 export { generateTotpSecret, verifyTotp, totpUri, generateRecoveryCodes, hashRecoveryCode } from './totp.js';
+export { useSharp, parseVariant, renderVariant, canVariant, focalCrop, WIDTHS as VARIANT_WIDTHS, RATIOS as VARIANT_RATIOS } from './media-variant.js';

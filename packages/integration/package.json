@@ -1,7 +1,7 @@
 {
   "name": "@a83/orbiter-integration",
   "version": "0.3.22",
-  "description": "Astro integration for Orbiter CMS — admin UI, virtual modules, injected routes",
+  "description": "Astro integration for Orbiter CMS \u2014 admin UI, virtual modules, injected routes",
   "type": "module",
   "main": "./src/index.js",
   "exports": {
@@ -39,11 +39,17 @@
   },
   "homepage": "https://github.com/aeon022/orbiter#readme",
   "peerDependencies": {
-    "astro": ">=6.0.0"
+    "astro": ">=6.0.0",
+    "sharp": ">=0.33.0"
   },
   "dependencies": {
     "@a83/orbiter-core": "^0.3.21",
     "fast-xml-parser": "^5.5.9",
     "turndown": "^7.2.2"
+  },
+  "peerDependenciesMeta": {
+    "sharp": {
+      "optional": true
+    }
   }
 }

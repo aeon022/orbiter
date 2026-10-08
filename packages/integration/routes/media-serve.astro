@@ -3,14 +3,18 @@ export const prerender = false;
 /**
  * /orbiter/media/[id] — serves a media file from the .pod file.
  * Supports blob (SQLite), local (disk), and external (url redirect) backends.
+ *
+ * Images can be requested as variants: ?w=800 &fmt=webp|avif|jpeg &ar=16:9 (see core media-variant.js).
+ * Crops follow the focal point set in the media library. Without sharp, or for non-raster files,
+ * the original is served.
  */
 import { podPath } from 'orbiter:db';
-import { openPod, mediaResponseHeaders } from '@a83/orbiter-core';
+import { openPod, mediaResponseHeaders, parseVariant, renderVariant } from '@a83/orbiter-core';
 
 const { id } = Astro.params;
 
 const db  = openPod(podPath);
-const row = db.db.prepare('SELECT mime_type, data, url, path FROM _media WHERE id = ?').get(id);
+const row = db.db.prepare('SELECT mime_type, data, url, path, focal_x, focal_y FROM _media WHERE id = ?').get(id);
 db.close();
 
 if (!row) {
@@ -22,14 +26,27 @@ if (row.url) {
   return Response.redirect(row.url, 302);
 }
 
-// Local backend: read from disk
+// Local backend: read from disk; default is the BLOB in SQLite
+let data = row.data;
 if (row.path) {
   const { readFile } = await import('node:fs/promises');
-  const data = await readFile(row.path).catch(() => null);
+  data = await readFile(row.path).catch(() => null);
   if (!data) return new Response('Not found on disk', { status: 404 });
-  return new Response(data, { headers: mediaResponseHeaders(row.mime_type) });
 }
 
-// Default: serve BLOB from SQLite
-return new Response(row.data, { headers: mediaResponseHeaders(row.mime_type) });
+const variant = parseVariant(Astro.url.searchParams);
+if (variant) {
+  try {
+    const v = await renderVariant(id, data, row.mime_type, variant, { x: row.focal_x ?? undefined, y: row.focal_y ?? undefined });
+    if (v) {
+      // Not "immutable": changing the focal point changes the crop, so let caches revalidate daily.
+      return new Response(v.data, { headers: { ...mediaResponseHeaders(v.type), 'Cache-Control': 'public, max-age=86400' } });
+    }
+  } catch (e) {
+    if (e.code === 'BUSY') return new Response('Busy, try again', { status: 503, headers: { 'Retry-After': '5' } });
+    // not decodable → serve the original
+  }
+}
+
+return new Response(data, { headers: mediaResponseHeaders(row.mime_type) });
 ---

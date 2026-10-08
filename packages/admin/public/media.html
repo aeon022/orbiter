@@ -32,7 +32,7 @@
     .media-name { font-size:10px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; }
     .media-meta { font-size:9px; color:var(--muted); display:flex; justify-content:space-between; }
     .media-overlay { position:absolute; inset:0; background:rgba(0,0,0,.5); opacity:0; transition:opacity .15s; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; }
-    .btn-copy-url { background:var(--bg2); border:1px solid var(--line); color:var(--text); font-family:var(--mono); font-size:9px; padding:5px 14px; cursor:pointer; letter-spacing:.06em; border-radius:2px; }
+    .btn-focal, .btn-copy-url { background:var(--bg2); border:1px solid var(--line); color:var(--text); font-family:var(--mono); font-size:9px; padding:5px 14px; cursor:pointer; letter-spacing:.06em; border-radius:2px; }
     .btn-copy-url:hover { background:var(--bg3); }
     .btn-copy-url.copied { color:var(--jade); border-color:var(--jade); }
     .btn-del-media { background:transparent; border:1px solid rgba(255,255,255,.3); color:rgba(255,255,255,.8); font-family:var(--mono); font-size:9px; padding:4px 12px; cursor:pointer; border-radius:2px; }
@@ -160,6 +160,47 @@
       }));
     }
 
+    // Focal point: click the image where the subject is; crops (16:9, 1:1 …) then keep it in frame.
+    function openFocalDialog(m) {
+      let fx = m.focal_x ?? 0.5, fy = m.focal_y ?? 0.5, has = m.focal_x != null;
+      const dlg = document.createElement('dialog');
+      dlg.style.cssText = 'background:var(--bg1);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:18px;width:min(640px,94vw);max-height:90vh;overflow:auto';
+      dlg.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="font-size:14px;color:var(--heading);flex:1">Focal point — ${esc(m.filename)}</div>
+          <button type="button" class="btn btn-ghost btn-sm" id="fp-cancel">Close</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Click the most important part of the picture. Cropped versions (<code>?ar=16:9</code>, <code>?ar=1:1</code> …) keep it in frame.</div>
+        <div id="fp-stage" style="position:relative;cursor:crosshair;line-height:0"><img id="fp-img" src="/api/media/${m.id}/raw" style="max-width:100%;max-height:50vh;border-radius:6px" />
+          <div id="fp-dot" style="position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 2px rgba(0,0,0,.6);pointer-events:none"></div></div>
+        <div id="fp-prev" style="display:flex;gap:10px;margin:12px 0;align-items:flex-end"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button type="button" class="btn btn-ghost btn-sm" id="fp-clear">Reset to centre</button>
+          <button type="button" class="btn btn-primary btn-sm" id="fp-save">Save</button>
+        </div>`;
+      document.body.appendChild(dlg);
+      const img = dlg.querySelector('#fp-img'), dot = dlg.querySelector('#fp-dot');
+      const place = () => { dot.style.left = (fx*img.clientWidth)+'px'; dot.style.top = (fy*img.clientHeight)+'px'; dot.style.display = has ? '' : 'none'; };
+      const previews = () => { dlg.querySelector('#fp-prev').innerHTML = has ? ['16:9','1:1','9:16'].map(ar=>`<div style="font-size:10px;color:var(--muted);text-align:center"><img src="/api/media/${m.id}/raw?w=160&ar=${ar}&_=${Math.round(fx*100)}-${Math.round(fy*100)}" style="display:block;border-radius:4px;margin-bottom:3px"/>${ar}</div>`).join('') : ''; };
+      img.addEventListener('load', place);
+      dlg.querySelector('#fp-stage').addEventListener('click', e => {
+        const r = img.getBoundingClientRect();
+        fx = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)); fy = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)); has = true;
+        place();
+      });
+      dlg.querySelector('#fp-clear').addEventListener('click', ()=>{ has = false; fx = fy = 0.5; place(); previews(); });
+      const save = async () => {
+        const body = has ? { focal_x: +fx.toFixed(4), focal_y: +fy.toFixed(4) } : { focal_x: null, focal_y: null };
+        const res = await fetch(`/api/media/${m.id}`,{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        if (res.ok) { m.focal_x = body.focal_x; m.focal_y = body.focal_y; previews(); }
+        return res.ok;
+      };
+      dlg.querySelector('#fp-save').addEventListener('click', async ()=>{ if (await save()) { dlg.close(); loadMedia(); } else alert('Could not save.'); });
+      dlg.querySelector('#fp-cancel').addEventListener('click', ()=>dlg.close());
+      dlg.addEventListener('close', ()=>dlg.remove());
+      dlg.showModal(); previews();
+    }
+
     function renderBroken() {
       document.getElementById('media-grid-wrap').innerHTML = `<div style="padding:8px 4px;font-size:12px">
         <div style="color:var(--muted);margin-bottom:10px">These entries point at media that was deleted. Open the entry and pick the file again.</div>
@@ -188,10 +229,13 @@
           </div>
           <div class="media-overlay">
             <button class="btn-copy-url" data-id="${m.id}">Copy URL</button>
+            ${isImg && m.mime_type !== 'image/svg+xml' ? `<button class="btn-focal" data-id="${m.id}">Focal point${m.focal_x != null ? ' ●' : ''}</button>` : ''}
             <button class="btn-del-media" data-id="${m.id}">Delete</button>
           </div>
         </div>`;
       }).join('')}</div>`;
+
+      wrap.querySelectorAll('.btn-focal').forEach(btn=>btn.addEventListener('click', ()=>openFocalDialog(allMedia.find(x=>x.id===btn.dataset.id))));
 
       wrap.querySelectorAll('.btn-copy-url').forEach(btn=>btn.addEventListener('click', ()=>{
         const url = `${location.origin}/api/media/${btn.dataset.id}/raw`;

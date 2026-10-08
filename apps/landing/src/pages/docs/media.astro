@@ -30,6 +30,29 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <h2>Deleting files</h2>
 <p>Select a file and click <strong>Delete</strong>. For the <code>local</code> backend, the file is also removed from disk. For the <code>github</code> backend, a deletion commit is made via the GitHub API. For <code>s3</code>, a <code>DeleteObject</code> request is sent. Blob and external-link items are removed from <code>_media</code> in the pod.</p>
 
+<h2>Responsive variants &amp; focal point</h2>
+<p>Add query parameters to any image URL to get a resized, re-encoded or cropped version, generated on demand and cached:</p>
+<table>
+  <thead><tr><th>Param</th><th>Values</th></tr></thead>
+  <tbody>
+    <tr><td><code>w</code></td><td>Width in px, rounded up to one of 160, 320, 480, 640, 800, 1024, 1280, 1600, 2000 (never enlarged)</td></tr>
+    <tr><td><code>fmt</code></td><td><code>webp</code>, <code>avif</code> or <code>jpeg</code></td></tr>
+    <tr><td><code>ar</code></td><td>Aspect ratio to crop to: <code>1:1</code>, <code>4:3</code>, <code>3:2</code>, <code>16:9</code>, <code>2:1</code>, <code>3:4</code>, <code>2:3</code>, <code>9:16</code></td></tr>
+  </tbody>
+</table>
+<pre>&lt;img
+  src="/orbiter/media/&#123;id&#125;?w=800&amp;fmt=webp"
+  srcset="/orbiter/media/&#123;id&#125;?w=480&amp;fmt=webp 480w,
+          /orbiter/media/&#123;id&#125;?w=800&amp;fmt=webp 800w,
+          /orbiter/media/&#123;id&#125;?w=1280&amp;fmt=webp 1280w"
+  sizes="(min-width: 800px) 800px, 100vw" alt="…" /&gt;</pre>
+<p>In the media library, <strong>Focal point</strong> on an image lets you click the important part. Crops with <code>ar</code> keep that point in frame instead of cutting from the centre — so a 16:9 banner doesn't behead the person at the edge of a portrait.</p>
+<ul>
+  <li>Needs <code>sharp</code>, which Astro projects already have. Without it, or for SVG/GIF/video/PDF, the original is served unchanged.</li>
+  <li>Because widths and ratios come from fixed lists, the number of variants per image is bounded. At most two are rendered at once; when many new variants are requested at the same moment the extra requests get <code>503</code> with <code>Retry-After</code>. Rendered variants are kept in a 64&nbsp;MB in-memory cache and served with a one-day cache lifetime.</li>
+  <li>Variants are not stored in the pod — they are cheap to regenerate and always follow the current focal point.</li>
+</ul>
+
 <h2>Usage, unused files and broken references</h2>
 <p>Every card shows whether the file is used (<em>used in 3 entries</em>) or <em>unused</em>; hover for the entry titles. The filter bar adds <strong>Unused</strong> and <strong>Broken refs</strong>. Deleting a file that is in use warns you first and names the entries. <em>Broken refs</em> lists entries that point at a media file that no longer exists.</p>
 <p>References are found by the file's id inside entry content, so they are recognised wherever they are stored — picker fields, image blocks, Markdown links to <code>/orbiter/media/&lt;id&gt;</code>. Entries in the trash count as references. Editors restricted to some collections see the counts but not the titles of entries they may not open.</p>
@@ -37,6 +60,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <h2>API access</h2>
 <pre>GET  /api/media              — list all files (no binary data)
 GET  /api/media/usage        — &#123; usage, unused, broken &#125;
+PUT  /api/media/:id          — &#123; alt?, focal_x?, focal_y? &#125; (focal in 0..1, null clears)
 GET  /api/media/:id/raw      — serve the file
 POST /api/media              — upload (multipart/form-data)
 POST /api/media/import-url   — server-side fetch from a URL

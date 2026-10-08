@@ -1,7 +1,8 @@
 import { Hono } from 'hono';
-import { openPod, getMediaBackend, mediaResponseHeaders } from '@a83/orbiter-core';
+import { openPod, getMediaBackend, mediaResponseHeaders, parseVariant, renderVariant, useSharp } from '@a83/orbiter-core';
 import { randomUUID } from 'node:crypto';
 import sharp from 'sharp';
+useSharp(sharp);
 import { safeFetch } from '../net.js';
 import { allowedCollectionIds } from '../middleware/auth.js';
 
@@ -81,20 +82,45 @@ mediaRoutes.get('/:id/raw', async (c) => {
     return c.redirect(item.url, 302);
   }
 
-  // Local backend: read from disk
+  // Local backend reads from disk, default is the BLOB in SQLite
+  let data = item.data;
   if (item.path) {
     const backend = getMediaBackend(db);
     const result  = await backend.get(item.id).catch(() => null);
-    db.close();
-    if (!result?.data) return c.json({ error: 'File not found on disk' }, 404);
-    return new Response(result.data, {
-      headers: mediaResponseHeaders(item.mime_type),
-    });
+    if (!result?.data) { db.close(); return c.json({ error: 'File not found on disk' }, 404); }
+    data = result.data;
   }
-
-  // Default: serve BLOB from SQLite
   db.close();
-  return new Response(item.data, { headers: mediaResponseHeaders(item.mime_type) });
+
+  // ?w=&fmt=&ar= → resized / re-encoded / focal-point-cropped variant (see core media-variant.js)
+  const variant = parseVariant(new URL(c.req.url).searchParams);
+  if (variant) {
+    try {
+      const v = await renderVariant(item.id, data, item.mime_type, variant, { x: item.focal_x ?? undefined, y: item.focal_y ?? undefined });
+      if (v) return new Response(v.data, { headers: { ...mediaResponseHeaders(v.type), 'Cache-Control': 'private, max-age=300' } });
+    } catch (e) {
+      if (e.code === 'BUSY') return c.json({ error: 'Busy, try again' }, 503);
+      // not decodable → fall through to the original
+    }
+  }
+  return new Response(data, { headers: mediaResponseHeaders(item.mime_type) });
+});
+
+// PUT /api/media/:id — alt text and/or focal point ({ focal_x, focal_y } in 0..1, or null to clear)
+mediaRoutes.put('/:id', async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  const db   = openPod(c.get('podPath'));
+  const item = db.getMediaItem(c.req.param('id'));
+  if (!item) { db.close(); return c.json({ error: 'Not found' }, 404); }
+  if ('alt' in body) db.db.prepare('UPDATE _media SET alt = ? WHERE id = ?').run(body.alt == null ? null : String(body.alt).slice(0, 500), item.id);
+  if ('focal_x' in body || 'focal_y' in body) {
+    const clear = body.focal_x == null && body.focal_y == null;
+    const x = Number(body.focal_x), y = Number(body.focal_y);
+    if (!clear && !(x >= 0 && x <= 1 && y >= 0 && y <= 1)) { db.close(); return c.json({ error: 'focal_x and focal_y must be between 0 and 1' }, 400); }
+    db.setMediaFocal(item.id, clear ? null : x, clear ? null : y);
+  }
+  db.close();
+  return c.json({ ok: true });
 });
 
 // POST /api/media  — multipart upload
