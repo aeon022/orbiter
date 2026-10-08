@@ -7,7 +7,8 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <p class="lead">The block editor handles text, images, and video in a single <code>contenteditable</code> surface. Content is serialized to and from Markdown.</p>
 
 <h2>Custom fields in the main column</h2>
-<p>Fields you define in the schema appear as cards in the <strong>main column</strong>, under the title — grouped as in your schema, two per row, with long inputs (text areas, tables, lists, media, relations) using the full width. The sidebar keeps what describes the entry itself: status, slug, history, activity, comments. A collection <em>without</em> a <code>body</code> field shows no block-editing tools at all; its groups start open, because the fields are the content.</p>
+<p>Fields you define in the schema sit in one <strong>collapsible “Fields” card</strong> in the main column, between the title and the body — grouped as in your schema, two per row, with long inputs (text areas, tables, lists, media, relations) using the full width. The header shows how many fields there are and how many are filled in. Collapse the card and the body gets the whole page; the choice is remembered per collection. If saving fails because a field is invalid, the card opens by itself.</p>
+<p>The sidebar keeps what describes the entry itself: status, slug, history, activity, comments. A collection <em>without</em> a <code>body</code> field shows no block-editing tools at all; its groups start open, because the fields are the content.</p>
 
 <h2>Text blocks</h2>
 <p>Plain paragraphs, headings (<code>##</code>, <code>###</code>), bold, italic, inline code, and links. Standard keyboard shortcuts apply: <kbd>⌘B</kbd> bold, <kbd>⌘I</kbd> italic, <kbd>⌘K</kbd> link.</p>

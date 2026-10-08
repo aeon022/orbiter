@@ -219,12 +219,22 @@
 
     /* ── Custom fields live in the main column (moved out of the sidebar after render) ── */
     .editor-page.has-fields { max-width:900px; }
-    .main-fields { margin:4px 0 28px; }
-    .main-fields .meta-section { padding:0; border:none; margin-bottom:18px; }
+    .main-fields { margin:4px 0 28px; border:1px solid var(--line); border-radius:12px; background:var(--bg1); overflow:hidden; }
+    .fields-card-head { display:flex; align-items:center; gap:10px; width:100%; padding:12px 16px; background:transparent; border:none; cursor:pointer; color:var(--text); font-family:var(--mono); text-align:left; }
+    .fields-card-head:hover { background:var(--bg2); }
+    .fc-chevron { font-size:9px; color:var(--muted); transition:transform .15s; }
+    .main-fields:not(.collapsed) .fc-chevron { transform:rotate(90deg); }
+    .fc-title { font-size:11px; letter-spacing:.18em; text-transform:uppercase; }
+    .fc-count { font-size:10px; color:var(--muted); }
+    .fc-filled { margin-left:auto; font-size:10px; color:var(--muted); }
+    .fields-card-body { padding:6px 16px 6px; border-top:1px solid var(--line2); }
+    .main-fields.collapsed .fields-card-body { display:none; }
+    .main-fields.collapsed .fields-card-head:hover { background:var(--bg2); }
+    .main-fields .meta-section { padding:0; border:none; margin:14px 0 6px; }
     .main-fields .meta-label { font-size:10px; letter-spacing:.2em; margin-bottom:12px; }
     .main-fields .meta-section.plain-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px 20px; }
     .main-fields .meta-section.plain-fields > .meta-label { grid-column:1 / -1; margin-bottom:-4px; }
-    .main-fields .field-group { background:var(--bg1); border-radius:10px; margin-bottom:0; }
+    .main-fields .field-group { background:var(--bg0); border-radius:10px; margin-bottom:0; }
     .main-fields .field-group-header { padding:11px 16px; background:transparent; }
     .main-fields .field-group-name { font-size:11px; letter-spacing:.16em; color:var(--text); }
     .main-fields .field-group-count { font-size:10px; }
@@ -1371,7 +1381,23 @@
         const dest = document.getElementById('main-fields');
         const hasBody = 'body' in schema || !!entryData?.data?.body || extraFields.length === 0;
         if (src && dest && src.children.length) {
-          dest.append(...src.children);
+          // A collapsible card, so a long field list never pushes the body out of sight. Open/closed is remembered per collection.
+          const fields = src.querySelectorAll('[data-field-key]');
+          const filled = [...fields].filter(f => [...f.querySelectorAll('input:not([type=hidden]):not([type=checkbox]), textarea, select')].some(i => i.value && i.value.trim())
+                                              || [...f.querySelectorAll('input[type=checkbox]')].some(i => i.checked)).length;
+          const key = 'orb_fields_collapsed_' + COLLECTION;
+          let collapsed = false; try { collapsed = hasBody && localStorage.getItem(key) === '1'; } catch {}
+          dest.innerHTML = `<button type="button" class="fields-card-head" id="fields-card-head" aria-expanded="${!collapsed}" aria-controls="fields-card-body">
+              <span class="fc-chevron">▶</span><span class="fc-title">Fields</span><span class="fc-count">${fields.length}</span><span class="fc-filled">${filled} filled</span></button>
+            <div class="fields-card-body" id="fields-card-body"></div>`;
+          dest.querySelector('#fields-card-body').append(...src.children);
+          dest.classList.toggle('collapsed', collapsed);
+          window.setFieldsCard = (open) => {
+            dest.classList.toggle('collapsed', !open);
+            dest.querySelector('#fields-card-head').setAttribute('aria-expanded', String(open));
+            try { localStorage.setItem(key, open ? '0' : '1'); } catch {}
+          };
+          dest.querySelector('#fields-card-head').addEventListener('click', () => window.setFieldsCard(dest.classList.contains('collapsed')));
           dest.style.display = '';
           document.querySelector('.editor-page')?.classList.add('has-fields');
           dest.querySelectorAll('.meta-section').forEach(sec => { if (!sec.querySelector('.field-group')) sec.classList.add('plain-fields'); });
@@ -1381,6 +1407,7 @@
           });
           // With no body to write, the fields ARE the content: open every group
           if (!hasBody) dest.querySelectorAll('.field-group').forEach(g => g.classList.add('open'));
+          dest.querySelectorAll('.meta-section').forEach(sec => { if (sec.closest('.fields-card-body')) sec.classList.add('in-card'); });
         }
         if (!hasBody) document.getElementById('editor-main')?.classList.add('no-body');
       }
@@ -2094,8 +2121,10 @@
         el = document.createElement('div');
         el.id = 'validation-banner';
         el.style.cssText = 'margin:0 0 12px;padding:10px 14px;background:color-mix(in srgb,var(--red) 10%,var(--bg2));border:1px solid color-mix(in srgb,var(--red) 30%,transparent);border-radius:var(--radius);font-size:11px;font-family:var(--mono);color:var(--red);line-height:1.7;';
-        document.querySelector('.meta-panel-inner')?.prepend(el);
+        const page = document.querySelector('.editor-page');
+        page?.insertBefore(el, document.getElementById('main-fields') ?? page.firstChild);
       }
+      window.setFieldsCard?.(true);          // the failing field may be inside the collapsed card
       el.innerHTML = '<strong>Cannot publish:</strong><br>' + errs.map(e => '· ' + e).join('<br>');
       el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       setTimeout(() => el?.remove(), 6000);
