@@ -9,22 +9,15 @@
 
 ## 1. Aktueller Stand (Stand: 2026-10-08, Abend)
 
-- Repo: `~/Sites/orbiter` (github.com/aeon022/orbiter), Branch `main`, **alles gepusht**, HEAD siehe `git log -1`.
+- Repo: `~/Sites/orbiter` (github.com/aeon022/orbiter), Branch `main`, **alles gepusht und veröffentlicht**, HEAD siehe `git log -1`.
 - **Nichts ist uncommittet** außer den bekannten untracked Marketing-Dateien (`content/docs/`, `content/posts/*hackernews-human.md`, `content/posts/postctl_ready/`, `.claude/`) — gehören nicht zu den Orbiter-Fixes, nicht anfassen.
 - Landing-Seite deployt automatisch bei Push auf `main` (GitHub Actions → `deploy/landing`). Der Changelog dort nennt bereits die **noch nicht veröffentlichten** Versionen (siehe unten).
 
 ### npm-Stand
 
-| Paket | live auf npm | im Repo (unveröffentlicht) |
-|---|---|---|
-| `@a83/orbiter-core` | 0.3.20 | **0.3.21** |
-| `@a83/orbiter-admin` | 0.3.87 | **0.3.88** |
-| `@a83/orbiter-integration` | 0.3.21 | **0.3.22** |
-| `@a83/orbiter-mcp` | 0.1.4 | **0.1.5** |
-| `@a83/orbiter-client` | 0.1.3 | **0.1.4** |
-| `@a83/orbiter-cli` | 0.3.14 | **0.3.15** |
+**Alles veröffentlicht (Release 3, 2026-10-08):** core 0.3.21, admin 0.3.88, integration 0.3.22, mcp 0.1.5, client 0.1.4, cli 0.3.15. Im Repo steht nichts Unveröffentlichtes. (Reihenfolge war: core zuerst, Sichtbarkeit abgewartet, dann der Rest.) Die Landing-Seite nennt diese Versionen im Changelog.
 
-→ **Release geplant fürs Wochenende (10./11.10.2026), nachdem der User den Klick-Durchgang gemacht hat.** Runbook: Abschnitt 6.
+→ **Beim nächsten Release** wieder Runbook (Abschnitt 6) und die Versionen erst bumpen.
 
 ### Sicherheits-Advisories (GitHub, alle veröffentlicht, CVE jeweils angefragt — IDs noch prüfen)
 
@@ -62,7 +55,8 @@ Ausgangspunkt: User wollte bei den Security-Sachen weitermachen; drei Advisories
 12. **Station-Mode-Bug:** Dock-Popups (`.xfce-tools-popup`, auch Collection-Drawer) hatten kein `max-height`/`overflow` → lange Listen liefen aus dem Bildschirm und scrollten nicht. Gefixt (CSS + `fitLeftPopup()` in `xfce.js`). Demo-Pod hat dafür 16 Collections unter „Library“.
 13. **Schema-Seite im Station-Mode:** Dokument war `overflow:hidden` (Seite definiert `html,body,.app {height:100%; overflow:hidden}`, im Station-Mode gibt es aber keine App-Shell mit eigenem Scrollbereich) → alles unter dem Dock unerreichbar. Gefixt in `schema.html` (Dokument scrollt, Collections-Liste sticky mit eigenem Scroll). Gefunden anhand eines Screenshots des Users.
 14. **Echter Browser für Tests:** `puppeteer-core` + lokales Chrome (`/Applications/Google Chrome.app`) funktioniert headless; Skripte lagen im Scratchpad (`pp/shot.cjs` Screenshot+Scroll-Messung, `pp/sweep.cjs` Scroll-Check aller Seiten im Station-Mode, `pp/probe.cjs` Popups). Damit können optische Checks selbst gemacht werden (Screenshot per Read ansehen). Station-Mode wird per `localStorage.orb_style='xfce'` erzwungen, Login per `fetch('/api/auth/login')` im Seitenkontext. Demo-Pod: `scratchpad/demo/seed.mjs` (+ `more.mjs`, `groups.mjs`), Server `ORBITER_POD=… PORT=4399`. Dock-Drawer entstehen aus Meta `nav.groups` (JSON `{Gruppe:[ids]}`), nicht aus `parent`.
-15. **Plugin-Ideen** gesammelt (Abschnitt 11 in `PLUGIN-CONCEPT.md`) und die **Docs-Seite „Webhook recipes"** gebaut (`/docs/webhook-recipes`): Empfänger-Skript mit Signaturprüfung + Handler für Slack/Telegram, IndexNow, Cloudflare, Mastodon. Das Empfänger-Skript wurde gegen echte signierte Zustellungen getestet (Ping ignoriert, Publish erkannt, Fälschung ergibt 401).
+15. **Release 3 veröffentlicht** (alle sechs Pakete, siehe npm-Stand) und `claude_push` ausgeführt (committet/pusht `~/.claude` — `projects/`, `history.jsonl`, `settings.json` — nach github.com/aeon022/claude-sync, privat; die Shell-Funktion steht in `~/.config/zsh/converters.zsh`, Gegenstück `claude_pull`). Der Demo-Server (Port 4399) wurde beendet, Shelves/Library-Testdaten aus der Demo entfernt.
+16. **Plugin-Ideen** gesammelt (Abschnitt 11 in `PLUGIN-CONCEPT.md`) und die **Docs-Seite „Webhook recipes"** gebaut (`/docs/webhook-recipes`): Empfänger-Skript mit Signaturprüfung + Handler für Slack/Telegram, IndexNow, Cloudflare, Mastodon. Das Empfänger-Skript wurde gegen echte signierte Zustellungen getestet (Ping ignoriert, Publish erkannt, Fälschung ergibt 401).
 
 ---
 
@@ -109,8 +103,8 @@ Ausgangspunkt: User wollte bei den Security-Sachen weitermachen; drei Advisories
 
 ## 5. Offen / nächste Schritte (in dieser Reihenfolge)
 
-1. **User: Klick-Durchgang im Browser** — Checkliste steht in `SECURITY-TODO.md` (Abschnitt „KLICK-CHECKLISTE"). Station-Mode **und** Classic, dunkel + hell. Bisher ist *nichts* davon im Browser gesehen worden (nur curl/Unit-Tests).
-2. **Release** (Abschnitt 6), danach `npm view` prüfen, CVE-IDs prüfen.
+1. **Klick-Durchgang im Browser** (Release ist schon draußen — Funde jetzt als Fixes nachliefern; ein Teil wurde mit headless Chrome bereits geprüft: Schema/Editor/Popups/Scroll im Station-Mode) — Checkliste steht in `SECURITY-TODO.md` (Abschnitt „KLICK-CHECKLISTE"). Station-Mode **und** Classic, dunkel + hell. Bisher ist *nichts* davon im Browser gesehen worden (nur curl/Unit-Tests).
+2. ~~Release~~ erledigt; **offen:** `npm view` aller sechs Pakete prüfen (Registry-Verzögerung), CVE-IDs der Advisories prüfen.
 3. **CSP enforcing:** nach dem Klick-Durchgang die gesammelten Reports ansehen, ~93 Inline-Handler (editor.html 77, forms.html 10, graph.html 3, analytics/entries/schema je 1) in `addEventListener`/Delegation umbauen (Handler rufen globale Funktionen und enthalten teils JS-Ausdrücke → nicht mechanisch), dann Header auf `Content-Security-Policy` (enforcing) umstellen. Erst wenn Reports leer sind.
 4. **Obsidian-Plugin v1 + Web-Clipper:** REST-Ingest-Endpunkt (Draft-Write-Key, Upsert per Slug über Frontmatter), Plugin (Push als Entwurf), README mit Sicherheitshinweis (Key liegt im Vault/`data.json` und wird ggf. mitgesynct → Draft-Only + Collection-Limit + Ablauf empfehlen). v2: Pull + Konflikterkennung. Bilder in v1 nur Links (Medien-Upload braucht heute Admin-Session).
 5. **Plugin-Ideen-Reihenfolge** (aus `PLUGIN-CONCEPT.md` §11): D Webhook-Rezepte (erledigt) → C Clipper/Obsidian über denselben Ingest-Endpunkt → A JSON-LD-Builder als erstes Feld-Plugin → B Transforms erst nach Entscheidung.
