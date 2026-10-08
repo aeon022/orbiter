@@ -1,13 +1,14 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
-import { requireAdmin, requireCollectionAccess } from '../middleware/auth.js';
+import { requireAdmin, requireCollectionAccess, allowedCollectionIds } from '../middleware/auth.js';
 
 export const collectionRoutes = new Hono();
 
 // GET /api/collections
 collectionRoutes.get('/', (c) => {
   const db   = openPod(c.get('podPath'));
-  const cols = db.getCollections().map(col => ({
+  const allowed = allowedCollectionIds(db, c.get('user'));
+  const cols = db.getCollections().filter(col => !allowed || allowed.includes(col.id)).map(col => ({
     ...col,
     schema:    col.schema ? JSON.parse(col.schema) : {},
     singleton: !!col.singleton,
@@ -18,7 +19,7 @@ collectionRoutes.get('/', (c) => {
 });
 
 // GET /api/collections/:id
-collectionRoutes.get('/:id', (c) => {
+collectionRoutes.get('/:id', requireCollectionAccess, (c) => {
   const db  = openPod(c.get('podPath'));
   const col = db.getCollection(c.req.param('id'));
   db.close();

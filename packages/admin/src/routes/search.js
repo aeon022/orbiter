@@ -1,16 +1,8 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
+import { allowedCollectionIds as allowedIds } from '../middleware/auth.js';
 
 export const searchRoutes = new Hono();
-
-// Collection ids the current user may see. Admins and unrestricted editors get null
-// (no filter); a restricted editor gets the explicit allow-list.
-function allowedIds(db, user) {
-  if (!user || user.role === 'admin') return null;
-  const raw = db.getMeta(`user.${user.id}.allowed_collections`);
-  if (!raw) return null;
-  try { return JSON.parse(raw); } catch { return []; }
-}
 
 // GET /api/search/recent — last N entries across all collections
 searchRoutes.get('/recent', (c) => {

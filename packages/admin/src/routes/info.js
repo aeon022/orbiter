@@ -9,13 +9,16 @@ const { version: adminVersion } = JSON.parse(
   readFileSync(join(__dirname, '../../package.json'), 'utf8')
 );
 
+import { allowedCollectionIds } from '../middleware/auth.js';
+
 export const infoRoutes = new Hono();
 
 // GET /api/info — pod path, format version, collection stats
 infoRoutes.get('/', (c) => {
   const podPath = c.get('podPath');
   const db      = openPod(podPath);
-  const cols    = db.getCollections().map(col => ({
+  const allowed = allowedCollectionIds(db, c.get('user'));
+  const cols    = db.getCollections().filter(col => !allowed || allowed.includes(col.id)).map(col => ({
     id:        col.id,
     label:     col.label,
     total:     db.getEntries(col.id, { status: 'published' }).length,
@@ -31,7 +34,7 @@ infoRoutes.get('/', (c) => {
   let navGroupsParsed = null;
   try { navGroupsParsed = navGroups ? JSON.parse(navGroups) : null; } catch {}
   return c.json({
-    podPath, podSize: statSync(podPath).size, formatVersion: version, adminVersion, collections: cols,
+    podPath: c.get('user')?.role === 'admin' ? podPath : undefined, podSize: statSync(podPath).size, formatVersion: version, adminVersion, collections: cols,
     nav: {
       hidden: navHidden ? navHidden.split(',').map(s => s.trim()).filter(Boolean) : [],
       groups: navGroupsParsed,

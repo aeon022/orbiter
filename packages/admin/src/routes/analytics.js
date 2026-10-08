@@ -1,5 +1,9 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
+import { clientIp } from '../net.js';
+import { allow } from '../ratelimit.js';
+
+const hitLimited = (c) => !allow(`hit:${clientIp(c.env?.incoming?.socket?.remoteAddress, c.req.header('x-forwarded-for'))}`, 120, 60_000);
 
 const BOT_PATTERNS = /bot|crawl|spider|slurp|facebookexternalhit|bingpreview|linkedinbot|twitterbot|whatsapp|telegrambot|gptbot|claudebot|perplexity|anthropic|cohere-ai|chatgpt|meta-externalagent/i;
 
@@ -29,13 +33,14 @@ export const analyticsRoutes = new Hono();
 
 // POST /api/hit — public, no auth, wide CORS
 analyticsPublicRoutes.post('/', (c) => {
+  if (hitLimited(c)) return new Response('', { status: 429 });
   const db = openPod(c.get('podPath'));
   const enabled = db.getMeta('analytics.enabled') !== '0';
   if (!enabled) { db.close(); return c.json({ ok: true }); }
 
   const body = c.req.query();
-  const path = body.p || '/';
-  const referrer = body.r || '';
+  const path = (body.p || '/').slice(0, 500);
+  const referrer = (body.r || '').slice(0, 500);
   const ua = c.req.header('user-agent') || '';
   const lang = (c.req.header('accept-language') || '').split(',')[0] || '';
   const screenW = parseInt(body.w) || null;
@@ -49,12 +54,13 @@ analyticsPublicRoutes.post('/', (c) => {
 
 // Also accept GET with query params (for <img> pixel fallback)
 analyticsPublicRoutes.get('/', (c) => {
+  if (hitLimited(c)) return new Response('', { status: 429 });
   const db = openPod(c.get('podPath'));
   const enabled = db.getMeta('analytics.enabled') !== '0';
   if (!enabled) { db.close(); return new Response('', { status: 204 }); }
 
-  const path = c.req.query('p') || '/';
-  const referrer = c.req.query('r') || '';
+  const path = (c.req.query('p') || '/').slice(0, 500);
+  const referrer = (c.req.query('r') || '').slice(0, 500);
   const ua = c.req.header('user-agent') || '';
   const lang = (c.req.header('accept-language') || '').split(',')[0] || '';
   const screenW = parseInt(c.req.query('w')) || null;

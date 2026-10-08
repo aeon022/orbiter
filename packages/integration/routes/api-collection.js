@@ -14,7 +14,7 @@ export const prerender = false;
  *   ?offset=0
  */
 import { podPath } from 'orbiter:db';
-import { openPod } from '@a83/orbiter-core';
+import { openPod, safeEqual } from '@a83/orbiter-core';
 
 const JSON_H = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };
 const err = (msg, status) => new Response(JSON.stringify({ error: msg }), { status, headers: JSON_H });
@@ -33,7 +33,7 @@ export async function GET({ params, request }) {
   let authed = !token;
   if (token) {
     const auth = request.headers.get('Authorization') ?? '';
-    authed = auth === `Bearer ${token}`;
+    authed = safeEqual(auth, `Bearer ${token}`);
     if (!authed) { db.close(); return err('Unauthorized', 401); }
   }
 

@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { openPod, hashPassword } from '@a83/orbiter-core';
 import { randomUUID } from 'node:crypto';
+import { getCookie } from 'hono/cookie';
 import { requireAdmin } from '../middleware/auth.js';
 
 export const userRoutes = new Hono();
@@ -53,6 +54,7 @@ userRoutes.put('/:id', async (c) => {
     if (password.length < 8) { db.close(); return c.json({ error: 'Password must be at least 8 characters' }, 400); }
     const hashed = await hashPassword(password);
     db.db.prepare('UPDATE _users SET password = ? WHERE id = ?').run(hashed, id);
+    db.deleteUserSessions(id, id === currentUser.id ? getCookie(c, 'orb_sess') ?? null : null);
   }
 
   db.close();

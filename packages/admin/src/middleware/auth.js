@@ -36,6 +36,14 @@ export function userCanAccessCollection(user, podPath, collectionId) {
   return allowed.includes(collectionId);
 }
 
+// Collection ids `user` may see, or null for "no filter" (admins, unrestricted editors).
+export function allowedCollectionIds(db, user) {
+  if (!user || user.role === 'admin') return null;
+  const raw = db.getMeta(`user.${user.id}.allowed_collections`);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return []; }
+}
+
 // Middleware: checks if the current user (editor role) is allowed to access collectionId.
 export const requireCollectionAccess = async (c, next) => {
   const user = c.get('user');

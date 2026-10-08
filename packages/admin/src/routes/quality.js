@@ -1,12 +1,15 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
 
+import { allowedCollectionIds } from '../middleware/auth.js';
+
 export const qualityRoutes = new Hono();
 
 // GET /api/quality — aggregate content quality report across all published entries
 qualityRoutes.get('/', (c) => {
   const db   = openPod(c.get('podPath'));
-  const cols = db.getCollections();
+  const allowed = allowedCollectionIds(db, c.get('user'));
+  const cols = db.getCollections().filter(col => !allowed || allowed.includes(col.id));
   const issues = [];
 
   for (const col of cols) {

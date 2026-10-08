@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
+import { userCanAccessCollection, allowedCollectionIds } from '../middleware/auth.js';
 
 export const aiRoutes = new Hono();
 
@@ -115,6 +116,7 @@ aiRoutes.post('/generate', async (c) => {
 aiRoutes.post('/suggest', async (c) => {
   const { collection, slug, type } = await c.req.json();
   if (!collection || !slug || !type) return c.json({ error: 'collection, slug, type required' }, 400);
+  if (!userCanAccessCollection(c.get('user'), c.get('podPath'), collection)) return c.json({ error: 'Forbidden' }, 403);
 
   const db = openPod(c.get('podPath'));
   const entry = db.getEntry(collection, slug);
@@ -202,6 +204,7 @@ aiRoutes.post('/suggest', async (c) => {
 aiRoutes.post('/suggest-all', async (c) => {
   const { collection, slug } = await c.req.json();
   if (!collection || !slug) return c.json({ error: 'collection, slug required' }, 400);
+  if (!userCanAccessCollection(c.get('user'), c.get('podPath'), collection)) return c.json({ error: 'Forbidden' }, 403);
 
   const db = openPod(c.get('podPath'));
   const entry = db.getEntry(collection, slug);
@@ -244,7 +247,8 @@ aiRoutes.post('/suggest-all', async (c) => {
     `${d.title || d.name || ''} ${(d.keywords || d.tags || []).join(' ')} ${d.excerpt || ''}`.toLowerCase().split(/\W+/).filter(w => w.length > 3)
   );
   if (myWords.size > 0) {
-    const allCols = db.getCollections();
+    const allowed = allowedCollectionIds(db, c.get('user'));
+    const allCols = db.getCollections().filter(rc => !allowed || allowed.includes(rc.id));
     const related = [];
     for (const rc of allCols) {
       const entries = db.getEntries(rc.id, { status: 'published' });

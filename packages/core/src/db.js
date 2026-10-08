@@ -294,6 +294,11 @@ export class OrbiterDB {
     this.db.prepare('DELETE FROM _sessions WHERE token = ?').run(token);
   }
 
+  // Revoke every session of a user (e.g. after a password change), optionally keeping one.
+  deleteUserSessions(userId, exceptToken = null) {
+    this.db.prepare('DELETE FROM _sessions WHERE user_id = ? AND token IS NOT ?').run(userId, exceptToken);
+  }
+
   // ── Meta ───────────────────────────────────
   getMeta(key) {
     const row = this.db.prepare('SELECT value FROM _meta WHERE key = ?').get(key);

@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { getCookie } from 'hono/cookie';
 import { openPod, verifyPassword, hashPassword } from '@a83/orbiter-core';
 
 export const accountRoutes = new Hono();
@@ -17,6 +18,7 @@ accountRoutes.put('/password', async (c) => {
 
   const hash = await hashPassword(newPassword);
   db.db.prepare('UPDATE _users SET password = ? WHERE id = ?').run(hash, user.id);
+  db.deleteUserSessions(user.id, getCookie(c, 'orb_sess') ?? null); // log out all other devices
   db.close();
   return c.json({ ok: true });
 });

@@ -1,10 +1,16 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
 import { sendFormNotification, sendFormReply } from '../email.js';
+import { requireAdmin } from '../middleware/auth.js';
+import { clientIp } from '../net.js';
+import { allow } from '../ratelimit.js';
 
 export const formPublicRoutes = new Hono();  // mounted without auth
 export const formRoutes       = new Hono();  // mounted with auth
 
+const MAX_FORM_BYTES  = 100_000;
+const MAX_FORM_FIELDS = 50;
+const MAX_FIELD_CHARS = 5_000;
 const VALID_STATUSES = new Set(['new', 'read', 'done', 'spam', 'confirmed', 'rejected']);
 
 // ── Public: POST /api/form/:formId ─────────────────
@@ -12,9 +18,11 @@ const VALID_STATUSES = new Set(['new', 'read', 'done', 'spam', 'confirmed', 'rej
 formPublicRoutes.post('/:formId', async (c) => {
   const formId  = c.req.param('formId').slice(0, 64).replace(/[^a-z0-9_-]/gi, '-');
   const podPath = c.get('podPath');
-  const ip      = c.req.header('x-forwarded-for')?.split(',')[0].trim()
-                ?? c.req.header('cf-connecting-ip')
-                ?? null;
+  const ip      = clientIp(c.env?.incoming?.socket?.remoteAddress, c.req.header('x-forwarded-for'));
+
+  // Public, unauthenticated: cap request rate and size so it can't be used to flood the pod or inbox
+  if (!allow(`form:${ip}`, 10, 60_000)) return c.json({ error: 'Too many submissions' }, 429);
+  if (Number(c.req.header('content-length') ?? 0) > MAX_FORM_BYTES) return c.json({ error: 'Payload too large' }, 413);
 
   let body;
   const ct = c.req.header('content-type') ?? '';
@@ -31,13 +39,20 @@ formPublicRoutes.post('/:formId', async (c) => {
   if (body._honeypot) return c.json({ ok: true });
   delete body._honeypot;
 
-  if (!Object.keys(body).length) return c.json({ error: 'Empty submission' }, 400);
+  const keys = Object.keys(body);
+  if (!keys.length) return c.json({ error: 'Empty submission' }, 400);
+  if (keys.length > MAX_FORM_FIELDS) return c.json({ error: 'Too many fields' }, 413);
+  for (const k of keys) {
+    if (k.length > 100) return c.json({ error: 'Field name too long' }, 413);
+    if (typeof body[k] === 'string' && body[k].length > MAX_FIELD_CHARS) body[k] = body[k].slice(0, MAX_FIELD_CHARS);
+  }
 
   const db = openPod(podPath);
   const id = db.createFormSubmission(formId, body, ip);
   db.close();
 
-  sendFormNotification(podPath, formId, body).catch(() => {});
+  // Global cap on notification mails so a flood of submissions can't turn into a mail flood
+  if (allow('form-mail', 30, 10 * 60_000)) sendFormNotification(podPath, formId, body).catch(() => {});
 
   return c.json({ ok: true, id });
 });
@@ -118,7 +133,7 @@ formRoutes.get('/configs/:formId', (c) => {
 });
 
 // PUT /api/forms/configs/:formId — save config
-formRoutes.put('/configs/:formId', async (c) => {
+formRoutes.put('/configs/:formId', requireAdmin, async (c) => {
   const formId = c.req.param('formId').slice(0, 64).replace(/[^a-z0-9_-]/gi, '-');
   const body = await c.req.json();
   const db = openPod(c.get('podPath'));
@@ -132,7 +147,7 @@ formRoutes.put('/configs/:formId', async (c) => {
 });
 
 // DELETE /api/forms/configs/:formId — delete config
-formRoutes.delete('/configs/:formId', (c) => {
+formRoutes.delete('/configs/:formId', requireAdmin, (c) => {
   const db = openPod(c.get('podPath'));
   db.deleteFormConfig(c.req.param('formId'));
   db.close();
