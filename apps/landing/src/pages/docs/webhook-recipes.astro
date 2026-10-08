@@ -1,0 +1,112 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Webhook recipes" current="/docs/webhook-recipes" prev={{ href: '/docs/webhooks', title: 'Webhooks' }} next={{ href: '/docs/cli', title: 'CLI reference' }}>
+
+<h1>Webhook recipes</h1>
+<p class="lead">Small receivers that react to publishing: announce a post, ping search engines, clear a CDN cache, notify a reviewer. They run on your own machine or server — Orbiter only sends the signed event.</p>
+
+<p>Read <a href="/docs/webhooks">Webhooks</a> first for the payload, headers and how the signature works. The receiver below verifies it and calls one handler per event; the recipes after it are the handlers.</p>
+
+<h2>The receiver</h2>
+<pre>// orbiter-hooks.mjs — receives Orbiter webhooks, verifies the signature, runs small actions.
+// Run:  ORBITER_WEBHOOK_SECRET=whsec_… SITE_URL=https://example.com node orbiter-hooks.mjs
+import &#123; createServer &#125; from 'node:http';
+import &#123; createHmac, timingSafeEqual &#125; from 'node:crypto';
+
+const SECRET = process.env.ORBITER_WEBHOOK_SECRET;
+const seen = new Set();                       // X-Orbiter-Delivery ids we already handled (retries!)
+
+function verify(raw, headers) &#123;
+  const ts = headers['x-orbiter-timestamp'];
+  if (Math.abs(Date.now() / 1000 - Number(ts)) &gt; 300) return false;          // replay window: 5 min
+  const expected = 'sha256=' + createHmac('sha256', SECRET).update(`$&#123;ts&#125;.$&#123;raw&#125;`).digest('hex');
+  const given = String(headers['x-orbiter-signature'] ?? '');
+  return given.length === expected.length &amp;&amp; timingSafeEqual(Buffer.from(given), Buffer.from(expected));
+&#125;
+
+const handlers = &#123;
+  async publish(e) &#123; /* see the recipes below */ &#125;,
+  async review(e)  &#123; /* see the recipes below */ &#125;,
+&#125;;
+
+createServer((req, res) =&gt; &#123;
+  let raw = '';
+  req.on('data', (d) =&gt; &#123; raw += d; if (raw.length &gt; 100_000) req.destroy(); &#125;);
+  req.on('end', () =&gt; &#123;
+    if (req.method !== 'POST' || !verify(raw, req.headers)) &#123; res.writeHead(401).end(); return; &#125;
+    const event = JSON.parse(raw);
+    res.writeHead(200).end();                                                  // answer fast; Orbiter times out after 10 s
+    if (seen.has(event.id)) return;                                            // retry of something we already did
+    seen.add(event.id);
+    handlers[event.event]?.(event).catch((err) =&gt; console.error(event.event, err.message));
+  &#125;);
+&#125;).listen(8787);
+</pre>
+<ul>
+  <li><strong>Answer fast.</strong> Orbiter waits 10 seconds and retries on anything but <code>2xx</code>. The receiver replies <code>200</code> first and does the work afterwards.</li>
+  <li><strong>Handle retries.</strong> A retry carries the same <code>id</code>. The <code>seen</code> set skips repeats (use a small database or file if the receiver restarts).</li>
+  <li>The payload has <code>collection</code> and <code>slug</code>, not a URL — build the page address from your own routes (<code>SITE_URL</code> + path).</li>
+  <li>Put the receiver behind HTTPS and add its URL under <strong>Settings → Webhooks</strong>; use <strong>Test</strong> to send a <code>ping</code> (ignored by the handlers above).</li>
+</ul>
+
+<h2>Notify a reviewer — Slack or Telegram</h2>
+<p>Event <code>review</code>, fired when an editor submits an entry (<a href="/docs/permissions#review">review workflow</a>).</p>
+<pre>// Slack: someone submitted an entry for review
+async review(e) &#123;
+  await fetch(process.env.SLACK_WEBHOOK_URL, &#123;
+    method: 'POST', headers: &#123; 'Content-Type': 'application/json' &#125;,
+    body: JSON.stringify(&#123; text: `Review requested: $&#123;e.collection&#125;/$&#123;e.slug&#125;` &#125;),
+  &#125;);
+&#125;,
+
+// Telegram
+async review(e) &#123;
+  await fetch(`https://api.telegram.org/bot$&#123;process.env.TG_TOKEN&#125;/sendMessage`, &#123;
+    method: 'POST', headers: &#123; 'Content-Type': 'application/json' &#125;,
+    body: JSON.stringify(&#123; chat_id: process.env.TG_CHAT, text: `Review requested: $&#123;e.collection&#125;/$&#123;e.slug&#125;` &#125;),
+  &#125;);
+&#125;,</pre>
+
+<h2>Tell search engines — IndexNow</h2>
+<p>Event <code>publish</code>. IndexNow is supported by Bing and others; you prove ownership by serving your key as a text file.</p>
+<pre>// IndexNow: tell Bing &amp; co. a page changed (host a file at https://example.com/&lt;KEY&gt;.txt containing KEY)
+async publish(e) &#123;
+  const site = new URL(process.env.SITE_URL);
+  await fetch('https://api.indexnow.org/indexnow', &#123;
+    method: 'POST', headers: &#123; 'Content-Type': 'application/json' &#125;,
+    body: JSON.stringify(&#123;
+      host: site.host, key: process.env.INDEXNOW_KEY,
+      keyLocation: `$&#123;site.origin&#125;/$&#123;process.env.INDEXNOW_KEY&#125;.txt`,
+      urlList: [`$&#123;site.origin&#125;/$&#123;e.collection&#125;/$&#123;e.slug&#125;`],          // adapt to your routes
+    &#125;),
+  &#125;);
+&#125;,</pre>
+
+<h2>Clear a CDN cache — Cloudflare</h2>
+<pre>// Cloudflare: purge the changed page from the cache
+async publish(e) &#123;
+  await fetch(`https://api.cloudflare.com/client/v4/zones/$&#123;process.env.CF_ZONE&#125;/purge_cache`, &#123;
+    method: 'POST',
+    headers: &#123; Authorization: `Bearer $&#123;process.env.CF_TOKEN&#125;`, 'Content-Type': 'application/json' &#125;,
+    body: JSON.stringify(&#123; files: [`$&#123;process.env.SITE_URL&#125;/$&#123;e.collection&#125;/$&#123;e.slug&#125;`] &#125;),
+  &#125;);
+&#125;,</pre>
+
+<h2>Announce a post — Mastodon</h2>
+<pre>// Mastodon: announce a new post (token needs the write:statuses scope)
+async publish(e) &#123;
+  await fetch(`https://$&#123;process.env.MASTODON_HOST&#125;/api/v1/statuses`, &#123;
+    method: 'POST',
+    headers: &#123; Authorization: `Bearer $&#123;process.env.MASTODON_TOKEN&#125;`, 'Idempotency-Key': e.id &#125;,
+    body: new URLSearchParams(&#123; status: `New: $&#123;process.env.SITE_URL&#125;/$&#123;e.collection&#125;/$&#123;e.slug&#125;` &#125;),
+  &#125;);
+&#125;,</pre>
+<p>For other networks or a scheduling tool, call its CLI or API from the same <code>publish</code> handler. Use the delivery <code>id</code> as an idempotency key where the target supports one, so a retry can't post twice.</p>
+
+<h2>Rebuild a search index or the site</h2>
+<p>In the <code>publish</code> handler run your build step, for example <code>execFile('npx', ['pagefind', '--site', 'dist'])</code>, or call a deploy hook. For a plain rebuild you don't need a receiver at all: the <a href="/docs/build-webhook">build webhook</a> already triggers it.</p>
+
+<div class="callout"><strong>Keep the secret out of the repo.</strong> Read it from the environment, never commit it. Anyone with the signing secret can forge events to your receiver; anyone who can reach an unsigned receiver can too — always verify the signature before acting.</div>
+
+</DocsLayout>

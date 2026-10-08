@@ -1,7 +1,7 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
 ---
-<DocsLayout title="Webhooks" current="/docs/webhooks" prev={{ href: '/docs/build-webhook', title: 'Build webhook' }} next={{ href: '/docs/cli', title: 'CLI reference' }}>
+<DocsLayout title="Webhooks" current="/docs/webhooks" prev={{ href: '/docs/build-webhook', title: 'Build webhook' }} next={{ href: '/docs/webhook-recipes', title: 'Webhook recipes' }}>
 
 <h1>Webhooks</h1>
 <p class="lead">Call your own URL when content is published or deleted. Every payload is signed, failed deliveries are retried, and recent deliveries are logged.</p>
@@ -42,6 +42,9 @@ function verify(rawBody, headers, secret) &#123;
   return given.length === expected.length &&
          timingSafeEqual(Buffer.from(given), Buffer.from(expected));
 &#125;</pre>
+
+<h2>Ready-made receivers</h2>
+<p>Slack or Telegram on review, IndexNow, Cloudflare purge, Mastodon: see <a href="/docs/webhook-recipes">Webhook recipes</a>.</p>
 
 <h2>Retries and log</h2>
 <p>Anything other than a <code>2xx</code> answer (or a timeout after 10 s) is retried after 5 seconds, 30 seconds and 5 minutes. Redirects are not followed. The last 50 deliveries — status, attempt, error — are listed under <strong>Recent deliveries</strong>. Retries run in the server process, so a restart drops pending ones.</p>
