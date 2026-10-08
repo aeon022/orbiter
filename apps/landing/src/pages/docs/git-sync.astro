@@ -49,6 +49,8 @@ jobs:
 
 <div class="callout"><strong>Tip:</strong> Use Orbiter's <a href="/docs/build-webhook">build webhook</a> to trigger <code>workflow_dispatch</code> automatically when you publish an entry. No manual git push needed for content-only changes.</div>
 
+<div class="callout"><strong>Security:</strong> a pod is the whole database. It contains user accounts and password hashes, live login sessions, and any credentials you saved in Settings (FTP, SMTP, AI, GitHub tokens). Committing it as-is puts all of that in your git history. Use a <strong>private</strong> repository, and consider <a href="/docs/cli"><code>orbiter encrypt</code></a> so only the <code>.pod.enc</code> is committed. The admin's built-in GitHub push already strips sessions, users and credentials from the copy it uploads — a manual <code>git add content.pod</code> does not.</div>
+
 <h2>What unpack does</h2>
 <ul>
   <li>Reads each row in <code>_media</code> where <code>data IS NOT NULL</code></li>
