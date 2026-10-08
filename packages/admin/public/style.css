@@ -6,7 +6,7 @@
    1. :root          → Space Dark (default)
    2. @media light   → Space Light (system auto)
    3. [data-scheme]  → manual override
-   4. [data-theme]   → palette swap (Zen / Catppuccin)
+   4. [data-theme]   → palette swap (Zen / Catppuccin / Amber terminal)
    ════════════════════════════════════════════════════════════ */
 
 /* ── Space Dark (default) — Space Station ─────────── */
@@ -264,6 +264,30 @@ html[data-scheme="light"][data-theme="space"]
     --row-hover: rgba(0,0,0,.015);
     --td-line:   rgba(76,79,105,.12);
   }
+  html:not([data-scheme="dark"])[data-theme="amber"] {
+    --bg0:       #f6f0e2;
+    --bg1:       #eee6d3;
+    --bg2:       #fffaf0;
+    --bg3:       #e4d9c0;
+    --line:      #d2c4a2;
+    --line2:     #e0d5ba;
+    --muted:     #6e5f3c;
+    --mid:       #5c4d2c;
+    --text:      #3a2f18;
+    --heading:   #1c1608;
+    --gold:      #9a5b00;
+    --gold-bg:   rgba(154,91,0,.08);
+    --jade:      #3f6b1f;
+    --jade-bg:   rgba(63,107,31,.09);
+    --accent:    #a8620a;
+    --accent2:   #b8431b;
+    --accent-bg: rgba(168,98,10,.10);
+    --red:       #b3321f;
+    --red-bg:    rgba(179,50,31,.08);
+    --hover-bg:  rgba(154,91,0,.05);
+    --row-hover: rgba(154,91,0,.025);
+    --td-line:   rgba(90,70,30,.12);
+  }
 }
 
 /* ── Zen Light explicit override ─────────────────── */
@@ -468,6 +492,81 @@ html[data-scheme="light"][data-theme="space"] {
   --hover-bg:  rgba(255,255,255,.04);
   --row-hover: rgba(255,255,255,.018);
   --td-line:   rgba(49,50,68,.7);
+}
+
+/* ── Terminal (amber phosphor) ───────────────────── */
+/* dark base (lower specificity so @media auto-light overrides) */
+[data-theme="amber"] {
+  --bg0:       #0b0a07;
+  --bg1:       #12100b;
+  --bg2:       #1a160e;
+  --bg3:       #231e13;
+  --line:      #33291a;
+  --line2:     #271f13;
+  --muted:     #978255;
+  --mid:       #a8935f;
+  --text:      #d6bf8a;
+  --heading:   #ffd98a;
+  --gold:      #ffb000;
+  --gold-bg:   rgba(255,176,0,.09);
+  --jade:      #8fcf6a;
+  --jade-bg:   rgba(143,207,106,.10);
+  --accent:    #e8a317;
+  --accent2:   #ff7a3d;
+  --accent-bg: rgba(232,163,23,.11);
+  --red:       #ff6b57;
+  --red-bg:    rgba(255,107,87,.10);
+  --hover-bg:  rgba(255,176,0,.06);
+  --row-hover: rgba(255,176,0,.03);
+  --td-line:   rgba(51,41,26,.7);
+}
+html[data-scheme="dark"][data-theme="amber"] {
+  --bg0:       #0b0a07;
+  --bg1:       #12100b;
+  --bg2:       #1a160e;
+  --bg3:       #231e13;
+  --line:      #33291a;
+  --line2:     #271f13;
+  --muted:     #978255;
+  --mid:       #a8935f;
+  --text:      #d6bf8a;
+  --heading:   #ffd98a;
+  --gold:      #ffb000;
+  --gold-bg:   rgba(255,176,0,.09);
+  --jade:      #8fcf6a;
+  --jade-bg:   rgba(143,207,106,.10);
+  --accent:    #e8a317;
+  --accent2:   #ff7a3d;
+  --accent-bg: rgba(232,163,23,.11);
+  --red:       #ff6b57;
+  --red-bg:    rgba(255,107,87,.10);
+  --hover-bg:  rgba(255,176,0,.06);
+  --row-hover: rgba(255,176,0,.03);
+  --td-line:   rgba(51,41,26,.7);
+}
+html[data-scheme="light"][data-theme="amber"] {
+  --bg0:       #f6f0e2;
+  --bg1:       #eee6d3;
+  --bg2:       #fffaf0;
+  --bg3:       #e4d9c0;
+  --line:      #d2c4a2;
+  --line2:     #e0d5ba;
+  --muted:     #6e5f3c;
+  --mid:       #5c4d2c;
+  --text:      #3a2f18;
+  --heading:   #1c1608;
+  --gold:      #9a5b00;
+  --gold-bg:   rgba(154,91,0,.08);
+  --jade:      #3f6b1f;
+  --jade-bg:   rgba(63,107,31,.09);
+  --accent:    #a8620a;
+  --accent2:   #b8431b;
+  --accent-bg: rgba(168,98,10,.10);
+  --red:       #b3321f;
+  --red-bg:    rgba(179,50,31,.08);
+  --hover-bg:  rgba(154,91,0,.05);
+  --row-hover: rgba(154,91,0,.025);
+  --td-line:   rgba(90,70,30,.12);
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -2718,4 +2817,14 @@ html[data-zen="1"] .main {
   html[data-style="xfce"] .page-header {
     padding: 14px 16px !important;
   }
+}
+
+/* ── Accessibility: visible keyboard focus + respect reduced-motion ─────────── */
+:where(button, a, summary, [tabindex]):focus-visible,
+:where(select, textarea, input[type="checkbox"], input[type="radio"], input[type="range"]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }

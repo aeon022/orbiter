@@ -1,6 +1,6 @@
 /**
  * Orbiter theme engine — runs inline in <head> before first paint.
- * Manages: palette (space/zen/catppuccin) × scheme (dark/light/auto).
+ * Manages: palette (space/zen/catppuccin/amber) × scheme (dark/light/auto).
  */
 
 // ── Console easter egg ──────────────────────────────────────────────

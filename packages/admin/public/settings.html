@@ -326,9 +326,9 @@
     }
 
     const ghConfigured   = !!(get('github.token') && get('github.repo'));
-    const currentTheme  = get('ui.theme') || 'space';
+    const currentTheme  = localStorage.getItem('orb_theme') || get('ui.theme') || 'space'; // what is actually applied
     const currentScheme = localStorage.getItem('orb_scheme') || 'auto';
-    const currentStyle  = localStorage.getItem('orb_style')  || 'classic';
+    const currentStyle  = localStorage.getItem('orb_style')  || 'glass'; // same default as theme.js
 
     const wrap = document.getElementById('settings-content');
     wrap.innerHTML = `
@@ -763,12 +763,22 @@
               <div class="theme-card-name">Catppuccin</div>
               <div class="theme-card-sub">Mocha / Latte · pastel</div>
             </button>
+            <button class="theme-card ${currentTheme==='amber'?'active':''}" data-theme="amber">
+              <div class="theme-swatch">
+                <span style="background:#0b0a07"></span>
+                <span style="background:#ffb000"></span>
+                <span style="background:#8fcf6a"></span>
+                <span style="background:#ff7a3d"></span>
+              </div>
+              <div class="theme-card-name">Terminal</div>
+              <div class="theme-card-sub">Amber phosphor · Paper in light</div>
+            </button>
           </div>
         </div>
         <div style="padding:10px 20px;border-top:1px solid var(--line2)">
           <div class="setting-label" style="margin-bottom:8px">Style</div>
           <div class="style-cards">
-            <button class="style-card \${currentStyle==='classic'?'active':''}" data-style="classic">
+            <button class="style-card ${currentStyle==='classic'?'active':''}" data-style="classic">
               <div class="style-preview">
                 <div class="sp-sidebar"></div>
                 <div class="sp-body">
@@ -780,7 +790,7 @@
               <div class="theme-card-name">Classic</div>
               <div class="theme-card-sub">Clean · flat panels</div>
             </button>
-            <button class="style-card \${currentStyle==='glass'?'active':''}" data-style="glass">
+            <button class="style-card ${currentStyle==='glass'?'active':''}" data-style="glass">
               <div class="style-preview sp-glass">
                 <div class="sp-orb sp-orb1"></div>
                 <div class="sp-orb sp-orb2"></div>
@@ -793,7 +803,7 @@
               <div class="theme-card-name">Glass</div>
               <div class="theme-card-sub">Glassmorphism · blur</div>
             </button>
-            <button class="style-card \${currentStyle==='xfce'?'active':''}" data-style="xfce">
+            <button class="style-card ${currentStyle==='xfce'?'active':''}" data-style="xfce">
               <div class="style-preview sp-glass" style="position:relative;overflow:hidden;">
                 <div class="sp-orb sp-orb1"></div>
                 <div class="sp-orb sp-orb2"></div>
@@ -1102,13 +1112,14 @@
     document.querySelectorAll('.style-card').forEach(btn => {
       btn.addEventListener('click', () => {
         const s = btn.dataset.style;
+        const wasXfce = (localStorage.getItem('orb_style') || 'glass') === 'xfce';
         document.querySelectorAll('.style-card').forEach(b => b.classList.toggle('active', b.dataset.style === s));
         const root = document.documentElement;
         root.removeAttribute('data-style');
         if (s === 'glass' || s === 'xfce') root.setAttribute('data-style', s);
         localStorage.setItem('orb_style', s);
-        // xfce requires a reload to inject the dock
-        if (s === 'xfce' || document.documentElement.dataset.style === 'xfce') {
+        // entering or leaving xfce needs a reload (the dock is injected DOM)
+        if (s === 'xfce' || wasXfce) {
           location.reload();
         }
       });
