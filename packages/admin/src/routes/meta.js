@@ -25,7 +25,6 @@ const ALLOWED_KEYS = [
   'ftp.remote_path', 'ftp.local_path', 'ftp.secure', 'ftp.auto_deploy',
   'nav.hidden', 'nav.groups',
   'llms.collections',
-  'webhooks.urls',
 ];
 
 export const SECRET_KEYS = new Set([

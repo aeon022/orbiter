@@ -467,11 +467,22 @@
             <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
               <div>
                 <div class="setting-label">API Keys</div>
-                <div class="setting-desc">Keys for the Public Content API and MCP. A key can optionally create drafts over MCP (never publish). Shown once on creation.</div>
+                <div class="setting-desc">Keys for the Public Content API and MCP. Limit a key to collections, give it an expiry or a rate limit, or let it create drafts over MCP (never publish). Shown once on creation.</div>
               </div>
               <button type="button" class="btn btn-ghost btn-sm" id="btn-gen-api-key">Generate key</button>
             </div>
             <div id="api-keys-list" style="width:100%;display:flex;flex-direction:column;gap:6px;font-size:11px;color:var(--muted)">Loading…</div>
+          </div>
+          <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:12px">
+            <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
+              <div>
+                <div class="setting-label">Webhooks</div>
+                <div class="setting-desc">Called when an entry is published or deleted. Payloads are signed (<code>X-Orbiter-Signature</code>, HMAC-SHA256), failed deliveries are retried, recent deliveries are logged. <a href="/docs/webhooks" target="_blank" style="color:var(--accent)">How to verify →</a></div>
+              </div>
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-add-webhook">Add webhook</button>
+            </div>
+            <div id="webhooks-list" style="width:100%;display:flex;flex-direction:column;gap:6px;font-size:11px;color:var(--muted)">Loading…</div>
+            <details style="width:100%"><summary style="cursor:pointer;font-size:11px;color:var(--muted)">Recent deliveries</summary><div id="webhooks-log" style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--muted)"></div></details>
           </div>
           <div class="setting-row">
             <div><div class="setting-label">Preview token</div><div class="setting-desc">Appended to Preview URLs — allows viewing draft entries on your site</div></div>
@@ -1029,7 +1040,7 @@
       if (!keys.length) { list.innerHTML = '<span style="color:var(--muted)">No keys yet</span>'; return; }
       list.innerHTML = keys.map(k => `
         <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--panel-alt,var(--sidebar-bg));border-radius:6px;border:1px solid var(--line)">
-          <span style="flex:1;font-family:var(--mono);font-size:10px;color:var(--heading)">${esc(k.label)}${k.scope==='draft-write'?' <span style="color:var(--gold)" title="Can create and edit drafts over MCP (never publish)">· drafts</span>':''}</span>
+          <span style="flex:1;font-family:var(--mono);font-size:10px;color:var(--heading)">${esc(k.label)}${k.scope==='draft-write'?' <span style="color:var(--gold)" title="Can create and edit drafts over MCP (never publish)">· drafts</span>':''}${k.collections?` <span style="color:var(--muted)" title="Limited to these collections">· ${esc(k.collections.join(', '))}</span>`:''}${k.expires?` <span style="color:${k.expires < new Date().toISOString().slice(0,10) ? 'var(--red)' : 'var(--muted)'}">· ${k.expires < new Date().toISOString().slice(0,10) ? 'expired' : 'until'} ${esc(k.expires)}</span>`:''}${k.rateLimit?` <span style="color:var(--muted)">· ${esc(k.rateLimit)}/min</span>`:''}</span>
           <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">${k.key}</span>
           <span style="font-size:9px;color:var(--muted)">${k.hits} hits</span>
           <span style="font-size:9px;color:var(--muted)">${k.created}</span>
@@ -1045,18 +1056,100 @@
     }
     renderApiKeys();
 
-    document.getElementById('btn-gen-api-key')?.addEventListener('click', async () => {
-      const label = prompt('Label for this key (e.g. "Frontend", "Mobile app"):');
-      if (label === null) return;
-      const canDraft = confirm('Let this key create and edit DRAFTS over MCP (it can never publish)?\n\nOK = drafts allowed · Cancel = read-only');
-      const res = await fetch('/api/api-keys', {
+    document.getElementById('btn-gen-api-key')?.addEventListener('click', () => {
+      const dlg = document.createElement('dialog');
+      dlg.style.cssText = 'background:var(--bg1);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:20px;max-width:420px;width:92vw';
+      dlg.innerHTML = `
+        <form method="dialog" style="display:flex;flex-direction:column;gap:12px;font-size:12px">
+          <div class="setting-label" style="font-size:14px">New API key</div>
+          <label>Label<input class="input" name="label" placeholder="Frontend, Mobile app, Claude agent …" /></label>
+          <label>Access
+            <select class="input" name="scope">
+              <option value="read">Read only</option>
+              <option value="draft-write">Read + create/edit drafts over MCP (never publish)</option>
+            </select>
+          </label>
+          <label>Only these collections <span style="color:var(--muted)">(comma-separated, empty = all)</span><input class="input" name="collections" placeholder="posts, pages" /></label>
+          <label>Expires <span style="color:var(--muted)">(optional)</span><input class="input" type="date" name="expires" /></label>
+          <label>Rate limit <span style="color:var(--muted)">(requests per minute, optional)</span><input class="input" type="number" min="1" max="100000" name="rateLimit" /></label>
+          <div id="key-dlg-err" style="color:var(--red);display:none"></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button type="button" class="btn btn-ghost btn-sm" id="key-dlg-cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-sm" value="ok">Create key</button>
+          </div>
+        </form>`;
+      document.body.appendChild(dlg);
+      dlg.querySelector('#key-dlg-cancel').addEventListener('click', () => dlg.close());
+      dlg.addEventListener('close', () => dlg.remove());
+      dlg.querySelector('form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const f = Object.fromEntries(new FormData(e.target));
+        const res = await fetch('/api/api-keys', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            label: f.label || 'API Key',
+            scope: f.scope,
+            collections: f.collections.split(',').map(x => x.trim()).filter(Boolean),
+            expires: f.expires || undefined,
+            rateLimit: f.rateLimit || undefined,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          const er = dlg.querySelector('#key-dlg-err'); er.textContent = data.error || 'Could not create key'; er.style.display = ''; return;
+        }
+        dlg.close();
+        prompt('New API key (copy it now — shown once):\n', data.key.key);
+        renderApiKeys();
+      });
+      dlg.showModal();
+      dlg.querySelector('[name=label]').focus();
+    });
+
+    // Webhooks
+    async function renderWebhooks() {
+      const list = document.getElementById('webhooks-list');
+      if (!list) return;
+      const res = await fetch('/api/webhooks', { credentials: 'include' }).catch(() => null);
+      if (!res?.ok) { list.textContent = 'Could not load webhooks'; return; }
+      const { hooks, log } = await res.json();
+      list.innerHTML = hooks.length ? hooks.map(h => `
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--panel-alt,var(--sidebar-bg));border-radius:6px;border:1px solid var(--line)">
+          <span style="flex:1;font-family:var(--mono);font-size:10px;color:var(--heading);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(h.url)}">${esc(h.url)}</span>
+          <span style="font-size:9px;color:var(--muted)">${esc(h.events.join(', '))}</span>
+          <span style="font-size:9px;color:${h.signed ? 'var(--jade)' : 'var(--gold)'}" title="${h.signed ? 'Payloads carry an HMAC signature' : 'Created before signing existed — delete and re-add to get a secret'}">${h.signed ? 'signed' : 'unsigned'}</span>
+          <button type="button" class="btn btn-ghost btn-sm" data-wh-test="${esc(h.id)}">Test</button>
+          <button type="button" class="btn btn-ghost btn-sm" style="color:var(--danger,#e55)" data-wh-del="${esc(h.id)}">Remove</button>
+        </div>`).join('') : 'No webhooks yet';
+      list.querySelectorAll('[data-wh-del]').forEach(b => b.addEventListener('click', async () => {
+        if (!confirm('Remove this webhook?')) return;
+        await fetch('/api/webhooks/' + b.dataset.whDel, { method: 'DELETE', credentials: 'include' });
+        renderWebhooks();
+      }));
+      list.querySelectorAll('[data-wh-test]').forEach(b => b.addEventListener('click', async () => {
+        b.disabled = true; b.textContent = '…';
+        const r = await fetch('/api/webhooks/' + b.dataset.whTest + '/test', { method: 'POST', credentials: 'include' }).then(x => x.json()).catch(() => ({ error: 'Network error' }));
+        alert(r.ok ? `Delivered (HTTP ${r.status}).` : `Failed: ${r.error || 'HTTP ' + r.status}`);
+        renderWebhooks();
+      }));
+      document.getElementById('webhooks-log').innerHTML = log.length
+        ? log.slice(0, 15).map(l => `<div style="color:${l.ok ? 'var(--jade)' : 'var(--red)'}">${esc(l.ts.slice(0,19).replace('T',' '))} · ${esc(l.event)} · ${l.ok ? 'OK' : esc(l.error || 'HTTP ' + l.status)} · try ${l.attempt} · ${esc(l.url)}</div>`).join('')
+        : 'No deliveries yet';
+    }
+    renderWebhooks();
+    document.getElementById('btn-add-webhook')?.addEventListener('click', async () => {
+      const url = prompt('Webhook URL (https://…):');
+      if (!url) return;
+      const res = await fetch('/api/webhooks', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ label: label || 'API Key', scope: canDraft ? 'draft-write' : 'read' }),
+        body: JSON.stringify({ url, events: ['publish', 'delete'] }),
       });
-      const { key } = await res.json();
-      prompt(`New API key (copy it now — shown once):\n`, key.key);
-      renderApiKeys();
+      const data = await res.json();
+      if (!res.ok) return alert(data.error || 'Could not add webhook');
+      prompt('Signing secret (copy it now — shown once). Use it to verify X-Orbiter-Signature:', data.secret);
+      renderWebhooks();
     });
 
     document.getElementById('btn-gen-preview-token')?.addEventListener('click', async () => {

@@ -16,12 +16,15 @@ const respond = (data) => ({ content: [{ type: 'text', text: JSON.stringify(data
  */
 export function createMcpServer({ db, mode, scope = null, keyLabel = 'mcp', collections = null }) {
   const server = new McpServer({ name: 'orbiter-mcp', version });
+  // A key limited to certain collections applies to reads as well as draft writes.
+  const canRead = (id) => !collections || collections.includes(id);
+  const denied  = (id) => ({ isError: true, ...respond({ error: `This API key may not access "${id}"` }) });
 
   server.registerTool('list_collections', {
     title: 'List collections',
     description: 'List accessible content collections in this Orbiter pod, with entry counts.',
     inputSchema: {},
-  }, async () => respond(listCollections(db, mode)));
+  }, async () => respond(listCollections(db, mode).filter(c => canRead(c.id))));
 
   server.registerTool('get_entries', {
     title: 'Get entries',
@@ -33,7 +36,7 @@ export function createMcpServer({ db, mode, scope = null, keyLabel = 'mcp', coll
       limit: z.number().int().min(1).max(100).optional().describe('Max results (default 20, max 100)'),
       offset: z.number().int().min(0).optional().describe('Pagination offset'),
     },
-  }, async (args) => respond(getEntries(db, mode, args)));
+  }, async (args) => canRead(args.collection) ? respond(getEntries(db, mode, args)) : denied(args.collection));
 
   server.registerTool('get_entry', {
     title: 'Get entry',
@@ -43,7 +46,7 @@ export function createMcpServer({ db, mode, scope = null, keyLabel = 'mcp', coll
       slug: z.string().describe('Entry slug'),
       locale: z.string().optional().describe('Locale variant'),
     },
-  }, async (args) => respond(getEntry(db, mode, args)));
+  }, async (args) => canRead(args.collection) ? respond(getEntry(db, mode, args)) : denied(args.collection));
 
   server.registerTool('search_content', {
     title: 'Search content',
@@ -53,7 +56,20 @@ export function createMcpServer({ db, mode, scope = null, keyLabel = 'mcp', coll
       query: z.string().describe('Search text'),
       limit: z.number().int().min(1).max(100).optional().describe('Max results (default 20, max 100)'),
     },
-  }, async (args) => respond(searchContent(db, mode, args)));
+  }, async (args) => {
+    if (args.collection && !canRead(args.collection)) return denied(args.collection);
+    if (collections && !args.collection) {
+      // Restricted key: search only its collections (not "all, then filter"), so the limit isn't eaten by hidden ones.
+      const results = [];
+      for (const id of collections) {
+        try { results.push(...searchContent(db, mode, { ...args, collection: id }).results); } catch { /* not accessible */ }
+      }
+      const lim = Math.min(Math.max(Number(args.limit) || 20, 1), 100);
+      return respond({ query: args.query, total: Math.min(results.length, lim), results: results.slice(0, lim) });
+    }
+    const res = searchContent(db, mode, args);
+    return respond(res);
+  });
 
   // Draft-write tools: only for a draft-write API key (http) or ORBITER_MCP_WRITE=1 (stdio).
   if (scope === 'draft-write') {

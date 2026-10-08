@@ -10,7 +10,7 @@ import { scryptSync, randomBytes, createCipheriv, createDecipheriv } from 'node:
 
 export const SECRET_META_KEYS = new Set([
   'github.token', 'ai.api_key', 'media.github_token',
-  'media.s3_access_key', 'media.s3_secret_key', 'email.smtp_pass', 'ftp.password',
+  'media.s3_access_key', 'media.s3_secret_key', 'email.smtp_pass', 'ftp.password', 'webhooks.urls',
 ]);
 
 const PREFIX = 'enc:v1:';

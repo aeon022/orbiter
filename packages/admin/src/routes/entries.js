@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
 import { sendNotification } from '../email.js';
 import { requireCollectionAccess } from '../middleware/auth.js';
+import { fireHooks } from '../webhooks.js';
 
 export const entryRoutes = new Hono();
 
@@ -9,26 +10,14 @@ export const entryRoutes = new Hono();
 entryRoutes.use('/:collectionId/*', requireCollectionAccess);
 
 function fireWebhook(podPath, event = 'publish', payload = {}) {
-  const db  = openPod(podPath);
+  const db = openPod(podPath);
   const buildUrl = db.getMeta('build.webhook_url') ?? '';
   db.setMeta('build.last_triggered', new Date().toISOString());
-
-  let hooks = [];
-  try { hooks = JSON.parse(db.getMeta('webhooks.urls') || '[]'); } catch {}
   db.close();
-
-  const body = JSON.stringify({ event, timestamp: new Date().toISOString(), ...payload });
-  const headers = { 'Content-Type': 'application/json', 'User-Agent': 'Orbiter-Webhook/1.0' };
-
   if (buildUrl && (event === 'publish' || event === 'build')) {
     fetch(buildUrl, { method: 'POST' }).catch(() => {});
   }
-
-  for (const hook of hooks) {
-    if (!hook.url) continue;
-    if (hook.events && !hook.events.includes(event) && !hook.events.includes('*')) continue;
-    fetch(hook.url, { method: 'POST', headers, body }).catch(() => {});
-  }
+  fireHooks(podPath, event, payload); // signed, retried, logged — see webhooks.js
 }
 
 // POST /api/collections/:id/entries/bulk — bulk publish or delete
@@ -212,7 +201,7 @@ entryRoutes.put('/:collectionId/entries/:slug', async (c) => {
   db.close();
 
   if (body.status === 'published' && before?.status !== 'published') {
-    fireWebhook(c.get('podPath'));
+    fireWebhook(c.get('podPath'), 'publish', { collection: collectionId, slug: body.slug ?? slug });
     sendNotification(c.get('podPath'), 'publish', { collection: collectionId, slug: body.slug ?? slug, username }).catch(()=>{});
   }
   return c.json(updated);
@@ -367,6 +356,6 @@ entryRoutes.patch('/:collectionId/entries/:slug/status', async (c) => {
   const username = c.get('user')?.username ?? 'unknown';
   if (status === 'scheduled') db.logAudit(entry.id, username, 'schedule');
   db.close();
-  if (status === 'published') fireWebhook(c.get('podPath'));
+  if (status === 'published') fireWebhook(c.get('podPath'), 'publish', { collection: collectionId, slug });
   return c.json({ ok: true });
 });

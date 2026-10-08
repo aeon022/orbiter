@@ -116,13 +116,22 @@ export function hashApiKey(key) {
  * @param {string} authHeaderValue
  * @returns {boolean}
  */
+// Per-key requests/minute, in memory (per process; resets on restart).
+const keyRate = new Map();
+function keyWithinRate(id, perMinute) {
+  const now = Date.now();
+  let b = keyRate.get(id);
+  if (!b || b.resetAt <= now) { b = { count: 0, resetAt: now + 60_000 }; keyRate.set(id, b); }
+  return ++b.count <= perMinute;
+}
+
 export function checkApiKey(db, authHeaderValue) {
   return authenticateApiKey(db, authHeaderValue).ok;
 }
 
 /**
  * Like checkApiKey, but also reports what the presented key may do.
- * Returns { ok, scope, keyLabel, collections }:
+ * Returns { ok, scope, keyLabel, collections, status? } (status 401/429 when a presented key is expired / over its rate limit):
  *   scope 'read' | 'draft-write' for a matching key, null for an anonymous (keyless) caller;
  *   ok is true for anonymous callers only while api.requireKey is off.
  * `collections` (array | null) limits where a draft-write key may write.
@@ -143,6 +152,9 @@ export function authenticateApiKey(db, authHeaderValue) {
     return storedBuf.length === bearerBuf.length && timingSafeEqual(storedBuf, bearerBuf);
   });
   if (!found) return { ok: open, scope: null };
+  // Expired keys are dead, even when the API is otherwise open.
+  if (found.expires && found.expires < new Date().toISOString().slice(0, 10)) return { ok: false, status: 401, scope: null };
+  if (found.rateLimit && !keyWithinRate(found.id, found.rateLimit)) return { ok: false, status: 429, scope: null };
 
   if (found.key) {
     found.hash = found.hash ?? hashApiKey(found.key);

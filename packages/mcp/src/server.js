@@ -61,8 +61,8 @@ async function startHttp() {
       // transport, mirroring the Public Content API's REST routes.
       const auth = authenticateApiKey(db, req.headers['authorization']);
       if (!auth.ok) {
-        res.writeHead(401, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Unauthorized — provide a valid API key as Bearer token' }));
+        res.writeHead(auth.status ?? 401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: auth.status === 429 ? 'Rate limit exceeded for this API key' : 'Unauthorized — provide a valid API key as Bearer token' }));
         return;
       }
 

@@ -12,6 +12,7 @@ const ADMIN_ROOT = join(__dirname, '..');
 if (!process.env.ELECTRON) process.chdir(ADMIN_ROOT);;
 import { readFileSync } from 'node:fs';
 import { openPod, migrateSecrets } from '@a83/orbiter-core';
+import { fireHooks } from './webhooks.js';
 import { authRoutes }       from './routes/auth.js';
 import { collectionRoutes } from './routes/collections.js';
 import { entryRoutes }      from './routes/entries.js';
@@ -38,6 +39,7 @@ import { schemaMigrateRoutes } from './routes/schema_migrate.js';
 import { podRoutes }           from './routes/pods.js';
 import { apiKeyRoutes }        from './routes/api-keys.js';
 import { securityRoutes }      from './routes/security.js';
+import { webhookRoutes }       from './routes/webhooks.js';
 import { requireAuth }      from './middleware/auth.js';
 import { csrfMiddleware }  from './middleware/csrf.js';
 
@@ -138,6 +140,7 @@ export function createApp(podPath) {
   api.route('/pods',         podRoutes);
   api.route('/api-keys',     apiKeyRoutes);
   api.route('/security-check', securityRoutes);
+  api.route('/webhooks',     webhookRoutes);
 
   app.route('/api', api);
 
@@ -198,6 +201,7 @@ setInterval(() => {
     const webhookUrl = db.getMeta('build.webhook_url') ?? '';
     if (webhookUrl) db.setMeta('build.last_triggered', new Date().toISOString());
     db.close();
+    for (const e of due) fireHooks(POD_PATH, 'publish', { collection: e.collection_id, slug: e.slug, scheduled: true });
     if (due.length)     console.log(`[scheduler] Published ${due.length} scheduled entr${due.length === 1 ? 'y' : 'ies'}`);
     if (expired.length) console.log(`[scheduler] Unpublished ${expired.length} expired entr${expired.length === 1 ? 'y' : 'ies'}`);
     if (webhookUrl) fetch(webhookUrl, { method: 'POST' }).catch(() => {});

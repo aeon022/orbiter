@@ -5,7 +5,7 @@ export const prerender = false;
  * Single entry — includes full body content.
  */
 import { podPath } from 'orbiter:db';
-import { openPod, checkApiKey } from '@a83/orbiter-core';
+import { openPod, authenticateApiKey } from '@a83/orbiter-core';
 
 const JSON_H = {
   'Content-Type': 'application/json',
@@ -19,9 +19,15 @@ export async function GET({ params, request }) {
 
   const db = openPod(podPath);
 
-  if (!checkApiKey(db, request.headers.get('authorization'))) {
+  const auth = authenticateApiKey(db, request.headers.get('authorization'));
+  if (!auth.ok) {
     db.close();
-    return err('Unauthorized — provide a valid API key as Bearer token', 401);
+    return err(auth.status === 429 ? 'Rate limit exceeded for this API key' : 'Unauthorized — provide a valid API key as Bearer token', auth.status ?? 401);
+  }
+  // A key limited to certain collections can't read others.
+  if (auth.collections && !auth.collections.includes(collection)) {
+    db.close();
+    return err(`This API key may not read "${collection}"`, 403);
   }
 
   const rawPublic = db.getMeta('public.collections') ?? '';

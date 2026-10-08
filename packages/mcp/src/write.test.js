@@ -51,3 +51,17 @@ test('authenticateApiKey: scope comes from the key; anonymous gets no scope; req
   assert.equal(authenticateApiKey(db, null).ok, false);
   assert.equal(authenticateApiKey(db, 'Bearer orb_ro').ok, true);
 }));
+
+test('authenticateApiKey: expired keys are rejected, per-key rate limit returns 429', () => withPod((db) => {
+  db.setMeta('api.keys', JSON.stringify([
+    { id: 'old', label: 'old', hash: hashApiKey('orb_old'), expires: '2020-01-01' },
+    { id: 'lim', label: 'lim', hash: hashApiKey('orb_lim'), rateLimit: 2 },
+    { id: 'ok',  label: 'ok',  hash: hashApiKey('orb_ok'),  expires: '2999-01-01' },
+  ]));
+  assert.equal(authenticateApiKey(db, 'Bearer orb_old').ok, false);
+  assert.equal(authenticateApiKey(db, 'Bearer orb_ok').ok, true);
+  assert.equal(authenticateApiKey(db, 'Bearer orb_lim').ok, true);
+  assert.equal(authenticateApiKey(db, 'Bearer orb_lim').ok, true);
+  const third = authenticateApiKey(db, 'Bearer orb_lim');
+  assert.equal(third.ok, false); assert.equal(third.status, 429);
+}));

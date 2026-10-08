@@ -1,0 +1,49 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Webhooks" current="/docs/webhooks" prev={{ href: '/docs/build-webhook', title: 'Build webhook' }} next={{ href: '/docs/cli', title: 'CLI reference' }}>
+
+<h1>Webhooks</h1>
+<p class="lead">Call your own URL when content is published or deleted. Every payload is signed, failed deliveries are retried, and recent deliveries are logged.</p>
+
+<h2>Set up</h2>
+<p><strong>Settings → API → Webhooks → Add webhook</strong> (admins only). Enter the URL; Orbiter shows the <strong>signing secret once</strong> — store it where your receiver can read it. Use <strong>Test</strong> to send a <code>ping</code>.</p>
+
+<h2>Events</h2>
+<table>
+  <thead><tr><th>Event</th><th>When</th></tr></thead>
+  <tbody>
+    <tr><td><code>publish</code></td><td>An entry is published (editor, bulk action, or scheduled publishing)</td></tr>
+    <tr><td><code>delete</code></td><td>Entries are deleted (bulk)</td></tr>
+    <tr><td><code>ping</code></td><td>The Test button</td></tr>
+  </tbody>
+</table>
+
+<h2>Request</h2>
+<pre>POST /your/endpoint
+Content-Type: application/json
+X-Orbiter-Event: publish
+X-Orbiter-Delivery: 6f1c…           (unique per delivery, same across retries)
+X-Orbiter-Timestamp: 1790000000      (unix seconds)
+X-Orbiter-Signature: sha256=9a3f…
+
+&#123;"event":"publish","id":"6f1c…","timestamp":"2026-10-08T09:00:00.000Z","collection":"posts","slug":"hello"&#125;</pre>
+
+<h2>Verify the signature</h2>
+<p>The signature is <code>HMAC-SHA256(secret, timestamp + "." + rawBody)</code>, hex-encoded. Compute it over the <strong>raw</strong> request body, compare in constant time, and reject old timestamps to stop replays.</p>
+<pre>import &#123; createHmac, timingSafeEqual &#125; from 'node:crypto';
+
+function verify(rawBody, headers, secret) &#123;
+  const ts = headers['x-orbiter-timestamp'];
+  if (Math.abs(Date.now() / 1000 - Number(ts)) > 300) return false;   // 5 min
+  const expected = 'sha256=' + createHmac('sha256', secret).update(`$&#123;ts&#125;.$&#123;rawBody&#125;`).digest('hex');
+  const given = String(headers['x-orbiter-signature'] ?? '');
+  return given.length === expected.length &&
+         timingSafeEqual(Buffer.from(given), Buffer.from(expected));
+&#125;</pre>
+
+<h2>Retries and log</h2>
+<p>Anything other than a <code>2xx</code> answer (or a timeout after 10 s) is retried after 5 seconds, 30 seconds and 5 minutes. Redirects are not followed. The last 50 deliveries — status, attempt, error — are listed under <strong>Recent deliveries</strong>. Retries run in the server process, so a restart drops pending ones.</p>
+<div class="callout"><strong>Older webhooks</strong> created before signing existed keep working but are marked <em>unsigned</em>. Remove and re-add them to get a secret. The secret is encrypted at rest when <a href="/docs/security"><code>ORBITER_SECRET</code></a> is set.</div>
+
+</DocsLayout>
