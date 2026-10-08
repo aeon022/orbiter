@@ -505,7 +505,7 @@ const faqs = [
         <div class="update-date">Oct<br />2026</div>
         <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.86 · core@0.3.19 · integration@0.3.21 — Latest</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.86 · core@0.3.19 · integration@0.3.21 · mcp@0.1.3 — Latest</div>
           <div class="update-title">Security follow-up: uploaded files, URL imports, login limits, and what gets pushed to GitHub</div>
           <p style="font-size:12px;color:var(--muted);margin:2px 0 10px;line-height:1.6">A second pass over the admin and core packages after the previous release. Update <code>@a83/orbiter-admin</code>, <code>@a83/orbiter-core</code> and <code>@a83/orbiter-integration</code> together — the new media headers live in core.</p>
           <ul class="update-items">
@@ -514,6 +514,10 @@ const faqs = [
             <li><strong>Server-side request forgery</strong> — importing or linking media by URL could be pointed at internal addresses (localhost, private networks, cloud metadata). Private and reserved targets are now blocked, redirects re-checked, downloads capped at 50 MB. Set <code>ORBITER_ALLOW_PRIVATE_FETCH=1</code> if you need to import from your LAN in development.</li>
             <li><strong>Login rate limit</strong> — it trusted a client-supplied <code>X-Forwarded-For</code> header, so it could be bypassed. The header is now only honoured when the connection comes from a reverse proxy on a private address.</li>
             <li><strong>Restricted editors</strong> — AI suggestions, the collection list/detail, <code>/api/info</code> and the quality report no longer expose collections an editor isn't allowed to see. Form-builder configs are admin-only.</li>
+            <li><strong>Content API drafts</strong> — with the API enabled but no token set, <code>?status=draft</code> on <code>/orbiter/api/[collection]</code> returned unpublished entries to anyone. Drafts now require a configured, matching token.</li>
+            <li><strong>API token hashed</strong> — the optional single <code>api.token</code> is now stored as a SHA-256 hash like API keys (existing plaintext values keep working and migrate on first use).</li>
+            <li><strong>Desktop app</strong> — the embedded server only listens on loopback (it was reachable from your LAN), the window is sandboxed, only http(s) links are handed to the OS, and navigation away from the local admin is blocked.</li>
+            <li><strong>Smaller fixes</strong> — CSV export works again and neutralises spreadsheet formulas, the login no longer reveals which usernames exist through timing, WordPress media import is covered by the same SSRF protection, and <code>/health</code> no longer exposes the pod path.</li>
             <li><strong>Sessions and public endpoints</strong> — changing a password signs out all other sessions. The public form and analytics endpoints are rate-limited and size-capped, and notification mails are capped. The Content API token is compared in constant time.</li>
           </ul>
         </div>

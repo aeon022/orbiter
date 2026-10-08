@@ -14,7 +14,7 @@ export const prerender = false;
  *   ?offset=0
  */
 import { podPath } from 'orbiter:db';
-import { openPod, safeEqual } from '@a83/orbiter-core';
+import { openPod, checkApiToken } from '@a83/orbiter-core';
 
 const JSON_H = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };
 const err = (msg, status) => new Response(JSON.stringify({ error: msg }), { status, headers: JSON_H });
@@ -25,24 +25,20 @@ export async function GET({ params, request }) {
 
   const db      = openPod(podPath);
   const enabled = db.getMeta('api.enabled') === '1';
-  const token   = db.getMeta('api.token') ?? '';
 
   if (!enabled) { db.close(); return err('API not enabled. Enable it in Settings → API.', 403); }
 
-  // Token auth (optional — if no token set, all requests are allowed)
-  let authed = !token;
-  if (token) {
-    const auth = request.headers.get('Authorization') ?? '';
-    authed = safeEqual(auth, `Bearer ${token}`);
-    if (!authed) { db.close(); return err('Unauthorized', 401); }
-  }
+  // Token auth (optional — if no token is set, the published content is open)
+  const { required, ok } = checkApiToken(db, request.headers.get('Authorization'));
+  if (!ok) { db.close(); return err('Unauthorized', 401); }
 
   const col = db.getCollection(collection);
   if (!col) { db.close(); return err(`Collection "${collection}" not found`, 404); }
 
   // Status filter: only allow drafts with valid token
   const statusParam = url.searchParams.get('status');
-  const status      = (authed && statusParam === 'draft') ? 'draft' : 'published';
+  // Drafts need a configured AND matching token — an open API (no token) never serves them.
+  const status      = (required && statusParam === 'draft') ? 'draft' : 'published';
 
   const limit  = Math.min(parseInt(url.searchParams.get('limit')  ?? '100'), 500);
   const offset = Math.max(parseInt(url.searchParams.get('offset') ?? '0'),   0);

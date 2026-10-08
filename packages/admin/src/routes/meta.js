@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { openPod } from '@a83/orbiter-core';
+import { openPod, hashApiToken } from '@a83/orbiter-core';
 import { requireAdmin } from '../middleware/auth.js';
 
 export const metaRoutes = new Hono();
@@ -46,6 +46,12 @@ const ADMIN_ONLY_KEYS = new Set([
   'email.notify_publish', 'email.notify_comment', 'email.notify_form', 'email.notify_to',
   'api.enabled',
 ]);
+
+// api.token is only ever stored hashed (the site compares hashes); everything else is stored as given.
+const storeValue = (key, value) => {
+  const v = value == null ? '' : String(value);
+  return key === 'api.token' ? hashApiToken(v) : v;
+};
 
 const PREVIEW_URL_RE = /^preview_url\.[a-z0-9_-]+$/;
 const TEMPLATES_RE   = /^templates\.[a-z0-9_-]+$/;
@@ -99,7 +105,7 @@ metaRoutes.put('/', async (c) => {
   for (const [key, value] of Object.entries(body)) {
     if (!ALLOWED_KEYS.includes(key) && !PREVIEW_URL_RE.test(key) && !TEMPLATES_RE.test(key)) continue;
     if (ADMIN_ONLY_KEYS.has(key) && !isAdmin) continue;
-    db.setMeta(key, value == null ? '' : String(value));
+    db.setMeta(key, storeValue(key, value));
   }
   db.close();
   return c.json({ ok: true });
@@ -113,7 +119,7 @@ metaRoutes.put('/:key', async (c) => {
   if (ADMIN_ONLY_KEYS.has(key) && user?.role !== 'admin') return c.json({ error: 'Forbidden' }, 403);
   const { value } = await c.req.json();
   const db = openPod(c.get('podPath'));
-  db.setMeta(key, value == null ? '' : String(value));
+  db.setMeta(key, storeValue(key, value));
   db.close();
   return c.json({ ok: true });
 });

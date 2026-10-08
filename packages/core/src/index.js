@@ -1,5 +1,5 @@
 // @a83/orbiter-core — Entry point
 export { OrbiterDB } from './db.js';
 export { createPod, openPod } from './pod.js';
-export { hashPassword, verifyPassword, generateToken, hashApiKey, checkApiKey, safeEqual } from './auth.js';
+export { hashPassword, verifyPassword, generateToken, hashApiKey, checkApiKey, hashApiToken, checkApiToken, safeEqual } from './auth.js';
 export { getMediaBackend, mediaResponseHeaders } from './media-backend.js';

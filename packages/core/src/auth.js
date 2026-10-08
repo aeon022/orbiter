@@ -62,6 +62,32 @@ export function safeEqual(a, b) {
   return bufA.length === bufB.length && timingSafeEqual(bufA, bufB);
 }
 
+const TOKEN_PREFIX = 'sha256:';
+
+/** Value to store for `api.token`: hashed, unless it already is (e.g. a form re-submitting the stored value). */
+export function hashApiToken(value) {
+  const v = String(value ?? '');
+  return !v || v.startsWith(TOKEN_PREFIX) ? v : TOKEN_PREFIX + hashApiKey(v);
+}
+
+/**
+ * Check the legacy single `api.token` against an Authorization header.
+ * Returns { required, ok }: required=false when no token is configured (open API).
+ * Plaintext values from older versions still match and are migrated to a hash on first use.
+ */
+export function checkApiToken(db, authHeaderValue) {
+  const stored = db.getMeta('api.token') ?? '';
+  if (!stored) return { required: false, ok: true };
+  const bearer = (authHeaderValue ?? '').replace(/^Bearer\s+/i, '').trim();
+  if (!bearer) return { required: true, ok: false };
+  if (stored.startsWith(TOKEN_PREFIX)) {
+    return { required: true, ok: safeEqual(stored, TOKEN_PREFIX + hashApiKey(bearer)) };
+  }
+  const ok = safeEqual(stored, bearer);
+  if (ok) db.setMeta('api.token', hashApiToken(stored)); // migrate off plaintext
+  return { required: true, ok };
+}
+
 /**
  * Hash an API key (already high-entropy, random) with plain SHA-256 — fast
  * on purpose, unlike hashPassword's deliberately slow scrypt for low-entropy

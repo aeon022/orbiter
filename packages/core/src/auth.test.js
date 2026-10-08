@@ -1,7 +1,7 @@
 // Run: node --test packages/core/src/auth.test.js
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkApiKey, hashApiKey, safeEqual } from './auth.js';
+import { checkApiKey, hashApiKey, hashApiToken, checkApiToken, safeEqual } from './auth.js';
 
 function fakeDb(meta) {
   return {
@@ -48,4 +48,24 @@ test('safeEqual matches equal strings and rejects mismatches/length differences'
   assert.equal(safeEqual('abc', 'abcd'), false);
   assert.equal(safeEqual('', ''), true);
   assert.equal(safeEqual(null, 'x'), false);
+});
+
+test('hashApiToken hashes once and is idempotent', () => {
+  const h = hashApiToken('secret');
+  assert.ok(h.startsWith('sha256:'));
+  assert.equal(hashApiToken(h), h);
+  assert.equal(hashApiToken(''), '');
+});
+
+test('checkApiToken: open when unset, hashed match, plaintext legacy migrates, draft-header spoof fails', () => {
+  assert.deepEqual(checkApiToken(fakeDb({}), null), { required: false, ok: true });
+  const meta = { 'api.token': hashApiToken('secret') };
+  const db = fakeDb(meta);
+  assert.equal(checkApiToken(db, 'Bearer secret').ok, true);
+  assert.equal(checkApiToken(db, 'Bearer wrong').ok, false);
+  assert.equal(checkApiToken(db, null).ok, false);
+  assert.equal(checkApiToken(db, 'Bearer ' + meta['api.token']).ok, false, 'the stored hash must not work as a token');
+  const legacy = { 'api.token': 'plain' };
+  assert.equal(checkApiToken(fakeDb(legacy), 'Bearer plain').ok, true);
+  assert.ok(legacy['api.token'].startsWith('sha256:'));
 });
