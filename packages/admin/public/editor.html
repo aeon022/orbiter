@@ -812,6 +812,27 @@
         return `<a href="${href}" class="locale-tab${isActive?' active':''}${!exists?' missing':''}" title="${title}">${loc.toUpperCase()}</a>`;
       }).join('');
       bar.style.display = 'flex';
+
+      // AI: create the missing translations as drafts (never overwrites, never publishes)
+      const missing = siteLocales.slice(1).filter(l => !existingLocales.has(l));
+      const targets = IS_TRANSLATION_NEW && existingLocales.has('') ? [LOCALE] : (LOCALE === '' ? missing : []);
+      if (targets.length) {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'locale-tab'; b.style.cssText = 'margin-left:auto;cursor:pointer';
+        b.textContent = IS_TRANSLATION_NEW ? '✦ Translate from default with AI' : `✦ Translate missing (${targets.map(t=>t.toUpperCase()).join(', ')})`;
+        b.addEventListener('click', async () => {
+          if (!confirm(`Create AI-translated drafts for: ${targets.join(', ')}?\n\nThey are saved as drafts — review them before publishing. Existing translations are never overwritten.`)) return;
+          b.disabled = true; const errors = [];
+          for (const to of targets) {
+            b.textContent = `Translating ${to.toUpperCase()}…`;
+            const r = await fetch('/api/ai/translate', { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ collection: COLLECTION, slug: SLUG, from: '', to }) }).then(x=>x.json()).catch(()=>({ error: 'Network error' }));
+            if (!r.ok) errors.push(`${to}: ${r.error || 'failed'}`);
+          }
+          if (errors.length) alert('Some translations failed:\n' + errors.join('\n'));
+          location.reload();
+        });
+        bar.appendChild(b);
+      }
     }
 
     // Entry locking — claim lock, warn if someone else is editing

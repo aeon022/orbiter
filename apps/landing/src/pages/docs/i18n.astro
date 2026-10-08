@@ -63,6 +63,15 @@ const post = await getLocaleEntry('posts', slug, lang);
   &lt;h1&gt;&#123;post.data.title&#125;&lt;/h1&gt;
 &lt;/html&gt;</pre>
 
+<h2>Translate missing locales with AI</h2>
+<p>With an <a href="/docs/ai-assistant">AI provider</a> configured, the editor's locale bar offers <strong>✦ Translate missing (FR, ES)</strong> on the default-language entry, and <strong>✦ Translate from default with AI</strong> on a language tab that doesn't exist yet. Each click creates the missing versions as <strong>drafts</strong>:</p>
+<ul>
+  <li>Prose fields (<code>string</code> and <code>richtext</code> fields, plus the SEO title and description) are translated; HTML, Markdown, URLs, slugs, media and other fields are copied unchanged.</li>
+  <li>An existing translation is never overwritten, and nothing is published — review the draft, then publish it (the <a href="/docs/permissions#review">review workflow</a> applies as usual).</li>
+  <li>Needs permission for the collection. Entries over about 24,000 characters are refused instead of being cut off. The text is sent to your configured provider; with Ollama it stays local.</li>
+  <li>API: <code>POST /api/ai/translate</code> with <code>&#123; collection, slug, from, to &#125;</code>. The activity log shows the draft as created by <em>you (AI translation)</em>.</li>
+</ul>
+
 <h2>Fallback behaviour</h2>
 <p><code>getLocaleEntry()</code> tries the requested locale first. If no translation exists for that locale, it returns the default locale variant. This lets you translate incrementally — untranslated entries fall back gracefully.</p>
 
