@@ -142,7 +142,7 @@ export function createApp(podPath) {
   app.get('/health', (c) => {
     let podOk = false;
     try { const db = openPod(podPath); db.close(); podOk = true; } catch {}
-    return c.json({ ok: podOk, version: adminVersion, pod: podPath, uptime: Math.floor(process.uptime()) });
+    return c.json({ ok: podOk, version: adminVersion, uptime: Math.floor(process.uptime()) });
   });
 
   // Redirect root and extensionless URLs to .html files
@@ -162,7 +162,9 @@ export function createApp(podPath) {
   return app;
 }
 
-serve({ fetch: createApp(POD_PATH).fetch, port: PORT }, () => {
+// Desktop app: loopback only, so the admin isn't reachable from the LAN. Standalone: HOST overrides.
+const HOST = process.env.ELECTRON ? '127.0.0.1' : process.env.HOST;
+serve({ fetch: createApp(POD_PATH).fetch, port: PORT, hostname: HOST }, () => {
   console.log(`Orbiter Admin API  →  http://localhost:${PORT}`);
   console.log(`Pod: ${POD_PATH}`);
 });

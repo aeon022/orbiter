@@ -562,6 +562,7 @@ function createWindow(port, podPath) {
       preload:          path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration:  false,
+      sandbox:          true,
     },
   });
 
@@ -574,9 +575,12 @@ function createWindow(port, podPath) {
 
   mainWindow.on('closed', () => { mainWindow = null; });
 
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
-    return { action: 'deny' };
+  // Only ever hand http(s) links to the OS — a file:, smb: or custom-protocol URL from
+  // content must not reach shell.openExternal. Keep the window itself on the local admin.
+  const openIfWeb = (url) => { if (/^https?:\/\//i.test(url)) shell.openExternal(url); };
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => { openIfWeb(url); return { action: 'deny' }; });
+  mainWindow.webContents.on('will-navigate', (e, url) => {
+    if (new URL(url).origin !== `http://localhost:${port}`) { e.preventDefault(); openIfWeb(url); }
   });
 }
 

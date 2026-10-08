@@ -67,6 +67,37 @@ entryRoutes.patch('/:collectionId/entries/reorder', async (c) => {
   return c.json({ ok: true });
 });
 
+// (registered before /entries/:slug so "export.csv" isn't swallowed as a slug)
+// GET /api/collections/:id/entries/export.csv
+entryRoutes.get('/:collectionId/entries/export.csv', (c) => {
+  const { collectionId } = c.req.param();
+  const db  = openPod(c.get('podPath'));
+  const col = db.getCollection(collectionId);
+  if (!col) { db.close(); return c.json({ error: 'Collection not found' }, 404); }
+  const entries = db.getEntries(collectionId);
+  const schema  = col.schema ? JSON.parse(col.schema) : {};
+  const fields  = Object.keys(schema);
+  const headers = ['slug', 'status', ...fields];
+  // Prefix formula-trigger characters so a spreadsheet doesn't execute cell content (CSV injection)
+  const csvEsc  = v => { let t = String(v ?? ''); if (/^[=+\-@\t\r]/.test(t)) t = "'" + t; return `"${t.replace(/"/g, '""')}"`; };
+  const rows    = [headers.map(csvEsc).join(',')];
+  for (const e of entries) {
+    rows.push(headers.map(h => {
+      if (h === 'slug')   return csvEsc(e.slug);
+      if (h === 'status') return csvEsc(e.status);
+      const v = e.data[h];
+      return csvEsc(Array.isArray(v) ? v.join(';') : v);
+    }).join(','));
+  }
+  db.close();
+  return new Response(rows.join('\n'), {
+    headers: {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': `attachment; filename="${collectionId}.csv"`,
+    },
+  });
+});
+
 // GET /api/collections/:id/entries?status=draft|published&locale=
 entryRoutes.get('/:collectionId/entries', (c) => {
   const { collectionId } = c.req.param();
@@ -259,35 +290,6 @@ entryRoutes.post('/:collectionId/entries/:slug/versions/:versionId/restore', (c)
   db.close();
   if (!ok) return c.json({ error: 'Version not found' }, 404);
   return c.json({ ok: true });
-});
-
-// GET /api/collections/:id/entries/export.csv
-entryRoutes.get('/:collectionId/entries/export.csv', (c) => {
-  const { collectionId } = c.req.param();
-  const db  = openPod(c.get('podPath'));
-  const col = db.getCollection(collectionId);
-  if (!col) { db.close(); return c.json({ error: 'Collection not found' }, 404); }
-  const entries = db.getEntries(collectionId);
-  const schema  = col.schema ? JSON.parse(col.schema) : {};
-  const fields  = Object.keys(schema);
-  const headers = ['slug', 'status', ...fields];
-  const csvEsc  = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const rows    = [headers.map(csvEsc).join(',')];
-  for (const e of entries) {
-    rows.push(headers.map(h => {
-      if (h === 'slug')   return csvEsc(e.slug);
-      if (h === 'status') return csvEsc(e.status);
-      const v = e.data[h];
-      return csvEsc(Array.isArray(v) ? v.join(';') : v);
-    }).join(','));
-  }
-  db.close();
-  return new Response(rows.join('\n'), {
-    headers: {
-      'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="${collectionId}.csv"`,
-    },
-  });
 });
 
 // POST /api/collections/:id/entries/import.csv

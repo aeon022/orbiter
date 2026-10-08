@@ -5,6 +5,8 @@ import { clientIp } from '../net.js';
 
 export const authRoutes = new Hono();
 
+// Valid-format hash of a random password; only used to burn the same CPU time for unknown users.
+const DUMMY_HASH = `${'0'.repeat(32)}:${'0'.repeat(128)}`;
 const LOGIN_MAX     = 5;
 const LOGIN_WINDOW  = 15 * 60 * 1000; // 15 min
 const loginAttempts = new Map(); // ip → { count, resetAt }
@@ -42,12 +44,15 @@ authRoutes.post('/login', async (c) => {
     return c.json({ error: 'Too many login attempts. Try again in 15 minutes.' }, 429);
   }
 
-  const { username, password } = await c.req.json();
-  if (!username || !password) return c.json({ error: 'Missing credentials' }, 400);
+  const body = await c.req.json().catch(() => null);
+  const { username, password } = body ?? {};
+  if (typeof username !== 'string' || typeof password !== 'string' || !username || !password) return c.json({ error: 'Missing credentials' }, 400);
 
   const db   = openPod(c.get('podPath'));
   const user = db.getUserByUsername(username);
-  if (!user || !(await verifyPassword(password, user.password))) {
+  // Always run scrypt, even for unknown users, so response time doesn't reveal which usernames exist.
+  const passwordOk = await verifyPassword(password, user?.password ?? DUMMY_HASH);
+  if (!user || !passwordOk) {
     db.close();
     recordFailure(ip);
     return c.json({ error: 'Invalid username or password' }, 401);

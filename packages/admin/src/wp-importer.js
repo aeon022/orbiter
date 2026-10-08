@@ -9,6 +9,7 @@
  */
 
 import { XMLParser } from 'fast-xml-parser';
+import { safeFetch } from './net.js';
 import { createRequire } from 'node:module';
 import { randomUUID } from 'node:crypto';
 
@@ -211,9 +212,8 @@ export async function executeImport(db, parsed, options) {
     for (const [wpId, att] of Object.entries(attachmentMap)) {
       if (!att.url) continue;
       try {
-        const res  = await fetch(att.url, { signal: AbortSignal.timeout(15000) });
+        const { resp: res, buffer: buf } = await safeFetch(att.url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const buf  = Buffer.from(await res.arrayBuffer());
         const mime = res.headers.get('content-type')?.split(';')[0]?.trim()
                      || att.mimeType || 'application/octet-stream';
         const filename = att.url.split('/').pop().split('?')[0] || `media-${wpId}`;

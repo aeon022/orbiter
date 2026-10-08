@@ -26,7 +26,8 @@ export function csrfMiddleware(allowedOrigins) {
     // No origin/referer — non-browser client; skip check
     if (!origin && !referer) return next();
 
-    const candidate = origin ?? new URL(referer).origin;
+    let candidate;
+    try { candidate = origin ?? new URL(referer).origin; } catch { return c.json({ error: 'CSRF check failed' }, 403); }
 
     if (!allowedOrigins.includes(candidate)) {
       return c.json({ error: 'CSRF check failed' }, 403);

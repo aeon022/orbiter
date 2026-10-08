@@ -97,6 +97,8 @@ formRoutes.post('/:id/reply', async (c) => {
   if (!row) return c.json({ error: 'Not found' }, 404);
   const to = row.data?.email ?? row.data?.Email ?? row.data?.e_mail ?? null;
   if (!to) return c.json({ error: 'No email address in submission' }, 400);
+  // One plain address only — the field is attacker-supplied, so no lists or display-name tricks.
+  if (typeof to !== 'string' || !/^[^\s,;<>"()]+@[^\s,;<>"()]+\.[^\s,;<>"()]+$/.test(to)) return c.json({ error: 'Invalid email address in submission' }, 400);
   try {
     await sendFormReply(c.get('podPath'), to, subject.trim(), text.trim());
     return c.json({ ok: true });
