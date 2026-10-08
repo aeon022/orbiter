@@ -30,6 +30,10 @@
             <label class="label" for="password">Password</label>
             <input class="input" id="password" name="password" type="password" autocomplete="current-password" required />
           </div>
+          <div class="field" id="code-field" style="display:none">
+            <label class="label" for="code">Authentication code</label>
+            <input class="input" id="code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="123456 or a recovery code" />
+          </div>
           <button class="btn btn-primary" style="width:100%;margin-top:8px;justify-content:center" type="submit" id="submit-btn">
             Sign in
           </button>
@@ -58,6 +62,7 @@
         body: JSON.stringify({
           username: e.target.username.value,
           password: e.target.password.value,
+          code: e.target.code.value,
         }),
       });
       const data = await res.json();
@@ -65,6 +70,10 @@
       if (res.ok) {
         location.replace('/dashboard.html');
       } else {
+        if (data.totp) {
+          document.getElementById('code-field').style.display = '';
+          document.getElementById('code').focus();
+        }
         error.textContent = data.error ?? 'Login failed';
         error.classList.add('visible');
         btn.disabled = false;

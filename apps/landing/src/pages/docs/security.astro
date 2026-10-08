@@ -28,6 +28,13 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <div class="callout"><strong>Keep the secret.</strong> Without the same <code>ORBITER_SECRET</code> the encrypted values can't be read — the settings show as empty, and saving an empty field will not overwrite them. Store the secret in your password manager or hosting provider's environment settings, not in the repository. If you don't set it, nothing changes: credentials stay plaintext.</div>
 <p>Covered: GitHub tokens, AI API key, S3 keys, SMTP password, FTP password. API tokens and API keys are stored as hashes instead. Passwords of user accounts are always hashed (scrypt).</p>
 
+<h2>Two-factor sign-in (TOTP)</h2>
+<p><strong>Account → Two-factor authentication</strong>: confirm your password, add the shown setup key to an authenticator app (Google Authenticator, 1Password, Aegis …) and enter a code to switch it on. You get eight one-time <strong>recovery codes</strong> — save them, they are shown once. From then on sign-in asks for the 6-digit code after the password; a code can't be used twice. Turning 2FA on signs out your other devices.</p>
+<p>Lost your phone and your recovery codes? An admin can reset your 2FA from <strong>Users</strong> (this also signs you out everywhere). The TOTP secret is encrypted at rest when <code>ORBITER_SECRET</code> is set.</p>
+
+<h2>Active sessions</h2>
+<p><strong>Account → Active sessions</strong> lists every device that is signed in (browser, IP, time). Sign out a single device or all others. A login session lasts 30 days.</p>
+
 <h2>Draft-only API keys for agents</h2>
 <p>An API key can optionally be created with <strong>drafts allowed</strong> (Settings → API Keys). Over <a href="/docs/mcp">MCP</a> such a key gets two extra tools, <code>create_draft</code> and <code>update_draft</code>. They can only create new entries as drafts and edit entries that are still drafts. They can't publish, schedule, delete, or change an entry that is already live — a human publishes in the admin. Every change shows up in the entry's activity log as <code>mcp:&lt;key label&gt;</code>.</p>
 

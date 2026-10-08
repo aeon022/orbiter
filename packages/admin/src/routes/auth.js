@@ -1,7 +1,8 @@
 import { Hono } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
-import { openPod, verifyPassword, generateToken } from '@a83/orbiter-core';
+import { openPod, verifyPassword, generateToken, verifyTotp, hashRecoveryCode } from '@a83/orbiter-core';
 import { clientIp } from '../net.js';
+import { allow } from '../ratelimit.js';
 
 export const authRoutes = new Hono();
 
@@ -57,12 +58,28 @@ authRoutes.post('/login', async (c) => {
     recordFailure(ip);
     return c.json({ error: 'Invalid username or password' }, 401);
   }
+
+  // Second factor. Password alone is never enough once 2FA is on; no session exists until the code checks out.
+  const totp = db.getTotp(user.id);
+  if (totp?.enabled) {
+    const code = typeof body.code === 'string' ? body.code.trim() : '';
+    if (!code) { db.close(); return c.json({ error: 'Two-factor code required', totp: true }, 401); }
+    // Per-account cap on top of the per-IP one, so spread-out guessing can't walk the 6-digit space.
+    const verified = allow(`totp:${user.id}`, 10, LOGIN_WINDOW) && (() => {
+      const step = verifyTotp(totp.secret, code, { after: totp.last });
+      if (step) { db.setTotpLast(user.id, step); return true; }
+      const h = hashRecoveryCode(code);
+      if (totp.recovery.includes(h)) { db.setTotpRecovery(user.id, totp.recovery.filter(x => x !== h)); return true; }
+      return false;
+    })();
+    if (!verified) { db.close(); recordFailure(ip); return c.json({ error: 'Invalid code', totp: true }, 401); }
+  }
   clearAttempts(ip);
 
   const token     = generateToken();
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
     .toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, '');
-  db.createSession(user.id, token, expiresAt);
+  db.createSession(user.id, token, expiresAt, { ip, ua: c.req.header('user-agent') });
   db.close();
 
   const isSecure = c.req.url.startsWith('https') || c.req.header('x-forwarded-proto') === 'https';

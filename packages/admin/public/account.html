@@ -208,6 +208,66 @@
           </div>
         </div>
 
+        <!-- Two-factor authentication -->
+        <div id="banner-2fa" class="banner"></div>
+        <div class="settings-group">
+          <div class="group-header">Two-factor authentication</div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Authenticator app</div>
+              <div class="setting-desc" id="tfa-desc">Loading…</div>
+            </div>
+            <div id="tfa-action"></div>
+          </div>
+          <div id="tfa-setup" style="display:none">
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">1 · Add the key to your app</div>
+                <div class="setting-desc">In Google Authenticator, 1Password, Aegis … choose "enter a setup key" and paste this. Account: <span id="tfa-account"></span>.</div>
+              </div>
+              <div><code id="tfa-secret" style="user-select:all;word-break:break-all;font-size:12px"></code></div>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">2 · Confirm with a code</div>
+                <div class="setting-desc">Enter the 6-digit code your app shows now.</div>
+              </div>
+              <input class="input" id="tfa-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" />
+            </div>
+            <div class="save-row"><button class="btn-save" id="tfa-enable-btn">Turn on 2FA</button></div>
+          </div>
+          <div id="tfa-recovery" style="display:none">
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">Recovery codes</div>
+                <div class="setting-desc">Save these now — each works once if you lose your phone. They won't be shown again.</div>
+              </div>
+              <pre id="tfa-codes" style="user-select:all;font-size:12px"></pre>
+            </div>
+          </div>
+          <div id="tfa-off" style="display:none">
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">Turn off</div>
+                <div class="setting-desc">Needs your password and a code (or a recovery code).</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <input class="input" id="tfa-off-pw" type="password" placeholder="Current password" autocomplete="current-password" />
+                <input class="input" id="tfa-off-code" type="text" placeholder="Code" autocomplete="one-time-code" />
+              </div>
+            </div>
+            <div class="save-row"><button class="btn-save" id="tfa-disable-btn">Turn off 2FA</button></div>
+          </div>
+        </div>
+
+        <!-- Active sessions -->
+        <div id="banner-sessions" class="banner"></div>
+        <div class="settings-group">
+          <div class="group-header">Active sessions</div>
+          <div id="sessions-list" style="padding:6px 20px 12px;font-size:12px"></div>
+          <div class="save-row"><button class="btn-save" id="signout-others-btn">Sign out all other devices</button></div>
+        </div>
+
       </div><!-- /.account-wrap -->
     </main>
   </div><!-- /.app -->
@@ -284,6 +344,73 @@
         showBanner('banner-password', false, res.error || 'Failed to change password.');
       }
     });
+
+    // ── Two-factor + sessions ─────────────────────────────────────────
+    const $ = (id) => document.getElementById(id);
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    const api = (url, method, body) => fetch(url, {
+      method, credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined,
+    }).then(r => r.json()).catch(() => ({ error: 'Network error' }));
+
+    async function loadTfa() {
+      const s = await api('/api/account/2fa', 'GET');
+      $('tfa-setup').style.display = 'none';
+      $('tfa-off').style.display = s.enabled ? '' : 'none';
+      $('tfa-desc').textContent = s.enabled
+        ? `On — ${s.recoveryLeft} recovery code${s.recoveryLeft === 1 ? '' : 's'} left.`
+        : 'Off. Add a second step to sign-in with an authenticator app.';
+      $('tfa-action').innerHTML = s.enabled ? '' : '<button class="btn-save" id="tfa-start-btn">Set up</button>';
+      $('tfa-start-btn')?.addEventListener('click', async () => {
+        const currentPassword = prompt('Confirm your password to start:');
+        if (!currentPassword) return;
+        const r = await api('/api/account/2fa/setup', 'POST', { currentPassword });
+        if (!r.secret) return showBanner('banner-2fa', false, r.error || 'Could not start setup.');
+        $('tfa-secret').textContent = r.secret.replace(/(.{4})/g, '$1 ').trim();
+        $('tfa-account').textContent = username;
+        $('tfa-setup').style.display = '';
+        $('tfa-code').focus();
+      });
+    }
+    $('tfa-enable-btn').addEventListener('click', async () => {
+      const r = await api('/api/account/2fa/enable', 'POST', { code: $('tfa-code').value });
+      if (!r.ok) return showBanner('banner-2fa', false, r.error || 'Failed.');
+      $('tfa-code').value = '';
+      $('tfa-codes').textContent = r.recoveryCodes.join('\n');
+      $('tfa-recovery').style.display = '';
+      showBanner('banner-2fa', true, '2FA is on. Other devices were signed out.');
+      loadTfa(); loadSessions();
+    });
+    $('tfa-disable-btn').addEventListener('click', async () => {
+      const r = await api('/api/account/2fa/disable', 'POST', { currentPassword: $('tfa-off-pw').value, code: $('tfa-off-code').value });
+      if (!r.ok) return showBanner('banner-2fa', false, r.error || 'Failed.');
+      $('tfa-off-pw').value = ''; $('tfa-off-code').value = ''; $('tfa-recovery').style.display = 'none';
+      showBanner('banner-2fa', true, '2FA is off.');
+      loadTfa();
+    });
+
+    async function loadSessions() {
+      const rows = await api('/api/account/sessions', 'GET');
+      if (!Array.isArray(rows)) { $('sessions-list').textContent = 'Could not load sessions.'; return; }
+      $('sessions-list').innerHTML = rows.map(r => `
+        <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line2)">
+          <div style="flex:1;min-width:0">
+            <div style="color:var(--heading);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.ua || 'Unknown device')}${r.current ? ' <span class="role-badge">this device</span>' : ''}</div>
+            <div style="color:var(--muted);font-size:11px">${esc(r.ip || 'unknown IP')} · signed in ${esc(r.created_at)} UTC</div>
+          </div>
+          ${r.current ? '' : `<button class="btn-save" data-sid="${esc(r.id)}">Sign out</button>`}
+        </div>`).join('') || 'No active sessions.';
+      $('sessions-list').querySelectorAll('[data-sid]').forEach(b => b.addEventListener('click', async () => {
+        await api('/api/account/sessions/' + b.dataset.sid, 'DELETE'); loadSessions();
+      }));
+    }
+    $('signout-others-btn').addEventListener('click', async () => {
+      await api('/api/account/sessions', 'DELETE');
+      showBanner('banner-sessions', true, 'Signed out everywhere else.');
+      loadSessions();
+    });
+    loadTfa(); loadSessions();
   </script>
   <script src="/sidebar.js"></script>
   <script src="/search.js"></script>

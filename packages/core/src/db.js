@@ -136,6 +136,12 @@ export class OrbiterDB {
     try { this.db.exec(`ALTER TABLE _media ADD COLUMN folder TEXT NOT NULL DEFAULT ''`); } catch {}
     try { this.db.exec(`ALTER TABLE _collections ADD COLUMN singleton INTEGER NOT NULL DEFAULT 0`); } catch {}
     try { this.db.exec(`ALTER TABLE _entries ADD COLUMN sort_order INTEGER`); } catch {}
+    for (const col of ['totp_secret TEXT', 'totp_enabled INTEGER NOT NULL DEFAULT 0', 'totp_recovery TEXT', 'totp_last INTEGER NOT NULL DEFAULT 0']) {
+      try { this.db.exec(`ALTER TABLE _users ADD COLUMN ${col}`); } catch {}
+    }
+    for (const col of ['ip TEXT', 'ua TEXT']) {
+      try { this.db.exec(`ALTER TABLE _sessions ADD COLUMN ${col}`); } catch {}
+    }
     try { this.db.exec(`ALTER TABLE _entries ADD COLUMN deleted_at TEXT`); } catch {}
     try { this.db.exec(`ALTER TABLE _entries ADD COLUMN publish_at TEXT`); } catch {}
     try { this.db.exec(`ALTER TABLE _entries ADD COLUMN unpublish_at TEXT`); } catch {}
@@ -270,12 +276,12 @@ export class OrbiterDB {
   }
 
   // ── Sessions ───────────────────────────────
-  createSession(userId, token, expiresAt) {
+  createSession(userId, token, expiresAt, { ip = null, ua = null } = {}) {
     // Prune expired sessions on every login
     this.db.prepare("DELETE FROM _sessions WHERE expires_at < datetime('now')").run();
     this.db.prepare(
-      'INSERT INTO _sessions (token, user_id, expires_at) VALUES (?, ?, ?)'
-    ).run(token, userId, expiresAt);
+      'INSERT INTO _sessions (token, user_id, expires_at, ip, ua) VALUES (?, ?, ?, ?, ?)'
+    ).run(token, userId, expiresAt, ip, ua ? String(ua).slice(0, 200) : null);
     this.db.prepare(
       "UPDATE _users SET last_login = datetime('now') WHERE id = ?"
     ).run(userId);
@@ -293,6 +299,43 @@ export class OrbiterDB {
 
   deleteSession(token) {
     this.db.prepare('DELETE FROM _sessions WHERE token = ?').run(token);
+  }
+
+  listSessions(userId) {
+    return this.db.prepare(
+      "SELECT token, ip, ua, created_at, expires_at FROM _sessions WHERE user_id = ? AND expires_at > datetime('now') ORDER BY created_at DESC"
+    ).all(userId);
+  }
+
+  // ── Two-factor (TOTP) ──────────────────────
+  // The secret is encrypted at rest when ORBITER_SECRET is set (see secrets.js).
+  getTotp(userId) {
+    const u = this.db.prepare('SELECT totp_secret, totp_enabled, totp_recovery, totp_last FROM _users WHERE id = ?').get(userId);
+    if (!u) return null;
+    const secret = isEncrypted(u.totp_secret) ? decryptSecret(`totp:${userId}`, u.totp_secret) : u.totp_secret;
+    let recovery = []; try { recovery = JSON.parse(u.totp_recovery ?? '[]'); } catch {}
+    return { enabled: !!u.totp_enabled, secret: secret || null, recovery, last: u.totp_last || 0 };
+  }
+
+  setTotpPending(userId, secret) {
+    const stored = secretsEnabled() ? encryptSecret(`totp:${userId}`, secret) : secret;
+    this.db.prepare('UPDATE _users SET totp_secret = ?, totp_enabled = 0, totp_recovery = NULL, totp_last = 0 WHERE id = ?').run(stored, userId);
+  }
+
+  enableTotp(userId, recoveryHashes, lastStep) {
+    this.db.prepare('UPDATE _users SET totp_enabled = 1, totp_recovery = ?, totp_last = ? WHERE id = ?').run(JSON.stringify(recoveryHashes), lastStep, userId);
+  }
+
+  disableTotp(userId) {
+    this.db.prepare('UPDATE _users SET totp_secret = NULL, totp_enabled = 0, totp_recovery = NULL, totp_last = 0 WHERE id = ?').run(userId);
+  }
+
+  setTotpLast(userId, step) {
+    this.db.prepare('UPDATE _users SET totp_last = ? WHERE id = ?').run(step, userId);
+  }
+
+  setTotpRecovery(userId, hashes) {
+    this.db.prepare('UPDATE _users SET totp_recovery = ? WHERE id = ?').run(JSON.stringify(hashes), userId);
   }
 
   // Revoke every session of a user (e.g. after a password change), optionally keeping one.

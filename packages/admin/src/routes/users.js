@@ -86,6 +86,15 @@ userRoutes.put('/:id/permissions', async (c) => {
   return c.json({ ok: true });
 });
 
+// DELETE /api/users/:id/2fa — admin reset for a user who lost their device and recovery codes
+userRoutes.delete('/:id/2fa', (c) => {
+  const db = openPod(c.get('podPath'));
+  db.disableTotp(c.req.param('id'));
+  db.deleteUserSessions(c.req.param('id'));
+  db.close();
+  return c.json({ ok: true });
+});
+
 userRoutes.delete('/:id', (c) => {
   const currentUser = c.get('user');
   if (currentUser.id === c.req.param('id')) {

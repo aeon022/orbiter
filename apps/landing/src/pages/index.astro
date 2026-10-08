@@ -307,7 +307,7 @@ const faqs = [
     </div>
 
     <div class="hero-inner">
-      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">New: Security check, encrypted secrets, draft-only agent keys — admin@0.3.87 · Changelog →</a>
+      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">New: Two-factor sign-in, active sessions, security check — admin@0.3.88 · Changelog →</a>
       <h1>Your entire CMS<br />in <span>one file.</span></h1>
       <p class="hero-sub">
         Content, media, schema, users — all in a single POD.
@@ -505,7 +505,20 @@ const faqs = [
         <div class="update-date">Oct<br />2026</div>
         <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.87 · core@0.3.20 · mcp@0.1.4 · cli@0.3.14 — Latest</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.88 · core@0.3.21 — Latest</div>
+          <div class="update-title">Two-factor sign-in and active sessions</div>
+          <ul class="update-items">
+            <li><strong>2FA (TOTP)</strong> — turn it on under Account with any authenticator app. Eight one-time recovery codes, codes can't be replayed, and an admin can reset a locked-out user. <a href="/docs/security">Docs →</a></li>
+            <li><strong>Active sessions</strong> — see every signed-in device (browser, IP, time) and sign out one or all others.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="update-card reveal" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
+        <div class="update-date">Oct<br />2026</div>
+        <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.87 · core@0.3.20 · mcp@0.1.4 · cli@0.3.14</div>
           <div class="update-title">Security check, encrypted secrets, draft-only agent keys, Terminal theme</div>
           <ul class="update-items">
             <li><strong><code>orbiter doctor</code> + dashboard card</strong> — flags a pod tracked by git, plaintext credentials, an open Content API and more, with the fix next to each finding. <a href="/docs/security">Docs →</a></li>
