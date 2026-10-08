@@ -1382,6 +1382,78 @@ import { ClientRouter } from 'astro:transitions';
       <span class="rm-tag next">planned</span>
     </div>
 
+    <div class="rm-item reveal">
+      <div class="rm-dot next">◈</div>
+      <div class="rm-phase">Next · Agents</div>
+      <div class="rm-title">Agent Proposals with a Human Gate</div>
+      <div class="rm-desc">Agents can suggest changes to <strong>published</strong> entries. Each suggestion lands in an inbox as a diff; reviewers accept, edit or reject — nothing is ever applied automatically. The activity log names the source (<code>agent:key-name</code>), and an access receipt shows which agents read what, aggregated and privacy-friendly.</div>
+      <span class="rm-tag next">planned</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot next">◈</div>
+      <div class="rm-phase">Next · Retrieval</div>
+      <div class="rm-title">Semantic Search in the POD</div>
+      <div class="rm-desc">Embeddings stored in the SQLite file (generated locally, e.g. with Ollama), returning passage-level hits with sources — for agents over MCP and the Content API, and as a better site search for humans. Search stays inside your POD.</div>
+      <span class="rm-tag next">planned</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot next">◈</div>
+      <div class="rm-phase">Next · Trust</div>
+      <div class="rm-title">Verifiable &amp; Citable Content</div>
+      <div class="rm-desc">Every published state gets a content hash, a stable permalink and a site signature, so readers and agents can verify nothing was altered and ask "as of 2026-10-01". Citation metadata (BibTeX, CSL-JSON, DOI) and a license / AI-use policy ride along in <code>llms.txt</code> and JSON-LD.</div>
+      <span class="rm-tag next">planned</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot future">◇</div>
+      <div class="rm-phase">Future · Machine</div>
+      <div class="rm-title">Claims &amp; Evidence Entries</div>
+      <div class="rm-desc">Claims as first-class entries with sources, confidence and status — the Knowledge Graph already draws the relations. Versioned collection contracts (JSON Schema / OpenAPI) and MCP resources &amp; prompts, not just tools.</div>
+      <span class="rm-tag future">planned</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot future">◇</div>
+      <div class="rm-phase">Future · Human</div>
+      <div class="rm-title">Freshness &amp; Quality Gates</div>
+      <div class="rm-desc">"Review by" dates and stale-content warnings, accessibility lint, a link checker, and a quality gate before publishing.</div>
+      <span class="rm-tag future">planned</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot future">◇</div>
+      <div class="rm-phase">Future · Reach</div>
+      <div class="rm-title">Publish Everywhere (POSSE)</div>
+      <div class="rm-desc">The POD stays the origin; ActivityPub lets people follow a site from Mastodon, plus newsletter and RSS out. One source, many channels.</div>
+      <span class="rm-tag future">planned</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot future">◇</div>
+      <div class="rm-phase">Future · Local-first</div>
+      <div class="rm-title">Capture Anywhere &amp; Sync</div>
+      <div class="rm-desc">A phone PWA for quick capture, and the conflict-aware multi-writer sync that is still on the list.</div>
+      <span class="rm-tag future">planned</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot future">◇</div>
+      <div class="rm-phase">Future · Trust</div>
+      <div class="rm-title">Privacy Tools for Forms</div>
+      <div class="rm-desc">Retention periods, export and deletion per person for form submissions — the inbox holds personal data.</div>
+      <span class="rm-tag future">planned</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot future">◇</div>
+      <div class="rm-phase">Future · Open</div>
+      <div class="rm-title">Open POD Specification</div>
+      <div class="rm-desc">The POD format written down as an open spec with a conformance test-suite and reference readers in Python and Go. No lock-in, in writing. Plus signed releases (npm provenance, SBOM).</div>
+      <span class="rm-tag future">planned</span>
+    </div>
+
   </div>
 </section>
 
