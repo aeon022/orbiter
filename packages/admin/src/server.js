@@ -41,6 +41,7 @@ import { apiKeyRoutes }        from './routes/api-keys.js';
 import { securityRoutes }      from './routes/security.js';
 import { webhookRoutes }       from './routes/webhooks.js';
 import { previewRoutes }       from './routes/preview.js';
+import { htmlHandler, cspPublicRoutes, cspAdminRoutes } from './csp.js';
 import { requireAuth }      from './middleware/auth.js';
 import { csrfMiddleware }  from './middleware/csrf.js';
 
@@ -154,8 +155,10 @@ export function createApp(podPath) {
   api.route('/security-check', securityRoutes);
   api.route('/webhooks',     webhookRoutes);
   api.route('/preview-token', previewRoutes);
+  api.route('/security-check/csp-reports', cspAdminRoutes);
 
   app.route('/api', api);
+  app.route('/csp-report', cspPublicRoutes);
 
   app.get('/health', (c) => {
     let podOk = false;
@@ -173,6 +176,9 @@ export function createApp(podPath) {
   app.get('/media', (c) => c.redirect('/media.html'));
   app.get('/settings', (c) => c.redirect('/settings.html'));
   app.get('/users', (c) => c.redirect('/users.html'));
+
+  // HTML pages: per-request script nonce + (report-only) CSP; everything else is plain static below
+  app.use('/*', htmlHandler(join(ADMIN_ROOT, 'public')));
 
   // Serve static frontend files from public/
   app.use('/*', serveStatic({ root: join(ADMIN_ROOT, 'public') }));

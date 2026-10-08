@@ -38,6 +38,9 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <h2>API key limits</h2>
 <p>When you create a key (Settings → API Keys) you can limit it to certain <strong>collections</strong> (for the REST API and MCP, reads and draft writes), give it an <strong>expiry date</strong> (an expired key is rejected with 401), and a <strong>rate limit</strong> in requests per minute (over it: 429). The rate limit is counted in memory per server process.</p>
 
+<h2>Browser hardening of the admin</h2>
+<p>The admin sends <code>X-Frame-Options</code>, <code>frame-ancestors 'self'</code>, <code>nosniff</code>, a same-origin referrer policy and forbids plugins and foreign form targets. A strict script policy (a per-request nonce on every script) is running in <strong>report-only</strong> mode: nothing is blocked yet, and admins can see what a strict policy would have blocked at <code>GET /api/security-check/csp-reports</code>. Once the remaining inline event handlers are converted, the policy is switched to enforcing.</p>
+
 <h2>Draft-only API keys for agents</h2>
 <p>An API key can optionally be created with <strong>drafts allowed</strong> (Settings → API Keys). Over <a href="/docs/mcp">MCP</a> such a key gets two extra tools, <code>create_draft</code> and <code>update_draft</code>. They can only create new entries as drafts and edit entries that are still drafts. They can't publish, schedule, delete, or change an entry that is already live — a human publishes in the admin. Every change shows up in the entry's activity log as <code>mcp:&lt;key label&gt;</code>.</p>
 
