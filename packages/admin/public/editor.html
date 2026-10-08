@@ -216,6 +216,35 @@
     .field-group-name { font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); flex:1; }
     .field-group-count { font-size:9px; color:var(--line); }
     .field-group-body { padding:10px; display:none; }
+
+    /* ── Custom fields live in the main column (moved out of the sidebar after render) ── */
+    .editor-page.has-fields { max-width:900px; }
+    .main-fields { margin:4px 0 28px; }
+    .main-fields .meta-section { padding:0; border:none; margin-bottom:18px; }
+    .main-fields .meta-label { font-size:10px; letter-spacing:.2em; margin-bottom:12px; }
+    .main-fields .meta-section.plain-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px 20px; }
+    .main-fields .meta-section.plain-fields > .meta-label { grid-column:1 / -1; margin-bottom:-4px; }
+    .main-fields .field-group { background:var(--bg1); border-radius:10px; margin-bottom:0; }
+    .main-fields .field-group-header { padding:11px 16px; background:transparent; }
+    .main-fields .field-group-name { font-size:11px; letter-spacing:.16em; color:var(--text); }
+    .main-fields .field-group-count { font-size:10px; }
+    .main-fields .field-group-body { padding:6px 16px 18px; }
+    .main-fields .field-group.open .field-group-body { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px 20px; }
+    .main-fields .meta-field { margin:0; min-width:0; }
+    .main-fields .meta-field.wide { grid-column:1 / -1; }
+    .main-fields .field-label { font-size:10px; margin-bottom:6px; }
+    .main-fields .field-input, .main-fields .field-select { font-size:12px; padding:8px 10px; }
+    .main-fields textarea.field-input { min-height:96px; line-height:1.5; }
+    @media (max-width:1100px) {
+      .main-fields .meta-section.plain-fields, .main-fields .field-group.open .field-group-body { grid-template-columns:1fr; }
+    }
+    /* Collections without a body field: no block-editing chrome */
+    .editor-main.no-body #be-editor, .editor-main.no-body #word-count-display, .editor-main.no-body #word-count { display:none; }
+    .editor-main.no-body .editor-toolbar > :nth-child(-n+4),
+    .editor-main.no-body [onclick*="openImgPicker"], .editor-main.no-body [onclick*="openVideoPicker"],
+    .editor-main.no-body [onclick*="openFilePicker"], .editor-main.no-body [onclick*="exportMarkdown"],
+    .editor-main.no-body .ai-toolbar-btn { display:none; }
+    .editor-main.no-body .editor-page { padding-top:32px; }
     .field-group.open .field-group-body { display:block; }
 
     /* Version history */
@@ -648,6 +677,7 @@
             <textarea id="title-input" class="editor-title-input" placeholder="Untitled" rows="1"
               oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';onTitleInput()"></textarea>
             <div class="editor-slug-line">/<span id="collection-id-display"></span>/<span id="slug-preview">…</span><button type="button" class="copy-slug-btn" onclick="copySlug()" title="Copy slug">⧉</button></div>
+            <div id="main-fields" class="main-fields" style="display:none"></div>
             <div id="be-editor" class="be-editor" spellcheck="false"></div>
             <textarea id="body-input" style="display:none"></textarea>
             <div class="word-count" id="word-count-display"></div>
@@ -1120,7 +1150,7 @@
 
       panel.innerHTML = `
         <button class="meta-panel-close" id="meta-panel-close" onclick="toggleMetaPanel()"><span class="mp-title">◈ Sidebar</span><span class="mp-x">✕</span></button>
-        ${fieldsSectionHtml}
+        <div id="fields-source">${fieldsSectionHtml}</div>
         <div class="meta-section">
           <div class="meta-label">SEO</div>
           <div class="serp-preview" id="serp-preview">
@@ -1333,6 +1363,27 @@
       document.getElementById('btn-expiry-confirm')?.addEventListener('click', () => {
         saveEntry(publishTarget());
       });
+
+      // Move the custom-field sections from the sidebar into the main column. Listeners bound above stay attached
+      // (the elements are moved, not re-created), and values are read with document-level selectors, so nothing else changes.
+      {
+        const src  = document.getElementById('fields-source');
+        const dest = document.getElementById('main-fields');
+        const hasBody = 'body' in schema || !!entryData?.data?.body || extraFields.length === 0;
+        if (src && dest && src.children.length) {
+          dest.append(...src.children);
+          dest.style.display = '';
+          document.querySelector('.editor-page')?.classList.add('has-fields');
+          dest.querySelectorAll('.meta-section').forEach(sec => { if (!sec.querySelector('.field-group')) sec.classList.add('plain-fields'); });
+          // Wide inputs get the full row; short ones sit two per row
+          dest.querySelectorAll('.meta-field').forEach(f => {
+            if (f.querySelector('textarea, .tbl-field-wrap, .media-drop-zone, .file-drop-zone, .weekday-grid, [id^="arr-"], .rel-list, .rel-search')) f.classList.add('wide');
+          });
+          // With no body to write, the fields ARE the content: open every group
+          if (!hasBody) dest.querySelectorAll('.field-group').forEach(g => g.classList.add('open'));
+        }
+        if (!hasBody) document.getElementById('editor-main')?.classList.add('no-body');
+      }
 
       // Version diff
       panel.querySelectorAll('.v-diff-btn').forEach(btn => {
