@@ -31,4 +31,3 @@ documents/
 # Private security notes (unfixed findings — never commit)
 SECURITY-TODO.md
 PLUGIN-CONCEPT.md
-stage.md
