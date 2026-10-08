@@ -14,10 +14,19 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
   <thead><tr><th>Role</th><th>Can do</th></tr></thead>
   <tbody>
     <tr><td><strong>admin</strong></td><td>Everything — users, settings, API keys, schema changes, every collection, every entry status including drafts. Always unrestricted; you can't limit an admin's collection access.</td></tr>
+    <tr><td><strong>reviewer</strong></td><td>Like an editor, but can always publish and schedule — also while the <a href="#review">review workflow</a> is on. Also subject to the per-collection allow-list.</td></tr>
     <tr><td><strong>editor</strong></td><td>Content work — create/edit/publish entries in whichever collections they're allowed to see. No access to Users, Settings, or schema structure changes.</td></tr>
   </tbody>
 </table>
-<p>Switch a user's role from the Users list — toggles between admin and editor on the same account.</p>
+<p>Change a user's role from the dropdown in the Users list (editor, reviewer, admin).</p>
+
+<h2 id="review">Review workflow</h2>
+<p>Turn on <strong>Settings → API → Review before publishing</strong>. From then on, editors can't publish or schedule: the editor offers <strong>Submit for review</strong> instead, and the entry gets the status <strong>In review</strong> (not public, like a draft). Admins and reviewers see <strong>Approve &amp; publish</strong> and <strong>Request changes</strong> (sends it back to draft). The Entries list has an <em>In review</em> filter, the sidebar tooltips count them, and the activity log records <em>submitted for review</em>, <em>approved</em> and <em>changes requested</em>.</p>
+<ul>
+  <li>The rule is enforced on the server for every route that publishes (editor, status buttons, bulk publish, scheduling, CSV import) — not just hidden in the UI.</li>
+  <li>An <code>in_review</code> webhook event (<code>review</code>) fires on submission, and, if "notify on publish" email is configured, the notification address gets a "review requested" mail.</li>
+  <li><strong>Limit:</strong> the gate controls moving an entry <em>into</em> published/scheduled. An editor can still edit an entry that is already live (it stays live). Restrict collections per editor if that isn't what you want.</li>
+</ul>
 
 <h2>Restricting an editor to specific collections</h2>
 <p>Click <strong>Collections</strong> next to an editor to open the permissions modal: a checkbox per collection. Leave everything checked (or don't touch it at all) and that editor is <strong>unrestricted</strong> — the default for a new editor account. Uncheck some and they lose access to exactly those collections: list views, entries, drafts, exports, all of it.</p>

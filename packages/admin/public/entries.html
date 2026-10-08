@@ -115,6 +115,7 @@
           <button class="filter-tab active" data-status="">All</button>
           <button class="filter-tab" data-status="published">Published</button>
           <button class="filter-tab" data-status="draft">Drafts</button>
+          <button class="filter-tab" data-status="in_review">In review</button>
           <button class="filter-tab" data-status="scheduled">Scheduled</button>
           <button class="filter-tab" data-status="trash" style="margin-left:auto">🗑 Trash</button>
         </div>
@@ -153,6 +154,9 @@
     const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).catch(() => null);
     if (!me?.user) { location.replace('/login.html'); throw new Error('unauthenticated'); }
     document.getElementById('topbar-user').textContent = me.user.username;
+    // Review workflow: editors submit for review instead of publishing
+    const reviewOn   = (await fetch('/api/meta/workflow~review',{credentials:'include'}).then(r=>r.json()).catch(()=>null))?.value === '1';
+    const canPublish = !reviewOn || me.user.role !== 'editor';
     if (me.user.role === 'admin') {
       document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
     }
@@ -273,8 +277,10 @@
               const title   = e.data?.title || e.slug;
               const updated = e.updated_at ? relativeTime(e.updated_at) : '—';
               const deleted = e.deleted_at ? e.deleted_at.split(' ')[0] : '—';
-              const nextStatus  = e.status === 'published' ? 'draft' : 'published';
-              const toggleLabel = e.status === 'published' ? 'Unpublish' : e.status === 'scheduled' ? 'Publish now' : 'Publish';
+              const nextStatus  = e.status === 'published' ? 'draft' : canPublish ? 'published' : 'in_review';
+              const toggleLabel = e.status === 'published' ? 'Unpublish'
+                : e.status === 'in_review' ? (canPublish ? 'Approve' : 'Withdraw')
+                : !canPublish ? 'Submit for review' : e.status === 'scheduled' ? 'Publish now' : 'Publish';
               const schedInfo   = e.status === 'scheduled' && e.publish_at ? ` · ${e.publish_at.split(' ')[0]}` : '';
               const localeParam = e.locale ? `&locale=${encodeURIComponent(e.locale)}` : '';
               const localeBadge = e.locale ? `<span style="font-family:var(--mono);font-size:9px;color:var(--muted);background:var(--bg3);border:1px solid var(--line);border-radius:4px;padding:1px 5px;margin-left:5px;vertical-align:middle">${e.locale}</span>` : '';
@@ -293,7 +299,7 @@
                       ? `<button class="btn-row restore-btn" data-slug="${e.slug}" data-locale="${e.locale ?? ''}">Restore</button>
                          <button class="btn-row btn-row-danger perm-del-btn" data-slug="${e.slug}" data-locale="${e.locale ?? ''}">Delete forever</button>`
                       : `<a class="btn-row" href="/editor.html?collection=${colId}&slug=${e.slug}${localeParam}">Edit</a>
-                         <button class="btn-row btn-row-toggle status-toggle" data-slug="${e.slug}" data-locale="${e.locale ?? ''}" data-next="${nextStatus}">${toggleLabel}</button>
+                         <button class="btn-row btn-row-toggle status-toggle" data-slug="${e.slug}" data-locale="${e.locale ?? ''}" data-next="${e.status === 'in_review' && !canPublish ? 'draft' : nextStatus}">${toggleLabel}</button>
                          <button class="btn-row btn-row-icon dup-btn" data-slug="${e.slug}" data-locale="${e.locale ?? ''}" title="Duplicate">⧉</button>
                          <button class="btn-row btn-row-danger delete-btn" data-slug="${e.slug}" data-locale="${e.locale ?? ''}">Trash</button>`
                     }
@@ -368,11 +374,12 @@
       wrap.querySelectorAll('.status-toggle').forEach(btn => {
         btn.addEventListener('click', async () => {
           btn.disabled = true;
-          await fetch(`/api/collections/${colId}/entries/${btn.dataset.slug}/status`, {
+          const r = await fetch(`/api/collections/${colId}/entries/${btn.dataset.slug}/status`, {
             method: 'PATCH', credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: btn.dataset.next, locale: btn.dataset.locale ?? '' }),
           });
+          if (!r.ok) alert((await r.json().catch(() => ({}))).error || 'Could not change status.');
           loadEntries();
         });
       });

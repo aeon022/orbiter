@@ -17,7 +17,7 @@ const ALLOWED_KEYS = [
   'dashboard.show_calendar', 'dashboard.show_recent', 'dashboard.show_collections', 'dashboard.show_workspace',
   'analytics.enabled',
   'ai.provider', 'ai.model', 'ai.api_key', 'ai.ollama_url',
-  'ui.theme',
+  'ui.theme', 'workflow.review',
   'format_version',
   'email.smtp_host', 'email.smtp_port', 'email.smtp_user', 'email.smtp_pass',
   'email.smtp_from', 'email.notify_publish', 'email.notify_comment', 'email.notify_form', 'email.notify_to',
@@ -43,7 +43,7 @@ const ADMIN_ONLY_KEYS = new Set([
   'ftp.host', 'ftp.port', 'ftp.user', 'ftp.remote_path', 'ftp.local_path', 'ftp.secure', 'ftp.auto_deploy',
   'email.smtp_host', 'email.smtp_port', 'email.smtp_user', 'email.smtp_from',
   'email.notify_publish', 'email.notify_comment', 'email.notify_form', 'email.notify_to',
-  'api.enabled',
+  'api.enabled', 'workflow.review',
 ]);
 
 // api.token is only ever stored hashed (the site compares hashes); everything else is stored as given.
@@ -63,9 +63,12 @@ function maskSecret(key, val) {
 // Read-side view of a value for the current role: admins see everything,
 // non-admins get secrets masked and admin-only (non-secret) keys withheld —
 // mirrors the write-side ADMIN_ONLY_KEYS check below.
+// Admin-only to *change*, but every user needs to read them to render the UI correctly.
+const READABLE_BY_ALL = new Set(['workflow.review']);
+
 function visibleValue(key, val, isAdmin) {
   if (isAdmin) return val;
-  if (ADMIN_ONLY_KEYS.has(key)) return SECRET_KEYS.has(key) ? maskSecret(key, val) : null;
+  if (ADMIN_ONLY_KEYS.has(key) && !READABLE_BY_ALL.has(key)) return SECRET_KEYS.has(key) ? maskSecret(key, val) : null;
   return val;
 }
 

@@ -24,6 +24,7 @@ infoRoutes.get('/', (c) => {
     total:     db.getEntries(col.id, { status: 'published' }).length,
     drafts:    db.getEntries(col.id, { status: 'draft' }).length,
     scheduled: db.getEntries(col.id, { status: 'scheduled' }).length,
+    review:    db.getEntries(col.id, { status: 'in_review' }).length,
     parent:    db.getMeta(`collection.${col.id}.parent`) ?? null,
     singleton: !!col.singleton,
   }));

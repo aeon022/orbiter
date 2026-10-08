@@ -11,7 +11,7 @@ export async function sendNotification(podPath, event, ctx = {}) {
   let db;
   try {
     db = openPod(podPath);
-    const shouldSend = event === 'publish'
+    const shouldSend = event === 'publish' || event === 'review'
       ? db.getMeta('email.notify_publish') === '1'
       : db.getMeta('email.notify_comment') === '1';
     if (!shouldSend) { db.close(); return; }
@@ -34,7 +34,10 @@ export async function sendNotification(podPath, event, ctx = {}) {
     });
 
     let subject, text;
-    if (event === 'publish') {
+    if (event === 'review') {
+      subject = `[${site}] Review requested: ${ctx.collection}/${ctx.slug}`;
+      text    = `${ctx.username ?? 'Someone'} submitted "${ctx.slug}" in the "${ctx.collection}" collection for review.`;
+    } else if (event === 'publish') {
       subject = `[${site}] Entry published: ${ctx.collection}/${ctx.slug}`;
       text    = `${ctx.username ?? 'Someone'} just published "${ctx.slug}" in the "${ctx.collection}" collection.`;
     } else {

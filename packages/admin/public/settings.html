@@ -453,6 +453,10 @@
             <input class="input" type="password" name="api.token" value="${get('api.token')}" autocomplete="off" placeholder="Leave blank for open access" />
           </div>
           <div class="setting-row">
+            <div><div class="setting-label">Review before publishing</div><div class="setting-desc">Editors can only submit entries for review; admins and reviewers publish. Assign the reviewer role under Users.</div></div>
+            <label class="toggle"><input type="checkbox" name="workflow.review" value="1" ${get('workflow.review')==='1'?'checked':''} /><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
             <div><div class="setting-label">Public API collections</div><div class="setting-desc">Collections exposed at <code>/api/public/[collection]</code> without auth. Comma-separated IDs, or <code>*</code> for all. Leave blank to disable.</div></div>
             <input class="input" type="text" name="public.collections" value="${get('public.collections')??''}" placeholder="posts, pages  or  *" style="font-family:var(--mono);font-size:12px;" />
           </div>
@@ -986,6 +990,7 @@
         ['media.s3_secret_key', fd.get('media.s3_secret_key')],
         ['media.s3_public_url', fd.get('media.s3_public_url')],
         ['api.enabled',              fd.get('api.enabled') ? '1' : '0'],
+        ['workflow.review',          fd.get('workflow.review') ? '1' : '0'],
         ['api.token',                fd.get('api.token')],
         ['public.collections',       fd.get('public.collections')],
         ['api.requireKey',           fd.get('api.requireKey') ? '1' : '0'],

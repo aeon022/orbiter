@@ -40,8 +40,8 @@ export async function run(args) {
     process.exit(1);
   }
 
-  const roleRaw = await ask('Role [editor/admin]', 'editor');
-  const role    = roleRaw === 'admin' ? 'admin' : 'editor';
+  const roleRaw = await ask('Role [editor/reviewer/admin]', 'editor');
+  const role    = ['admin', 'reviewer'].includes(roleRaw) ? roleRaw : 'editor';
 
   closeRl();
 

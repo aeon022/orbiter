@@ -170,7 +170,8 @@
             ttRows +=
               '<div class="nav-tooltip-row"><span class="nav-tooltip-num">' + col.total + '</span> published</div>' +
               (col.drafts > 0 ? '<div class="nav-tooltip-row nav-tooltip-draft"><span class="nav-tooltip-num">' + col.drafts + '</span> draft' + (col.drafts !== 1 ? 's' : '') + '</div>' : '') +
-              ((col.scheduled||0) > 0 ? '<div class="nav-tooltip-row nav-tooltip-sched"><span class="nav-tooltip-num">' + col.scheduled + '</span> scheduled</div>' : '');
+              ((col.scheduled||0) > 0 ? '<div class="nav-tooltip-row nav-tooltip-sched"><span class="nav-tooltip-num">' + col.scheduled + '</span> scheduled</div>' : '') +
+              ((col.review||0) > 0 ? '<div class="nav-tooltip-row nav-tooltip-sched"><span class="nav-tooltip-num">' + col.review + '</span> in review</div>' : '');
           }
           var dotColor = colColor(col.id);
           a.innerHTML =

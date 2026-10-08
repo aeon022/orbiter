@@ -128,10 +128,12 @@
     .status-dot.published  { background:var(--jade); }
     .status-dot.draft      { background:var(--gold); }
     .status-dot.scheduled  { background:var(--accent); }
+    .status-dot.in_review  { background:var(--accent2); }
     .status-lbl { font-size:11px; }
     .status-lbl.published  { color:var(--jade); }
     .status-lbl.draft      { color:var(--gold); }
     .status-lbl.scheduled  { color:var(--accent); }
+    .status-lbl.in_review  { color:var(--accent2); }
     .btn-publish { display:block; width:100%; padding:9px; background:var(--gold); border:none; color:var(--bg0); font-family:var(--mono); font-size:10px; letter-spacing:.12em; cursor:pointer; transition:background .15s; margin-bottom:5px; border-radius:var(--radius); }
     .btn-publish:hover { background:#7a5520; }
     .btn-draft { display:block; width:100%; padding:8px; background:transparent; border:1px solid var(--line); color:var(--mid); font-family:var(--mono); font-size:10px; cursor:pointer; transition:all .12s; border-radius:var(--radius); margin-bottom:5px; }
@@ -863,6 +865,14 @@
     // Fetch preview URL + token for this collection
     const previewMeta = await fetch(`/api/meta/preview_url~${COLLECTION}`,{credentials:'include'}).then(r=>r.json()).catch(()=>null);
     const previewUrlTemplate = previewMeta?.value || '';
+    // Review workflow: with it on, editors submit for review; admins and reviewers publish.
+    const REVIEW_ON = (await fetch('/api/meta/workflow~review',{credentials:'include'}).then(r=>r.json()).catch(()=>null))?.value === '1';
+    const CAN_PUB   = !REVIEW_ON || me.user.role !== 'editor';
+    const statusLabel   = (s) => ({ published:'Published', scheduled:'Scheduled', in_review:'In review' }[s] ?? 'Draft');
+    const publishLabel  = (s) => !CAN_PUB ? (s === 'in_review' ? 'Submitted for review' : 'Submit for review')
+                                          : s === 'in_review' ? 'Approve & publish' : s === 'published' ? 'Republish' : 'Publish now';
+    const draftLabel    = (s) => s === 'in_review' ? (CAN_PUB ? 'Request changes' : 'Withdraw to draft') : s === 'scheduled' ? 'Cancel schedule' : 'Save as draft';
+    const publishTarget = () => CAN_PUB ? 'published' : 'in_review';
     function updatePreviewLink() {
       const btn = document.getElementById('btn-preview-link');
       if (!btn || !previewUrlTemplate) return;
@@ -1073,7 +1083,7 @@
         </div>
       `).join('');
 
-      const actionLabel = { create:'Created', update:'Saved', publish:'Published', unpublish:'Unpublished', delete:'Moved to trash', restore:'Restored' };
+      const actionLabel = { create:'Created', update:'Saved', publish:'Published', unpublish:'Unpublished', delete:'Moved to trash', restore:'Restored', submit_review:'Submitted for review', approve:'Approved', request_changes:'Changes requested' };
       const actHtml = activityData.slice(0,10).map(a=>`
         <div style="display:flex;align-items:baseline;gap:8px;padding:4px 0;border-bottom:1px solid var(--line2);font-size:10px;">
           <span style="color:var(--text);font-weight:500;flex-shrink:0">${actionLabel[a.action]??a.action}</span>
@@ -1120,17 +1130,17 @@
         <div class="meta-section">
           <div class="status-bar">
             <div class="status-dot ${status}" id="status-dot"></div>
-            <div class="status-lbl ${status}" id="status-lbl">${status==='published'?'Published':status==='scheduled'?'Scheduled':'Draft'}</div>
+            <div class="status-lbl ${status}" id="status-lbl">${statusLabel(status)}</div>
             ${status==='scheduled'&&publishAt?`<span style="font-size:10px;color:var(--muted);margin-left:auto">${new Date(publishAt.replace(' ','T')).toLocaleDateString()}</span>`:''}
           </div>
-          <button type="button" class="btn-publish" id="btn-publish">${status==='published'?'Republish':'Publish now'}</button>
-          <button type="button" class="btn-draft"   id="btn-draft">${status==='scheduled'?'Cancel schedule':'Save as draft'}</button>
-          <div class="schedule-picker${status==='scheduled'?' open':''}" id="schedule-picker">
+          <button type="button" class="btn-publish" id="btn-publish" ${!CAN_PUB && status==='in_review' ? 'disabled' : ''}>${publishLabel(status)}</button>
+          <button type="button" class="btn-draft"   id="btn-draft">${draftLabel(status)}</button>
+          <div class="schedule-picker${status==='scheduled'?' open':''}" id="schedule-picker" ${CAN_PUB ? '' : 'hidden'}>
             <input type="datetime-local" class="field-input" id="publish-at-input" value="${publishAtInput}" style="flex:1;font-size:10px;padding:5px 8px;" />
             <button type="button" id="btn-schedule-confirm" style="padding:5px 10px;background:var(--accent);border:none;color:var(--bg0);font-family:var(--mono);font-size:10px;cursor:pointer;border-radius:var(--radius);white-space:nowrap;">Set</button>
           </div>
-          <button type="button" class="btn-schedule" id="btn-schedule">${status==='scheduled'?'Reschedule':'Schedule'}</button>
-          ${status==='published'?`
+          <button type="button" class="btn-schedule" id="btn-schedule" ${CAN_PUB ? '' : 'hidden'}>${status==='scheduled'?'Reschedule':'Schedule'}</button>
+          ${status==='published' && CAN_PUB ?`
           <div class="expiry-picker${unpublishAt?' open':''}" id="expiry-picker">
             <input type="datetime-local" class="field-input" id="unpublish-at-input" value="${unpublishAtInput}" style="flex:1;font-size:10px;padding:5px 8px;" />
             <button type="button" id="btn-expiry-confirm" style="padding:5px 10px;background:var(--bg3);border:1px solid var(--line);color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;border-radius:var(--radius);white-space:nowrap;">Set</button>
@@ -1148,8 +1158,9 @@
             <div class="field-label">Status</div>
             <select class="field-select" id="status-select">
               <option value="draft"     ${status==='draft'     ?'selected':''}>Draft</option>
-              <option value="published" ${status==='published' ?'selected':''}>Published</option>
-              <option value="scheduled" ${status==='scheduled' ?'selected':''}>Scheduled</option>
+              <option value="in_review" ${status==='in_review' ?'selected':''}>In review</option>
+              <option value="published" ${status==='published' ?'selected':''} ${CAN_PUB?'':'disabled'}>Published</option>
+              <option value="scheduled" ${status==='scheduled' ?'selected':''} ${CAN_PUB?'':'disabled'}>Scheduled</option>
             </select>
           </div>
           ${updatedAt ? `<div class="meta-field"><div class="field-label">Modified</div><div class="field-readonly">${new Date(updatedAt).toLocaleDateString()}</div></div>` : ''}
@@ -1285,7 +1296,7 @@
       });
 
       // Publish / draft / schedule buttons
-      document.getElementById('btn-publish').addEventListener('click', () => saveEntry('published'));
+      document.getElementById('btn-publish').addEventListener('click', () => saveEntry(publishTarget()));
       document.getElementById('btn-draft').addEventListener('click',   () => saveEntry('draft'));
       document.getElementById('btn-schedule').addEventListener('click', () => {
         document.getElementById('schedule-picker').classList.toggle('open');
@@ -1299,7 +1310,7 @@
         document.getElementById('expiry-picker').classList.toggle('open');
       });
       document.getElementById('btn-expiry-confirm')?.addEventListener('click', () => {
-        saveEntry('published');
+        saveEntry(publishTarget());
       });
 
       // Version diff
@@ -1444,14 +1455,14 @@
     function updateStatusUI(status) {
       document.getElementById('status-dot').className = 'status-dot ' + status;
       document.getElementById('status-lbl').className = 'status-lbl ' + status;
-      document.getElementById('status-lbl').textContent = status === 'published' ? 'Published' : status === 'scheduled' ? 'Scheduled' : 'Draft';
+      document.getElementById('status-lbl').textContent = statusLabel(status);
       const sel = document.getElementById('status-select');
       if (sel) sel.value = status;
       const publishBtn = document.getElementById('btn-publish');
       const draftBtn   = document.getElementById('btn-draft');
       const schedBtn   = document.getElementById('btn-schedule');
-      if (publishBtn) publishBtn.textContent = status === 'published' ? 'Republish' : 'Publish now';
-      if (draftBtn)   draftBtn.textContent   = status === 'scheduled' ? 'Cancel schedule' : 'Save as draft';
+      if (publishBtn) { publishBtn.textContent = publishLabel(status); publishBtn.disabled = !CAN_PUB && status === 'in_review'; }
+      if (draftBtn)   draftBtn.textContent   = draftLabel(status);
       if (schedBtn)   schedBtn.textContent   = status === 'scheduled' ? 'Reschedule' : 'Schedule';
     }
 
@@ -1985,7 +1996,7 @@
       }
       if (mod && e.shiftKey && (e.key==='s' || e.key==='S')) {
         e.preventDefault();
-        saveEntry('published');
+        saveEntry(publishTarget());
       }
       if (mod && e.shiftKey && (e.key==='p' || e.key==='P')) {
         e.preventDefault();

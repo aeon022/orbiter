@@ -7,7 +7,7 @@ import { readHooks, writeHooks, readLog, newSecret, deliver } from '../webhooks.
 export const webhookRoutes = new Hono();
 webhookRoutes.use('*', requireAdmin);
 
-const EVENTS = ['publish', 'delete', '*'];
+const EVENTS = ['publish', 'delete', 'review', '*'];
 const publicHook = (h) => ({ id: h.id, url: h.url, events: h.events ?? ['*'], signed: !!h.secret });
 
 // GET /api/webhooks → hooks (never their secrets) + recent deliveries

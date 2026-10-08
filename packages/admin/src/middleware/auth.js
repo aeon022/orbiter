@@ -44,6 +44,14 @@ export function allowedCollectionIds(db, user) {
   try { return JSON.parse(raw); } catch { return []; }
 }
 
+// Review workflow (Settings → "Require review before publishing"): when on, only admins and
+// reviewers may publish or schedule; editors can submit for review instead.
+export function canPublish(db, user) {
+  if (!user) return false;
+  if (user.role === 'admin' || user.role === 'reviewer') return true;
+  return db.getMeta('workflow.review') !== '1';
+}
+
 // Middleware: checks if the current user (editor role) is allowed to access collectionId.
 export const requireCollectionAccess = async (c, next) => {
   const user = c.get('user');

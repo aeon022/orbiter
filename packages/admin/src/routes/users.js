@@ -21,7 +21,7 @@ userRoutes.get('/', (c) => {
 userRoutes.post('/', async (c) => {
   const { username, password, role = 'editor' } = await c.req.json();
   if (!username || !password) return c.json({ error: 'username and password are required' }, 400);
-  if (!['admin', 'editor'].includes(role)) return c.json({ error: 'Invalid role' }, 400);
+  if (!['admin', 'reviewer', 'editor'].includes(role)) return c.json({ error: 'Invalid role' }, 400);
 
   const db       = openPod(c.get('podPath'));
   const existing = db.getUserByUsername(username);
@@ -45,7 +45,7 @@ userRoutes.put('/:id', async (c) => {
   const target = users.find(u => u.id === id);
   if (!target) { db.close(); return c.json({ error: 'User not found' }, 404); }
 
-  if (role && ['admin', 'editor'].includes(role)) {
+  if (role && ['admin', 'reviewer', 'editor'].includes(role)) {
     if (id === currentUser.id) { db.close(); return c.json({ error: 'Cannot change your own role' }, 400); }
     db.db.prepare('UPDATE _users SET role = ? WHERE id = ?').run(role, id);
   }

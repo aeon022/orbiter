@@ -1,13 +1,23 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
 import { sendNotification } from '../email.js';
-import { requireCollectionAccess } from '../middleware/auth.js';
+import { requireCollectionAccess, canPublish } from '../middleware/auth.js';
 import { fireHooks } from '../webhooks.js';
 
 export const entryRoutes = new Hono();
 
 // Collection-level permission check for non-admin users
 entryRoutes.use('/:collectionId/*', requireCollectionAccess);
+
+const STATUSES   = new Set(['draft', 'in_review', 'published', 'scheduled']);
+const PUBLISHING = new Set(['published', 'scheduled']);
+
+// Review workflow gate: returns a 403 response if the change would *move an entry into* published/scheduled
+// and the user may not publish. Re-saving an entry that is already in that state (autosave) is not a transition.
+function publishDenied(c, db, status, beforeStatus) {
+  if (!PUBLISHING.has(status) || status === beforeStatus || canPublish(db, c.get('user'))) return null;
+  return c.json({ error: 'Publishing needs a reviewer or admin — submit this entry for review instead' }, 403);
+}
 
 function fireWebhook(podPath, event = 'publish', payload = {}) {
   const db = openPod(podPath);
@@ -27,6 +37,7 @@ entryRoutes.post('/:collectionId/entries/bulk', async (c) => {
   if (!Array.isArray(slugs) || !slugs.length) return c.json({ error: 'slugs required' }, 400);
   if (!['publish', 'draft', 'delete', 'restore', 'permanent'].includes(action)) return c.json({ error: 'Invalid action' }, 400);
   const db = openPod(c.get('podPath'));
+  if (action === 'publish') { const denied = publishDenied(c, db, 'published'); if (denied) { db.close(); return denied; } }
   if (action === 'delete')    { slugs.forEach(slug => db.deleteEntry(collectionId, slug, locale)); }
   else if (action === 'restore')   { slugs.forEach(slug => db.restoreEntry(collectionId, slug, locale)); }
   else if (action === 'permanent') { slugs.forEach(slug => db.permanentDeleteEntry(collectionId, slug, locale)); }
@@ -151,11 +162,13 @@ entryRoutes.post('/:collectionId/entries', async (c) => {
   const { slug, data = {}, status = 'draft', locale = '' } = await c.req.json();
   if (!slug) return c.json({ error: 'slug is required' }, 400);
 
+  if (!STATUSES.has(status)) return c.json({ error: 'Invalid status' }, 400);
   const db = openPod(c.get('podPath'));
   if (!db.getCollection(collectionId)) { db.close(); return c.json({ error: 'Collection not found' }, 404); }
   if (db.getEntry(collectionId, slug, locale)) { db.close(); return c.json({ error: `Entry "${slug}" (${locale || 'default'}) already exists` }, 409); }
+  { const denied = publishDenied(c, db, status); if (denied) { db.close(); return denied; } }
 
-  if (status === 'published' || status === 'scheduled') {
+  if (status === 'published' || status === 'scheduled' || status === 'in_review') {
     const col = db.getCollection(collectionId);
     const schema = col?.schema ? JSON.parse(col.schema) : {};
     const errors = validateFields(schema, data);
@@ -175,22 +188,28 @@ entryRoutes.put('/:collectionId/entries/:slug', async (c) => {
   const body   = await c.req.json();
   const locale = body.locale ?? c.req.query('locale') ?? '';
 
+  if (body.status !== undefined && !STATUSES.has(body.status)) return c.json({ error: 'Invalid status' }, 400);
   const db     = openPod(c.get('podPath'));
+  const before = db.getEntry(collectionId, slug, locale);
+  { const denied = publishDenied(c, db, body.status, before?.status); if (denied) { db.close(); return denied; } }
 
-  if (body.status === 'published' || body.status === 'scheduled') {
+  if (body.status === 'published' || body.status === 'scheduled' || body.status === 'in_review') {
     const col = db.getCollection(collectionId);
     const schema = col?.schema ? JSON.parse(col.schema) : {};
     const errors = validateFields(schema, body.data ?? {});
     if (errors.length) { db.close(); return c.json({ error: 'Validation failed', errors }, 422); }
   }
 
-  const before = db.getEntry(collectionId, slug, locale);
   const ok     = db.updateEntry(collectionId, slug, { ...body, locale });
   if (!ok) { db.close(); return c.json({ error: 'Not found' }, 404); }
   const updated  = db.getEntry(collectionId, body.slug ?? slug, locale);
   const username = c.get('user')?.username ?? 'unknown';
-  if (body.status === 'published' && before?.status !== 'published') {
-    db.logAudit(updated.id, username, 'publish');
+  if (body.status === 'in_review' && before?.status !== 'in_review') {
+    db.logAudit(updated.id, username, 'submit_review');
+  } else if (before?.status === 'in_review' && body.status === 'draft') {
+    db.logAudit(updated.id, username, 'request_changes');
+  } else if (body.status === 'published' && before?.status !== 'published') {
+    db.logAudit(updated.id, username, before?.status === 'in_review' ? 'approve' : 'publish');
   } else if (body.status === 'draft' && before?.status === 'published') {
     db.logAudit(updated.id, username, 'unpublish');
   } else if (body.status === 'scheduled' && before?.status !== 'scheduled') {
@@ -200,6 +219,10 @@ entryRoutes.put('/:collectionId/entries/:slug', async (c) => {
   }
   db.close();
 
+  if (body.status === 'in_review' && before?.status !== 'in_review') {
+    fireWebhook(c.get('podPath'), 'review', { collection: collectionId, slug: body.slug ?? slug });
+    sendNotification(c.get('podPath'), 'review', { collection: collectionId, slug: body.slug ?? slug, username }).catch(()=>{});
+  }
   if (body.status === 'published' && before?.status !== 'published') {
     fireWebhook(c.get('podPath'), 'publish', { collection: collectionId, slug: body.slug ?? slug });
     sendNotification(c.get('podPath'), 'publish', { collection: collectionId, slug: body.slug ?? slug, username }).catch(()=>{});
@@ -324,7 +347,7 @@ entryRoutes.post('/:collectionId/entries/import.csv', async (c) => {
     for (const h of headers.filter(h => h !== 'slug' && h !== 'status')) {
       data[h] = row[h];
     }
-    const status = ['draft','published'].includes(row.status) ? row.status : 'draft';
+    const status = ['draft','published'].includes(row.status) && (row.status === 'draft' || canPublish(db, c.get('user'))) ? row.status : 'draft';
     if (db.getEntry(collectionId, row.slug)) {
       db.updateEntry(collectionId, row.slug, { slug: row.slug, data, status });
       updated++;
@@ -357,17 +380,22 @@ entryRoutes.post('/:collectionId/entries/:slug/duplicate', (c) => {
 entryRoutes.patch('/:collectionId/entries/:slug/status', async (c) => {
   const { collectionId, slug } = c.req.param();
   const { status, publish_at, unpublish_at, locale = '' } = await c.req.json();
-  if (!['draft', 'published', 'scheduled'].includes(status)) return c.json({ error: 'Invalid status' }, 400);
+  if (!STATUSES.has(status)) return c.json({ error: 'Invalid status' }, 400);
   if (status === 'scheduled' && !publish_at) return c.json({ error: 'publish_at required for scheduled status' }, 400);
   const db    = openPod(c.get('podPath'));
   const entry = db.getEntry(collectionId, slug, locale);
   if (!entry) { db.close(); return c.json({ error: 'Not found' }, 404); }
+  { const denied = publishDenied(c, db, status, entry.status); if (denied) { db.close(); return denied; } }
   const pa  = status === 'scheduled' ? publish_at : null;
   const ua  = status === 'published' ? (unpublish_at ?? null) : null;
   db.updateEntry(collectionId, slug, { slug, data: entry.data, status, publish_at: pa, unpublish_at: ua, locale });
   const username = c.get('user')?.username ?? 'unknown';
   if (status === 'scheduled') db.logAudit(entry.id, username, 'schedule');
+  else if (status === 'in_review' && entry.status !== 'in_review') db.logAudit(entry.id, username, 'submit_review');
+  else if (status === 'published' && entry.status === 'in_review') db.logAudit(entry.id, username, 'approve');
+  else if (status === 'draft' && entry.status === 'in_review') db.logAudit(entry.id, username, 'request_changes');
   db.close();
+  if (status === 'in_review' && entry.status !== 'in_review') fireWebhook(c.get('podPath'), 'review', { collection: collectionId, slug });
   if (status === 'published') fireWebhook(c.get('podPath'), 'publish', { collection: collectionId, slug });
   return c.json({ ok: true });
 });
