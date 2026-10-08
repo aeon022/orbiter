@@ -7,11 +7,22 @@
 
 ---
 
+## 0. Der Faden in 10 Zeilen (zuerst lesen)
+
+- **Alles Geplante vom 2026-10-08 ist gebaut, getestet, gepusht und auf npm veröffentlicht** (core 0.3.21, admin 0.3.88, integration 0.3.22, mcp 0.1.5, client 0.1.4, cli 0.3.15). Der Demo-Server läuft nicht mehr.
+- **Als Nächstes (in dieser Reihenfolge):** (1) User-Klick-Durchgang → Funde nachliefern, (2) CVE-IDs der 6 Advisories abwarten/prüfen (aktuell `pending`) und Adrian kurz Bescheid geben, (3) CSP von Report-Only auf *enforcing* (erst Inline-Handler umbauen), (4) Obsidian-Plugin v1 + Web-Clipper über einen REST-Ingest-Endpunkt, (5) die fünf offenen Entscheidungen zum Plugin-System (`PLUGIN-CONCEPT.md`).
+- **Bekannte offene UI-Kleinigkeit:** Auf der Schema-Seite wirken „Export schema", „+ Add field", „Rename field" und das Feld „Apply template…" im **dunklen** Modus weiß/hart (im hellen unauffällig). User wurde gefragt, ob angleichen — Antwort steht aus.
+- **Offene Idee:** Titel der Editor-Karte („Details") pro Collection konfigurierbar machen (z. B. „Veranstaltungsdaten").
+- Browser-Tests kann ich selbst (headless Chrome + Screenshots, siehe Verlauf 14); der User will trotzdem selbst klicken.
+- Am Sessionende: diese Datei aktualisieren, committen, pushen; danach `claude_push` (siehe Abschnitt 7) — wenn der User es verlangt.
+
+---
+
 ## 1. Aktueller Stand (Stand: 2026-10-08, Abend)
 
 - Repo: `~/Sites/orbiter` (github.com/aeon022/orbiter), Branch `main`, **alles gepusht und veröffentlicht**, HEAD siehe `git log -1`.
 - **Nichts ist uncommittet** außer den bekannten untracked Marketing-Dateien (`content/docs/`, `content/posts/*hackernews-human.md`, `content/posts/postctl_ready/`, `.claude/`) — gehören nicht zu den Orbiter-Fixes, nicht anfassen.
-- Landing-Seite deployt automatisch bei Push auf `main` (GitHub Actions → `deploy/landing`). Der Changelog dort nennt bereits die **noch nicht veröffentlichten** Versionen (siehe unten).
+- Landing-Seite deployt automatisch bei Push auf `main` (GitHub Actions → `deploy/landing`). Der Changelog dort nennt die jetzt veröffentlichten Versionen.
 
 ### npm-Stand
 
@@ -19,7 +30,7 @@
 
 → **Beim nächsten Release** wieder Runbook (Abschnitt 6) und die Versionen erst bumpen.
 
-### Sicherheits-Advisories (GitHub, alle veröffentlicht, CVE jeweils angefragt — IDs noch prüfen)
+### Sicherheits-Advisories (GitHub, alle veröffentlicht, CVE jeweils angefragt — Stand 2026-10-08 abends bei allen sechs noch `pending`)
 
 | GHSA | Thema | Fix in |
 |---|---|---|
@@ -52,11 +63,12 @@ Ausgangspunkt: User wollte bei den Security-Sachen weitermachen; drei Advisories
 9. Obsidian-Plugin-Idee des Users → auf die Roadmap gesetzt (Version 1 = Push als Entwurf).
 10. Dieses `stage.md` angelegt und ins Git genommen.
 11. **Roadmap erweitert** (Agent Proposals, Semantic Search, Verifiable Content, Claims, Freshness, POSSE, Privacy-Tools, Open POD Spec) und **Editor-Layout umgebaut**: Custom Fields wandern aus der Sidebar in eine **einklappbare „Details“-Karte** (Titel „Details“ statt „Fields“ — User-Wunsch nach anderem Namen; Alternativen waren Fieldsets/Properties) im Hauptbereich (zwischen Titel und Body, 2 Spalten, Zustand pro Collection in localStorage `orb_fields_collapsed_<collection>`); Collections ohne `body` blenden Block-Toolbar aus. Zusätzlich gefunden/gefixt: Validierungs-Banner beim Veröffentlichen wurde nie angezeigt (Selektor `.meta-panel-inner` existiert nicht). Logik per jsdom getestet, **optisch noch nicht gesehen** (steht in der Klick-Checkliste).
-12. **Station-Mode-Bug:** Dock-Popups (`.xfce-tools-popup`, auch Collection-Drawer) hatten kein `max-height`/`overflow` → lange Listen liefen aus dem Bildschirm und scrollten nicht. Gefixt (CSS + `fitLeftPopup()` in `xfce.js`). Demo-Pod hat dafür 16 Collections unter „Library“.
-13. **Schema-Seite im Station-Mode:** Dokument war `overflow:hidden` (Seite definiert `html,body,.app {height:100%; overflow:hidden}`, im Station-Mode gibt es aber keine App-Shell mit eigenem Scrollbereich) → alles unter dem Dock unerreichbar. Gefixt in `schema.html` (Dokument scrollt, Collections-Liste sticky mit eigenem Scroll). Gefunden anhand eines Screenshots des Users.
-14. **Echter Browser für Tests:** `puppeteer-core` + lokales Chrome (`/Applications/Google Chrome.app`) funktioniert headless; Skripte lagen im Scratchpad (`pp/shot.cjs` Screenshot+Scroll-Messung, `pp/sweep.cjs` Scroll-Check aller Seiten im Station-Mode, `pp/probe.cjs` Popups). Damit können optische Checks selbst gemacht werden (Screenshot per Read ansehen). Station-Mode wird per `localStorage.orb_style='xfce'` erzwungen, Login per `fetch('/api/auth/login')` im Seitenkontext. Demo-Pod: `scratchpad/demo/seed.mjs` (+ `more.mjs`, `groups.mjs`), Server `ORBITER_POD=… PORT=4399`. Dock-Drawer entstehen aus Meta `nav.groups` (JSON `{Gruppe:[ids]}`), nicht aus `parent`.
+12. **Station-Mode-Bug:** Dock-Popups (`.xfce-tools-popup`, auch Collection-Drawer) hatten kein `max-height`/`overflow` → lange Listen liefen aus dem Bildschirm und scrollten nicht. Gefixt (CSS + `fitLeftPopup()` in `xfce.js`). (Die Test-Collections „Shelf 1–16“/„Library“ in der Demo-Pod wurden danach wieder entfernt.)
+13. **Schema-Seite im Station-Mode:** Dokument war `overflow:hidden` (Seite definiert `html,body,.app {height:100%; overflow:hidden}`, im Station-Mode gibt es aber keine App-Shell mit eigenem Scrollbereich) → alles unter dem Dock unerreichbar. Gefixt in `schema.html` (Dokument scrollt, Collections-Liste sticky mit eigenem Scroll). Gefunden anhand eines Screenshots des Users; danach per headless Chrome verifiziert (Dokument scrollt, Save/Delete erreichbar).
+14. **Echter Browser für Tests:** `puppeteer-core` + lokales Chrome (`/Applications/Google Chrome.app`) funktioniert headless; Skripte lagen im Scratchpad (`pp/shot.cjs` Screenshot+Scroll-Messung, `pp/sweep.cjs` Scroll-Check aller Seiten im Station-Mode, `pp/probe.cjs` Popups). Damit können optische Checks selbst gemacht werden (Screenshot per Read ansehen). Station-Mode wird per `localStorage.orb_style='xfce'` erzwungen, Login per `fetch('/api/auth/login')` im Seitenkontext. Demo-Pod: `scratchpad/demo/seed.mjs` (Posts mit Body+Gruppen, Events ohne Body, Notes, Authors), Server `ORBITER_POD=… PORT=4399`. Dock-Drawer entstehen aus Meta `nav.groups` (JSON `{Gruppe:[ids]}`), nicht aus `parent`. **Ergebnisse des Browser-Checks:** alle 19 Admin-Seiten scrollen im Station-Mode (Graph bewusst Vollbild-Canvas); Editor-Innenscroll ok; Dock-Popups (16 Einträge, niedriges Fenster) bleiben im Fenster und scrollen; die „Details“-Karte sieht bei Posts und Events gut aus.
 15. **Release 3 veröffentlicht** (alle sechs Pakete, siehe npm-Stand) und `claude_push` ausgeführt (committet/pusht `~/.claude` — `projects/`, `history.jsonl`, `settings.json` — nach github.com/aeon022/claude-sync, privat; die Shell-Funktion steht in `~/.config/zsh/converters.zsh`, Gegenstück `claude_pull`). Der Demo-Server (Port 4399) wurde beendet, Shelves/Library-Testdaten aus der Demo entfernt.
-16. **Plugin-Ideen** gesammelt (Abschnitt 11 in `PLUGIN-CONCEPT.md`) und die **Docs-Seite „Webhook recipes"** gebaut (`/docs/webhook-recipes`): Empfänger-Skript mit Signaturprüfung + Handler für Slack/Telegram, IndexNow, Cloudflare, Mastodon. Das Empfänger-Skript wurde gegen echte signierte Zustellungen getestet (Ping ignoriert, Publish erkannt, Fälschung ergibt 401).
+16. **Release 3 bestätigt:** nach der Registry-Verzögerung (Minuten) zeigte `npm view` alle sechs Pakete mit den neuen Versionen; CVE-IDs aller sechs Advisories noch `pending`.
+17. **Plugin-Ideen** gesammelt (Abschnitt 11 in `PLUGIN-CONCEPT.md`) und die **Docs-Seite „Webhook recipes"** gebaut (`/docs/webhook-recipes`): Empfänger-Skript mit Signaturprüfung + Handler für Slack/Telegram, IndexNow, Cloudflare, Mastodon. Das Empfänger-Skript wurde gegen echte signierte Zustellungen getestet (Ping ignoriert, Publish erkannt, Fälschung ergibt 401).
 
 ---
 
@@ -103,8 +115,8 @@ Ausgangspunkt: User wollte bei den Security-Sachen weitermachen; drei Advisories
 
 ## 5. Offen / nächste Schritte (in dieser Reihenfolge)
 
-1. **Klick-Durchgang im Browser** (Release ist schon draußen — Funde jetzt als Fixes nachliefern; ein Teil wurde mit headless Chrome bereits geprüft: Schema/Editor/Popups/Scroll im Station-Mode) — Checkliste steht in `SECURITY-TODO.md` (Abschnitt „KLICK-CHECKLISTE"). Station-Mode **und** Classic, dunkel + hell. Bisher ist *nichts* davon im Browser gesehen worden (nur curl/Unit-Tests).
-2. ~~Release~~ erledigt; **offen:** `npm view` aller sechs Pakete prüfen (Registry-Verzögerung), CVE-IDs der Advisories prüfen.
+1. **Klick-Durchgang im Browser (User)** — Checkliste in `SECURITY-TODO.md` („KLICK-CHECKLISTE"), Station-Mode **und** Classic, dunkel + hell. Bereits mit headless Chrome geprüft: Schema-Seite, Editor-Details-Karte (Posts/Events), Dock-Popups, Scrollen aller Seiten im Station-Mode. **Noch ungesehen:** Account (2FA/Sessions), Key-Dialog, Webhooks-UI, Review-Workflow-UI, Diff-Dialog, Media-Fokuspunkt/Filter, Terminal-Theme überall, Desktop-App. Funde werden als Fixes nachgeliefert (Release ist schon draußen → nächster Patch-Release).
+2. **Advisories:** CVE-IDs sind für alle sechs noch `pending` → später prüfen (`gh api repos/aeon022/orbiter/security-advisories/<GHSA> --jq .cve_id`); sobald Adrians drei vergeben sind, ihm kurz schreiben. Offen auch: Schema-Seite im dunklen Modus (weiße Buttons) angleichen? (Frage an User offen.)
 3. **CSP enforcing:** nach dem Klick-Durchgang die gesammelten Reports ansehen, ~93 Inline-Handler (editor.html 77, forms.html 10, graph.html 3, analytics/entries/schema je 1) in `addEventListener`/Delegation umbauen (Handler rufen globale Funktionen und enthalten teils JS-Ausdrücke → nicht mechanisch), dann Header auf `Content-Security-Policy` (enforcing) umstellen. Erst wenn Reports leer sind.
 4. **Obsidian-Plugin v1 + Web-Clipper:** REST-Ingest-Endpunkt (Draft-Write-Key, Upsert per Slug über Frontmatter), Plugin (Push als Entwurf), README mit Sicherheitshinweis (Key liegt im Vault/`data.json` und wird ggf. mitgesynct → Draft-Only + Collection-Limit + Ablauf empfehlen). v2: Pull + Konflikterkennung. Bilder in v1 nur Links (Medien-Upload braucht heute Admin-Session).
 5. **Plugin-Ideen-Reihenfolge** (aus `PLUGIN-CONCEPT.md` §11): D Webhook-Rezepte (erledigt) → C Clipper/Obsidian über denselben Ingest-Endpunkt → A JSON-LD-Builder als erstes Feld-Plugin → B Transforms erst nach Entscheidung.
@@ -114,7 +126,7 @@ Ausgangspunkt: User wollte bei den Security-Sachen weitermachen; drei Advisories
 
 ---
 
-## 6. Release-Runbook (so haben wir es zweimal gemacht, hat funktioniert)
+## 6. Release-Runbook (so haben wir es dreimal gemacht, hat funktioniert)
 
 Voraussetzungen: Arbeitsbaum sauber (`git status` ohne tracked Änderungen), Tests grün, Landing-Build grün, `npm whoami` → `aeon022`. **npm-Automation-Token läuft am 2026-11-05 ab** (Memory `reference_npm_token_expiry`).
 
@@ -136,6 +148,8 @@ Voraussetzungen: Arbeitsbaum sauber (`git status` ohne tracked Änderungen), Tes
 - MCP-HTTP testen: `ORBITER_MCP_HTTP=1 PORT=4511 node packages/mcp/src/server.js`, Header `Accept: application/json, text/event-stream`, JSON-RPC `tools/list` / `tools/call`.
 - Landing bauen: `cd apps/landing && npx astro build` (**immer vor dem Push**; geschweifte Klammern in `.astro`-Text müssen als `&#123; &#125;` geschrieben werden, sonst Build-Fehler — ist uns einmal passiert).
 - Dev-Ports (Memory): Orbiter-Admin-Dev 4399, Blog 4322, Astro 4321.
+- **Browser-Check (headless Chrome):** `npm i puppeteer-core` in einem Scratch-Ordner, `executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'`, `headless: 'new'`; Station-Mode per `evaluateOnNewDocument(() => localStorage.setItem('orb_style','xfce'))`, Login per `fetch('/api/auth/login')` im Seitenkontext, Screenshot speichern und mit Read ansehen. Scroll prüfen: `document.scrollingElement.scrollHeight` vs. `innerHeight` und `window.scrollTo`.
+- **Session abschließen:** `claude_push` (Shell-Funktion in `~/.config/zsh/converters.zsh`) committet/pusht `~/.claude` (`projects/`, `history.jsonl`, `settings.json`) nach github.com/aeon022/claude-sync (privat); Gegenstück `claude_pull` bzw. `dev_start` vor dem Arbeiten. Läuft ~2 Minuten (LFS-Upload), deshalb im Hintergrund laufen lassen.
 - Syntaxcheck der Inline-Skripte in HTML-Dateien: Skript-Blöcke per Regex extrahieren und `node --check` (haben wir für alle geänderten Seiten gemacht).
 
 ---
@@ -149,6 +163,11 @@ Voraussetzungen: Arbeitsbaum sauber (`git status` ohne tracked Änderungen), Tes
 - Die zsh-Meldung `compdef:153: _comps: assignment to invalid subscript range` ist harmloses Rauschen der Shell-Initialisierung.
 - Hono: Middleware per `use()` gilt nur für **später registrierte** Handler → Reihenfolge beachten (Ursache des Singleton-Bugs aus Adrians Report; auch der CSV-Export wurde von `/:slug` verschluckt).
 - Astro: `.astro`-Text mit `{…}` ist ein Ausdruck (siehe oben).
+- **npm-Registry-Verzögerung:** direkt nach `npm publish` zeigt `npm view` noch die alte Version (Minuten). Erst core abwarten, dann den Rest; am Ende alle Pakete gegenprüfen (Hintergrund-Schleife mit `until … sleep 30`).
+- **CSP Report-Only meldet Inline-Handler erst beim Auslösen** (Klick) — ein stummer Seitenaufruf erzeugt keine Reports.
+- `rm -f pfad*` mit Glob bricht in zsh eine `&&`-Kette ab, wenn nichts passt → Dateien einzeln nennen.
+- Python-Heredocs: Anführungszeichen im Text (z. B. „Webhook recipes" mit ASCII-`"`) können den String beenden → mit `'''`/`<<'PYEOF'` und ohne ASCII-Quotes im Text arbeiten, Ergebnis immer prüfen (ein Mal wurde so eine Änderung nicht geschrieben).
+- Hintergrund-Tasks melden sich per Benachrichtigung; „failed exit 144" nach `pkill` ist nur das Beenden des Servers.
 - Editor-`editor.html` (≈3.400 Zeilen) hat Feldtypen inline, keine Registry — Voraussetzung für Plugins (Phase 0 im Konzept).
 - Das Pod-File enthält **alles** (Hashes, Sessions, Secrets). Der `orbiter init`-Workflow committet es absichtlich ins Git → Docs warnen, `orbiter doctor` meldet es, Secrets lassen sich mit `ORBITER_SECRET` verschlüsseln.
 
@@ -159,7 +178,7 @@ Voraussetzungen: Arbeitsbaum sauber (`git status` ohne tracked Änderungen), Tes
 - Will **konkrete Umsetzung**, kurze klare Rückmeldungen; bei Mehrdeutigkeit lieber sinnvoll entscheiden und es sagen als mehrfach nachfragen.
 - Veröffentlichen (npm, Advisories, Push) macht er bewusst — vorher kurz fragen, dann durchführen. „passt"/„ja"/„mach das" = Freigabe für den zuletzt vorgeschlagenen Schritt.
 - Bevorzugt eine **sinnvolle Reihenfolge** („mach eine Reihenfolge, die arbeiten wir ab") und dass wir Dinge **abarbeiten**, ohne dass er jeden Schritt anstößt.
-- Klick-Tests im Browser macht **er** (am Wochenende vor dem Release); ich kann keinen Browser bedienen und muss das offen sagen.
+- Klick-Tests im Browser macht **er** gern selbst; ich kann zusätzlich mit headless Chrome Screenshots/Messungen machen (siehe Verlauf 14) und muss offen sagen, was ich nur so und was ich gar nicht gesehen habe.
 - Nutzt Station Mode (xfce/glass) — dort testen (Memory `user_station_mode`).
 - Wichtig: ehrlich berichten, was **nicht** getestet wurde.
 
