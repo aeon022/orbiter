@@ -3,6 +3,7 @@ import { openPod, getMediaBackend, mediaResponseHeaders } from '@a83/orbiter-cor
 import { randomUUID } from 'node:crypto';
 import sharp from 'sharp';
 import { safeFetch } from '../net.js';
+import { allowedCollectionIds } from '../middleware/auth.js';
 
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/tiff']);
 
@@ -37,6 +38,35 @@ mediaRoutes.get('/', (c) => {
   const items  = db.listMedia(folder);
   db.close();
   return c.json(items);
+});
+
+// GET /api/media/usage — where each file is referenced, which files are unused, which references are broken.
+// References are found by media id inside entry data (that's how pickers and /orbiter/media/<id> URLs store them).
+// Trashed entries count as references (they can be restored). Entries from collections the caller may not see are
+// counted but never named.
+const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g;
+const MEDIA_URL_RE = /media\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/g;
+mediaRoutes.get('/usage', (c) => {
+  const db = openPod(c.get('podPath'));
+  const allowed = allowedCollectionIds(db, c.get('user'));
+  const ids = new Set(db.db.prepare('SELECT id FROM _media').all().map(r => r.id));
+  const usage = {};
+  const broken = [];
+  for (const e of db.db.prepare('SELECT collection_id, slug, data FROM _entries').all()) {
+    const visible = !allowed || allowed.includes(e.collection_id);
+    let title = e.slug; try { title = JSON.parse(e.data).title || e.slug; } catch {}
+    for (const m of new Set(e.data.match(UUID_RE) ?? [])) {
+      if (!ids.has(m)) continue;
+      const u = (usage[m] ??= { count: 0, entries: [] });
+      u.count++;
+      if (visible) u.entries.push({ collection: e.collection_id, slug: e.slug, title });
+    }
+    if (visible) for (const [, m] of e.data.matchAll(MEDIA_URL_RE)) {
+      if (!ids.has(m)) broken.push({ collection: e.collection_id, slug: e.slug, title, mediaId: m });
+    }
+  }
+  db.close();
+  return c.json({ usage, unused: [...ids].filter(id => !usage[id]), broken });
 });
 
 // GET /api/media/:id/raw  — serve binary or redirect to CDN

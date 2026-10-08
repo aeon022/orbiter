@@ -40,3 +40,21 @@ test('db: plaintext stays plaintext without ORBITER_SECRET, migrates + roundtrip
     db.close();
   } finally { delete process.env.ORBITER_SECRET; rmSync(dir, { recursive: true, force: true }); }
 });
+
+test('restoreVersion keeps the content it replaces as a new version', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'orb-ver-'));
+  try {
+    const p = join(dir, 'v.pod'); createPod(p);
+    const db = openPod(p);
+    db.createCollection('posts', 'Posts', {}, false);
+    db.createEntry('posts', 'a', { title: 'one' }, 'draft');
+    db.updateEntry('posts', 'a', { slug: 'a', data: { title: 'two' } });           // snapshot: one
+    const e = db.getEntry('posts', 'a');
+    const v = db.db.prepare('SELECT id FROM _versions WHERE entry_id = ?').get(e.id);
+    assert.ok(db.restoreVersion(e.id, v.id));
+    assert.equal(db.getEntry('posts', 'a').data.title, 'one');
+    const snaps = db.db.prepare('SELECT data FROM _versions WHERE entry_id = ?').all(e.id).map(r => JSON.parse(r.data).title);
+    assert.ok(snaps.includes('two'), 'the replaced content must be recoverable');
+    db.close();
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});

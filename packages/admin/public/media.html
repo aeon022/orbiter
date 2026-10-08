@@ -113,9 +113,11 @@
     const fmtSize = b => b < 1048576 ? (b/1024).toFixed(1)+' KB' : (b/1048576).toFixed(1)+' MB';
     const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     let allMedia = [];
+    let usage = { usage: {}, unused: [], broken: [] };
 
     async function loadMedia() {
       allMedia = await fetch('/api/media',{credentials:'include'}).then(r=>r.json());
+      usage = await fetch('/api/media/usage',{credentials:'include'}).then(r=>r.ok?r.json():usage).catch(()=>usage);
       document.getElementById('media-count').textContent = `${allMedia.length} asset${allMedia.length!==1?'s':''}`;
       renderFilterBar();
       renderGrid(allMedia);
@@ -139,6 +141,8 @@
         ${hasImage ? `<button class="filter-btn" data-f="image">Images</button>` : ''}
         ${hasVideo ? `<button class="filter-btn" data-f="video">Video</button>` : ''}
         ${hasPdf   ? `<button class="filter-btn" data-f="pdf">PDF</button>` : ''}
+        ${usage.unused.length ? `<button class="filter-btn" data-f="unused" title="Not referenced by any entry">Unused (${usage.unused.length})</button>` : ''}
+        ${usage.broken.length ? `<button class="filter-btn" data-f="broken" title="Entries pointing at a file that no longer exists" style="color:var(--red)">Broken refs (${usage.broken.length})</button>` : ''}
         ${folders.map(f=>`<button class="filter-btn" data-f="folder:${esc(f)}">${esc(f)}</button>`).join('')}
       `;
       bar.querySelectorAll('.filter-btn').forEach(btn=>btn.addEventListener('click', ()=>{
@@ -150,8 +154,18 @@
         else if (f==='video')          filtered = allMedia.filter(m=>m.mime_type.startsWith('video/'));
         else if (f==='pdf')            filtered = allMedia.filter(m=>m.mime_type==='application/pdf');
         else if (f.startsWith('folder:')) filtered = allMedia.filter(m=>m.folder===f.slice(7));
+        else if (f==='unused')         filtered = allMedia.filter(m=>usage.unused.includes(m.id));
+        if (f==='broken') { renderBroken(); return; }
         renderGrid(filtered);
       }));
+    }
+
+    function renderBroken() {
+      document.getElementById('media-grid-wrap').innerHTML = `<div style="padding:8px 4px;font-size:12px">
+        <div style="color:var(--muted);margin-bottom:10px">These entries point at media that was deleted. Open the entry and pick the file again.</div>
+        ${usage.broken.map(b=>`<div style="padding:6px 0;border-bottom:1px solid var(--line2)">
+          <a href="/editor.html?collection=${encodeURIComponent(b.collection)}&slug=${encodeURIComponent(b.slug)}" style="color:var(--accent)">${esc(b.title)}</a>
+          <span style="color:var(--muted)"> · ${esc(b.collection)} · missing ${esc(b.mediaId.slice(0,8))}…</span></div>`).join('')}</div>`;
     }
 
     function renderGrid(items) {
@@ -170,6 +184,7 @@
           <div class="media-info">
             <div class="media-name" title="${esc(m.filename)}">${esc(m.filename)}</div>
             <div class="media-meta"><span>${fmtSize(m.size)}</span><span>${esc(m.folder||m.created_at?.split(' ')[0]||'')}</span></div>
+            <div class="media-meta" style="font-size:9px;color:${usage.usage[m.id] ? 'var(--jade)' : 'var(--muted)'}" title="${esc((usage.usage[m.id]?.entries??[]).map(e=>e.title).join(', '))}">${usage.usage[m.id] ? `used in ${usage.usage[m.id].count} entr${usage.usage[m.id].count===1?'y':'ies'}` : 'unused'}</div>
           </div>
           <div class="media-overlay">
             <button class="btn-copy-url" data-id="${m.id}">Copy URL</button>
@@ -187,7 +202,8 @@
       }));
 
       wrap.querySelectorAll('.btn-del-media').forEach(btn=>btn.addEventListener('click', async ()=>{
-        if (!confirm('Delete this file?')) return;
+        const u = usage.usage[btn.dataset.id];
+        if (!confirm(u ? `This file is used in ${u.count} entr${u.count===1?'y':'ies'}${u.entries.length ? ' (' + u.entries.slice(0,5).map(e=>e.title).join(', ') + (u.entries.length>5?', …':'') + ')' : ''}. Deleting it breaks those references. Delete anyway?` : 'Delete this file?')) return;
         await fetch(`/api/media/${btn.dataset.id}`,{method:'DELETE',credentials:'include'});
         loadMedia();
       }));

@@ -744,6 +744,39 @@
     document.getElementById('collection-id-display').textContent = COLLECTION;
 
     // Load collection schema + entry + locale meta
+    // ── Version diff helpers ──────────────────────────────────────────
+    const dEsc = (v) => String(v ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    // Line diff via LCS. Returns [{t:'=' | '-' | '+', v}]. Large texts fall back to "all removed / all added".
+    function lineDiff(a, b) {
+      const x = a.split('\n'), y = b.split('\n');
+      if (x.length * y.length > 4_000_000) return [...x.map(v => ({ t: '-', v })), ...y.map(v => ({ t: '+', v }))];
+      const L = Array.from({ length: x.length + 1 }, () => new Uint32Array(y.length + 1));
+      for (let i = x.length - 1; i >= 0; i--) for (let j = y.length - 1; j >= 0; j--)
+        L[i][j] = x[i] === y[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+      const out = []; let i = 0, j = 0;
+      while (i < x.length && j < y.length) {
+        if (x[i] === y[j]) { out.push({ t: '=', v: x[i] }); i++; j++; }
+        else if (L[i + 1][j] >= L[i][j + 1]) out.push({ t: '-', v: x[i++] });
+        else out.push({ t: '+', v: y[j++] });
+      }
+      while (i < x.length) out.push({ t: '-', v: x[i++] });
+      while (j < y.length) out.push({ t: '+', v: y[j++] });
+      return out;
+    }
+    const asText = (v) => v == null ? '' : typeof v === 'string' ? v : JSON.stringify(v, null, 2);
+    // Field-by-field diff of two data objects → HTML (changed fields only).
+    function diffHtml(oldData, newData, labels = {}) {
+      const keys = [...new Set([...Object.keys(oldData), ...Object.keys(newData)])];
+      const blocks = keys.map(k => {
+        const a = asText(oldData[k]), b = asText(newData[k]);
+        if (a === b) return '';
+        const lines = lineDiff(a, b).map(o =>
+          `<div style="white-space:pre-wrap;word-break:break-word;padding:1px 8px;${o.t === '-' ? 'background:var(--red-bg);color:var(--red)' : o.t === '+' ? 'background:var(--jade-bg);color:var(--jade)' : 'color:var(--muted)'}">${o.t === '=' ? '&nbsp;&nbsp;' : o.t}  ${dEsc(o.v) || '&nbsp;'}</div>`).join('');
+        return `<div style="margin-bottom:12px"><div style="font-size:10px;color:var(--mid);margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">${dEsc(labels[k] || k)}</div><div style="font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:6px;overflow:hidden">${lines}</div></div>`;
+      }).filter(Boolean);
+      return blocks.join('') || '<div style="color:var(--muted);font-size:12px">No differences — this version has the same content as the saved entry.</div>';
+    }
+
     const [colData, entryData, versionsData, activityData, mediaData, commentsData, siteLocalesMeta, entryLocalesData] = await Promise.all([
       fetch(`/api/collections/${COLLECTION}`,{credentials:'include'}).then(r=>r.ok?r.json():null),
       IS_NEW ? null : fetch(`/api/collections/${COLLECTION}/entries/${SLUG}${localeQ}`,{credentials:'include'}).then(r=>r.ok?r.json():null),
@@ -1021,12 +1054,16 @@
         fieldsSectionHtml = `<div class="meta-section"><div class="meta-label">Fields</div>${fieldGroupMap['_ungrouped'] || ''}</div>`;
       }
 
-      const versHtml = versionsData.slice(0,8).map((v,i)=>`
+      // Snapshots are the content *before* each save, so every one of them can be restored; "Current" is the saved entry.
+      const versHtml = `
+        <div class="version-row"><div class="v-dot cur"></div><div class="v-hash">Current</div></div>
+      ` + versionsData.slice(0,8).map((v)=>`
         <div class="version-row" data-vid="${v.id}">
-          <div class="v-dot${i===0?' cur':''}"></div>
+          <div class="v-dot"></div>
           <div class="v-hash">${v.id.slice(0,7)}</div>
-          <div class="v-time">${new Date(v.created_at).toLocaleDateString()}</div>
-          ${i===0 ? '' : `<button class="btn-row v-restore-btn" data-vid="${v.id}" style="margin-left:auto;font-size:9px;padding:2px 6px">Restore</button>`}
+          <div class="v-time">${new Date(v.created_at.replace(' ','T') + 'Z').toLocaleString()}</div>
+          <button class="btn-row v-diff-btn" data-vid="${v.id}" style="margin-left:auto;font-size:9px;padding:2px 6px">Diff</button>
+          <button class="btn-row v-restore-btn" data-vid="${v.id}" style="font-size:9px;padding:2px 6px">Restore</button>
         </div>
       `).join('');
 
@@ -1259,10 +1296,32 @@
         saveEntry('published');
       });
 
+      // Version diff
+      panel.querySelectorAll('.v-diff-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const targetSlug = currentSlug || SLUG;
+          const ver = await fetch(`/api/collections/${COLLECTION}/entries/${targetSlug}/versions/${btn.dataset.vid}`, { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+          if (!ver) return alert('Could not load that version.');
+          const labels = Object.fromEntries(Object.entries(schema).map(([k, f]) => [k, f.label || k]));
+          const dlg = document.createElement('dialog');
+          dlg.style.cssText = 'background:var(--bg1);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:20px;width:min(760px,94vw);max-height:84vh;overflow:auto';
+          dlg.innerHTML = `
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+              <div style="font-size:14px;color:var(--heading);flex:1">Changes if you restore ${dEsc(btn.dataset.vid.slice(0,7))}</div>
+              <span style="font-size:10px;color:var(--muted)"><span style="color:var(--red)">− saved now</span> · <span style="color:var(--jade)">+ this version</span></span>
+              <button type="button" class="btn-row" id="diff-close">Close</button>
+            </div>${diffHtml(entryData?.data ?? {}, ver.data, labels)}`;
+          document.body.appendChild(dlg);
+          dlg.querySelector('#diff-close').addEventListener('click', () => dlg.close());
+          dlg.addEventListener('close', () => dlg.remove());
+          dlg.showModal();
+        });
+      });
+
       // Version restore buttons
       panel.querySelectorAll('.v-restore-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
-          if (!confirm('Restore this version? Current content will be overwritten.')) return;
+          if (!confirm('Restore this version? The current content is kept as a version, so you can undo this.')) return;
           const vid = btn.dataset.vid;
           const targetSlug = currentSlug || SLUG;
           const res = await fetch(`/api/collections/${COLLECTION}/entries/${targetSlug}/versions/${vid}/restore`, {

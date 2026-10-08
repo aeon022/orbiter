@@ -80,6 +80,9 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
   </tbody>
 </table>
 
+<h2>Version history and diff</h2>
+<p>Each save keeps the previous content as a version (the last 20). In the sidebar's <strong>History</strong>, <strong>Diff</strong> shows, field by field, what would change if you restored that version (red = saved now, green = that version); <strong>Restore</strong> brings it back. Restoring keeps the content it replaces as a new version, so you can always undo a restore.</p>
+
 <h2>Preview URL</h2>
 <p>Set a preview URL template per collection in <strong>Schema → (collection) → Preview URL</strong>. Use <code>&#123;slug&#125;</code> as a placeholder:</p>
 <pre>https://mysite.com/posts/&#123;slug&#125;</pre>

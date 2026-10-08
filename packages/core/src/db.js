@@ -422,6 +422,9 @@ export class OrbiterDB {
     const ver = this.db.prepare('SELECT * FROM _versions WHERE id = ? AND entry_id = ?').get(versionId, entryId);
     if (!ver) return false;
     const now = sqliteNow();
+    // Keep what is being replaced, so a restore can itself be undone.
+    const cur = this.db.prepare('SELECT data FROM _entries WHERE id = ?').get(entryId);
+    if (cur) this.db.prepare('INSERT INTO _versions (id, entry_id, data, created_at) VALUES (?, ?, ?, ?)').run(randomUUID(), entryId, cur.data, now);
     this.db.prepare('UPDATE _entries SET data = ?, updated_at = ? WHERE id = ?').run(ver.data, now, entryId);
     return true;
   }

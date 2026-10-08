@@ -268,6 +268,18 @@ entryRoutes.get('/:collectionId/entries/:slug/versions', (c) => {
   return c.json(versions);
 });
 
+// GET /api/collections/:id/entries/:slug/versions/:versionId — a snapshot's data (for the diff view)
+entryRoutes.get('/:collectionId/entries/:slug/versions/:versionId', (c) => {
+  const { collectionId, slug, versionId } = c.req.param();
+  const db    = openPod(c.get('podPath'));
+  const entry = db.getEntry(collectionId, slug);
+  const row   = entry && db.db.prepare('SELECT id, data, created_at FROM _versions WHERE id = ? AND entry_id = ?').get(versionId, entry.id);
+  db.close();
+  if (!row) return c.json({ error: 'Not found' }, 404);
+  let data = {}; try { data = JSON.parse(row.data); } catch {}
+  return c.json({ id: row.id, created_at: row.created_at, data });
+});
+
 // POST /api/collections/:id/entries/:slug/versions/:versionId/restore
 entryRoutes.post('/:collectionId/entries/:slug/versions/:versionId/restore', (c) => {
   const { collectionId, slug, versionId } = c.req.param();

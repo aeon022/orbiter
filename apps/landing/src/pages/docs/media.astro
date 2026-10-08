@@ -30,8 +30,13 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <h2>Deleting files</h2>
 <p>Select a file and click <strong>Delete</strong>. For the <code>local</code> backend, the file is also removed from disk. For the <code>github</code> backend, a deletion commit is made via the GitHub API. For <code>s3</code>, a <code>DeleteObject</code> request is sent. Blob and external-link items are removed from <code>_media</code> in the pod.</p>
 
+<h2>Usage, unused files and broken references</h2>
+<p>Every card shows whether the file is used (<em>used in 3 entries</em>) or <em>unused</em>; hover for the entry titles. The filter bar adds <strong>Unused</strong> and <strong>Broken refs</strong>. Deleting a file that is in use warns you first and names the entries. <em>Broken refs</em> lists entries that point at a media file that no longer exists.</p>
+<p>References are found by the file's id inside entry content, so they are recognised wherever they are stored — picker fields, image blocks, Markdown links to <code>/orbiter/media/&lt;id&gt;</code>. Entries in the trash count as references. Editors restricted to some collections see the counts but not the titles of entries they may not open.</p>
+
 <h2>API access</h2>
 <pre>GET  /api/media              — list all files (no binary data)
+GET  /api/media/usage        — { usage, unused, broken }
 GET  /api/media/:id/raw      — serve the file
 POST /api/media              — upload (multipart/form-data)
 POST /api/media/import-url   — server-side fetch from a URL
