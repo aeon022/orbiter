@@ -11,13 +11,15 @@ import steps from '../data/tour.json';
   <p class="section-lead reveal reveal-delay-1">Real screens from a real pod — Space Station mode, dark. Hover the glowing outlines, or use <kbd>←</kbd> <kbd>→</kbd>.</p>
 
   <div class="tour" data-tour>
-    <div class="tour-steps" role="tablist" aria-label="Tour steps" aria-orientation="vertical">
+    <div class="tour-steps">
+      <div class="tour-tabs" role="tablist" aria-label="Tour steps" aria-orientation="vertical">
       {steps.map((s, i) => (
         <button class="tour-step" role="tab" type="button" id={`tour-tab-${s.id}`} aria-controls={`tour-panel-${s.id}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-i={i}>
           <span class="tour-num">{String(i + 1).padStart(2, '0')}</span>
           <span class="tour-step-title">{s.title}</span>
         </button>
       ))}
+      </div>
       <div class="tour-controls">
         <button type="button" class="tour-nav" data-prev aria-label="Previous step">←</button>
         <button type="button" class="tour-nav" data-next aria-label="Next step">→</button>
@@ -53,6 +55,7 @@ import steps from '../data/tour.json';
 <style>
   .tour-section { padding: 80px 0 40px; scroll-margin-top: 70px; }
   .tour { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 28px; align-items: start; margin-top: 36px; }
+  .tour-tabs { display: contents; }
   .tour-steps { display: flex; flex-direction: column; gap: 4px; position: sticky; top: 90px; }
   .tour-step { all: unset; box-sizing: border-box; display: flex; align-items: baseline; gap: 12px; padding: 11px 14px; border-radius: 10px; cursor: pointer; color: var(--muted, #8a8aa8); border: 1px solid transparent; transition: background .15s, color .15s, border-color .15s; }
   .tour-step:hover { color: var(--heading, #fff); background: rgba(139, 124, 248, .07); }

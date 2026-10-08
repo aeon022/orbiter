@@ -1110,6 +1110,7 @@
           fieldsHtml += `<input type="text" class="field-input" name="${key}" value="${escHtml(val??'')}" />`;
         }
         fieldsHtml += '</div>';
+        fieldsHtml = fieldsHtml.replaceAll(` name="${key}"`, ` name="${key}" aria-label="${escHtml(field.label??key)}"`);
         fieldGroupMap[grp] += fieldsHtml;
       }
 

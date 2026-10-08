@@ -240,3 +240,22 @@
       .catch(function () {});
   });
 })();
+
+// a11y: give unlabeled form controls an accessible name from the nearest label-like text (runs on dynamic renders too)
+(() => {
+  const SEL = 'input:not([type=hidden]):not([type=submit]):not([type=button]), select, textarea';
+  const LBL = '.setting-label, .field-label, .form-label, label, .label, h3, h4';
+  const name = (el) => {
+    for (let p = el.parentElement, i = 0; p && i < 3; p = p.parentElement, i++) {
+      const l = [...p.querySelectorAll(LBL)].find((x) => !x.contains(el) && x.textContent.trim());
+      if (l) return l.textContent.replace(/\s+/g, ' ').trim();
+    }
+    return el.title || el.placeholder || el.dataset.slug || el.dataset.col || el.name || '';
+  };
+  const run = () => document.querySelectorAll(SEL).forEach((el) => {
+    if ([...(el.labels || [])].some((l) => l.textContent.trim()) || el.hasAttribute('aria-label') || el.hasAttribute('aria-labelledby')) return;
+    const n = name(el); if (n) el.setAttribute('aria-label', n);
+  });
+  let t; new MutationObserver(() => { clearTimeout(t); t = setTimeout(run, 150); }).observe(document.documentElement, { childList: true, subtree: true });
+  run();
+})();
