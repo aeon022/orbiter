@@ -26,6 +26,13 @@
     .coll-empty { padding:24px 16px; font-size:10px; color:var(--muted); line-height:1.8; }
 
     .editor-panel { padding:32px 40px; overflow-y:auto; height:100%; }
+    /* Station mode: there is no app shell with its own scroll area — the page scrolls, the dock and status bar stay fixed.
+       (Without this the document stayed overflow:hidden and everything under the dock was unreachable.) */
+    html[data-style="xfce"], html[data-style="xfce"] body { height:auto; overflow:visible; }
+    html[data-style="xfce"] .main { align-items:start; }
+    html[data-style="xfce"] .editor-panel { height:auto; overflow:visible; }
+    html[data-style="xfce"] .coll-panel { height:auto; align-self:start; position:sticky; top:calc(var(--sb-h, 26px) + 20px);
+      max-height:calc(100dvh - var(--sb-h, 26px) - var(--dock-h, 76px) - 56px); border-radius:14px; border:1px solid var(--line); }
     .editor-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:300px; gap:14px; color:var(--muted); text-align:center; }
     .editor-empty-icon { font-size:28px; opacity:.2; }
     .editor-head { margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(--line); }
