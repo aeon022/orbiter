@@ -261,7 +261,7 @@ export class OrbiterDB {
 
   getUsers() {
     return this.db.prepare(
-      'SELECT id, username, role, created_at, last_login FROM _users ORDER BY created_at ASC'
+      'SELECT id, username, role, created_at, last_login, totp_enabled FROM _users ORDER BY created_at ASC'
     ).all();
   }
 

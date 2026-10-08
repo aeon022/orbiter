@@ -126,12 +126,13 @@
           ${users.map(u=>`
             <div class="user-row ${u.id===me.user.id?'is-self':''}">
               <div class="user-name">${u.username}${u.id===me.user.id?'<span class="self-tag">you</span>':''}</div>
-              <div><span class="role-badge ${u.role}">${u.role}</span></div>
+              <div><span class="role-badge ${u.role}">${u.role}</span>${u.totp_enabled?' <span class="role-badge editor" title="Two-factor authentication is on">2FA</span>':''}</div>
               <div class="user-date">${u.last_login ? new Date(u.last_login).toLocaleDateString() : '—'}</div>
               <div class="user-actions">
                 <select class="btn-action role-select" data-id="${u.id}" ${u.id===me.user.id?'disabled':''} title="Reviewers can publish when the review workflow is on">
                   ${['editor','reviewer','admin'].map(r=>`<option value="${r}" ${u.role===r?'selected':''}>${r}</option>`).join('')}
                 </select>
+                ${u.totp_enabled&&u.id!==me.user.id?`<button class="btn-action btn-reset-2fa" data-id="${u.id}" data-name="${u.username}" title="For a user who lost their device and recovery codes">Reset 2FA</button>`:''}
                 ${u.role!=='admin'?`<button class="btn-action btn-perms" data-id="${u.id}" data-name="${u.username}">Collections</button>`:''}
                 <button class="btn-action btn-reset-pw" data-id="${u.id}" data-name="${u.username}" ${u.id===me.user.id?'disabled':''}>Reset PW</button>
                 <button class="btn-del" data-id="${u.id}" ${u.id===me.user.id?'disabled':''}>Delete</button>
@@ -149,6 +150,12 @@
         else showBanner('banner-err', '✕ Could not delete user');
       }));
 
+      wrap.querySelectorAll('.btn-reset-2fa').forEach(btn=>btn.addEventListener('click', async ()=>{
+        if (!confirm(`Turn off two-factor authentication for ${btn.dataset.name} and sign them out everywhere?`)) return;
+        const res = await fetch(`/api/users/${btn.dataset.id}/2fa`,{method:'DELETE',credentials:'include'});
+        if (res.ok) { showBanner('banner-ok', '✓ 2FA reset'); loadUsers(); }
+        else showBanner('banner-err', '✕ Could not reset 2FA');
+      }));
       wrap.querySelectorAll('.role-select').forEach(sel=>sel.addEventListener('change', async ()=>{
         const newRole = sel.value;
         if (!confirm(`Change role to ${newRole}?`)) { loadUsers(); return; }
