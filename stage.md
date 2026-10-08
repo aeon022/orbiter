@@ -9,7 +9,7 @@
 
 ## 1. Aktueller Stand (Stand: 2026-10-08, Abend)
 
-- Repo: `~/Sites/orbiter` (github.com/aeon022/orbiter), Branch `main`, **alles gepusht**, HEAD `867b6395`.
+- Repo: `~/Sites/orbiter` (github.com/aeon022/orbiter), Branch `main`, **alles gepusht**, HEAD siehe `git log -1`.
 - **Nichts ist uncommittet** außer den bekannten untracked Marketing-Dateien (`content/docs/`, `content/posts/*hackernews-human.md`, `content/posts/postctl_ready/`, `.claude/`) — gehören nicht zu den Orbiter-Fixes, nicht anfassen.
 - Landing-Seite deployt automatisch bei Push auf `main` (GitHub Actions → `deploy/landing`). Der Changelog dort nennt bereits die **noch nicht veröffentlichten** Versionen (siehe unten).
 
@@ -57,7 +57,8 @@ Ausgangspunkt: User wollte bei den Security-Sachen weitermachen; drei Advisories
 7. **Roadmap-Features gebaut** (Reihenfolge laut User „sinnvoll"): Security-Check/`orbiter doctor`, verschlüsselte Secrets, MCP-Draft-Write-Keys, 2FA + Sessions, Key-Scopes/Expiry/Rate-Limit, signierte Webhooks, Version-Diff, Medien-Usage, Preview-Tokens, Review-Workflow, Bild-Varianten + Fokuspunkt, KI-Übersetzung.
 8. **Plugin-System-Konzept** geschrieben (`PLUGIN-CONCEPT.md`, nichts gebaut), Basis-Security-Header + **Nonce-CSP im Report-Only-Modus** eingebaut.
 9. Obsidian-Plugin-Idee des Users → auf die Roadmap gesetzt (Version 1 = Push als Entwurf).
-10. Dieses `stage.md` angelegt.
+10. Dieses `stage.md` angelegt und ins Git genommen.
+11. **Plugin-Ideen** gesammelt (Abschnitt 11 in `PLUGIN-CONCEPT.md`) und die **Docs-Seite „Webhook recipes"** gebaut (`/docs/webhook-recipes`): Empfänger-Skript mit Signaturprüfung + Handler für Slack/Telegram, IndexNow, Cloudflare, Mastodon. Das Empfänger-Skript wurde gegen echte signierte Zustellungen getestet (Ping ignoriert, Publish erkannt, Fälschung ergibt 401).
 
 ---
 
@@ -107,8 +108,9 @@ Ausgangspunkt: User wollte bei den Security-Sachen weitermachen; drei Advisories
 1. **User: Klick-Durchgang im Browser** — Checkliste steht in `SECURITY-TODO.md` (Abschnitt „KLICK-CHECKLISTE"). Station-Mode **und** Classic, dunkel + hell. Bisher ist *nichts* davon im Browser gesehen worden (nur curl/Unit-Tests).
 2. **Release** (Abschnitt 6), danach `npm view` prüfen, CVE-IDs prüfen.
 3. **CSP enforcing:** nach dem Klick-Durchgang die gesammelten Reports ansehen, ~93 Inline-Handler (editor.html 77, forms.html 10, graph.html 3, analytics/entries/schema je 1) in `addEventListener`/Delegation umbauen (Handler rufen globale Funktionen und enthalten teils JS-Ausdrücke → nicht mechanisch), dann Header auf `Content-Security-Policy` (enforcing) umstellen. Erst wenn Reports leer sind.
-4. **Obsidian-Plugin v1:** REST-Ingest-Endpunkt (Draft-Write-Key, Upsert per Slug über Frontmatter), Plugin (Push als Entwurf), README mit Sicherheitshinweis (Key liegt im Vault/`data.json` und wird ggf. mitgesynct → Draft-Only + Collection-Limit + Ablauf empfehlen). v2: Pull + Konflikterkennung. Bilder in v1 nur Links (Medien-Upload braucht heute Admin-Session).
-5. **Plugin-System** laut `PLUGIN-CONCEPT.md` — **fünf Entscheidungen des Users stehen aus** (Phase 1 zuerst? Server-Transforms überhaupt? Wer schreibt Plugins? Desktop? Strikte CSP vorab? — Letzteres läuft jetzt als Punkt 3).
+4. **Obsidian-Plugin v1 + Web-Clipper:** REST-Ingest-Endpunkt (Draft-Write-Key, Upsert per Slug über Frontmatter), Plugin (Push als Entwurf), README mit Sicherheitshinweis (Key liegt im Vault/`data.json` und wird ggf. mitgesynct → Draft-Only + Collection-Limit + Ablauf empfehlen). v2: Pull + Konflikterkennung. Bilder in v1 nur Links (Medien-Upload braucht heute Admin-Session).
+5. **Plugin-Ideen-Reihenfolge** (aus `PLUGIN-CONCEPT.md` §11): D Webhook-Rezepte (erledigt) → C Clipper/Obsidian über denselben Ingest-Endpunkt → A JSON-LD-Builder als erstes Feld-Plugin → B Transforms erst nach Entscheidung.
+5b. **Plugin-System** laut `PLUGIN-CONCEPT.md` — **fünf Entscheidungen des Users stehen aus** (Phase 1 zuerst? Server-Transforms überhaupt? Wer schreibt Plugins? Desktop? Strikte CSP vorab? — Letzteres läuft jetzt als Punkt 3).
 6. Später/groß: Live-Collaboration, SvelteKit-Integration, Orbiter Cloud.
 7. Kleinkram/Ideen: Webhook-Retries persistent machen (Queue statt Timer), Rate-Limit pro Key über mehrere Prozesse, „Passwort-Stärke"-Check in `orbiter doctor`, QR-Code für 2FA-Setup (aktuell nur Setup-Key zum Eintippen), `ping-worker` ist noch nicht gehostet (Cloudflare-Rate-Limit-Regel wäre der eigentliche Schutz).
 
