@@ -95,7 +95,7 @@
       location.replace('/login.html');
     });
     const info = await fetch('/api/info',{credentials:'include'}).then(r=>r.json()).catch(()=>({}));
-    if (info.pod) document.getElementById('pod-name').textContent = info.pod.split('/').pop();
+    if (info.podPath) document.getElementById('pod-name').textContent = info.podPath.split('/').pop();
 
     function fmtBytes(b) {
       if (!b) return '—';
@@ -163,5 +163,8 @@
 
     loadPods();
   </script>
+  <script src="/search.js"></script>
+  <script src="/sidebar.js"></script>
+  <script src="/router.js"></script>
 </body>
 </html>

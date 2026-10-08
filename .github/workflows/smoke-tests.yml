@@ -1,0 +1,83 @@
+name: Smoke tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/**'
+      - 'apps/landing/**'
+      - 'tests/**'
+      - 'package-lock.json'
+      - '.github/workflows/smoke-tests.yml'
+  pull_request:
+    paths:
+      - 'packages/**'
+      - 'apps/landing/**'
+      - 'tests/**'
+      - 'package-lock.json'
+      - '.github/workflows/smoke-tests.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - name: Install (core, admin, mcp)
+        run: npm ci --workspace=packages/core --workspace=packages/admin --workspace=packages/mcp
+      - name: Run unit tests
+        run: node --test packages/core/src/*.test.js packages/mcp/src/*.test.js packages/admin/src/*.test.js
+
+  admin-browser:
+    name: Admin in a real browser
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - name: Install (core, admin)
+        run: npm ci --workspace=packages/core --workspace=packages/admin
+      - name: Install puppeteer-core (outside the workspace, so the lockfile stays untouched)
+        run: mkdir -p /tmp/pp && cd /tmp/pp && npm init -y >/dev/null && npm i puppeteer-core
+      - name: Admin smoke test (uses the Chrome that ships with the runner)
+        run: node tests/e2e/admin.mjs
+        env:
+          NODE_PATH: /tmp/pp/node_modules
+
+  landing-browser:
+    name: Landing site in a real browser
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - name: Install librsvg (OG card generation in prebuild)
+        run: sudo apt-get install -y librsvg2-bin
+      - name: Install (landing)
+        run: npm ci --workspace=apps/landing
+      - name: Build
+        run: npm run build --workspace=apps/landing
+      - name: Install puppeteer-core
+        run: mkdir -p /tmp/pp && cd /tmp/pp && npm init -y >/dev/null && npm i puppeteer-core
+      - name: Landing smoke test
+        run: node tests/e2e/landing.mjs
+        env:
+          NODE_PATH: /tmp/pp/node_modules

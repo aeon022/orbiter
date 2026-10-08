@@ -788,6 +788,10 @@
 
     // Load collection schema + entry + locale meta
     // ── Version diff helpers ──────────────────────────────────────────
+    // Small UI strings follow the browser language (German keeps An/Aus and Mo–So; everything else gets On/Off and Mon–Sun)
+    const IS_DE = (navigator.language || '').toLowerCase().startsWith('de');
+    const L_ON = IS_DE ? 'An' : 'On', L_OFF = IS_DE ? 'Aus' : 'Off';
+    const L_DAYS = IS_DE ? ['Mo','Di','Mi','Do','Fr','Sa','So'] : ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
     const dEsc = (v) => String(v ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     // Line diff via LCS. Returns [{t:'=' | '-' | '+', v}]. Large texts fall back to "all removed / all added".
     function lineDiff(a, b) {
@@ -999,7 +1003,7 @@
 
         if (field.type==='boolean') {
           const checked = val===true||val==='true'||val===1;
-          fieldsHtml += `<label class="bool-toggle"><input type="checkbox" name="${key}"${checked?' checked':''} /><span class="bool-track"></span><span class="bool-label">${checked?'An':'Aus'}</span></label>`;
+          fieldsHtml += `<label class="bool-toggle"><input type="checkbox" name="${key}"${checked?' checked':''} /><span class="bool-track"></span><span class="bool-label">${checked?L_ON:L_OFF}</span></label>`;
         } else if (field.type==='datetime') {
           fieldsHtml += `<input type="datetime-local" class="field-input" name="${key}" value="${escHtml(val??'')}" />`;
         } else if (field.type==='date') {
@@ -1009,7 +1013,7 @@
         } else if (field.type==='weekdays') {
           const active = Array.isArray(val) ? val : [];
           fieldsHtml += `<div class="weekday-grid" id="wd-grid-${key}">
-            ${[['Mon','Mo'],['Tue','Di'],['Wed','Mi'],['Thu','Do'],['Fri','Fr'],['Sat','Sa'],['Sun','So']].map(([d,l])=>`<button type="button" class="wd-btn${active.includes(d)?' active':''}" data-day="${d}" data-key="${key}">${l}</button>`).join('')}
+            ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d,n)=>[d,L_DAYS[n]]).map(([d,l])=>`<button type="button" class="wd-btn${active.includes(d)?' active':''}" data-day="${d}" data-key="${key}">${l}</button>`).join('')}
             <input type="hidden" name="${key}" id="wd-val-${key}" value="${active.join(',')}" />
           </div>`;
         } else if (field.type==='image'||field.type==='media') {
@@ -1331,7 +1335,7 @@
       panel.querySelectorAll('.bool-toggle input[type=checkbox]').forEach(cb=>{
         cb.addEventListener('change',()=>{
           const lbl = cb.closest('.bool-toggle')?.querySelector('.bool-label');
-          if (lbl) lbl.textContent = cb.checked ? 'An' : 'Aus';
+          if (lbl) lbl.textContent = cb.checked ? L_ON : L_OFF;
           markDirty();
         });
       });
