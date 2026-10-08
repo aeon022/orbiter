@@ -258,6 +258,13 @@
             </div>
             <div id="quality-body"></div>
           </div>
+          <div class="side-section" id="security-section" style="display:none;margin-top:20px">
+            <div class="section-head">
+              <div class="section-title">Security Check</div>
+              <span style="font-size:10px;color:var(--muted)">same as <code>orbiter doctor</code></span>
+            </div>
+            <div id="security-body"></div>
+          </div>
         </div>
       </div>
 
@@ -485,6 +492,18 @@
           <span style="color:var(--red);font-family:var(--mono)">${count}</span>
         </div>`
       ).join('') + `<div style="padding-top:8px;font-size:10px;color:var(--muted)">${q.total} total issue${q.total!==1?'s':''} across published entries</div>`;
+    }).catch(() => {});
+
+    // ── Security check (admins only — the route 403s for editors) ─────
+    fetch('/api/security-check', { credentials: 'include' }).then(r => r.ok ? r.json() : null).then(res => {
+      const issues = (res?.findings ?? []).filter(f => f.level !== 'ok');
+      if (!issues.length) return;
+      document.getElementById('security-section').style.display = '';
+      document.getElementById('security-body').innerHTML = issues.map(f =>
+        `<div style="padding:6px 0;border-bottom:1px solid var(--bg2);font-size:11px;">
+          <div style="color:${f.level==='fail'?'var(--red)':'var(--gold)'}">${f.level==='fail'?'✕':'⚠'} ${escHtml(f.message)}</div>
+          ${f.fix ? `<div style="color:var(--muted);margin-top:2px">→ ${escHtml(f.fix)}</div>` : ''}
+        </div>`).join('');
     }).catch(() => {});
 
     // ── Calendar strip ────────────────────────────────────────────────

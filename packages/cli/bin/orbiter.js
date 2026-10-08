@@ -14,6 +14,7 @@ const commands = {
   unpack:     () => import('../src/unpack.js').then(m => m.run(args)),
   pack:       () => import('../src/pack.js').then(m => m.run(args)),
   status:     () => import('../src/status.js').then(m => m.run(args)),
+  doctor:     () => import('../src/doctor.js').then(m => m.run(args)),
   sync:       () => import('../src/sync.js').then(m => m.run(args)),
   encrypt:    () => import('../src/encrypt.js').then(m => m.runEncrypt(args)),
   decrypt:    () => import('../src/encrypt.js').then(m => m.runDecrypt(args)),
@@ -66,6 +67,7 @@ function printHelp() {
     unpack   [--pod <path>]        Extract media BLOBs to files (pod → git mode)
     pack     [--pod <path>]        Re-insert media files as BLOBs (git → server mode)
     status   [pod-path]            Show pod health — entry counts, size, last modified
+    doctor   [pod-path]            Check a pod for security problems (exit 1 on failures)
     sync     --remote user@host:/path/content.pod
              [--pod <path>] [--pull]  Push or pull pod via rsync
     encrypt  [--pod <path>]        Encrypt a .pod file → .pod.enc (AES-256-GCM)

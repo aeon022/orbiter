@@ -11,7 +11,7 @@ const ADMIN_ROOT = join(__dirname, '..');
 // In Electron the asar is not a real directory, so we skip it.
 if (!process.env.ELECTRON) process.chdir(ADMIN_ROOT);;
 import { readFileSync } from 'node:fs';
-import { openPod }          from '@a83/orbiter-core';
+import { openPod, migrateSecrets } from '@a83/orbiter-core';
 import { authRoutes }       from './routes/auth.js';
 import { collectionRoutes } from './routes/collections.js';
 import { entryRoutes }      from './routes/entries.js';
@@ -37,6 +37,7 @@ import { qualityRoutes }       from './routes/quality.js';
 import { schemaMigrateRoutes } from './routes/schema_migrate.js';
 import { podRoutes }           from './routes/pods.js';
 import { apiKeyRoutes }        from './routes/api-keys.js';
+import { securityRoutes }      from './routes/security.js';
 import { requireAuth }      from './middleware/auth.js';
 import { csrfMiddleware }  from './middleware/csrf.js';
 
@@ -136,6 +137,7 @@ export function createApp(podPath) {
   api.route('/collections',  schemaMigrateRoutes);
   api.route('/pods',         podRoutes);
   api.route('/api-keys',     apiKeyRoutes);
+  api.route('/security-check', securityRoutes);
 
   app.route('/api', api);
 
@@ -164,6 +166,14 @@ export function createApp(podPath) {
 
 // Desktop app: loopback only, so the admin isn't reachable from the LAN. Standalone: HOST overrides.
 const HOST = process.env.ELECTRON ? '127.0.0.1' : process.env.HOST;
+// Opt-in: with ORBITER_SECRET set, encrypt any credentials still stored in plaintext.
+try {
+  const sdb = openPod(POD_PATH);
+  const n = migrateSecrets(sdb);
+  sdb.close();
+  if (n) console.log(`[secrets] Encrypted ${n} stored credential${n === 1 ? '' : 's'}`);
+} catch (e) { console.warn('[secrets]', e.message); }
+
 serve({ fetch: createApp(POD_PATH).fetch, port: PORT, hostname: HOST }, () => {
   console.log(`Orbiter Admin API  →  http://localhost:${PORT}`);
   console.log(`Pod: ${POD_PATH}`);

@@ -117,14 +117,23 @@ export function hashApiKey(key) {
  * @returns {boolean}
  */
 export function checkApiKey(db, authHeaderValue) {
-  const requireKey = db.getMeta('api.requireKey');
-  if (requireKey !== '1') return true;
+  return authenticateApiKey(db, authHeaderValue).ok;
+}
 
+/**
+ * Like checkApiKey, but also reports what the presented key may do.
+ * Returns { ok, scope, keyLabel, collections }:
+ *   scope 'read' | 'draft-write' for a matching key, null for an anonymous (keyless) caller;
+ *   ok is true for anonymous callers only while api.requireKey is off.
+ * `collections` (array | null) limits where a draft-write key may write.
+ */
+export function authenticateApiKey(db, authHeaderValue) {
   const bearer = (authHeaderValue ?? '').replace(/^Bearer\s+/i, '').trim();
-  if (!bearer) return false;
+  const open   = db.getMeta('api.requireKey') !== '1';
+  if (!bearer) return { ok: open, scope: null };
 
   let keys;
-  try { keys = JSON.parse(db.getMeta('api.keys') ?? '[]'); } catch { return false; }
+  try { keys = JSON.parse(db.getMeta('api.keys') ?? '[]'); } catch { return { ok: open, scope: null }; }
 
   const bearerBuf = Buffer.from(hashApiKey(bearer), 'hex');
   const found = keys.find(k => {
@@ -133,7 +142,7 @@ export function checkApiKey(db, authHeaderValue) {
     const storedBuf = Buffer.from(storedHash, 'hex');
     return storedBuf.length === bearerBuf.length && timingSafeEqual(storedBuf, bearerBuf);
   });
-  if (!found) return false;
+  if (!found) return { ok: open, scope: null };
 
   if (found.key) {
     found.hash = found.hash ?? hashApiKey(found.key);
@@ -143,5 +152,10 @@ export function checkApiKey(db, authHeaderValue) {
   found.hits = (found.hits || 0) + 1;
   found.lastUsed = new Date().toISOString().split('T')[0];
   db.setMeta('api.keys', JSON.stringify(keys));
-  return true;
+  return {
+    ok: true,
+    scope: found.scope === 'draft-write' ? 'draft-write' : 'read',
+    keyLabel: found.label ?? found.id,
+    collections: Array.isArray(found.collections) && found.collections.length ? found.collections : null,
+  };
 }

@@ -3,7 +3,7 @@ import { openPod } from '@a83/orbiter-core';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { createMcpServer } from './mcp-server.js';
-import { checkApiKey } from './auth.js';
+import { authenticateApiKey } from './auth.js';
 
 const POD_PATH = process.env.ORBITER_POD;
 if (!POD_PATH) {
@@ -24,7 +24,8 @@ if (HTTP_MODE) {
 // ── stdio: local trust, one long-lived db handle, full access ──────────
 async function startStdio() {
   const db = openPod(POD_PATH);
-  const server = createMcpServer({ db, mode: 'trusted' });
+  // stdio is local trust and read-only by default; ORBITER_MCP_WRITE=1 adds the draft-only write tools.
+  const server = createMcpServer({ db, mode: 'trusted', scope: process.env.ORBITER_MCP_WRITE === '1' ? 'draft-write' : null, keyLabel: 'stdio' });
   const transport = new StdioServerTransport();
 
   const shutdown = () => {
@@ -58,14 +59,15 @@ async function startHttp() {
     try {
       // Auth is checked before the request is ever handed to the MCP
       // transport, mirroring the Public Content API's REST routes.
-      if (!checkApiKey(db, req.headers['authorization'])) {
+      const auth = authenticateApiKey(db, req.headers['authorization']);
+      if (!auth.ok) {
         res.writeHead(401, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Unauthorized — provide a valid API key as Bearer token' }));
         return;
       }
 
       const body = await readJsonBody(req);
-      const server = createMcpServer({ db, mode: 'public' });
+      const server = createMcpServer({ db, mode: 'public', scope: auth.scope, keyLabel: auth.keyLabel, collections: auth.collections });
       // Stateless: fresh server + transport per request, no session tracking.
       const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
       await server.connect(transport);

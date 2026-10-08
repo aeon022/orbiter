@@ -3,6 +3,7 @@
  * Wraps a .pod (SQLite) file and exposes
  * typed methods for collections and entries.
  */
+import { SECRET_META_KEYS, secretsEnabled, isEncrypted, encryptSecret, decryptSecret } from './secrets.js';
 import Database from 'better-sqlite3';
 import { resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -302,11 +303,24 @@ export class OrbiterDB {
   // ── Meta ───────────────────────────────────
   getMeta(key) {
     const row = this.db.prepare('SELECT value FROM _meta WHERE key = ?').get(key);
-    return row ? row.value : null;
+    if (!row) return null;
+    // Encrypted credentials (see secrets.js): null when ORBITER_SECRET is missing or wrong.
+    return isEncrypted(row.value) ? decryptSecret(key, row.value) : row.value;
   }
 
   setMeta(key, value) {
-    this.db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)').run(key, String(value));
+    let v = String(value);
+    if (!v && SECRET_META_KEYS.has(key)) {
+      // A settings form re-submits "" for a secret it couldn't read (missing/wrong ORBITER_SECRET);
+      // don't let that wipe the encrypted value.
+      const cur = this.db.prepare('SELECT value FROM _meta WHERE key = ?').get(key)?.value;
+      if (isEncrypted(cur) && decryptSecret(key, cur) === null) {
+        console.warn(`[orbiter] "${key}" is encrypted and ORBITER_SECRET is missing/wrong — not overwriting`);
+        return;
+      }
+    }
+    if (v && SECRET_META_KEYS.has(key) && secretsEnabled() && !isEncrypted(v)) v = encryptSecret(key, v);
+    this.db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)').run(key, v);
   }
 
   // ── Collections (write) ───────────────────────────

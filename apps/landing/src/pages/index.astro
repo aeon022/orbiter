@@ -307,7 +307,7 @@ const faqs = [
     </div>
 
     <div class="hero-inner">
-      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">New: Security follow-up — GitHub push, media serving, SSRF, login limits — admin@0.3.86 · Changelog →</a>
+      <a href="https://github.com/aeon022/orbiter/releases" target="_blank" rel="noopener noreferrer" class="hero-badge">New: Security check, encrypted secrets, draft-only agent keys — admin@0.3.87 · Changelog →</a>
       <h1>Your entire CMS<br />in <span>one file.</span></h1>
       <p class="hero-sub">
         Content, media, schema, users — all in a single POD.
@@ -501,11 +501,27 @@ const faqs = [
 
     <div class="updates-feed">
 
+      <div class="update-card reveal" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
+        <div class="update-date">Oct<br />2026</div>
+        <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.87 · core@0.3.20 · mcp@0.1.4 · cli@0.3.14 — Latest</div>
+          <div class="update-title">Security check, encrypted secrets, draft-only agent keys, Terminal theme</div>
+          <ul class="update-items">
+            <li><strong><code>orbiter doctor</code> + dashboard card</strong> — flags a pod tracked by git, plaintext credentials, an open Content API and more, with the fix next to each finding. <a href="/docs/security">Docs →</a></li>
+            <li><strong>Encrypted secrets</strong> — set <code>ORBITER_SECRET</code> and stored FTP/SMTP/AI/GitHub/S3 credentials are encrypted at rest (AES-256-GCM). Opt-in; nothing changes without it.</li>
+            <li><strong>Draft-only keys for agents</strong> — an API key can be allowed to create and edit <em>drafts</em> over MCP. It can never publish or touch live entries.</li>
+            <li><strong>Terminal theme</strong> — a fourth palette: amber phosphor on near-black, with a warm paper light variant.</li>
+            <li><strong>Admin polish</strong> — Settings style cards show their active state, the style default matches the app, leaving the XFCE dock reloads cleanly, visible keyboard focus, and reduced-motion support.</li>
+          </ul>
+        </div>
+      </div>
+
       <div class="update-card reveal" style="border-color:color-mix(in srgb,var(--red) 55%,var(--border))">
         <div class="update-date">Oct<br />2026</div>
         <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.86 · core@0.3.19 · integration@0.3.21 · mcp@0.1.3 — Latest</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.86 · core@0.3.19 · integration@0.3.21 · mcp@0.1.3</div>
           <div class="update-title">Security follow-up: uploaded files, URL imports, login limits, and what gets pushed to GitHub</div>
           <p style="font-size:12px;color:var(--muted);margin:2px 0 10px;line-height:1.6">A second pass over the admin and core packages after the previous release. Update <code>@a83/orbiter-admin</code>, <code>@a83/orbiter-core</code> and <code>@a83/orbiter-integration</code> together — the new media headers live in core.</p>
           <ul class="update-items">

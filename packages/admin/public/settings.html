@@ -467,7 +467,7 @@
             <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
               <div>
                 <div class="setting-label">API Keys</div>
-                <div class="setting-desc">Scoped keys for the Public Content API. Keys are shown once on creation.</div>
+                <div class="setting-desc">Keys for the Public Content API and MCP. A key can optionally create drafts over MCP (never publish). Shown once on creation.</div>
               </div>
               <button type="button" class="btn btn-ghost btn-sm" id="btn-gen-api-key">Generate key</button>
             </div>
@@ -1019,6 +1019,7 @@
 
     // Preview token generator
     // API Keys
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     async function renderApiKeys() {
       const list = document.getElementById('api-keys-list');
       if (!list) return;
@@ -1028,7 +1029,7 @@
       if (!keys.length) { list.innerHTML = '<span style="color:var(--muted)">No keys yet</span>'; return; }
       list.innerHTML = keys.map(k => `
         <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--panel-alt,var(--sidebar-bg));border-radius:6px;border:1px solid var(--line)">
-          <span style="flex:1;font-family:var(--mono);font-size:10px;color:var(--heading)">${k.label}</span>
+          <span style="flex:1;font-family:var(--mono);font-size:10px;color:var(--heading)">${esc(k.label)}${k.scope==='draft-write'?' <span style="color:var(--gold)" title="Can create and edit drafts over MCP (never publish)">· drafts</span>':''}</span>
           <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">${k.key}</span>
           <span style="font-size:9px;color:var(--muted)">${k.hits} hits</span>
           <span style="font-size:9px;color:var(--muted)">${k.created}</span>
@@ -1047,10 +1048,11 @@
     document.getElementById('btn-gen-api-key')?.addEventListener('click', async () => {
       const label = prompt('Label for this key (e.g. "Frontend", "Mobile app"):');
       if (label === null) return;
+      const canDraft = confirm('Let this key create and edit DRAFTS over MCP (it can never publish)?\n\nOK = drafts allowed · Cancel = read-only');
       const res = await fetch('/api/api-keys', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ label: label || 'API Key' }),
+        body: JSON.stringify({ label: label || 'API Key', scope: canDraft ? 'draft-write' : 'read' }),
       });
       const { key } = await res.json();
       prompt(`New API key (copy it now — shown once):\n`, key.key);

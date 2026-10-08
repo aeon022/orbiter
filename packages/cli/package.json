@@ -1,6 +1,6 @@
 {
   "name": "@a83/orbiter-cli",
-  "version": "0.3.13",
+  "version": "0.3.14",
   "description": "CLI for Orbiter CMS — init, add-user, export",
   "type": "module",
   "bin": {
@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/aeon022/orbiter#readme",
   "dependencies": {
-    "@a83/orbiter-core": "^0.3.1",
+    "@a83/orbiter-core": "^0.3.20",
     "adm-zip": "^0.6.1"
   }
 }

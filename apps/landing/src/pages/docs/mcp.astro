@@ -56,4 +56,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
   </tbody>
 </table>
 
+<h2>Writing drafts</h2>
+<p>Read-only is the default. A key created with <strong>drafts allowed</strong> (Settings → API Keys) additionally gets <code>create_draft</code> and <code>update_draft</code> over HTTP: they create entries as drafts and edit entries that are still drafts — never publish, schedule or delete, and never touch live entries. Over stdio, set <code>ORBITER_MCP_WRITE=1</code> to enable the same two tools. See <a href="/docs/security">Security check &amp; secrets</a>.</p>
+
 </DocsLayout>

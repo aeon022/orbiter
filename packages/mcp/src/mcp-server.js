@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { readFileSync } from 'node:fs';
 import { listCollections, getEntries, getEntry, searchContent } from './content.js';
+import { createDraft, updateDraft } from './write.js';
 
 const { version } = JSON.parse(
   readFileSync(new URL('../package.json', import.meta.url), 'utf8')
@@ -13,7 +14,7 @@ const respond = (data) => ({ content: [{ type: 'text', text: JSON.stringify(data
  * mode: 'trusted' (stdio, local — full access) | 'public' (http, remote —
  * same restrictions as the Public Content API). See content.js.
  */
-export function createMcpServer({ db, mode }) {
+export function createMcpServer({ db, mode, scope = null, keyLabel = 'mcp', collections = null }) {
   const server = new McpServer({ name: 'orbiter-mcp', version });
 
   server.registerTool('list_collections', {
@@ -53,6 +54,28 @@ export function createMcpServer({ db, mode }) {
       limit: z.number().int().min(1).max(100).optional().describe('Max results (default 20, max 100)'),
     },
   }, async (args) => respond(searchContent(db, mode, args)));
+
+  // Draft-write tools: only for a draft-write API key (http) or ORBITER_MCP_WRITE=1 (stdio).
+  if (scope === 'draft-write') {
+    const ctx = { allowed: collections, actor: `mcp:${keyLabel}` };
+    const run = (fn, args) => { try { return respond(fn(db, args, ctx)); } catch (e) { return { isError: true, ...respond({ error: e.message }) }; } };
+    const shape = {
+      collection: z.string().describe('Collection id'),
+      slug: z.string().describe('Entry slug (lowercase letters, digits, - or _)'),
+      data: z.record(z.any()).describe('Field values keyed by schema field name'),
+      locale: z.string().optional().describe('Locale (default: none)'),
+    };
+    server.registerTool('create_draft', {
+      title: 'Create draft',
+      description: 'Create a new entry as a DRAFT. It is not public until a human publishes it in the admin.',
+      inputSchema: shape,
+    }, async (args) => run(createDraft, args));
+    server.registerTool('update_draft', {
+      title: 'Update draft',
+      description: 'Merge fields into an existing DRAFT entry. Published or scheduled entries cannot be changed this way.',
+      inputSchema: shape,
+    }, async (args) => run(updateDraft, args));
+  }
 
   return server;
 }

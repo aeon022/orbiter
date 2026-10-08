@@ -27,7 +27,8 @@ apiKeyRoutes.get('/', (c) => {
 
 // POST /api/api-keys — generate new key
 apiKeyRoutes.post('/', async (c) => {
-  const { label } = await c.req.json().catch(() => ({}));
+  const { label, scope, collections } = await c.req.json().catch(() => ({}));
+  if (scope != null && !['read', 'draft-write'].includes(scope)) return c.json({ error: 'scope must be "read" or "draft-write"' }, 400);
   const db = openPod(c.get('podPath'));
   const keys = readKeys(db);
   const rawKey = 'orb_' + randomBytes(24).toString('base64url');
@@ -39,6 +40,8 @@ apiKeyRoutes.post('/', async (c) => {
     created: new Date().toISOString().split('T')[0],
     hits:    0,
     lastUsed: null,
+    scope:   scope === 'draft-write' ? 'draft-write' : 'read', // draft-write = MCP can create/edit drafts, never publish
+    ...(Array.isArray(collections) && collections.length ? { collections: collections.map(String) } : {}),
   };
   keys.push(entry);
   writeKeys(db, keys);
