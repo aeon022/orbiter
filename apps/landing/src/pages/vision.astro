@@ -1286,6 +1286,94 @@ import { ClientRouter } from 'astro:transitions';
       <span class="rm-tag future">planned</span>
     </div>
 
+    <div class="rm-item reveal">
+      <div class="rm-dot next">◈</div>
+      <div class="rm-phase">Next · Security</div>
+      <div class="rm-title">Security Check &amp; <code>orbiter doctor</code></div>
+      <div class="rm-desc">Audits your setup for the risks that actually bite: open Content API with no token, a pod with live sessions committed to git, plaintext credentials, a public admin port, stale sessions, outdated packages. CLI command plus a dashboard card.</div>
+      <span class="rm-tag next">in progress</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot next">◈</div>
+      <div class="rm-phase">Next · Security</div>
+      <div class="rm-title">Encrypted Secrets in the POD</div>
+      <div class="rm-desc">FTP, SMTP, AI and GitHub tokens encrypted at rest with a key from an environment variable (<code>ORBITER_SECRET</code>), so a pod committed to git no longer carries usable credentials.</div>
+      <span class="rm-tag next">in progress</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot next">◈</div>
+      <div class="rm-phase">Next · AI</div>
+      <div class="rm-title">MCP Draft-Write Access</div>
+      <div class="rm-desc">Scoped API keys let agents create and edit <strong>drafts</strong> over MCP — never publish. An agent prepares, a human approves. Read-only keys keep working as today.</div>
+      <span class="rm-tag next">in progress</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot future">◇</div>
+      <div class="rm-phase">Future · Security</div>
+      <div class="rm-title">2FA &amp; Active Sessions</div>
+      <div class="rm-desc">TOTP for admins and an "active devices" list with per-session sign-out. Sessions currently last 30 days and can only be ended all at once.</div>
+      <span class="rm-tag future">planned</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot future">◇</div>
+      <div class="rm-phase">Future · Security</div>
+      <div class="rm-title">API Key Scopes &amp; Expiry</div>
+      <div class="rm-desc">Read-only vs. write, per-collection access, expiry date and per-key rate limits for Public Content API keys.</div>
+      <span class="rm-tag future">planned</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot future">◇</div>
+      <div class="rm-phase">Future · Automation</div>
+      <div class="rm-title">Signed Webhooks with Retry &amp; Log</div>
+      <div class="rm-desc">HMAC-signed payloads, automatic retries and a delivery log — the foundation for the Slack / newsletter automations above.</div>
+      <span class="rm-tag future">planned</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot future">◇</div>
+      <div class="rm-phase">Future · Editing</div>
+      <div class="rm-title">Version Diff</div>
+      <div class="rm-desc">Side-by-side comparison of entry versions before you restore one.</div>
+      <span class="rm-tag future">planned</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot future">◇</div>
+      <div class="rm-phase">Future · Editing</div>
+      <div class="rm-title">Review Workflow</div>
+      <div class="rm-desc">An "In review" status and a reviewer role on top of the existing comments and edit locks.</div>
+      <span class="rm-tag future">planned</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot future">◇</div>
+      <div class="rm-phase">Future · Media</div>
+      <div class="rm-title">Media Cleanup &amp; Usage</div>
+      <div class="rm-desc">See where an image is used, find unused media and broken references (the Knowledge Graph already knows the relations).</div>
+      <span class="rm-tag future">planned</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot future">◇</div>
+      <div class="rm-phase">Future · Media</div>
+      <div class="rm-title">Focal Point &amp; Responsive Variants</div>
+      <div class="rm-desc">Set a focal point per image; generate AVIF/WebP <code>srcset</code> variants with the sharp pipeline that is already in place.</div>
+      <span class="rm-tag future">planned</span>
+    </div>
+
+    <div class="rm-item reveal">
+      <div class="rm-dot future">◇</div>
+      <div class="rm-phase">Future · AI</div>
+      <div class="rm-title">Translate Missing Locales</div>
+      <div class="rm-desc">Suggest translations for entries that exist in one language but not in another, using the configured AI provider.</div>
+      <span class="rm-tag future">planned</span>
+    </div>
+
   </div>
 </section>
 
