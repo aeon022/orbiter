@@ -38,6 +38,9 @@ html {
   scroll-behavior: smooth;
 }
 
+/* decorative orbit/glow layers are wider than a phone — clip them so the page doesn't widen and zoom out */
+html { overflow-x: clip; }
+
 body {
   max-width: var(--max);
   margin: 0 auto;
@@ -2221,6 +2224,8 @@ html.is-leaving body {
   gap: 64px;
   align-items: start;
 }
+/* grid items default to min-width:auto — a wide <pre> in one column would stretch the whole track past the viewport */
+.manifesto-inner > * { min-width: 0; }
 
 .manifesto-eyebrow {
   font-size: 0.68rem;
@@ -2540,7 +2545,7 @@ html.is-leaving body {
   .comparison-table    { font-size: 0.8rem; }
   .comparison-table th,
   .comparison-table td { padding: 12px 14px; }
-  .manifesto-inner     { grid-template-columns: 1fr; gap: 40px; }
+  .manifesto-inner     { grid-template-columns: minmax(0, 1fr); gap: 40px; }
   .terminal-wrap       { position: static; }
   .deploy-grid         { grid-template-columns: 1fr; }
   .metric              { padding: 18px 24px; }

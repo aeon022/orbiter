@@ -1,4 +1,6 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* the reset above also removes a modal <dialog>'s auto margins (it would sit in the top-left corner) */
+dialog { margin: auto; }
 
 /* ════════════════════════════════════════════════════════════
    THEME SYSTEM
