@@ -63,6 +63,17 @@ const ALLOWED_ORIGINS = process.env.ADMIN_ORIGIN
 export function createApp(podPath) {
   const app = new Hono();
 
+  // Baseline security headers. No script-src yet — the admin UI uses inline scripts/styles throughout
+  // (a nonce-based CSP is the next step); these cover clickjacking, plugin/object embeds, base-tag and
+  // form hijacking, MIME sniffing and referrer leakage.
+  app.use('*', async (c, next) => {
+    c.header('Content-Security-Policy', "frame-ancestors 'self'; base-uri 'self'; object-src 'none'; form-action 'self'");
+    c.header('X-Frame-Options', 'SAMEORIGIN');
+    c.header('X-Content-Type-Options', 'nosniff');
+    c.header('Referrer-Policy', 'same-origin');
+    await next();
+  });
+
   // Inject pod path into every request context
   app.use('*', async (c, next) => {
     c.set('podPath', podPath);
