@@ -59,6 +59,8 @@
     .group-header::before { content: "◆"; color: var(--gold); font-size: 5px; line-height: 1; }
 
     /* Setting row — hover, keine alternierenden Hintergründe */
+    /* rows that hold a list (API keys, webhooks) use the full width instead of the 220px control column */
+    .setting-row.setting-row-wide { display: flex; flex-direction: column; align-items: stretch; gap: 12px; }
     .setting-row {
       display: grid;
       grid-template-columns: 1fr 220px;
@@ -467,7 +469,7 @@
               <span style="font-size:11px;color:var(--text);font-family:var(--mono);">Enabled</span>
             </label>
           </div>
-          <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:12px">
+          <div class="setting-row setting-row-wide">
             <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
               <div>
                 <div class="setting-label">API Keys</div>
@@ -477,7 +479,7 @@
             </div>
             <div id="api-keys-list" style="width:100%;display:flex;flex-direction:column;gap:6px;font-size:11px;color:var(--muted)">Loading…</div>
           </div>
-          <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:12px">
+          <div class="setting-row setting-row-wide">
             <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
               <div>
                 <div class="setting-label">Webhooks</div>

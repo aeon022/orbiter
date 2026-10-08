@@ -1,6 +1,10 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 /* the reset above also removes a modal <dialog>'s auto margins (it would sit in the top-left corner) */
 dialog { margin: auto; }
+/* native controls (checkboxes, date pickers, scrollbars, selects) follow the active scheme instead of staying light on dark */
+:root { color-scheme: dark; }
+html[data-scheme="light"] { color-scheme: light; }
+@media (prefers-color-scheme: light) { html:not([data-scheme="dark"]) { color-scheme: light; } }
 
 /* ════════════════════════════════════════════════════════════
    THEME SYSTEM

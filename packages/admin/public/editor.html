@@ -1100,6 +1100,8 @@
           fieldsHtml += `<input type="text" class="field-input" name="${key}" id="seo-inp-${key}" value="${escHtml(val??'')}" maxlength="120" />`;
         } else if (SEO_DESC_KEYS.has(key)) {
           fieldsHtml += `<textarea class="field-input" name="${key}" id="seo-inp-${key}" rows="3" maxlength="300" style="resize:vertical;">${escHtml(val??'')}</textarea>`;
+        } else if (field.type==='richtext' || field.multiline) {
+          fieldsHtml += `<textarea class="field-input" name="${key}" rows="3" style="resize:vertical;">${escHtml(val??'')}</textarea>`;
         } else {
           fieldsHtml += `<input type="text" class="field-input" name="${key}" value="${escHtml(val??'')}" />`;
         }

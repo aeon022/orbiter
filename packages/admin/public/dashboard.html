@@ -406,8 +406,17 @@
 
     if (!showCalendar) document.getElementById('cal-strip').style.display = 'none';
     if (!showRecent) document.querySelector('.content-main').style.display = 'none';
-    if (!showCollections) document.querySelector('.content-side').style.display = 'none';
-    if (!showRecent && !showCollections) document.querySelector('.dash-content').style.display = 'none';
+    // The side column also holds the content-quality and security panels, which must not vanish just because the
+    // Collections card is switched off — hide only that card, then hide the column when nothing in it is visible.
+    const collectionsCard = document.querySelector('.content-side .side-section');
+    if (!showCollections && collectionsCard) collectionsCard.style.display = 'none';
+    const trimSide = () => {
+      const side = document.querySelector('.content-side'); if (!side) return;
+      const any = [...side.querySelectorAll('.side-section')].some(s => s.style.display !== 'none');
+      side.style.display = any ? '' : 'none';
+      if (!showRecent) document.querySelector('.dash-content').style.display = any ? '' : 'none';
+    };
+    trimSide();
     if (!showWorkspace) document.querySelector('.workspace')?.style.setProperty('display', 'none', 'important');
 
     // Stats — fetch published counts per collection
@@ -446,7 +455,7 @@
             <div class="entry-coll">${escHtml(e.label || e.collection)}</div>
           </div>
           <div class="entry-date">${date}</div>
-          <div class="pill ${e.status}">${e.status}</div>
+          <div class="pill ${e.status}">${String(e.status).replace(/_/g, ' ')}</div>
         </a>`;
       }).join('')}</div>`;
     }
@@ -479,7 +488,7 @@
       if (!q.total) return;
       const sec = document.getElementById('quality-section');
       const body = document.getElementById('quality-body');
-      sec.style.display = '';
+      sec.style.display = ''; trimSide();
       const TYPE_LABELS = {
         'no-body':      'No body',
         'short-body':   'Body too short',
@@ -499,7 +508,7 @@
     fetch('/api/security-check', { credentials: 'include' }).then(r => r.ok ? r.json() : null).then(res => {
       const issues = (res?.findings ?? []).filter(f => f.level !== 'ok');
       if (!issues.length) return;
-      document.getElementById('security-section').style.display = '';
+      document.getElementById('security-section').style.display = ''; trimSide();
       document.getElementById('security-body').innerHTML = issues.map(f =>
         `<div style="padding:6px 0;border-bottom:1px solid var(--bg2);font-size:11px;">
           <div style="color:${f.level==='fail'?'var(--red)':'var(--gold)'}">${f.level==='fail'?'✕':'⚠'} ${escHtml(f.message)}</div>

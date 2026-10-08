@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="/style.css" />
   <script src="/theme.js"></script>
   <style>
-    .account-wrap { max-width: 640px; padding-bottom: 40px; }
+    .account-wrap { max-width: 640px; margin: 0 auto; width: 100%; padding-bottom: 40px; }
 
     .settings-group {
       background: var(--bg2);
@@ -390,13 +390,20 @@
       loadTfa();
     });
 
+    // "Chrome on macOS" instead of the raw user-agent string (the full string stays in the tooltip)
+    function deviceName(ua) {
+      if (!ua) return 'Unknown device';
+      const os = /iPhone|iPad/.test(ua) ? 'iOS' : /Android/.test(ua) ? 'Android' : /Mac OS X/.test(ua) ? 'macOS' : /Windows/.test(ua) ? 'Windows' : /Linux/.test(ua) ? 'Linux' : '';
+      const br = /Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : /curl|node|python/i.test(ua) ? 'Script' : 'Browser';
+      return os ? br + ' on ' + os : br;
+    }
     async function loadSessions() {
       const rows = await api('/api/account/sessions', 'GET');
       if (!Array.isArray(rows)) { $('sessions-list').textContent = 'Could not load sessions.'; return; }
       $('sessions-list').innerHTML = rows.map(r => `
         <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line2)">
           <div style="flex:1;min-width:0">
-            <div style="color:var(--heading);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.ua || 'Unknown device')}${r.current ? ' <span class="role-badge">this device</span>' : ''}</div>
+            <div style="color:var(--heading);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r.ua || '')}">${esc(deviceName(r.ua))}${r.current ? ' <span class="role-badge">this device</span>' : ''}</div>
             <div style="color:var(--muted);font-size:11px">${esc(r.ip || 'unknown IP')} · signed in ${esc(r.created_at)} UTC</div>
           </div>
           ${r.current ? '' : `<button class="btn-save" data-sid="${esc(r.id)}">Sign out</button>`}
@@ -414,6 +421,5 @@
   </script>
   <script src="/sidebar.js"></script>
   <script src="/search.js"></script>
-  <script src="/xfce.js" type="module"></script>
 </body>
 </html>

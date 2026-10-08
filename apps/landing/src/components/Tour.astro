@@ -1,0 +1,195 @@
+---
+/**
+ * Interactive product tour: real screenshots of Space Station mode (generated from a demo pod, see
+ * src/data/tour.json) with hotspots you can hover, focus or tap. Keyboard: ← → switch steps.
+ */
+import steps from '../data/tour.json';
+---
+
+<section id="tour" class="tour-section" aria-labelledby="tour-h">
+  <h2 id="tour-h" class="reveal">Take the tour</h2>
+  <p class="section-lead reveal reveal-delay-1">Real screens from a real pod — Space Station mode, dark. Hover the glowing outlines, or use <kbd>←</kbd> <kbd>→</kbd>.</p>
+
+  <div class="tour" data-tour>
+    <div class="tour-steps" role="tablist" aria-label="Tour steps" aria-orientation="vertical">
+      {steps.map((s, i) => (
+        <button class="tour-step" role="tab" type="button" id={`tour-tab-${s.id}`} aria-controls={`tour-panel-${s.id}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-i={i}>
+          <span class="tour-num">{String(i + 1).padStart(2, '0')}</span>
+          <span class="tour-step-title">{s.title}</span>
+        </button>
+      ))}
+      <div class="tour-controls">
+        <button type="button" class="tour-nav" data-prev aria-label="Previous step">←</button>
+        <button type="button" class="tour-nav" data-next aria-label="Next step">→</button>
+        <button type="button" class="tour-nav tour-play" data-play aria-pressed="false" title="Play automatically">▶ Auto</button>
+      </div>
+    </div>
+
+    <div class="tour-stage">
+      <div class="tour-frame">
+        <div class="tour-chrome" aria-hidden="true"><span></span><span></span><span></span><em>localhost:4322 — Orbiter Admin</em></div>
+        <div class="tour-shots">
+          {steps.map((s, i) => (
+            <figure class={`tour-panel${i === 0 ? ' active' : ''}`} role="tabpanel" id={`tour-panel-${s.id}`} aria-labelledby={`tour-tab-${s.id}`} data-i={i} hidden={i !== 0}>
+              <div class="tour-canvas" style={`aspect-ratio:${s.width}/${s.height}`}>
+                <img src={s.file} width={s.width} height={s.height} alt={`Orbiter admin: ${s.title}. ${s.caption}`} loading={i === 0 ? 'eager' : 'lazy'} decoding="async" />
+                {s.hotspots.map((h, j) => (
+                  <button type="button" class="tour-hot" style={`left:${h.x}%;top:${h.y}%;width:${h.w}%;height:${h.h}%`} aria-label={`${h.label}: ${h.text}`} data-hot={j}>
+                    <span class="tour-dot" aria-hidden="true"></span>
+                    <span class="tour-tip" role="tooltip"><strong>{h.label}</strong>{h.text}</span>
+                  </button>
+                ))}
+              </div>
+              <figcaption>{s.caption}</figcaption>
+            </figure>
+          ))}
+        </div>
+        <div class="tour-progress" aria-hidden="true"><i></i></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .tour-section { padding: 80px 0 40px; scroll-margin-top: 70px; }
+  .tour { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 28px; align-items: start; margin-top: 36px; }
+  .tour-steps { display: flex; flex-direction: column; gap: 4px; position: sticky; top: 90px; }
+  .tour-step { all: unset; box-sizing: border-box; display: flex; align-items: baseline; gap: 12px; padding: 11px 14px; border-radius: 10px; cursor: pointer; color: var(--muted, #8a8aa8); border: 1px solid transparent; transition: background .15s, color .15s, border-color .15s; }
+  .tour-step:hover { color: var(--heading, #fff); background: rgba(139, 124, 248, .07); }
+  .tour-step[aria-selected="true"] { color: var(--heading, #fff); background: rgba(139, 124, 248, .14); border-color: rgba(139, 124, 248, .4); }
+  .tour-step:focus-visible { outline: 2px solid var(--accent, #8b7cf8); outline-offset: 2px; }
+  .tour-num { font-family: ui-monospace, 'SF Mono', monospace; font-size: 10px; letter-spacing: .1em; color: var(--accent, #8b7cf8); }
+  .tour-step-title { font-size: 14px; font-weight: 500; }
+  .tour-controls { display: flex; gap: 6px; margin-top: 10px; padding: 0 4px; }
+  .tour-nav { all: unset; box-sizing: border-box; cursor: pointer; font-size: 12px; color: var(--muted, #8a8aa8); border: 1px solid rgba(139, 124, 248, .25); border-radius: 14px; padding: 5px 12px; transition: all .15s; }
+  .tour-nav:hover { color: var(--heading, #fff); border-color: rgba(139, 124, 248, .55); }
+  .tour-nav[aria-pressed="true"] { color: var(--accent, #8b7cf8); background: rgba(139, 124, 248, .14); border-color: rgba(139, 124, 248, .5); }
+  .tour-nav:focus-visible { outline: 2px solid var(--accent, #8b7cf8); outline-offset: 2px; }
+
+  .tour-frame { border-radius: 14px; overflow: visible; border: 1px solid rgba(139, 124, 248, .22); background: #05050c; box-shadow: 0 30px 80px rgba(0, 0, 0, .55), 0 0 0 1px rgba(255, 255, 255, .03); position: relative; }
+  .tour-chrome { display: flex; align-items: center; gap: 6px; padding: 9px 14px; border-bottom: 1px solid rgba(255, 255, 255, .06); background: rgba(255, 255, 255, .02); border-radius: 14px 14px 0 0; }
+  .tour-chrome span { width: 9px; height: 9px; border-radius: 50%; background: rgba(255, 255, 255, .16); }
+  .tour-chrome em { margin-left: 10px; font-style: normal; font-size: 11px; color: var(--muted, #8a8aa8); letter-spacing: .02em; }
+  .tour-panel { margin: 0; }
+  .tour-panel[hidden] { display: none; }
+  .tour-canvas { position: relative; width: 100%; background: #070711; }
+  .tour-canvas img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .tour-panel.active .tour-canvas img { animation: tour-in .45s ease both; }
+  @keyframes tour-in { from { opacity: 0; transform: scale(1.012); } to { opacity: 1; transform: none; } }
+  .tour-panel figcaption { padding: 14px 18px 16px; font-size: 13.5px; line-height: 1.55; color: var(--text, #c9c9de); border-top: 1px solid rgba(255, 255, 255, .06); border-radius: 0 0 14px 14px; background: rgba(255, 255, 255, .015); }
+
+  /* hotspots: a quiet outline that wakes up on hover/focus */
+  .tour-hot { all: unset; box-sizing: border-box; position: absolute; min-width: 34px; min-height: 22px; border-radius: 8px; cursor: pointer; border: 1.5px solid rgba(139, 124, 248, .55); background: rgba(139, 124, 248, .06); transition: background .2s, border-color .2s, box-shadow .2s; z-index: 2; }
+  .tour-hot:hover, .tour-hot:focus-visible, .tour-hot.open { background: rgba(139, 124, 248, .16); border-color: #b6adff; box-shadow: 0 0 0 4px rgba(139, 124, 248, .18); z-index: 5; }
+  .tour-hot:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .tour-dot { position: absolute; left: -6px; top: -6px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent, #8b7cf8); box-shadow: 0 0 0 0 rgba(139, 124, 248, .6); animation: tour-pulse 2.4s ease-out infinite; }
+  @keyframes tour-pulse { 0% { box-shadow: 0 0 0 0 rgba(139, 124, 248, .55); } 70%, 100% { box-shadow: 0 0 0 11px rgba(139, 124, 248, 0); } }
+  .tour-tip { position: absolute; left: 50%; top: calc(100% + 12px); transform: translate(-50%, 4px); width: max-content; max-width: min(300px, 70vw); padding: 10px 13px; border-radius: 11px; font-size: 12.5px; line-height: 1.5; text-align: left; color: #d8d8ee; background: rgba(12, 12, 26, .97); border: 1px solid rgba(139, 124, 248, .45); box-shadow: 0 14px 40px rgba(0, 0, 0, .55); opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s; }
+  .tour-tip strong { display: block; color: #fff; font-size: 12px; letter-spacing: .04em; margin-bottom: 2px; }
+  .tour-hot:hover .tour-tip, .tour-hot:focus-visible .tour-tip, .tour-hot.open .tour-tip { opacity: 1; transform: translate(-50%, 0); }
+  .tour-hot.flip .tour-tip { top: auto; bottom: calc(100% + 12px); }
+  .tour-hot.left .tour-tip { left: 0; transform: translate(0, 4px); } .tour-hot.left:hover .tour-tip, .tour-hot.left:focus-visible .tour-tip, .tour-hot.left.open .tour-tip { transform: none; }
+  .tour-hot.right .tour-tip { left: auto; right: 0; transform: translate(0, 4px); } .tour-hot.right:hover .tour-tip, .tour-hot.right:focus-visible .tour-tip, .tour-hot.right.open .tour-tip { transform: none; }
+
+  .tour-progress { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: transparent; overflow: hidden; border-radius: 0 0 14px 14px; }
+  .tour-progress i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #4ade80, #8b7cf8); }
+  .tour-progress.run i { animation: tour-run var(--tour-ms, 6500ms) linear forwards; }
+  @keyframes tour-run { from { width: 0; } to { width: 100%; } }
+
+  @media (max-width: 900px) {
+    .tour { grid-template-columns: 1fr; gap: 16px; }
+    .tour-steps { position: static; flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: 6px; padding-bottom: 4px; scrollbar-width: none; }
+    .tour-steps::-webkit-scrollbar { display: none; }
+    .tour-step { flex: none; padding: 8px 12px; }
+    .tour-num { display: none; }
+    .tour-controls { display: none; }
+    .tour-dot { width: 10px; height: 10px; left: -5px; top: -5px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tour-dot, .tour-panel.active .tour-canvas img, .tour-progress.run i { animation: none; }
+    .tour-tip, .tour-hot { transition: none; }
+  }
+</style>
+
+<script>
+  const root = document.querySelector('[data-tour]');
+  if (root) {
+    const tabs = [...root.querySelectorAll('.tour-step')];
+    const panels = [...root.querySelectorAll('.tour-panel')];
+    const bar = root.querySelector('.tour-progress');
+    const playBtn = root.querySelector('[data-play]');
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const STEP_MS = 6500;
+    let current = 0, timer = null, playing = false;
+
+    const closeAll = () => root.querySelectorAll('.tour-hot.open').forEach((h) => h.classList.remove('open'));
+
+    // keep tooltips inside the screenshot: flip up near the bottom, align to an edge near the sides
+    function place(hot) {
+      const canvas = hot.closest('.tour-canvas'); if (!canvas) return;
+      const c = canvas.getBoundingClientRect(), r = hot.getBoundingClientRect();
+      hot.classList.toggle('flip', r.bottom - c.top > c.height * 0.68);
+      hot.classList.toggle('left', r.left + r.width / 2 - c.left < 170);
+      hot.classList.toggle('right', c.right - (r.left + r.width / 2) < 170);
+    }
+
+    function show(i, { focus = false, user = true } = {}) {
+      current = (i + tabs.length) % tabs.length;
+      tabs.forEach((t, k) => { const on = k === current; t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; });
+      panels.forEach((p, k) => { const on = k === current; p.hidden = !on; p.classList.toggle('active', on); });
+      closeAll();
+      panels[current].querySelectorAll('.tour-hot').forEach(place);
+      if (focus) tabs[current].focus();
+      if (user && playing) stop(); else if (playing) restartBar();
+      if (!reduce) { const first = panels[current].querySelector('.tour-hot'); if (first) setTimeout(() => { if (!first.matches(':hover')) first.classList.add('open'); }, 650); }
+    }
+
+    function restartBar() { bar.classList.remove('run'); void bar.offsetWidth; bar.style.setProperty('--tour-ms', STEP_MS + 'ms'); bar.classList.add('run'); }
+    function play() {
+      if (reduce) return;
+      playing = true; playBtn.setAttribute('aria-pressed', 'true'); playBtn.textContent = '❚❚ Pause'; restartBar();
+      clearInterval(timer);
+      timer = setInterval(() => {
+        // someone is looking at a hotspot (pointer or keyboard focus inside the tour): don't pull the screen away
+        if (root.matches(':hover') || root.contains(document.activeElement)) { restartBar(); return; }
+        show(current + 1, { user: false });
+      }, STEP_MS);
+    }
+    function stop() { playing = false; clearInterval(timer); bar.classList.remove('run'); playBtn.setAttribute('aria-pressed', 'false'); playBtn.textContent = '▶ Auto'; }
+
+    tabs.forEach((t, k) => t.addEventListener('click', () => show(k)));
+    root.querySelector('[data-prev]').addEventListener('click', () => show(current - 1));
+    root.querySelector('[data-next]').addEventListener('click', () => show(current + 1));
+    playBtn.addEventListener('click', () => (playing ? stop() : play()));
+    if (reduce) playBtn.hidden = true;
+
+    root.querySelector('.tour-steps').addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); show(current + 1, { focus: true }); }
+      else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); show(current - 1, { focus: true }); }
+      else if (e.key === 'Home') { e.preventDefault(); show(0, { focus: true }); }
+      else if (e.key === 'End') { e.preventDefault(); show(tabs.length - 1, { focus: true }); }
+    });
+    // ← → anywhere while the tour is on screen (not while typing, not with modifiers)
+    let visible = false;
+    new IntersectionObserver((e) => { visible = e[0].isIntersecting; }, { threshold: 0.4 }).observe(root);
+    document.addEventListener('keydown', (e) => {
+      if (!visible || e.metaKey || e.ctrlKey || e.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable || root.querySelector('.tour-steps').contains(e.target)) return;
+      if (e.key === 'ArrowRight') show(current + 1); else if (e.key === 'ArrowLeft') show(current - 1);
+    });
+
+    // hotspots: tap to pin on touch, Esc / outside click to close
+    root.addEventListener('click', (e) => {
+      const hot = e.target.closest('.tour-hot');
+      if (!hot) { if (!e.target.closest('.tour-tip')) closeAll(); return; }
+      const was = hot.classList.contains('open'); closeAll(); if (!was) { place(hot); hot.classList.add('open'); }
+    });
+    root.addEventListener('mouseover', (e) => { const hot = e.target.closest('.tour-hot'); if (hot) { place(hot); if (!hot.classList.contains('open')) closeAll(); } });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll(); });
+    // pause autoplay while the pointer or focus is inside
+    root.addEventListener('mouseenter', () => { if (playing) stop(); });
+    root.addEventListener('focusin', () => { if (playing) stop(); });
+    window.addEventListener('resize', () => panels[current].querySelectorAll('.tour-hot').forEach(place));
+    // first step: hint the first hotspot once the tour scrolls into view
+    new IntersectionObserver((e, o) => { if (e[0].isIntersecting) { show(0, { user: false }); o.disconnect(); } }, { threshold: 0.5 }).observe(root);
+  }
+</script>

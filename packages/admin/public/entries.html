@@ -291,7 +291,7 @@
                   <div style="color:var(--heading);font-weight:500">${escHtml(title)}${localeBadge}</div>
                   <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px">${escHtml(e.slug)}</div>
                 </td>
-                <td>${isTrash ? `<span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${deleted}</span>` : `<span class="badge badge-${e.status}">${e.status}${schedInfo}</span>`}</td>
+                <td>${isTrash ? `<span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${deleted}</span>` : `<span class="badge badge-${e.status}">${String(e.status).replace(/_/g, ' ')}${schedInfo}</span>`}</td>
                 <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${isTrash ? '' : updated}</td>
                 <td style="width:1%;white-space:nowrap">
                   <div class="row-actions">

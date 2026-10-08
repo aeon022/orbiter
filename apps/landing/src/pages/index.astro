@@ -147,6 +147,7 @@ const faqs = [
     a: 'MIT License. Use it for any project including commercial ones. Modify it, fork it, distribute it. No attribution required (though appreciated). The source is on GitHub and stays open source.',
   },
 ];
+import Tour from '../components/Tour.astro';
 ---
 
 <!doctype html>
@@ -409,9 +410,12 @@ const faqs = [
     </div>
   </section>
 
+  <!-- INTERACTIVE TOUR -->
+  <Tour />
+
   <!-- SCREENSHOTS -->
   <section id="screenshots" class="screenshots-section">
-    <h2 class="reveal">See it in action</h2>
+    <h2 class="reveal">More screens</h2>
     <p class="section-lead reveal reveal-delay-1">A full CMS admin — standalone server on port 4322, glassmorphism UI, three themes.</p>
 
     <div class="screenshot-main reveal reveal-delay-2">

@@ -638,6 +638,9 @@ import { ClientRouter } from 'astro:transitions';
     .rm-chip:hover { color: var(--heading); border-color: rgba(139,124,248,0.45); }
     .rm-chip[aria-pressed="true"] { color: var(--accent); background: rgba(139,124,248,0.14); border-color: rgba(139,124,248,0.5); }
     .rm-chip .n { opacity: .6; margin-left: 4px; font-variant-numeric: tabular-nums; }
+    :global(.rm-weigh) { display: inline-block; margin: 8px 0 0 10px; font-size: 11px; color: var(--muted); text-decoration: none; border-bottom: 1px dashed rgba(139,124,248,0.35); transition: color .15s, border-color .15s; }
+    :global(.rm-weigh:hover) { color: var(--accent); border-bottom-color: var(--accent); }
+    .rm-suggest { text-decoration: none; display: inline-flex; align-items: center; }
     .rm-machine { margin-left: auto; color: var(--accent); border-style: dashed; }
     /* the page-wide `* { margin: 0 }` reset also removes a modal dialog's auto margins → centre it explicitly */
     .mv-dialog { margin: auto; width: min(760px, calc(100vw - 32px)); max-height: 80vh; padding: 0; border: 1px solid rgba(139,124,248,0.35); border-radius: 18px; background: rgba(9,9,20,0.96); color: var(--text); box-shadow: 0 24px 80px rgba(0,0,0,0.6); }
@@ -1216,6 +1219,7 @@ import { ClientRouter } from 'astro:transitions';
       <button class="rm-chip" type="button" data-filter="coming" aria-pressed="true">Coming up<span class="n"></span></button>
       <button class="rm-chip" type="button" data-filter="shipped" aria-pressed="false">Shipped<span class="n"></span></button>
       <button class="rm-chip" type="button" data-filter="all" aria-pressed="false">All<span class="n"></span></button>
+      <a class="rm-chip rm-suggest" id="rm-suggest" href="https://github.com/aeon022/orbiter/issues/new?labels=roadmap&title=Idea%3A+&body=What+problem+would+this+solve%3F+Who+is+it+for%3F" target="_blank" rel="noopener">＋ Suggest an idea</a>
       <button class="rm-chip rm-machine" type="button" id="rm-machine-btn" aria-haspopup="dialog">◈ Machine view</button>
     </div>
   </div>
@@ -1737,6 +1741,14 @@ import { ClientRouter } from 'astro:transitions';
       el.id = id;
       const a = document.createElement('a'); a.className = 'rm-anchor'; a.href = '#' + id; a.textContent = '#'; a.setAttribute('aria-label', 'Link to ' + title.textContent);
       title.appendChild(a);
+    });
+    // Items that are still ahead get a "weigh in" link: a pre-filled GitHub issue, so a vote is a comment, not a form on our side
+    items.filter((el) => el.dataset.kind !== 'shipped').forEach((el) => {
+      const t = el.querySelector('.rm-title').textContent.replace(/#$/, '').trim();
+      const a = document.createElement('a'); a.className = 'rm-weigh'; a.target = '_blank'; a.rel = 'noopener';
+      a.href = 'https://github.com/aeon022/orbiter/issues/new?labels=roadmap&title=' + encodeURIComponent('Roadmap: ' + t) + '&body=' + encodeURIComponent('I would use this because…\n\nMy setup / use case:\n');
+      a.textContent = 'Weigh in on GitHub ↗'; a.setAttribute('aria-label', 'Weigh in on “' + t + '” on GitHub (opens a new issue)');
+      el.querySelector('.rm-tag')?.after(a);
     });
     const count = { shipped: items.filter(i => i.dataset.kind === 'shipped').length };
     count.coming = items.length - count.shipped; count.all = items.length;

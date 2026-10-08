@@ -1,0 +1,242 @@
+[
+  {
+    "id": "dashboard",
+    "title": "Dashboard",
+    "caption": "Calendar of what goes live when, stats at a glance, notes and to-dos \u2014 everything an editor needs on one screen.",
+    "file": "/tour/dashboard.webp",
+    "width": 1600,
+    "height": 1000,
+    "hotspots": [
+      {
+        "label": "This month",
+        "text": "Scheduled and published entries on a calendar; click a day.",
+        "x": 3.33,
+        "y": 18.08,
+        "w": 78.67,
+        "h": 51.94
+      },
+      {
+        "label": "Stats",
+        "text": "Entries, drafts and media \u2014 live from the pod.",
+        "x": 83.33,
+        "y": 6.13,
+        "w": 13.33,
+        "h": 63.89
+      },
+      {
+        "label": "Station dock",
+        "text": "Collections, tools and the command palette in one floating dock.",
+        "x": 7.88,
+        "y": 87.81,
+        "w": 84.24,
+        "h": 9.79
+      }
+    ]
+  },
+  {
+    "id": "security",
+    "title": "Security check",
+    "caption": "The security check tells admins what to fix before it bites: plaintext credentials, an open API, a pod tracked by git \u2014 each with the fix. Same as orbiter doctor.",
+    "file": "/tour/security.webp",
+    "width": 1600,
+    "height": 1000,
+    "hotspots": [
+      {
+        "label": "Security check",
+        "text": "Findings with the fix next to each one \u2014 encrypt credentials, require a token\u2026",
+        "x": 71.58,
+        "y": 25.28,
+        "w": 25,
+        "h": 32.59
+      }
+    ]
+  },
+  {
+    "id": "editor",
+    "title": "Editor",
+    "caption": "The body stays the main content \u2014 block editor, AI assistant and suggestions. Custom fields wait in a collapsible card above it.",
+    "file": "/tour/editor.webp",
+    "width": 1600,
+    "height": 1000,
+    "hotspots": [
+      {
+        "label": "Details card",
+        "text": "Collapsed, it takes one line. Open it when you need the fields.",
+        "x": 15.83,
+        "y": 35.82,
+        "w": 68.33,
+        "h": 32.9
+      },
+      {
+        "label": "Block editor",
+        "text": "Write in blocks; insert media, tables and callouts.",
+        "x": 15.83,
+        "y": 72.46,
+        "w": 68.33,
+        "h": 27.54
+      },
+      {
+        "label": "AI & suggestions",
+        "text": "Local (Ollama) or cloud models; translate missing languages as drafts.",
+        "x": 38.98,
+        "y": 4.33,
+        "w": 11.35,
+        "h": 3.47
+      }
+    ]
+  },
+  {
+    "id": "details",
+    "title": "Custom fields",
+    "caption": "Open the Details card: fields grouped as in your schema, two per row, long inputs at full width. It remembers how you left it.",
+    "file": "/tour/details.webp",
+    "width": 1600,
+    "height": 1000,
+    "hotspots": [
+      {
+        "label": "Collapsible card",
+        "text": "Click to collapse; the choice is remembered per collection.",
+        "x": 15.92,
+        "y": 36.35,
+        "w": 68.17,
+        "h": 5.07
+      },
+      {
+        "label": "Grouped fields",
+        "text": "Groups come from your schema; the first one opens by default.",
+        "x": 17.25,
+        "y": 44.22,
+        "w": 65.5,
+        "h": 55.78
+      },
+      {
+        "label": "Room for long fields",
+        "text": "Text areas, tables, relations and media take the full row.",
+        "x": 18.67,
+        "y": 53.5,
+        "w": 62.67,
+        "h": 12.8
+      }
+    ]
+  },
+  {
+    "id": "review",
+    "title": "Review workflow",
+    "caption": "Editors submit, reviewers approve. In-review, scheduled and draft entries are one filter away.",
+    "file": "/tour/review.webp",
+    "width": 1600,
+    "height": 1000,
+    "hotspots": [
+      {
+        "label": "Status filters",
+        "text": "Published, drafts, in review, scheduled, trash.",
+        "x": 5.08,
+        "y": 28.82,
+        "w": 89.83,
+        "h": 3.33
+      },
+      {
+        "label": "In review",
+        "text": "Waiting for a reviewer \u2014 nothing goes live by accident.",
+        "x": 45.04,
+        "y": 41.77,
+        "w": 5.97,
+        "h": 2.67
+      },
+      {
+        "label": "Scheduled",
+        "text": "Publishes itself at the time you set.",
+        "x": 45.04,
+        "y": 65.05,
+        "w": 12.9,
+        "h": 2.67
+      }
+    ]
+  },
+  {
+    "id": "media",
+    "title": "Media",
+    "caption": "Usage badges, unused and broken-reference filters, and focal points so crops keep the subject in frame.",
+    "file": "/tour/media.webp",
+    "width": 1600,
+    "height": 1000,
+    "hotspots": [
+      {
+        "label": "Clean-up filters",
+        "text": "Find unused files and entries pointing at deleted media.",
+        "x": 3.33,
+        "y": 60.69,
+        "w": 93.33,
+        "h": 3.07
+      },
+      {
+        "label": "Where is it used?",
+        "text": "Every file shows how many entries use it.",
+        "x": 4.42,
+        "y": 93.14,
+        "w": 15.7,
+        "h": 1.92
+      },
+      {
+        "label": "Focal point",
+        "text": "Click the important part; ?ar=16:9 crops respect it.",
+        "x": 8.29,
+        "y": 81.08,
+        "w": 7.95,
+        "h": 3.2
+      }
+    ]
+  },
+  {
+    "id": "account",
+    "title": "Account & sessions",
+    "caption": "Two-factor sign-in with an authenticator app, recovery codes, and every signed-in device with one-click sign-out.",
+    "file": "/tour/account.webp",
+    "width": 1600,
+    "height": 1000,
+    "hotspots": [
+      {
+        "label": "Two-factor",
+        "text": "TOTP with one-time recovery codes; codes can\u2019t be replayed.",
+        "x": 25.42,
+        "y": 25.36,
+        "w": 26.17,
+        "h": 2.27
+      },
+      {
+        "label": "Active sessions",
+        "text": "Browser, IP and time \u2014 sign out any device.",
+        "x": 23.42,
+        "y": 59.5,
+        "w": 53.17,
+        "h": 24.21
+      }
+    ]
+  },
+  {
+    "id": "settings",
+    "title": "Keys & webhooks",
+    "caption": "API keys with scopes, expiry and rate limits. Signed webhooks with retries and a delivery log.",
+    "file": "/tour/settings.webp",
+    "width": 1600,
+    "height": 1000,
+    "hotspots": [
+      {
+        "label": "API keys",
+        "text": "Read-only, or draft-only for agents \u2014 limited to collections, with an expiry date.",
+        "x": 52.08,
+        "y": 34.71,
+        "w": 42,
+        "h": 12.27
+      },
+      {
+        "label": "Signed webhooks",
+        "text": "HMAC-signed, retried, logged.",
+        "x": 52.08,
+        "y": 61.64,
+        "w": 42,
+        "h": 5.07
+      }
+    ]
+  }
+]
