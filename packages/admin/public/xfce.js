@@ -206,6 +206,15 @@
     if (metaPanel.classList.contains('open')) refreshHUDActivity();
   }
 
+  // Left-docked popups are centred on their dock button; shift them so a tall one stays fully on screen.
+  function fitLeftPopup(popup, centerY) {
+    popup.style.transform = 'none';
+    var h   = popup.offsetHeight;
+    var min = (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sb-h'), 10) || 26) + 8;
+    var max = window.innerHeight - h - 8;
+    popup.style.top = Math.round(Math.max(min, Math.min(centerY - h / 2, max))) + 'px';
+  }
+
   // ── Tools popup ───────────────────────────────────────────────────────
   var toolsPopup;
 
@@ -283,6 +292,9 @@
       }
     }
     toolsPopup.classList.toggle('open');
+    if (isLeft && btn && toolsPopup.classList.contains('open')) {
+      fitLeftPopup(toolsPopup, btn.getBoundingClientRect().top + btn.getBoundingClientRect().height / 2);
+    }
   }
 
   // ── Hover preview card above collection items ────────────────────────
@@ -1544,6 +1556,7 @@
                   popup.style.transform = '';
                 }
                 popup.classList.add('open');
+                if (isLeft) fitLeftPopup(popup, bRect.top + bRect.height / 2);
               }
               function scheduleHide() {
                 drawerTimer = setTimeout(function () { popup.classList.remove('open'); hideColPreview(); }, 250);

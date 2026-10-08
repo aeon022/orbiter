@@ -2191,7 +2191,13 @@ html[data-style="xfce"] .xfce-in-focus .xfce-focus-trigger::after {
   flex-direction: column;
   gap: 2px;
   min-width: 130px;
+  /* Long lists (many collections / tools) scroll instead of running off the screen */
+  max-height: calc(100dvh - var(--dock-h, 76px) - var(--sb-h, 26px) - 56px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
+.xfce-tools-popup > * { flex-shrink: 0; }
 .xfce-tools-popup.open {
   display: flex;
 }
@@ -2461,6 +2467,7 @@ html[data-style="xfce"][data-dock-pos="left"] .xfce-palette {
 }
 html[data-style="xfce"][data-dock-pos="left"] .xfce-tools-popup {
   bottom: auto;
+  max-height: calc(100dvh - var(--sb-h, 26px) - 32px);
 }
 html[data-style="xfce"][data-dock-pos="left"] .xfce-ws-overlay {
   bottom: auto; left: 110px; top: 50%; transform: translateY(-50%);

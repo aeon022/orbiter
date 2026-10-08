@@ -1388,7 +1388,7 @@
           const key = 'orb_fields_collapsed_' + COLLECTION;
           let collapsed = false; try { collapsed = hasBody && localStorage.getItem(key) === '1'; } catch {}
           dest.innerHTML = `<button type="button" class="fields-card-head" id="fields-card-head" aria-expanded="${!collapsed}" aria-controls="fields-card-body">
-              <span class="fc-chevron">▶</span><span class="fc-title">Fields</span><span class="fc-count">${fields.length}</span><span class="fc-filled">${filled} filled</span></button>
+              <span class="fc-chevron">▶</span><span class="fc-title">Details</span><span class="fc-count">${fields.length}</span><span class="fc-filled">${filled} filled</span></button>
             <div class="fields-card-body" id="fields-card-body"></div>`;
           dest.querySelector('#fields-card-body').append(...src.children);
           dest.classList.toggle('collapsed', collapsed);
