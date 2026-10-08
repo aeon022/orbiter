@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { openPod, verifyPassword, generateToken } from '@a83/orbiter-core';
+import { clientIp } from '../net.js';
 
 export const authRoutes = new Hono();
 
@@ -9,16 +10,19 @@ const LOGIN_WINDOW  = 15 * 60 * 1000; // 15 min
 const loginAttempts = new Map(); // ip → { count, resetAt }
 
 function getRealIp(c) {
-  return c.req.header('x-forwarded-for')?.split(',')[0].trim()
-    ?? c.req.header('x-real-ip')
-    ?? 'unknown';
+  return clientIp(c.env?.incoming?.socket?.remoteAddress, c.req.header('x-forwarded-for'));
 }
 
 function checkRateLimit(ip) {
   const now  = Date.now();
   const rec  = loginAttempts.get(ip);
   if (rec && rec.resetAt > now && rec.count >= LOGIN_MAX) return false;
-  if (!rec || rec.resetAt <= now) loginAttempts.set(ip, { count: 0, resetAt: now + LOGIN_WINDOW });
+  if (!rec || rec.resetAt <= now) {
+    if (loginAttempts.size > 10_000) {
+      for (const [k, v] of loginAttempts) if (v.resetAt <= now) loginAttempts.delete(k);
+    }
+    loginAttempts.set(ip, { count: 0, resetAt: now + LOGIN_WINDOW });
+  }
   return true;
 }
 

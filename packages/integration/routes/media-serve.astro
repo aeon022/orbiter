@@ -5,7 +5,7 @@ export const prerender = false;
  * Supports blob (SQLite), local (disk), and external (url redirect) backends.
  */
 import { podPath } from 'orbiter:db';
-import { openPod } from '@a83/orbiter-core';
+import { openPod, mediaResponseHeaders } from '@a83/orbiter-core';
 
 const { id } = Astro.params;
 
@@ -27,19 +27,9 @@ if (row.path) {
   const { readFile } = await import('node:fs/promises');
   const data = await readFile(row.path).catch(() => null);
   if (!data) return new Response('Not found on disk', { status: 404 });
-  return new Response(data, {
-    headers: {
-      'Content-Type':  row.mime_type,
-      'Cache-Control': 'public, max-age=31536000, immutable',
-    },
-  });
+  return new Response(data, { headers: mediaResponseHeaders(row.mime_type) });
 }
 
 // Default: serve BLOB from SQLite
-return new Response(row.data, {
-  headers: {
-    'Content-Type':  row.mime_type,
-    'Cache-Control': 'public, max-age=31536000, immutable',
-  },
-});
+return new Response(row.data, { headers: mediaResponseHeaders(row.mime_type) });
 ---

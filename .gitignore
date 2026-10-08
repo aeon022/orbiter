@@ -27,3 +27,6 @@ Thumbs.db
 # Local documents (drafts, notes, posts)
 documents/
 /screenshots/
+
+# Private security notes (unfixed findings — never commit)
+SECURITY-TODO.md

@@ -1,7 +1,10 @@
 import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
-import { readFileSync } from 'node:fs';
+import { readFileSync, rmSync, mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { requireAdmin } from '../middleware/auth.js';
+import { SECRET_KEYS } from './meta.js';
 
 export const githubRoutes = new Hono();
 githubRoutes.use('*', requireAdmin);
@@ -48,6 +51,28 @@ function extFor(mime, filename) {
   return m ? m[0] : '.bin';
 }
 
+// Secrets that must never leave the server, beyond the masked-in-UI SECRET_KEYS.
+const EXTRA_SECRET_KEYS = ['api.keys', 'webhooks.urls', 'build.webhook_url'];
+
+export function scrubbedPodBase64(podPath) {
+  const dir = mkdtempSync(join(tmpdir(), 'orbiter-push-'));
+  const copy = join(dir, 'content.pod');
+  try {
+    const src = openPod(podPath);
+    src.db.exec(`VACUUM INTO '${copy.replace(/'/g, "''")}'`);
+    src.close();
+    const clean = openPod(copy);
+    clean.db.exec('DELETE FROM _sessions; DELETE FROM _users;');
+    const del = clean.db.prepare('DELETE FROM _meta WHERE key = ?');
+    for (const k of [...SECRET_KEYS, ...EXTRA_SECRET_KEYS]) del.run(k);
+    clean.db.exec("DELETE FROM _meta WHERE key LIKE 'user.%' OR key LIKE 'lock.%'");
+    clean.close();
+    return readFileSync(copy).toString('base64');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
 // POST /api/github/push — commit pod + media to GitHub
 githubRoutes.post('/push', async (c) => {
   const podPath = c.get('podPath');
@@ -83,8 +108,8 @@ githubRoutes.post('/push', async (c) => {
     db.setMeta('storage.mode', 'git');
     db.close();
 
-    // Read pod as base64 (after writing storage.mode)
-    const podBase64 = readFileSync(podPath).toString('base64');
+    // Push a scrubbed copy: never ship live sessions, password hashes or stored credentials to git.
+    const podBase64 = scrubbedPodBase64(podPath);
 
     const files = [
       { path: 'content.pod',      content: podBase64, encoding: 'base64' },

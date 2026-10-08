@@ -211,3 +211,25 @@ class S3Backend {
     this.db.deleteMedia(id);
   }
 }
+
+// Types that are safe to render inline when served from our origin. Everything else
+// (html, js, xml, ...) is forced to download so an uploaded file can't run script here.
+const INLINE_SAFE = /^(image\/(jpeg|png|gif|webp|avif|tiff|svg\+xml)|video\/(mp4|webm|ogg)|audio\/(mpeg|ogg|wav|webm)|application\/pdf)$/;
+
+/**
+ * Response headers for serving a stored media file. Uploaded files are untrusted:
+ * nosniff + a sandboxing CSP (so an SVG opened directly can't run script; skipped for
+ * PDF, whose viewer breaks under `sandbox`) + attachment for non-allowlisted types.
+ */
+export function mediaResponseHeaders(mimeType) {
+  const mime = String(mimeType ?? '').toLowerCase().split(';')[0].trim();
+  const safe = INLINE_SAFE.test(mime);
+  const headers = {
+    'Content-Type':           safe ? mime : 'application/octet-stream',
+    'Cache-Control':          'public, max-age=31536000, immutable',
+    'X-Content-Type-Options': 'nosniff',
+  };
+  if (!safe) headers['Content-Disposition'] = 'attachment';
+  if (mime !== 'application/pdf') headers['Content-Security-Policy'] = "sandbox; default-src 'none'; style-src 'unsafe-inline'";
+  return headers;
+}

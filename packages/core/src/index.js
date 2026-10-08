@@ -2,4 +2,4 @@
 export { OrbiterDB } from './db.js';
 export { createPod, openPod } from './pod.js';
 export { hashPassword, verifyPassword, generateToken, hashApiKey, checkApiKey, safeEqual } from './auth.js';
-export { getMediaBackend } from './media-backend.js';
+export { getMediaBackend, mediaResponseHeaders } from './media-backend.js';

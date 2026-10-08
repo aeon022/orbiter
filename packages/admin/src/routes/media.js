@@ -1,7 +1,8 @@
 import { Hono } from 'hono';
-import { openPod, getMediaBackend } from '@a83/orbiter-core';
+import { openPod, getMediaBackend, mediaResponseHeaders } from '@a83/orbiter-core';
 import { randomUUID } from 'node:crypto';
 import sharp from 'sharp';
+import { safeFetch } from '../net.js';
 
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/tiff']);
 
@@ -57,21 +58,13 @@ mediaRoutes.get('/:id/raw', async (c) => {
     db.close();
     if (!result?.data) return c.json({ error: 'File not found on disk' }, 404);
     return new Response(result.data, {
-      headers: {
-        'Content-Type':  item.mime_type,
-        'Cache-Control': 'public, max-age=31536000, immutable',
-      },
+      headers: mediaResponseHeaders(item.mime_type),
     });
   }
 
   // Default: serve BLOB from SQLite
   db.close();
-  return new Response(item.data, {
-    headers: {
-      'Content-Type':  item.mime_type,
-      'Cache-Control': 'public, max-age=31536000, immutable',
-    },
-  });
+  return new Response(item.data, { headers: mediaResponseHeaders(item.mime_type) });
 });
 
 // POST /api/media  — multipart upload
@@ -120,16 +113,15 @@ mediaRoutes.post('/import-url', async (c) => {
   const gdrive = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
   if (gdrive) url = `https://drive.google.com/uc?export=download&id=${gdrive[1]}`;
 
-  let resp;
+  let resp, rawBuffer;
   try {
-    resp = await fetch(url, { redirect: 'follow', headers: { 'User-Agent': 'Orbiter-Admin/1.0' } });
+    ({ resp, buffer: rawBuffer } = await safeFetch(url, { headers: { 'User-Agent': 'Orbiter-Admin/1.0' } }));
   } catch (err) {
     return c.json({ error: `Fetch failed: ${err.message}` }, 400);
   }
   if (!resp.ok) return c.json({ error: `Remote returned ${resp.status}` }, 400);
 
   const mime      = (resp.headers.get('content-type') || 'application/octet-stream').split(';')[0].trim();
-  const rawBuffer = Buffer.from(await resp.arrayBuffer());
   const filename  = url.split('/').pop()?.split('?')[0] || 'imported';
   const id        = randomUUID();
   const db        = openPod(c.get('podPath'));
@@ -157,11 +149,12 @@ mediaRoutes.post('/add-link', async (c) => {
   try { body = await c.req.json(); } catch { return c.json({ error: 'Invalid JSON' }, 400); }
   const { url, alt, folder, filename: providedName } = body;
   if (!url) return c.json({ error: 'No URL provided' }, 400);
+  if (!/^https?:\/\//i.test(url)) return c.json({ error: 'Only http(s) URLs are allowed' }, 400);
 
   // Detect mime via HEAD request, fall back to extension sniffing
   let mime = 'application/octet-stream';
   try {
-    const head = await fetch(url, { method: 'HEAD', redirect: 'follow', headers: { 'User-Agent': 'Orbiter-Admin/1.0' } });
+    const { resp: head } = await safeFetch(url, { method: 'HEAD', headers: { 'User-Agent': 'Orbiter-Admin/1.0' } });
     const ct = head.headers.get('content-type');
     if (ct) mime = ct.split(';')[0].trim();
   } catch {
