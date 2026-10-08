@@ -58,7 +58,8 @@ Ausgangspunkt: User wollte bei den Security-Sachen weitermachen; drei Advisories
 8. **Plugin-System-Konzept** geschrieben (`PLUGIN-CONCEPT.md`, nichts gebaut), Basis-Security-Header + **Nonce-CSP im Report-Only-Modus** eingebaut.
 9. Obsidian-Plugin-Idee des Users → auf die Roadmap gesetzt (Version 1 = Push als Entwurf).
 10. Dieses `stage.md` angelegt und ins Git genommen.
-11. **Plugin-Ideen** gesammelt (Abschnitt 11 in `PLUGIN-CONCEPT.md`) und die **Docs-Seite „Webhook recipes"** gebaut (`/docs/webhook-recipes`): Empfänger-Skript mit Signaturprüfung + Handler für Slack/Telegram, IndexNow, Cloudflare, Mastodon. Das Empfänger-Skript wurde gegen echte signierte Zustellungen getestet (Ping ignoriert, Publish erkannt, Fälschung ergibt 401).
+11. **Roadmap erweitert** (Agent Proposals, Semantic Search, Verifiable Content, Claims, Freshness, POSSE, Privacy-Tools, Open POD Spec) und **Editor-Layout umgebaut**: Custom Fields wandern aus der Sidebar als Karten (2 Spalten) in den Hauptbereich; Collections ohne `body` blenden Block-Toolbar aus. Logik per jsdom getestet, **optisch noch nicht gesehen** (steht in der Klick-Checkliste).
+12. **Plugin-Ideen** gesammelt (Abschnitt 11 in `PLUGIN-CONCEPT.md`) und die **Docs-Seite „Webhook recipes"** gebaut (`/docs/webhook-recipes`): Empfänger-Skript mit Signaturprüfung + Handler für Slack/Telegram, IndexNow, Cloudflare, Mastodon. Das Empfänger-Skript wurde gegen echte signierte Zustellungen getestet (Ping ignoriert, Publish erkannt, Fälschung ergibt 401).
 
 ---
 
