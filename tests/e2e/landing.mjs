@@ -97,14 +97,15 @@ await check('docs: package-manager switch, copy button, edit link; security.txt;
   const sec = await (await fetch(BASE + '/.well-known/security.txt')).text();
   assert(/^Contact: /m.test(sec) && /^Expires: /m.test(sec), 'security.txt incomplete');
   await page.goto(BASE + '/', { waitUntil: 'networkidle0' });
-  const hidden = await page.$$eval('.update-card', (c) => c.filter((x) => getComputedStyle(x).display === 'none').length);
-  assert(hidden >= 5, 'older release cards are not collapsed (' + hidden + ' hidden)');
+  const homeCards = await page.$$eval('.update-card', (c) => c.length);
+  assert(homeCards === 3, 'home should show the 3 latest releases, got ' + homeCards);
+  await page.goto(BASE + '/changelog/', { waitUntil: 'networkidle0' });
+  const allCards = await page.$$eval('.update-card', (c) => c.length);
+  assert(allCards >= 14, 'changelog page has only ' + allCards + ' releases');
+  await page.goto(BASE + '/', { waitUntil: 'networkidle0' });
   assert(!(await page.$eval('#cmp-details', (d) => d.open)), 'comparison table should start collapsed');
   await page.goto(BASE + '/#comparison', { waitUntil: 'networkidle0' }); await sleep(200);
   assert(await page.$eval('#cmp-details', (d) => d.open), '#comparison did not open the table');
-  const lastCard = await page.$$eval('.update-card', (c) => c.filter((x) => x.id).pop().id);
-  await page.goto(BASE + '/#' + lastCard, { waitUntil: 'networkidle0' }); await sleep(200);
-  assert(await page.$eval('#' + lastCard, (c) => getComputedStyle(c).display !== 'none'), 'deep link to an old release did not expand the list');
   await page.keyboard.press('/'); await sleep(300);
   await page.type('#sp-input', 'webhook'); await sleep(400);
   await page.click('.sp-chip[data-kind="Roadmap"]'); await sleep(300);
@@ -116,7 +117,7 @@ await check('docs: package-manager switch, copy button, edit link; security.txt;
 
 await check('a11y: no critical or serious axe violations on home, vision and docs pages', async () => {
   const problems = [];
-  for (const path of ['/', '/vision/', '/docs/', '/docs/security/', '/docs/disclosure/', '/docs/cli/']) {
+  for (const path of ['/', '/vision/', '/docs/', '/docs/security/', '/docs/disclosure/', '/docs/cli/', '/changelog/']) {
     const page = await newPage(); await page.goto(BASE + path, { waitUntil: 'networkidle0' }); await sleep(400);
     for (const v of await axeProblems(page)) problems.push(`${path}: ${v}`);
     await page.close();

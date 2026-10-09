@@ -43,7 +43,7 @@
     { t: 'Roadmap', u: '/vision/', k: 'Page', b: 'What is shipped and what comes next' },
     { t: 'Security check & secrets', u: '/docs/security/', k: 'Docs', b: 'orbiter doctor, encrypted credentials, 2FA, API key limits' },
     { t: 'Webhooks', u: '/docs/webhooks/', k: 'Docs', b: 'Signed events with retries' },
-    { t: "What's new", u: '/#updates', k: 'Page', b: 'Changelog — also as an Atom feed' },
+    { t: "What's new", u: '/changelog/', k: 'Page', b: 'Changelog — also as an Atom feed' },
   ];
   const KIND_NAME = { Docs: 'Docs', Roadmap: 'Roadmap', Changelog: 'Changelog', Page: 'Page', Recent: 'Recent' };
   const RECENT_KEY = 'orb_search_recent';

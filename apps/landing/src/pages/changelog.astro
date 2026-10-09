@@ -1,0 +1,52 @@
+---
+import '../styles/landing.css';
+import FooterSignature from '../components/FooterSignature.astro';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+const cards = readFileSync(resolve(process.cwd(), 'src/data/updates.html'), 'utf-8');
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Changelog — Orbiter</title>
+  <meta name="description" content="Every Orbiter release and notable change, newest first. Also as Atom and JSON feed." />
+  <link rel="canonical" href="https://orbiter.sh/changelog/" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="alternate" type="application/atom+xml" title="Orbiter changelog (Atom)" href="/changelog.xml" />
+  <link rel="alternate" type="application/feed+json" title="Orbiter changelog (JSON Feed)" href="/changelog.json" />
+  <script src="/search.js" defer></script>
+</head>
+<body id="top">
+  <div class="nebula nebula-1" aria-hidden="true"></div>
+  <header class="cl-head">
+    <a href="/" class="cl-logo">🪐 Orbiter</a>
+    <nav aria-label="Site">
+      <a href="/">Home</a><a href="/docs/">Docs</a><a href="/vision/">Vision</a>
+      <button type="button" class="sp-trigger" data-search-open aria-label="Search the site (press /)">Search <kbd>/</kbd></button>
+      <a href="https://github.com/aeon022/orbiter" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+  <main id="main">
+    <section class="updates-section cl-page">
+      <h1>Changelog</h1>
+      <p class="section-lead">Every release, newest first. <span class="feed-links">Subscribe: <a href="/changelog.xml">Atom</a> · <a href="/changelog.json">JSON Feed</a></span></p>
+      <div class="updates-feed"><Fragment set:html={cards} /></div>
+    </section>
+  </main>
+  <FooterSignature />
+</body>
+</html>
+
+<style is:global>
+  .cl-head { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; max-width: 1100px; margin: 0 auto; padding: 22px 24px; }
+  .cl-logo { color: var(--heading, #fff); font-weight: 700; text-decoration: none; letter-spacing: .04em; }
+  .cl-head nav { all: unset; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; font-size: 14px; }
+  .cl-head nav a { color: var(--muted); text-decoration: none; }
+  .cl-head nav a:hover { color: var(--text); }
+  .cl-head nav .sp-trigger { font: inherit; font-size: 12px; color: var(--muted); background: transparent; border: 1px solid rgba(139,124,248,.3); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+  .cl-page { position: relative; z-index: 1; padding-top: 40px; }
+  .cl-page h1 { font-size: clamp(2rem, 4vw, 3rem); text-align: center; margin-bottom: 12px; }
+  .cl-page .section-lead { text-align: center; }
+</style>

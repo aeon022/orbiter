@@ -15,6 +15,10 @@ const _aiMdRaw = readFileSync(resolve(process.cwd(), '../../AI_SETUP.md'), 'utf-
 const _aiMatch = _aiMdRaw.match(/^```\n([\s\S]+)\n```\s*$/m);
 const aiPromptText = _aiMatch ? _aiMatch[1] : _aiMdRaw;
 
+// newest three releases for the home page; the full list lives on /changelog/ (same markup, src/data/updates.html)
+const _updatesAll = readFileSync(resolve(process.cwd(), 'src/data/updates.html'), 'utf-8');
+const latestUpdates = _updatesAll.split(/(?=<div class="update-card)/).filter((c) => c.trim()).slice(0, 3).join('');
+
 const features = [
   { icon: '◈', title: 'One file. Everything.',        body: 'Content, media, schema, users, sessions — all in a single POD (a SQLite database with a <code>.pod</code> extension). Copy it anywhere. Back it up with <code>cp</code>.' },
   { icon: '⬡', title: 'Astro-native',                 body: 'One line in <code>astro.config.mjs</code> gives you <code>orbiter:collections</code> — a Vite virtual module that snapshots your published content at build time. Zero runtime fetch.' },
@@ -269,7 +273,7 @@ import Tour from '../components/Tour.astro';
       <a href="#how-it-works"  data-section="how-it-works">How it works</a>
       <a href="#features"      data-section="features">Features</a>
       <a href="#station-mode"  data-section="station-mode">Station ◉</a>
-      <a href="#updates"       data-section="updates">Changelog</a>
+      <a href="/changelog/">Changelog</a>
       <a href="#ai-setup"      data-section="ai-setup" class="nav-ai">✦ AI Setup</a>
       <a href="#pricing"       data-section="pricing">Pricing</a>
       <a href="#faq"           data-section="faq">FAQ</a>
@@ -292,7 +296,7 @@ import Tour from '../components/Tour.astro';
     <a href="#how-it-works">How it works</a>
     <a href="#features">Features</a>
     <a href="#station-mode">Station ◉</a>
-    <a href="#updates">Changelog</a>
+    <a href="/changelog/">Changelog</a>
     <a href="#ai-setup">✦ AI Setup</a>
     <a href="#pricing">Pricing</a>
     <a href="#faq">FAQ</a>
@@ -506,330 +510,12 @@ import Tour from '../components/Tour.astro';
   <!-- UPDATES / CHANGELOG -->
   <section id="updates" class="updates-section">
     <h2 class="reveal">What's new</h2>
-    <p class="section-lead reveal reveal-delay-1">Recent updates and improvements to Orbiter. <span class="feed-links">Subscribe: <a href="/changelog.xml">Atom</a> · <a href="/changelog.json">JSON Feed</a></span></p>
+    <p class="section-lead reveal reveal-delay-1">The latest releases. <a href="/changelog/">Full changelog →</a> <span class="feed-links">Subscribe: <a href="/changelog.xml">Atom</a> · <a href="/changelog.json">JSON Feed</a></span></p>
 
     <div class="updates-feed">
-
-      <div class="update-card reveal" id="update-two-factor-sign-in-signed-webhooks-key-limits-ve" data-date="2026-10-08" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
-        <div class="update-date">Oct<br />2026</div>
-        <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
-        <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.88 · core@0.3.21 · mcp@0.1.5 · integration@0.3.22 · client@0.1.4 · cli@0.3.15 — Latest</div>
-          <div class="update-title">Two-factor sign-in, signed webhooks, key limits, version diff and media usage</div>
-          <ul class="update-items">
-            <li><strong>2FA (TOTP)</strong> — turn it on under Account with any authenticator app. Eight one-time recovery codes, codes can't be replayed, and an admin can reset a locked-out user. <a href="/docs/security">Docs →</a></li>
-            <li><strong>Active sessions</strong> — see every signed-in device (browser, IP, time) and sign out one or all others.</li>
-            <li><strong>API key limits</strong> — restrict a key to collections, give it an expiry date or a requests-per-minute limit. Applies to the REST API and MCP. A new dialog replaces the prompt chain.</li>
-            <li><strong>Editor layout</strong> — custom fields now live in a collapsible “Details” card in the main column (grouped, two per row, long inputs full width; remembers open/closed per collection) instead of small boxes in the sidebar, so the body stays the main content. Collections without a body field drop the block-editing tools. Also fixed: validation errors on publish were never shown, the long dock popups in Station mode (many collections / tools) now scroll instead of running off the screen, and the Schema page can be scrolled in Station mode again.</li>
-            <li><strong>Webhook recipes</strong> — tested receiver plus copy-paste handlers: Slack/Telegram on review, IndexNow, Cloudflare purge, Mastodon. <a href="/docs/webhook-recipes">Docs →</a></li>
-            <li><strong>AI translation of missing locales</strong> — one click in the editor creates the missing language versions as drafts (never overwrites, never publishes). <a href="/docs/i18n">Docs →</a></li>
-            <li><strong>Image variants + focal point</strong> — <code>/orbiter/media/&lt;id&gt;?w=800&amp;fmt=webp&amp;ar=16:9</code> serves a resized, re-encoded or cropped version; crops keep the focal point you set in the media library. Bounded and cached. <a href="/docs/media">Docs →</a></li>
-            <li><strong>Review workflow</strong> — optional. Editors submit entries for review; admins and the new <em>reviewer</em> role approve or request changes. Enforced on every publishing route. <a href="/docs/permissions#review">Docs →</a></li>
-            <li><strong>Preview links</strong> — the editor's Preview button now uses a one-hour token bound to that entry instead of the master preview token (which also fixes previews for editors, who only got a masked token before).</li>
-            <li><strong>Version diff</strong> — see field by field what a restore would change. Restoring now keeps the content it replaces, so a restore can be undone (previously the replaced content was lost, and the newest snapshot couldn't be restored at all).</li>
-            <li><strong>Media usage</strong> — each file shows where it is used; filter <em>Unused</em> files and <em>Broken refs</em>; deleting a file that is in use warns first.</li>
-            <li><strong>Signed webhooks</strong> — HMAC-SHA256 signatures, retries (5 s, 30 s, 5 min) and a delivery log, managed in Settings. Webhook URLs are now admin-only (editors could previously set them). <a href="/docs/webhooks">Docs →</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="update-card reveal" id="update-security-check-encrypted-secrets-draft-only-agen" data-date="2026-10-08" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
-        <div class="update-date">Oct<br />2026</div>
-        <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
-        <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.87 · core@0.3.20 · mcp@0.1.4 · cli@0.3.14</div>
-          <div class="update-title">Security check, encrypted secrets, draft-only agent keys, Terminal theme</div>
-          <ul class="update-items">
-            <li><strong><code>orbiter doctor</code> + dashboard card</strong> — flags a pod tracked by git, plaintext credentials, an open Content API and more, with the fix next to each finding. <a href="/docs/security">Docs →</a></li>
-            <li><strong>Encrypted secrets</strong> — set <code>ORBITER_SECRET</code> and stored FTP/SMTP/AI/GitHub/S3 credentials are encrypted at rest (AES-256-GCM). Opt-in; nothing changes without it.</li>
-            <li><strong>Draft-only keys for agents</strong> — an API key can be allowed to create and edit <em>drafts</em> over MCP. It can never publish or touch live entries.</li>
-            <li><strong>Terminal theme</strong> — a fourth palette: amber phosphor on near-black, with a warm paper light variant.</li>
-            <li><strong>Admin polish</strong> — Settings style cards show their active state, the style default matches the app, leaving the XFCE dock reloads cleanly, visible keyboard focus, and reduced-motion support.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="update-card reveal" id="update-security-follow-up-uploaded-files-url-imports-lo" data-date="2026-10-08" style="border-color:color-mix(in srgb,var(--red) 55%,var(--border))">
-        <div class="update-date">Oct<br />2026</div>
-        <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
-        <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.86 · core@0.3.19 · integration@0.3.21 · mcp@0.1.3</div>
-          <div class="update-title">Security follow-up: uploaded files, URL imports, login limits, and what gets pushed to GitHub</div>
-          <p style="font-size:12px;color:var(--muted);margin:2px 0 10px;line-height:1.6">A second pass over the admin and core packages after the previous release. Update <code>@a83/orbiter-admin</code>, <code>@a83/orbiter-core</code> and <code>@a83/orbiter-integration</code> together — the new media headers live in core.</p>
-          <ul class="update-items">
-            <li><strong>GitHub push no longer ships secrets</strong> — the GitHub push feature committed the whole <code>.pod</code>, including live session tokens, password hashes and stored credentials (FTP, SMTP, AI and GitHub tokens). It now pushes a scrubbed copy. If you pushed before, rotate those credentials and check your repo history.</li>
-            <li><strong>Uploaded files can't run script</strong> — media is served with <code>nosniff</code> and a sandboxing CSP, and anything that isn't an image, video, audio or PDF is forced to download. Applies to the admin and the public <code>/orbiter/media</code> route.</li>
-            <li><strong>Server-side request forgery</strong> — importing or linking media by URL could be pointed at internal addresses (localhost, private networks, cloud metadata). Private and reserved targets are now blocked, redirects re-checked, downloads capped at 50 MB. Set <code>ORBITER_ALLOW_PRIVATE_FETCH=1</code> if you need to import from your LAN in development.</li>
-            <li><strong>Login rate limit</strong> — it trusted a client-supplied <code>X-Forwarded-For</code> header, so it could be bypassed. The header is now only honoured when the connection comes from a reverse proxy on a private address.</li>
-            <li><strong>Restricted editors</strong> — AI suggestions, the collection list/detail, <code>/api/info</code> and the quality report no longer expose collections an editor isn't allowed to see. Form-builder configs are admin-only.</li>
-            <li><strong>Content API drafts</strong> — with the API enabled but no token set, <code>?status=draft</code> on <code>/orbiter/api/[collection]</code> returned unpublished entries to anyone. Drafts now require a configured, matching token.</li>
-            <li><strong>API token hashed</strong> — the optional single <code>api.token</code> is now stored as a SHA-256 hash like API keys (existing plaintext values keep working and migrate on first use).</li>
-            <li><strong>Desktop app</strong> — the embedded server only listens on loopback (it was reachable from your LAN), the window is sandboxed, only http(s) links are handed to the OS, and navigation away from the local admin is blocked.</li>
-            <li><strong>Smaller fixes</strong> — CSV export works again and neutralises spreadsheet formulas, the login no longer reveals which usernames exist through timing, WordPress media import is covered by the same SSRF protection, and <code>/health</code> no longer exposes the pod path.</li>
-            <li><strong>Sessions and public endpoints</strong> — changing a password signs out all other sessions. The public form and analytics endpoints are rate-limited and size-capped, and notification mails are capped. The Content API token is compared in constant time.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="update-card reveal" id="update-security-hardening-pass-3-privately-disclosed-bu" data-date="2026-10-01" style="border-color:color-mix(in srgb,var(--red) 55%,var(--border))">
-        <div class="update-date">Oct<br />2026</div>
-        <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
-        <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.85 · core@0.3.18 · mcp@0.1.2 · client@0.1.3 · integration@0.3.20 · cli@0.3.13</div>
-          <div class="update-title">Security hardening pass: 3 privately-disclosed bugs fixed, full-repo audit, 0 known dependency vulnerabilities</div>
-          <p style="font-size:12px;color:var(--muted);margin:2px 0 10px;line-height:1.6">A researcher privately reported three vulnerabilities in the admin and core packages. All three are fixed and released. Finding them prompted a broader audit of the rest of the codebase, which turned up more of the same pattern — all fixed below, plus a dependency and process cleanup so the next one is easier to report and faster to close.</p>
-          <ul class="update-items">
-            <li><strong>Stored XSS</strong> — unescaped field names/IPs in the Inbox, unescaped media filenames and analytics paths from fully unauthenticated endpoints, and the same pattern in <code>apps/demo</code>'s public post/page/event pages. Fixed with consistent escaping (and DOMPurify on the demo frontend) everywhere user- or visitor-supplied text reaches <code>innerHTML</code>.</li>
-            <li><strong>Collection permission bypass</strong> — an editor restricted to specific collections could still reach draft content via the singleton endpoint, the terminal CSV/JSON export, search/calendar widgets, comments, and edit-locks. All now enforce the same <code>requireCollectionAccess</code> check as the main entry routes. See the new <a href="/docs/permissions">permissions docs</a>.</li>
-            <li><strong>Path traversal</strong> — the local media backend's <code>folder</code> parameter could write outside the configured media directory; the GitHub and S3 backends had the same unvalidated join. All three now resolve and reject anything that would escape the configured root.</li>
-            <li><strong>Plaintext API keys</strong> — Bearer tokens for the Public Content API and MCP server were stored and compared in plaintext, inside a <code>.pod</code> file that Orbiter's own <code>orbiter init</code> template commits to git by design. Now hashed (SHA-256, constant-time compare), with transparent migration for already-issued keys.</li>
-            <li><strong>Missing/inverted access checks</strong> — <code>api-keys</code> management, schema field rename/delete, and the embeddable-widget endpoint (<code>/api/widget/:collection</code> — inverted logic made it allow-by-default instead of deny-by-default like every other API gate) each had a broken or missing permission check. All fixed.</li>
-            <li><strong>Dependency audit</strong> — <code>npm audit</code> went from 40 vulnerabilities to 0: removed an unused, outdated <code>electron-builder</code> devDependency pulling in most of them on its own, bumped nodemailer/sharp/adm-zip/electron to patched versions, and — the big one — <strong>Astro 5 → 7</strong> and <strong>@astrojs/node 9 → 11</strong> across <code>apps/demo</code>, <code>apps/landing</code>, and the <code>orbiter init</code> scaffold template, closing a critical RCE in Astro's AVIF image optimization.</li>
-            <li><strong>Process</strong> — new <a href="https://github.com/aeon022/orbiter/security/policy" target="_blank" rel="noopener">SECURITY.md</a>, GitHub private vulnerability reporting and Dependabot security updates turned on for the repo, and a weekly <code>npm audit</code> CI check.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="update-card reveal" id="update-mcp-server-for-ai-agents-public-content-api-json" data-date="2026-08-01" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
-        <div class="update-date">Aug<br />2026</div>
-        <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
-        <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">mcp@0.1.0 · admin@0.3.81</div>
-          <div class="update-title">MCP server for AI agents, Public Content API, JSON-LD, API keys</div>
-          <ul class="update-items">
-            <li><strong><code>@a83/orbiter-mcp</code></strong> — new MCP server package. <code>list_collections</code>, <code>get_entries</code>, <code>get_entry</code>, <code>search_content</code> tools for Claude Desktop and other MCP clients. stdio for local trusted access, <code>--http</code> for remote (same auth as the Public Content API).</li>
-            <li><strong>Public Content API</strong> — <code>/api/public/[collection]</code> read-only JSON endpoints, opt-in per collection, CORS enabled.</li>
-            <li><strong>API keys</strong> — generate/revoke Bearer tokens in Settings, optional enforcement on the Public Content API and MCP HTTP transport, hit counters and last-used tracking.</li>
-            <li><strong>JSON-LD / schema.org</strong> — <code>BlogPosting</code> and <code>WebSite</code> structured data on published HTML, both themes.</li>
-            <li><strong>OpenAPI spec + API discovery</strong> — auto-generated spec and a discovery endpoint listing available collections and auth requirements.</li>
-            <li><strong>Admin panel routing fix</strong> — clean extensionless URLs (<code>/login</code>, <code>/dashboard</code>, etc.) now redirect correctly.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="update-card reveal" id="update-team-ready-content-validation-permissions-qualit" data-date="2026-06-01" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
-        <div class="update-date">Jun<br />2026</div>
-        <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
-        <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.78 · cli@0.3.9</div>
-          <div class="update-title">Team-ready: content validation, permissions, quality dashboard, encryption, SvelteKit</div>
-          <ul class="update-items">
-            <li><strong>Content validation</strong> — schema fields support <code>required</code>, <code>min</code>, <code>max</code>, and <code>regex</code>. Drafts always save freely. Publish/Schedule shows an inline error banner. Server enforces the same rules via 422.</li>
-            <li><strong>Collection permissions</strong> — restrict editor users to specific collections. Configured per-user in a checkbox modal. Admins are always unrestricted.</li>
-            <li><strong>Content quality dashboard</strong> — sidebar panel scans all published entries for missing body, short body, no image, and no SEO metadata. Issue counts at a glance.</li>
-            <li><strong>Schema migration</strong> — rename a field including all entry data in one atomic transaction. Also: change-type and delete-field routes.</li>
-            <li><strong>Multi-pod dashboard</strong> — link multiple pod files, see published count, collections, size, and last modified across all projects in one page.</li>
-            <li><strong><code>orbiter encrypt/decrypt</code></strong> — AES-256-GCM with scrypt key derivation. Commit the <code>.pod.enc</code> to git, decrypt in CI with a secret.</li>
-            <li><strong><code>orbiter sync</code></strong> — rsync push/pull in one command. <strong><code>orbiter status</code></strong> — pod health in the terminal.</li>
-            <li><strong>SvelteKit support</strong> — <code>@a83/orbiter-client</code> opens the pod directly from any Node.js framework. <strong><code>&lt;OrbiterImage&gt;</code></strong> Astro component with auto lazy, alt, and dimensions.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="update-card reveal" id="update-standard-astro-content-api-static-site-generator" data-date="2026-06-01" style="border-color:color-mix(in srgb,var(--gold) 50%,var(--line))">
-        <div class="update-date">Jun<br />2026</div>
-        <div class="update-dot" style="background:var(--gold);box-shadow:0 0 0 4px color-mix(in srgb,var(--gold) 18%,transparent)"></div>
-        <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--gold) 14%,transparent);color:var(--gold);border-color:color-mix(in srgb,var(--gold) 30%,transparent)">Content Layer + Publish HTML + Suggestions v2</div>
-          <div class="update-title">Standard astro:content API, static site generator, AI suggestions, CLI, UI polish</div>
-          <ul class="update-items">
-            <li><strong>Astro Content Layer</strong> — <code>orbiterLoader()</code> for build-time, <code>orbiterLiveLoader()</code> for SSR. Use <code>getCollection()</code> from <code>astro:content</code> instead of the custom virtual module. Auto Zod schema, hot reload on pod changes.</li>
-            <li><strong>Smart Suggestions v2</strong> — multi-section panel with tags, cross-collection related entries, AI SEO title &amp; description, content quality hints, <code>suggestedPrompts</code>. Manual <code>✦ Suggest</code> button grouped with <code>✦ AI</code>.</li>
-            <li><strong>Publish HTML</strong> — one-click static site. Two themes: <em>Orbit</em> (modern) and <em>Canvas</em> (editorial whiteboard). Dark mode, responsive, OG tags, reading time.</li>
-            <li><strong>CLI</strong> — <code>orbiter publish</code> generates HTML from terminal, <code>orbiter backup</code> creates timestamped pod copy.</li>
-            <li><strong>UI polish</strong> — dashboard greeting, live word count, pulsing autosave dot, favicon badge, pod size in sidebar, collection color dots, relative timestamps, shortcut hints.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="update-card reveal" id="update-calendar-view-simple-analytics-cross-pod-copy-an" data-date="2026-06-01" style="border-color:color-mix(in srgb,var(--accent) 40%,var(--line))">
-        <div class="update-date">Jun<br />2026</div>
-        <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
-        <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.74</div>
-          <div class="update-title">Calendar view, Simple Analytics, cross-pod copy &amp; desktop auto-update</div>
-          <ul class="update-items">
-            <li><strong>Calendar view</strong> — full month-grid page with color-coded entries (scheduled/expiring/published/draft). Click a day to see entries, filter by status, keyboard nav. Dashboard widget with mini calendar + upcoming list.</li>
-            <li><strong>Simple Analytics</strong> — privacy-friendly pageview tracking stored in the POD. No cookies, no external scripts, &lt;500 bytes. Bot detection (GPTBot, ClaudeBot, etc). Dashboard with daily chart, top pages, referrers. Human vs. agent traffic split.</li>
-            <li><strong>Cross-pod import/export</strong> — export all collections + entries as JSON. Import from a <code>.pod</code> file or JSON export. Collections created automatically, skip or overwrite duplicates.</li>
-            <li><strong>Desktop auto-update</strong> — the Electron app downloads new releases from GitHub in the background. Universal macOS DMG (M1 + Intel in one file). One-click backup (<code>⌘⇧S</code>).</li>
-            <li><strong>Table field</strong> — mini-spreadsheet as a schema field type. Header row, data rows, add/remove rows and columns, Tab navigation. Stored as <code>string[][]</code>.</li>
-            <li><strong>Dashboard widget toggles</strong> — enable/disable Calendar, Recently Edited, Collections, Notes &amp; To-Do in Settings.</li>
-            <li><strong>OG Image picker</strong> — media picker modal in the SEO panel instead of a dropdown. Image preview + clear button.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="update-card reveal" id="update-desktop-app-for-macos-and-windows-pick-a-templat" data-date="2026-06-01" style="border-color:color-mix(in srgb,var(--accent) 25%,var(--line))">
-        <div class="update-date">Jun<br />2026</div>
-        <div class="update-dot" style="background:color-mix(in srgb,var(--accent) 60%,transparent)"></div>
-        <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 25%,transparent)">Desktop v0.2.2</div>
-          <div class="update-title">Desktop App for macOS &amp; Windows — pick a template, start editing.</div>
-          <ul class="update-items">
-            <li><strong>Templates on first launch</strong> — choose Blog, Portfolio, Business, or Events. The app creates all collections and fills them with demo content so you can see how everything works right away.</li>
-            <li><strong>macOS</strong> — DMG installer, drag to Applications, double-click. Apple Silicon (arm64) and Intel (x64).</li>
-            <li><strong>Windows</strong> — NSIS installer wizard, optional install directory. x64.</li>
-            <li><strong>Self-contained</strong> — Electron bundles the full admin server. Runs locally, no internet required after install.</li>
-            <li><strong>Multi-site switching</strong> — File → Switch POD (<code>⌘O</code>) switches to a different content database and restarts instantly.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="update-card reveal" id="update-station-dock-overhaul-command-palette-keyboard-n" data-date="2026-06-01" style="border-color:color-mix(in srgb,var(--accent) 40%,var(--line))">
-        <div class="update-date">Jun<br />2026</div>
-        <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
-        <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">v0.3.47 — New</div>
-          <div class="update-title">Station dock overhaul — command palette, keyboard nav, notification center & more</div>
-          <ul class="update-items">
-            <li><strong>Command palette</strong> — <code>⌘K</code> or <code>/</code> opens a full-screen palette. Opens with recent entries pre-loaded. Type <code>&gt;</code> to enter command mode: <code>&gt; ls</code>, <code>&gt; go</code>, <code>&gt; new</code>, <code>&gt; search</code>, <code>&gt; build</code>, <code>&gt; export</code>, <code>&gt; random</code>, <code>&gt; = expr</code> (math evaluator). Command history with ↑/↓.</li>
-            <li><strong>Vim keyboard navigation</strong> — press <code>g</code> then a letter to jump to any page: <code>g d</code> dashboard, <code>g m</code> media, <code>g h</code> HUD, <code>g s</code> settings, <code>g b</code> build, and more. Animated <code>g ›</code> indicator in the status bar while waiting for the second key.</li>
-            <li><strong>Notification center</strong> — bell icon in the status bar. Every save, build trigger, and export is logged automatically. Dropdown panel with unread badge, relative timestamps, and clear-all.</li>
-            <li><strong>HUD panel expanded</strong> — Drafts section (last 10 drafts, clickable to editor) and Activity feed (last 8 events as a live timeline). Opens with <code>g h</code> or the dock button.</li>
-            <li><strong>Zen / focus mode</strong> — <code>⌘⇧F</code> hides the dock and status bar for distraction-free writing. Persists across reloads. Toast hint on enter.</li>
-            <li><strong>Shortcut cheatsheet</strong> — <code>?</code> key or <code>?</code> button in the status bar opens a two-column modal with every shortcut and palette command.</li>
-            <li><strong>Live build status</strong> — status bar shows <em>◉ building…</em> with a pulse animation while a build is running, polling every 4 seconds until done.</li>
-            <li><strong>Breadcrumb in status bar</strong> — when inside a collection, the center shows <em>Collection › Entries</em> with a clickable link back.</li>
-            <li><strong>Left dock mode</strong> — toggle dock position between bottom and left side. All popups, overlays, and magnification axis adapt automatically.</li>
-            <li><strong>Hover preview cards</strong> — hovering a collection in the dock shows a card with the 3 most recent entries and quick-action buttons (new entry, view all, export).</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="update-card reveal" id="update-space-station-mode-multilingual-i18n-settings-ov" data-date="2026-06-01" style="border-color:color-mix(in srgb,var(--accent) 20%,var(--line))">
-        <div class="update-date">Jun<br />2026</div>
-        <div class="update-dot" style="background:color-mix(in srgb,var(--accent) 60%,transparent)"></div>
-        <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 25%,transparent)">v0.3.20</div>
-          <div class="update-title">Space Station mode, multilingual i18n & settings overhaul</div>
-          <ul class="update-items">
-            <li><strong>Space Station mode</strong> — a distinct admin layout: floating magnification dock (macOS-style), HUD status-bar panel with stats and notes, frosted glass page headers with contextual action buttons. Toggle in Settings → Interface → Layout.</li>
-            <li><strong>Mobile tab bar</strong> — in Station mode, the dock collapses to a native-feeling bottom tab bar on screens under 768 px. Stats stack to a 2×2 grid; cards resize automatically.</li>
-            <li><strong>Multilingual (i18n)</strong> — per-entry locale variants using a dedicated <code>locale</code> column (not slug suffixes). Configure locales in Settings → Language; locale tabs appear in the editor automatically. <code>getLocaleCollection()</code> and <code>getLocaleEntry()</code> in <code>orbiter:collections</code> with automatic fallback to the default locale.</li>
-            <li><strong>Settings two-column layout</strong> — settings groups reflow into a responsive two-column grid to reduce scrolling. Save button pinned to the page header and repeated at the bottom.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="update-card reveal" id="update-scheduled-publishing-comments-rss-sitemap-entry" data-date="2026-06-01">
-        <div class="update-date">Jun<br />2026</div>
-        <div class="update-dot"></div>
-        <div class="update-body">
-          <div class="update-tag">v0.3.14</div>
-          <div class="update-title">Scheduled publishing, comments, RSS/sitemap, entry locking & email notifications</div>
-          <ul class="update-items">
-            <li><strong>Scheduled publishing</strong> — set a <code>publish_at</code> date on any entry. A server-side scheduler auto-publishes and fires the build webhook. Also supports <code>unpublish_at</code> to revert published entries to draft at a future date.</li>
-            <li><strong>Content comments</strong> — per-entry editorial comment thread directly in the editor. Post, resolve/unresolve, and delete comments. Stored in a <code>_comments</code> table, never mixed with entry data.</li>
-            <li><strong>RSS feeds & XML sitemap</strong> — <code>/orbiter/rss/[collection].xml</code> and <code>/orbiter/sitemap.xml</code> injected automatically by the integration. No configuration needed.</li>
-            <li><strong>Schema export & import</strong> — download any collection's schema as JSON, re-import to another collection or pod. Export/Import buttons in the schema edit panel.</li>
-            <li><strong>CSV import & export</strong> — bulk entry management. Export all entries as CSV, import to create or update by slug.</li>
-            <li><strong>Entry locking</strong> — when you open an entry, the editor claims a lock. If another user is already editing, a warning banner appears. Lock expires after 90 s without a heartbeat.</li>
-            <li><strong>Email notifications</strong> — configure SMTP in Settings. Get an email on publish and/or new comment. Powered by nodemailer, always async.</li>
-            <li><strong>Required field validation</strong> — fields marked <code>required</code> in the schema block saves (non-autosave) until filled.</li>
-            <li><strong>Image optimization</strong> — uploaded images are resized and compressed automatically via sharp. Max-width and quality configurable per pod in Settings.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="update-card reveal" id="update-trash-activity-log-draft-preview" data-date="2026-05-01">
-        <div class="update-date">May<br />2026</div>
-        <div class="update-dot"></div>
-        <div class="update-body">
-          <div class="update-tag">v0.3.9</div>
-          <div class="update-title">Trash, activity log & draft preview</div>
-          <ul class="update-items">
-            <li><strong>Trash / soft delete</strong> — deleted entries move to a recoverable Trash tab. Restore to draft or permanently delete. Bulk restore and bulk purge supported.</li>
-            <li><strong>Activity log</strong> — every create, update, publish, unpublish, delete, and restore is recorded with the acting user and timestamp. Visible in the editor's meta panel.</li>
-            <li><strong>Draft preview</strong> — generate a preview token in Settings → API and attach it to your preview URL. <code>getPreviewEntry()</code> in <code>orbiter:collections</code> reads any draft directly from the pod, bypassing the published-only snapshot.</li>
-            <li><strong>Schema field drag-sort</strong> — reorder fields in the schema editor with a drag handle. Order is preserved in the stored schema.</li>
-            <li><strong>Rate limiting</strong> — login endpoint is limited to 5 attempts per 15 minutes per IP. Returns 429 with a human-readable message.</li>
-            <li><strong>TypeScript types</strong> — <code>orbiter-env.d.ts</code> is auto-generated at build time with per-collection interfaces and typed overloads for all query functions.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="update-card reveal" id="update-singletons-drag-sort-editor-blocks-version-displ" data-date="2026-05-01">
-        <div class="update-date">May<br />2026</div>
-        <div class="update-dot"></div>
-        <div class="update-body">
-          <div class="update-tag">v0.3.3</div>
-          <div class="update-title">Singletons, drag-sort, editor blocks & version display</div>
-          <ul class="update-items">
-            <li><strong>Singleton collections</strong> — mark a collection as singleton to skip the entries list and go straight to the one record. Good for site settings, about pages, or any single-document content.</li>
-            <li><strong>Drag-to-sort entries</strong> — reorder entries manually with a drag handle. Order persists in the pod and is reflected in <code>getCollection()</code> output.</li>
-            <li><strong>Callout blocks</strong> — type <code>/note</code> in the block picker to insert a tinted info/warning box inline with prose.</li>
-            <li><strong>Table blocks</strong> — type <code>/tbl</code> for an editable 2×2 table. Tab to navigate cells, toolbar to add/remove rows and columns.</li>
-            <li><strong>Boolean field</strong> — on/off toggle field type for schema definitions.</li>
-            <li><strong>Preview URL per collection</strong> — set a URL template with <code>&#123;slug&#125;</code> in Schema; an ↗ Preview button appears in the editor topbar.</li>
-            <li><strong>Version display</strong> — admin sidebar footer now shows <em>Orbiter vX.Y.Z · pod vN</em> so you always know what's running.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="update-card reveal reveal-delay-1">
-        <div class="update-date">Apr<br />2026</div>
-        <div class="update-dot"></div>
-        <div class="update-body">
-          <div class="update-tag green">v0.3.1</div>
-          <div class="update-title">S3 backends, docs & auto-webhook</div>
-          <ul class="update-items">
-            <li><strong>S3-compatible media backend</strong> — store uploads on Cloudflare R2, Backblaze B2, AWS S3, or any S3-compatible endpoint. Config via Settings → Media.</li>
-            <li><strong>External media links</strong> — reference a Dropbox, Drive, or CDN URL directly without fetching the file. Third tab in the image picker.</li>
-            <li><strong>Auto-publish webhook</strong> — fires automatically when an entry transitions from draft to published, no manual trigger needed.</li>
-            <li><strong>Docs site</strong> — full reference at <a href="/docs">orbiter.sh/docs</a>: quick start, collections, media, API, deployment, CLI.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="update-card reveal reveal-delay-2">
-        <div class="update-date">May<br />2025</div>
-        <div class="update-dot"></div>
-        <div class="update-body">
-          <div class="update-tag">Editor</div>
-          <div class="update-title">Images, Video & Cloud Import</div>
-          <ul class="update-items">
-            <li><strong>Inline image blocks</strong> — float left, right, center, or full width. Text wraps naturally, travel-blog style.</li>
-            <li><strong>Video embedding</strong> — paste a YouTube, Vimeo, or direct <code>.mp4</code> URL. The editor auto-embeds in a responsive 16:9 player.</li>
-            <li><strong>Cloud URL import</strong> — paste a share link from Dropbox, Google Drive, or OneDrive. The server fetches it and stores it in your pod. No CORS, no manual download.</li>
-            <li><strong>Block picker</strong> — <code>/img</code> and <code>/vid</code> shortcuts to insert media blocks from the keyboard.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="update-card reveal reveal-delay-1">
-        <div class="update-date">Mar<br />2025</div>
-        <div class="update-dot"></div>
-        <div class="update-body">
-          <div class="update-tag amber">Themes</div>
-          <div class="update-title">Three Themes & Glass Layout</div>
-          <ul class="update-items">
-            <li><strong>Space</strong> — dark space station HUD, light solar command ice blue.</li>
-            <li><strong>Zen</strong> — Japandi aesthetic: slate, mauve, moss, warm neutrals.</li>
-            <li><strong>Catppuccin</strong> — Mocha (dark) and Latte (light) from the popular palette.</li>
-            <li><strong>Glass layout</strong> — frosted panels, backdrop blur, animated gradient orbs. Ships as the default; classic grid still available.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="update-card reveal reveal-delay-2">
-        <div class="update-date">Jan<br />2025</div>
-        <div class="update-dot dim"></div>
-        <div class="update-body">
-          <div class="update-tag green">v0.2.0 → v0.2.2</div>
-          <div class="update-title">Now on npm</div>
-          <ul class="update-items">
-            <li><strong>Published to npm</strong> — <code>orbiter-core</code>, <code>orbiter-integration</code>, <code>orbiter-admin</code>, <code>orbiter-cli</code>.</li>
-            <li><strong>Block editor</strong> with live preview, autosave, version history, and draft/published toggle.</li>
-            <li><strong>i18n</strong> — per-entry locale variants, <code>getLocaleCollection()</code>, locale fallback.</li>
-            <li><strong>Relations</strong> — resolved at build time into full Entry objects.</li>
-            <li><strong>WordPress importer</strong>, Git sync mode, JSON API, multi-user auth, PWA.</li>
-          </ul>
-        </div>
-      </div>
-
+      <Fragment set:html={latestUpdates} />
     </div>
-    <p class="updates-more-wrap"><button type="button" class="updates-more" id="updates-more" aria-expanded="false">Show older releases</button></p>
+    <p class="updates-more-wrap"><a class="updates-more" href="/changelog/">All releases →</a></p>
   </section>
 
   <!-- HOW IT WORKS -->
@@ -1591,14 +1277,11 @@ ORBITER_POD=$(pwd)/apps/demo/demo.pod npm run dev --workspace=packages/admin</co
   <PageTransition />
   <script is:inline>
     (function () {
-      var sec = document.getElementById('updates'), btn = document.getElementById('updates-more'), cmp = document.getElementById('cmp-details');
-      function showAll() { sec.classList.add('show-all'); btn.setAttribute('aria-expanded', 'true'); btn.hidden = true; }
-      btn.addEventListener('click', showAll);
+      var cmp = document.getElementById('cmp-details');
       // deep links (search, shared URLs) into a collapsed part open it first
       function reveal() {
         var id = decodeURIComponent(location.hash.slice(1)); if (!id) return;
         var t = document.getElementById(id); if (!t) return;
-        if (t.classList.contains('update-card') && getComputedStyle(t).display === 'none') showAll();
         if (id === 'comparison' || (cmp && cmp.contains(t))) cmp.open = true;
         if (t.scrollIntoView) setTimeout(function () { t.scrollIntoView(); }, 30);
       }

@@ -46,6 +46,7 @@ for (const file of walk(DIST).filter((f) => f.endsWith('index.html'))) {
       const h2 = (inner.match(/<h2[^>]*>([\s\S]*?)<\/h2>/) ?? [])[1];
       entries.push({ t: h2 ? strip(h2) : id.replace(/-/g, ' '), u: `/#${id}`, k: 'Page', h: '', b: clip(strip(inner), 1200) });
     }
+  } else if (url === '/changelog/') {
     // Changelog cards → search entries + feed items
     for (const m of html.matchAll(/<div class="update-card[^"]*"[^>]*?id="([^"]+)"[^>]*?data-date="([^"]+)"[^>]*>([\s\S]*?)(?=<div class="update-card|<\/div>\s*<\/div>\s*<\/section>)/g)) {
       const [, id, date, inner] = m;
@@ -53,7 +54,7 @@ for (const file of walk(DIST).filter((f) => f.endsWith('index.html'))) {
       const tag = strip((inner.match(/<div class="update-tag"[^>]*>([\s\S]*?)<\/div>/) ?? [])[1] ?? '');
       const lead = strip((inner.match(/<p[^>]*>([\s\S]*?)<\/p>/) ?? [])[1] ?? '');
       const items = [...inner.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/g)].map((x) => x[1].trim());
-      entries.push({ t: ttl, u: `/#${id}`, k: 'Changelog', h: tag, b: clip(strip(inner), 1800) });
+      entries.push({ t: ttl, u: `/changelog/#${id}`, k: 'Changelog', h: tag, b: clip(strip(inner), 1800) });
       feed.push({ id, date, title: ttl, tag, lead, items });
     }
   } else if (url === '/vision/') {
@@ -87,14 +88,14 @@ const atom = `<?xml version="1.0" encoding="utf-8"?>
   <title>Orbiter — changelog</title>
   <subtitle>Releases and notable changes of Orbiter, the CMS in one POD.</subtitle>
   <link href="${SITE}/changelog.xml" rel="self" type="application/atom+xml"/>
-  <link href="${SITE}/#updates" rel="alternate" type="text/html"/>
+  <link href="${SITE}/changelog/" rel="alternate" type="text/html"/>
   <id>${SITE}/changelog.xml</id>
   <updated>${stamp(feed[0]?.date ?? new Date().toISOString().slice(0, 10))}</updated>
   <author><name>Orbiter</name><uri>${SITE}</uri></author>
 ${feed.map((f) => `  <entry>
-    <id>${SITE}/#${f.id}</id>
+    <id>${SITE}/changelog/#${f.id}</id>
     <title>${xml(f.title)}</title>
-    <link href="${SITE}/#${f.id}" rel="alternate" type="text/html"/>
+    <link href="${SITE}/changelog/#${f.id}" rel="alternate" type="text/html"/>
     <updated>${stamp(f.date)}</updated>
     <summary>${xml(f.tag)}</summary>
     <content type="html">${xml(body(f))}</content>
@@ -105,9 +106,9 @@ writeFileSync(join(DIST, 'changelog.xml'), atom);
 
 writeFileSync(join(DIST, 'changelog.json'), JSON.stringify({
   version: 'https://jsonfeed.org/version/1.1', title: 'Orbiter — changelog',
-  home_page_url: `${SITE}/#updates`, feed_url: `${SITE}/changelog.json`,
+  home_page_url: `${SITE}/changelog/`, feed_url: `${SITE}/changelog.json`,
   description: 'Releases and notable changes of Orbiter, the CMS in one POD.',
-  items: feed.map((f) => ({ id: `${SITE}/#${f.id}`, url: `${SITE}/#${f.id}`, title: f.title, summary: f.tag, content_html: body(f), date_published: stamp(f.date) })),
+  items: feed.map((f) => ({ id: `${SITE}/changelog/#${f.id}`, url: `${SITE}/changelog/#${f.id}`, title: f.title, summary: f.tag, content_html: body(f), date_published: stamp(f.date) })),
 }, null, 2));
 
 console.log(`postbuild: ${entries.length} search entries (${(statSyncSafe(join(DIST, 'search-index.json')) / 1024).toFixed(0)} KB), ${feed.length} changelog items`);
