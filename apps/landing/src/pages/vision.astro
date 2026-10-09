@@ -713,6 +713,12 @@ import { ClientRouter } from 'astro:transitions';
     .hud-back:hover { color: var(--accent); }
     .hud-back::before { content: '←'; font-size: 13px; }
 
+    /* ── Arrival flash after the warp from the landing page ── */
+    #warp-arrive { position: fixed; inset: 0; z-index: 9999; pointer-events: none; opacity: 0;
+      background: radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.95) 0%, rgba(196,185,255,0.85) 14%, rgba(139,124,248,0.55) 38%, rgba(139,124,248,0.15) 62%, transparent 80%); }
+    :global(html.warp-arriving) #warp-arrive { animation: warp-arrive-anim 0.7s ease-out forwards; }
+    @keyframes warp-arrive-anim { 0% { opacity: 1; transform: scale(3); } 100% { opacity: 0; transform: scale(1); } }
+
     /* ── Back to top — warp jump ── */
     .btt {
       position: fixed; bottom: 28px; right: 28px; z-index: 150;
@@ -989,6 +995,8 @@ import { ClientRouter } from 'astro:transitions';
   <script src="/search.js" defer></script>
 </head>
 <body>
+<div id="warp-arrive" aria-hidden="true"></div>
+<script is:inline>try { if (sessionStorage.getItem('orb_warp')) { sessionStorage.removeItem('orb_warp'); document.documentElement.classList.add('warp-arriving'); setTimeout(function () { document.documentElement.classList.remove('warp-arriving'); }, 800); } } catch (e) {}</script>
 
 <div class="page-curtain"></div>
 <div class="vision-bg"></div>

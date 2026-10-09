@@ -1,12 +1,12 @@
 <style>
   .warp-flash {
     position: fixed; inset: 0; z-index: 9999;
-    background: radial-gradient(ellipse at 50% 50%, rgba(139,124,248,0.3), transparent 60%);
+    background: radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.95) 0%, rgba(196,185,255,0.85) 14%, rgba(139,124,248,0.55) 38%, rgba(139,124,248,0.15) 62%, transparent 80%);
     pointer-events: none;
     opacity: 0;
   }
   .warp-flash.active {
-    animation: warp-flash-anim 0.6s ease-out forwards;
+    animation: warp-flash-anim 0.55s ease-in forwards;
   }
   .warp-streaks {
     position: fixed; inset: 0; z-index: 9998;
@@ -20,9 +20,9 @@
     animation: warp-streak-anim 0.6s ease-out forwards;
   }
   @keyframes warp-flash-anim {
-    0% { opacity: 0; transform: scale(0.8); }
-    30% { opacity: 1; transform: scale(1.2); }
-    100% { opacity: 0; transform: scale(2); }
+    0% { opacity: 0; transform: scale(0.6); }
+    55% { opacity: 1; transform: scale(1.4); }
+    100% { opacity: 1; transform: scale(3); }
   }
   @keyframes warp-streak-anim {
     0% { opacity: 0; transform: scaleX(0.5); }
@@ -39,8 +39,9 @@ function navigateWithTransition(href: string, isVision: boolean) {
   if (isVision) {
     document.getElementById('warp-flash')?.classList.add('active');
     document.getElementById('warp-streaks')?.classList.add('active');
-    document.documentElement.classList.add('is-leaving');
-    setTimeout(() => { window.location.href = href; }, 500);
+    // no body fade here: the flash lives inside <body> and would fade out with it
+    try { sessionStorage.setItem('orb_warp', '1'); } catch { /* private mode */ }
+    setTimeout(() => { window.location.href = href; }, 520);
   } else {
     document.documentElement.classList.add('is-leaving');
     setTimeout(() => { window.location.href = href; }, 230);
