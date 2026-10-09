@@ -2816,11 +2816,20 @@ html.is-leaving body {
 
 /* long sections: older releases and the comparison table start collapsed */
 .updates-more-wrap { text-align: center; margin: 28px 0 0; }
-.updates-more, .cmp-details > summary { font: inherit; font-size: 13px; color: var(--accent); background: rgba(139,124,248,.1); border: 1px solid rgba(139,124,248,.35); border-radius: 999px; padding: 9px 20px; cursor: pointer; list-style: none; display: inline-block; }
-.updates-more:hover, .cmp-details > summary:hover { background: rgba(139,124,248,.2); }
-.cmp-details { text-align: center; }
-.cmp-details > summary::-webkit-details-marker { display: none; }
-.cmp-details[open] > summary { margin-bottom: 20px; }
+.updates-more { text-decoration: none; }
+.updates-more, .cmp-details > summary, .more-details > summary { font: inherit; font-size: 13px; color: var(--accent); background: rgba(139,124,248,.1); border: 1px solid rgba(139,124,248,.35); border-radius: 999px; padding: 9px 20px; cursor: pointer; list-style: none; display: inline-block; }
+.updates-more:hover, .cmp-details > summary:hover, .more-details > summary:hover { background: rgba(139,124,248,.2); }
+.cmp-details, .more-details { text-align: center; }
+.cmp-details > summary::-webkit-details-marker, .more-details > summary::-webkit-details-marker { display: none; }
+.cmp-details[open] > summary, .more-details[open] > summary { margin-bottom: 20px; }
+.more-details { margin: 0 0 40px; }
+.more-details > section { text-align: left; }
 .cmp-details > .comparison-wrap { text-align: left; }
 .update-body a { text-decoration: underline; text-underline-offset: 3px; }
 .section-lead a { text-decoration: underline; text-underline-offset: 3px; }
+
+/* home: the changelog strip stays short (full text on /changelog/) */
+#updates .update-items li:nth-child(n+4) { display: none; }
+.features-more { margin: 32px 0 0; }
+.features-more[open] > summary { margin-bottom: 28px; }
+@media (max-width: 700px) { .press-snippet { display: none; } }

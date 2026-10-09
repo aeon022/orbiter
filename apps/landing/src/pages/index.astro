@@ -272,9 +272,7 @@ import Tour from '../components/Tour.astro';
     <div class="nav-links">
       <a href="#how-it-works"  data-section="how-it-works">How it works</a>
       <a href="#features"      data-section="features">Features</a>
-      <a href="#station-mode"  data-section="station-mode">Station ◉</a>
       <a href="/changelog/">Changelog</a>
-      <a href="#ai-setup"      data-section="ai-setup" class="nav-ai">✦ AI Setup</a>
       <a href="#pricing"       data-section="pricing">Pricing</a>
       <a href="#faq"           data-section="faq">FAQ</a>
       <a href="/vision" class="nav-vision">Vision</a>
@@ -295,9 +293,7 @@ import Tour from '../components/Tour.astro';
   <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
     <a href="#how-it-works">How it works</a>
     <a href="#features">Features</a>
-    <a href="#station-mode">Station ◉</a>
     <a href="/changelog/">Changelog</a>
-    <a href="#ai-setup">✦ AI Setup</a>
     <a href="#pricing">Pricing</a>
     <a href="#faq">FAQ</a>
     <a href="/vision" class="nav-vision">Vision</a>
@@ -415,9 +411,129 @@ import Tour from '../components/Tour.astro';
     </div>
   </section>
 
+  <!-- HOSTING / WORKS ON -->
+  <section class="hosting-section">
+    <div class="hosting-label reveal">Admin runs on any Node.js host</div>
+    <div class="hosting-logos reveal reveal-delay-1">
+      <span class="hosting-chip">
+        <span class="hosting-dot" style="background:#E54D2E"></span>
+        Railway
+      </span>
+      <span class="hosting-chip">
+        <span class="hosting-dot" style="background:#6C47FF"></span>
+        Coolify
+      </span>
+      <span class="hosting-chip">
+        <span class="hosting-dot" style="background:#7B3FE4"></span>
+        Fly.io
+      </span>
+      <span class="hosting-chip">
+        <span class="hosting-dot" style="background:#46E3B7"></span>
+        Render
+      </span>
+      <span class="hosting-chip">
+        <span class="hosting-dot" style="background:#D50C2D"></span>
+        Hetzner
+      </span>
+      <span class="hosting-chip">
+        <span class="hosting-dot" style="background:#339933"></span>
+        Node.js
+      </span>
+      <span class="hosting-chip" title="via Git sync mode">
+        <span class="hosting-dot" style="background:#2DA44E"></span>
+        GitHub Pages*
+      </span>
+      <span class="hosting-chip" title="via Git sync mode">
+        <span class="hosting-dot" style="background:#00C7B7"></span>
+        Netlify*
+      </span>
+    </div>
+    <div class="hosting-note reveal reveal-delay-2">* serverless platforms use <a href="#how-it-works">Git sync mode</a> — content is committed to the repo before each build</div>
+
+    <div class="hosting-flow-arrow reveal">↓ &nbsp; Astro builds &nbsp; → &nbsp; FTP deploy &nbsp; ↓</div>
+
+    <div class="hosting-label reveal">Publishes to any shared host via FTP</div>
+    <div class="hosting-logos reveal reveal-delay-1">
+      <span class="hosting-chip">
+        <span class="hosting-dot" style="background:#0066CC"></span>
+        World4You
+      </span>
+      <span class="hosting-chip">
+        <span class="hosting-dot" style="background:#ED1C24"></span>
+        Strato
+      </span>
+      <span class="hosting-chip">
+        <span class="hosting-dot" style="background:#003D8F"></span>
+        IONOS
+      </span>
+      <span class="hosting-chip">
+        <span class="hosting-dot" style="background:#673DE6"></span>
+        Hostinger
+      </span>
+      <span class="hosting-chip">
+        <span class="hosting-dot" style="background:#2E8B57"></span>
+        All-Inkl
+      </span>
+      <span class="hosting-chip">
+        <span class="hosting-dot" style="background:var(--muted)"></span>
+        Any FTP server
+      </span>
+    </div>
+    <div class="hosting-note reveal reveal-delay-2">configure host, credentials &amp; remote path in Settings → one click to deploy, or trigger automatically after each build</div>
+  </section>
+
   <!-- INTERACTIVE TOUR -->
+  <!-- HOW IT WORKS -->
+  <section id="how-it-works">
+    <h2 class="reveal">How it works</h2>
+    <p class="section-lead reveal reveal-delay-1">Your entire CMS lives next to your source code — in one file.</p>
+
+    <div class="file-visual reveal reveal-delay-2">
+      <span class="dim">your-site/</span><br />
+      <span class="dim">├── astro.config.mjs</span><br />
+      <div class="file-highlight">
+        ├── content.pod &nbsp;&nbsp;<span class="acc">← your entire CMS</span>
+      </div>
+      <span class="dim">└── src/pages/</span>
+    </div>
+
+    <div class="steps">
+      <div class="reveal">
+        <div class="step-label">Step 1 — Start the admin</div>
+        <div class="code-block">
+          <pre><code>npm install @a83/orbiter-admin
+ORBITER_POD=$(pwd)/content.pod npm start</code></pre>
+          <button class="copy-btn code-copy-btn" aria-label="Copy code" title="Copy to clipboard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+      </div>
+      <div class="reveal reveal-delay-1">
+        <div class="step-label">Step 2 — Add the integration to astro.config.mjs</div>
+        <div class="code-block">
+          <pre><code><span class="dim">import</span> orbiter <span class="dim">from</span> <span class="grn">'@a83/orbiter-integration'</span><span class="dim">;</span>
+
+<span class="dim">export default</span> defineConfig(&#123;
+  output: <span class="grn">'server'</span>,
+  integrations: [orbiter(&#123; pod: <span class="grn">'./content.pod'</span> &#125;)],
+&#125;);</code></pre>
+          <button class="copy-btn code-copy-btn" aria-label="Copy code" title="Copy to clipboard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+      </div>
+      <div class="reveal reveal-delay-2">
+        <div class="step-label">Step 3 — Read content in your pages</div>
+        <div class="code-block">
+          <pre><code><span class="dim">import</span> &#123; getCollection &#125; <span class="dim">from</span> <span class="grn">'orbiter:collections'</span><span class="dim">;</span>
+
+<span class="dim">const</span> posts = <span class="dim">await</span> getCollection(<span class="grn">'posts'</span>);</code></pre>
+          <button class="copy-btn code-copy-btn" aria-label="Copy code" title="Copy to clipboard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <Tour />
 
+  <details class="more-details" id="more-details">
+    <summary>More screens &amp; editor details</summary>
   <!-- SCREENSHOTS -->
   <section id="screenshots" class="screenshots-section">
     <h2 class="reveal">More screens</h2>
@@ -506,64 +622,9 @@ import Tour from '../components/Tour.astro';
       </div>
     </div>
   </section>
+  </details>
 
-  <!-- UPDATES / CHANGELOG -->
-  <section id="updates" class="updates-section">
-    <h2 class="reveal">What's new</h2>
-    <p class="section-lead reveal reveal-delay-1">The latest releases. <a href="/changelog/">Full changelog →</a> <span class="feed-links">Subscribe: <a href="/changelog.xml">Atom</a> · <a href="/changelog.json">JSON Feed</a></span></p>
 
-    <div class="updates-feed">
-      <Fragment set:html={latestUpdates} />
-    </div>
-    <p class="updates-more-wrap"><a class="updates-more" href="/changelog/">All releases →</a></p>
-  </section>
-
-  <!-- HOW IT WORKS -->
-  <section id="how-it-works">
-    <h2 class="reveal">How it works</h2>
-    <p class="section-lead reveal reveal-delay-1">Your entire CMS lives next to your source code — in one file.</p>
-
-    <div class="file-visual reveal reveal-delay-2">
-      <span class="dim">your-site/</span><br />
-      <span class="dim">├── astro.config.mjs</span><br />
-      <div class="file-highlight">
-        ├── content.pod &nbsp;&nbsp;<span class="acc">← your entire CMS</span>
-      </div>
-      <span class="dim">└── src/pages/</span>
-    </div>
-
-    <div class="steps">
-      <div class="reveal">
-        <div class="step-label">Step 1 — Start the admin</div>
-        <div class="code-block">
-          <pre><code>npm install @a83/orbiter-admin
-ORBITER_POD=$(pwd)/content.pod npm start</code></pre>
-          <button class="copy-btn code-copy-btn" aria-label="Copy code" title="Copy to clipboard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
-        </div>
-      </div>
-      <div class="reveal reveal-delay-1">
-        <div class="step-label">Step 2 — Add the integration to astro.config.mjs</div>
-        <div class="code-block">
-          <pre><code><span class="dim">import</span> orbiter <span class="dim">from</span> <span class="grn">'@a83/orbiter-integration'</span><span class="dim">;</span>
-
-<span class="dim">export default</span> defineConfig(&#123;
-  output: <span class="grn">'server'</span>,
-  integrations: [orbiter(&#123; pod: <span class="grn">'./content.pod'</span> &#125;)],
-&#125;);</code></pre>
-          <button class="copy-btn code-copy-btn" aria-label="Copy code" title="Copy to clipboard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
-        </div>
-      </div>
-      <div class="reveal reveal-delay-2">
-        <div class="step-label">Step 3 — Read content in your pages</div>
-        <div class="code-block">
-          <pre><code><span class="dim">import</span> &#123; getCollection &#125; <span class="dim">from</span> <span class="grn">'orbiter:collections'</span><span class="dim">;</span>
-
-<span class="dim">const</span> posts = <span class="dim">await</span> getCollection(<span class="grn">'posts'</span>);</code></pre>
-          <button class="copy-btn code-copy-btn" aria-label="Copy code" title="Copy to clipboard"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2 2v1"/></svg></button>
-        </div>
-      </div>
-    </div>
-  </section>
 
   <!-- FEATURES -->
   <section id="features">
@@ -571,7 +632,7 @@ ORBITER_POD=$(pwd)/content.pod npm start</code></pre>
     <p class="section-lead reveal reveal-delay-1">A full CMS admin — standalone on port 4322. The Astro integration handles content at build time via <code>orbiter:collections</code>.</p>
 
     <div class="grid reveal">
-      {features.map(f => (
+      {features.slice(0, 8).map(f => (
         <div class="feature">
           <span class="feature-icon">{f.icon}</span>
           <div class="feature-title">{f.title}</div>
@@ -579,6 +640,18 @@ ORBITER_POD=$(pwd)/content.pod npm start</code></pre>
         </div>
       ))}
     </div>
+    <details class="more-details features-more" id="features-more">
+      <summary>Show all {features.length} features</summary>
+      <div class="grid">
+        {features.slice(8).map(f => (
+          <div class="feature">
+            <span class="feature-icon">{f.icon}</span>
+            <div class="feature-title">{f.title}</div>
+            <div class="feature-body" set:html={f.body} />
+          </div>
+        ))}
+      </div>
+    </details>
   </section>
 
   <!-- MANIFESTO: Your data. No strings attached. -->
@@ -668,76 +741,112 @@ ORBITER_POD=$(pwd)/content.pod npm start</code></pre>
     </div>
   </section>
 
-  <!-- HOSTING / WORKS ON -->
-  <section class="hosting-section">
-    <div class="hosting-label reveal">Admin runs on any Node.js host</div>
-    <div class="hosting-logos reveal reveal-delay-1">
-      <span class="hosting-chip">
-        <span class="hosting-dot" style="background:#E54D2E"></span>
-        Railway
-      </span>
-      <span class="hosting-chip">
-        <span class="hosting-dot" style="background:#6C47FF"></span>
-        Coolify
-      </span>
-      <span class="hosting-chip">
-        <span class="hosting-dot" style="background:#7B3FE4"></span>
-        Fly.io
-      </span>
-      <span class="hosting-chip">
-        <span class="hosting-dot" style="background:#46E3B7"></span>
-        Render
-      </span>
-      <span class="hosting-chip">
-        <span class="hosting-dot" style="background:#D50C2D"></span>
-        Hetzner
-      </span>
-      <span class="hosting-chip">
-        <span class="hosting-dot" style="background:#339933"></span>
-        Node.js
-      </span>
-      <span class="hosting-chip" title="via Git sync mode">
-        <span class="hosting-dot" style="background:#2DA44E"></span>
-        GitHub Pages*
-      </span>
-      <span class="hosting-chip" title="via Git sync mode">
-        <span class="hosting-dot" style="background:#00C7B7"></span>
-        Netlify*
-      </span>
-    </div>
-    <div class="hosting-note reveal reveal-delay-2">* serverless platforms use <a href="#how-it-works">Git sync mode</a> — content is committed to the repo before each build</div>
+  <!-- TRADEOFFS -->
+  <section id="tradeoffs">
+    <h2 class="reveal">Honest tradeoffs</h2>
+    <p class="section-lead reveal reveal-delay-1">Orbiter is the right tool for small teams and content sites. Here's where it isn't.</p>
 
-    <div class="hosting-flow-arrow reveal">↓ &nbsp; Astro builds &nbsp; → &nbsp; FTP deploy &nbsp; ↓</div>
-
-    <div class="hosting-label reveal">Publishes to any shared host via FTP</div>
-    <div class="hosting-logos reveal reveal-delay-1">
-      <span class="hosting-chip">
-        <span class="hosting-dot" style="background:#0066CC"></span>
-        World4You
-      </span>
-      <span class="hosting-chip">
-        <span class="hosting-dot" style="background:#ED1C24"></span>
-        Strato
-      </span>
-      <span class="hosting-chip">
-        <span class="hosting-dot" style="background:#003D8F"></span>
-        IONOS
-      </span>
-      <span class="hosting-chip">
-        <span class="hosting-dot" style="background:#673DE6"></span>
-        Hostinger
-      </span>
-      <span class="hosting-chip">
-        <span class="hosting-dot" style="background:#2E8B57"></span>
-        All-Inkl
-      </span>
-      <span class="hosting-chip">
-        <span class="hosting-dot" style="background:var(--muted)"></span>
-        Any FTP server
-      </span>
+    <div class="tradeoffs">
+      {tradeoffs.map((t, i) => (
+        <div class={`tradeoff reveal reveal-delay-${i + 1}`}>
+          <div class="tradeoff-warning">⚠</div>
+          <div class="tradeoff-content">
+            <div class="tradeoff-title">{t.title}</div>
+            <div class="tradeoff-body">{t.body}</div>
+          </div>
+        </div>
+      ))}
     </div>
-    <div class="hosting-note reveal reveal-delay-2">configure host, credentials &amp; remote path in Settings → one click to deploy, or trigger automatically after each build</div>
   </section>
+
+  <!-- STATION MODE -->
+  <section class="coming-section" id="station-mode">
+    <h2 class="reveal">Space Station mode.</h2>
+    <p class="section-lead reveal reveal-delay-1">A distinct layout for the admin — dark glassmorphism, floating magnification dock, command palette, vim keyboard navigation, notification center, HUD panel, zen mode, and a full mobile tab-bar. Switch in one click from Settings.</p>
+
+    <div class="coming-layout reveal reveal-delay-2">
+      <div class="coming-main">
+        <div class="screenshot-frame">
+          <img src="/screenshots/xfce-dashboard.webp" srcset="/screenshots/xfce-dashboard-800.webp 800w, /screenshots/xfce-dashboard.webp 1440w" sizes="(max-width: 800px) 100vw, 800px" alt="Orbiter Space Station mode — dark glassmorphism dashboard with floating dock" width="1440" height="900" loading="lazy" />
+        </div>
+        <div class="screenshot-caption">Dashboard — glass cards, stats sidebar, notes &amp; to-do, floating dock</div>
+      </div>
+      </div>
+
+    <div class="coming-mobile-row reveal reveal-delay-3">
+      <div class="coming-mobile-frame">
+        <div class="screenshot-frame coming-mobile-shot">
+          <img src="/screenshots/xfce-mobile.webp" alt="Orbiter Space Station mode on mobile — bottom tab bar, responsive dashboard" width="390" height="844" loading="lazy" />
+        </div>
+      </div>
+      <div class="coming-mobile-text">
+        <div class="coming-mobile-label">Mobile-ready</div>
+        <p>The dock becomes a native-feeling bottom tab bar. Stats stack to a 2×2 grid. Cards resize to fit. Same content, any screen.</p>
+        <div class="coming-chips">
+          <span class="coming-chip">Floating dock</span>
+          <span class="coming-chip">⌘K command palette</span>
+          <span class="coming-chip">Vim navigation</span>
+          <span class="coming-chip">Notification center</span>
+          <span class="coming-chip">HUD panel + drafts</span>
+          <span class="coming-chip">Zen mode</span>
+          <span class="coming-chip">Live build status</span>
+          <span class="coming-chip">3 themes · 2 schemes</span>
+          <span class="coming-chip">Mobile tab bar</span>
+          <span class="coming-chip">Notes &amp; to-do</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI SETUP -->
+  <section id="ai-setup" class="ai-setup-section">
+    <div class="ai-kicker reveal"><span class="ai-dot"></span>Claude Code · ChatGPT · Antigravity</div>
+    <h2 class="reveal">Scaffold a full project with AI.</h2>
+    <p class="section-lead reveal reveal-delay-1">One prompt. A complete Astro blog with Orbiter CMS — collections, example content, all pages, and a working admin — built by your AI assistant from scratch.</p>
+
+    <div class="ai-prompt-box reveal reveal-delay-3">
+      <div class="ai-prompt-header">
+        <span>AI_SETUP.md — paste into any AI assistant</span>
+        <button class="ai-copy-btn" id="ai-copy-btn" onclick="copyAiPrompt()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy full prompt
+        </button>
+      </div>
+      <div class="ai-prompt-preview" tabindex="0" role="region" aria-label="Prompt preview"><span class="hi">You are scaffolding a new Astro blog site using Orbiter CMS (https://orbiter.sh).</span>
+<span class="hi">Orbiter is a self-hosted CMS where all content, media, schema, and users live in a</span>
+<span class="hi">single SQLite database called a POD (.pod extension). No database server. No cloud dependency.</span>
+
+<span class="hi">Your task: set up a complete, working project from scratch — including a seed script</span>
+<span class="hi">that creates collections and example content, and Astro pages that consume the data.</span>
+
+<span class="hi">Follow every step below in order. Run commands as you go. Do not skip steps.</span>
+
+<span class="di">─────────────────────────────────────────────</span>
+<span class="hi">STEP 1 — Create the Astro project</span>
+<span class="di">─────────────────────────────────────────────</span>
+
+<span class="di">STEP 2 — Install Orbiter packages + add npm scripts</span>
+<span class="di">STEP 3 — Configure astro.config.mjs</span>
+<span class="di">STEP 4 — Write seed.js (collections, posts, authors, pages, admin user)</span>
+<span class="di">STEP 5 — Run the seed script</span>
+<span class="di">STEP 6 — Create BaseLayout, Header, PostCard, and all pages</span>
+<span class="di">STEP 7 — Start both dev servers</span>
+<span class="di">STEP 8 — Verify everything works</span>
+<span class="di">STEP 9 — Clean up</span>
+
+<span class="di">[ + full file contents, project structure, and troubleshooting guide ]</span></div>
+      <div class="ai-prompt-footer">
+        <span>9 steps · full file contents · troubleshooting guide · MIT</span>
+        <div class="ai-works-with">
+          Works with
+          <span class="ai-badge claude">Claude Code</span>
+          <span class="ai-badge gpt">ChatGPT</span>
+          <span class="ai-badge gemini">Antigravity</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
 
   <!-- COMPARISON -->
   <section id="comparison" class="comparison-section">
@@ -965,181 +1074,20 @@ ORBITER_POD=$(pwd)/content.pod npm start</code></pre>
     </div>
   </section>
 
-  <!-- TRADEOFFS -->
-  <section id="tradeoffs">
-    <h2 class="reveal">Honest tradeoffs</h2>
-    <p class="section-lead reveal reveal-delay-1">Orbiter is the right tool for small teams and content sites. Here's where it isn't.</p>
+  <!-- UPDATES / CHANGELOG -->
+  <section id="updates" class="updates-section">
+    <h2 class="reveal">What's new</h2>
+    <p class="section-lead reveal reveal-delay-1">The latest releases. <a href="/changelog/">Full changelog →</a> <span class="feed-links">Subscribe: <a href="/changelog.xml">Atom</a> · <a href="/changelog.json">JSON Feed</a></span></p>
 
-    <div class="tradeoffs">
-      {tradeoffs.map((t, i) => (
-        <div class={`tradeoff reveal reveal-delay-${i + 1}`}>
-          <div class="tradeoff-warning">⚠</div>
-          <div class="tradeoff-content">
-            <div class="tradeoff-title">{t.title}</div>
-            <div class="tradeoff-body">{t.body}</div>
-          </div>
-        </div>
-      ))}
+    <div class="updates-feed">
+      <Fragment set:html={latestUpdates} />
     </div>
+    <p class="updates-more-wrap"><a class="updates-more" href="/changelog/">All releases →</a></p>
   </section>
 
-  <!-- AI SETUP -->
-  <section id="ai-setup" class="ai-setup-section">
-    <div class="ai-kicker reveal"><span class="ai-dot"></span>Claude Code · ChatGPT · Antigravity</div>
-    <h2 class="reveal">Scaffold a full project with AI.</h2>
-    <p class="section-lead reveal reveal-delay-1">One prompt. A complete Astro blog with Orbiter CMS — collections, example content, all pages, and a working admin — built by your AI assistant from scratch.</p>
 
-    <div class="ai-what-grid">
-      <div class="ai-what-card reveal">
-        <div class="ai-what-icon">⬡</div>
-        <strong>Full project structure</strong>
-        <p>BaseLayout, Header, PostCard components. Blog listing, post detail, and About page — all wired to Orbiter content.</p>
-      </div>
-      <div class="ai-what-card reveal reveal-delay-1">
-        <div class="ai-what-icon">◈</div>
-        <strong>Collections with example data</strong>
-        <p>Posts, Authors, and Pages collections. Three seeded blog posts, an author, and an About page — ready to edit.</p>
-      </div>
-      <div class="ai-what-card reveal reveal-delay-2">
-        <div class="ai-what-icon">▦</div>
-        <strong>Working admin at localhost:4322</strong>
-        <p>Login with <code>admin / admin</code> and start creating content immediately. Change schema, upload media, switch themes.</p>
-      </div>
-    </div>
 
-    <div class="ai-prompt-box reveal reveal-delay-3">
-      <div class="ai-prompt-header">
-        <span>AI_SETUP.md — paste into any AI assistant</span>
-        <button class="ai-copy-btn" id="ai-copy-btn" onclick="copyAiPrompt()">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          Copy full prompt
-        </button>
-      </div>
-      <div class="ai-prompt-preview" tabindex="0" role="region" aria-label="Prompt preview"><span class="hi">You are scaffolding a new Astro blog site using Orbiter CMS (https://orbiter.sh).</span>
-<span class="hi">Orbiter is a self-hosted CMS where all content, media, schema, and users live in a</span>
-<span class="hi">single SQLite database called a POD (.pod extension). No database server. No cloud dependency.</span>
 
-<span class="hi">Your task: set up a complete, working project from scratch — including a seed script</span>
-<span class="hi">that creates collections and example content, and Astro pages that consume the data.</span>
-
-<span class="hi">Follow every step below in order. Run commands as you go. Do not skip steps.</span>
-
-<span class="di">─────────────────────────────────────────────</span>
-<span class="hi">STEP 1 — Create the Astro project</span>
-<span class="di">─────────────────────────────────────────────</span>
-
-<span class="di">STEP 2 — Install Orbiter packages + add npm scripts</span>
-<span class="di">STEP 3 — Configure astro.config.mjs</span>
-<span class="di">STEP 4 — Write seed.js (collections, posts, authors, pages, admin user)</span>
-<span class="di">STEP 5 — Run the seed script</span>
-<span class="di">STEP 6 — Create BaseLayout, Header, PostCard, and all pages</span>
-<span class="di">STEP 7 — Start both dev servers</span>
-<span class="di">STEP 8 — Verify everything works</span>
-<span class="di">STEP 9 — Clean up</span>
-
-<span class="di">[ + full file contents, project structure, and troubleshooting guide ]</span></div>
-      <div class="ai-prompt-footer">
-        <span>9 steps · full file contents · troubleshooting guide · MIT</span>
-        <div class="ai-works-with">
-          Works with
-          <span class="ai-badge claude">Claude Code</span>
-          <span class="ai-badge gpt">ChatGPT</span>
-          <span class="ai-badge gemini">Antigravity</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- WALKTHROUGH -->
-  <section class="walkthrough-section" id="walkthrough">
-    <h2 class="reveal">From install to published content.</h2>
-    <p class="section-lead reveal reveal-delay-1">Three steps. No database. No cloud account. No configuration files.</p>
-    <div class="walkthrough-grid reveal reveal-delay-2">
-      <div class="walkthrough-step">
-        <div class="walkthrough-num">1</div>
-        <div class="screenshot-frame walkthrough-shot">
-          <img src="/screenshots/dashboard.webp" srcset="/screenshots/dashboard-800.webp 800w, /screenshots/dashboard.webp 1440w" sizes="(max-width: 800px) 100vw, 800px" alt="Orbiter dashboard after first login" width="1390" height="839" loading="lazy" />
-        </div>
-        <div class="walkthrough-body">
-          <div class="walkthrough-title">Create your pod, start the admin</div>
-          <p>Run <code>npx @a83/orbiter-cli init my-site</code> — it scaffolds a project, creates a <code>.pod</code> file with sample collections, and starts the admin. Open <code>localhost:4322</code> and log in. Done.</p>
-        </div>
-      </div>
-      <div class="walkthrough-step">
-        <div class="walkthrough-num">2</div>
-        <div class="screenshot-frame walkthrough-shot">
-          <img src="/screenshots/xfce-editor-locale.webp" srcset="/screenshots/xfce-editor-locale-800.webp 800w, /screenshots/xfce-editor-locale.webp 1440w" sizes="(max-width: 800px) 100vw, 800px" alt="Orbiter block editor with locale switcher tabs" width="1440" height="900" loading="lazy" />
-        </div>
-        <div class="walkthrough-body">
-          <div class="walkthrough-title">Write content. In any language.</div>
-          <p>The block editor handles text, inline images, video, and all your schema fields. Locale tabs appear automatically when you configure multiple languages in Settings — same slug, independent content per locale.</p>
-        </div>
-      </div>
-      <div class="walkthrough-step">
-        <div class="walkthrough-num">3</div>
-        <div class="screenshot-frame walkthrough-shot">
-          <img src="/screenshots/xfce-settings.webp" srcset="/screenshots/xfce-settings-800.webp 800w, /screenshots/xfce-settings.webp 1440w" sizes="(max-width: 800px) 100vw, 800px" alt="Settings page with build webhook and API token" width="1440" height="900" loading="lazy" />
-        </div>
-        <div class="walkthrough-body">
-          <div class="walkthrough-title">Publish. Rebuild. Deploy.</div>
-          <p>Set a build webhook URL in Settings. When you publish an entry, Orbiter fires it automatically — triggering your CI/CD on Railway, Netlify, or Vercel. Your static site rebuilds with fresh content.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- STATION MODE -->
-  <section class="coming-section" id="station-mode">
-    <h2 class="reveal">Space Station mode.</h2>
-    <p class="section-lead reveal reveal-delay-1">A distinct layout for the admin — dark glassmorphism, floating magnification dock, command palette, vim keyboard navigation, notification center, HUD panel, zen mode, and a full mobile tab-bar. Switch in one click from Settings.</p>
-
-    <div class="coming-layout reveal reveal-delay-2">
-      <div class="coming-main">
-        <div class="screenshot-frame">
-          <img src="/screenshots/xfce-dashboard.webp" srcset="/screenshots/xfce-dashboard-800.webp 800w, /screenshots/xfce-dashboard.webp 1440w" sizes="(max-width: 800px) 100vw, 800px" alt="Orbiter Space Station mode — dark glassmorphism dashboard with floating dock" width="1440" height="900" loading="lazy" />
-        </div>
-        <div class="screenshot-caption">Dashboard — glass cards, stats sidebar, notes &amp; to-do, floating dock</div>
-      </div>
-      <div class="coming-side">
-        <div class="coming-side-shot">
-          <div class="screenshot-frame">
-            <img src="/screenshots/xfce-entries.webp" srcset="/screenshots/xfce-entries-800.webp 800w, /screenshots/xfce-entries.webp 1440w" sizes="(max-width: 800px) 100vw, 800px" alt="Entries list in Space Station mode" width="1440" height="900" loading="lazy" />
-          </div>
-          <div class="screenshot-caption">Entries — glass header, filter tabs</div>
-        </div>
-        <div class="coming-side-shot">
-          <div class="screenshot-frame">
-            <img src="/screenshots/xfce-settings.webp" srcset="/screenshots/xfce-settings-800.webp 800w, /screenshots/xfce-settings.webp 1440w" sizes="(max-width: 800px) 100vw, 800px" alt="Settings in Space Station mode" width="1440" height="900" loading="lazy" />
-          </div>
-          <div class="screenshot-caption">Settings — glass groups, accent dock</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="coming-mobile-row reveal reveal-delay-3">
-      <div class="coming-mobile-frame">
-        <div class="screenshot-frame coming-mobile-shot">
-          <img src="/screenshots/xfce-mobile.webp" alt="Orbiter Space Station mode on mobile — bottom tab bar, responsive dashboard" width="390" height="844" loading="lazy" />
-        </div>
-      </div>
-      <div class="coming-mobile-text">
-        <div class="coming-mobile-label">Mobile-ready</div>
-        <p>The dock becomes a native-feeling bottom tab bar. Stats stack to a 2×2 grid. Cards resize to fit. Same content, any screen.</p>
-        <div class="coming-chips">
-          <span class="coming-chip">Floating dock</span>
-          <span class="coming-chip">⌘K command palette</span>
-          <span class="coming-chip">Vim navigation</span>
-          <span class="coming-chip">Notification center</span>
-          <span class="coming-chip">HUD panel + drafts</span>
-          <span class="coming-chip">Zen mode</span>
-          <span class="coming-chip">Live build status</span>
-          <span class="coming-chip">3 themes · 2 schemes</span>
-          <span class="coming-chip">Mobile tab bar</span>
-          <span class="coming-chip">Notes &amp; to-do</span>
-        </div>
-      </div>
-    </div>
-  </section>
 
   <!-- CTA -->
   <section class="cta" id="try">
@@ -1283,6 +1231,7 @@ ORBITER_POD=$(pwd)/apps/demo/demo.pod npm run dev --workspace=packages/admin</co
         var id = decodeURIComponent(location.hash.slice(1)); if (!id) return;
         var t = document.getElementById(id); if (!t) return;
         if (id === 'comparison' || (cmp && cmp.contains(t))) cmp.open = true;
+        document.querySelectorAll('.more-details').forEach(function (d) { if (d.contains(t)) d.open = true; });
         if (t.scrollIntoView) setTimeout(function () { t.scrollIntoView(); }, 30);
       }
       reveal(); window.addEventListener('hashchange', reveal);
