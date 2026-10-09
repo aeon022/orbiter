@@ -49,6 +49,8 @@ export function watchErrors(page, ignore = []) {
 /** Run axe-core on the current page; returns critical/serious violations as readable lines (needs `axe-core` next to puppeteer-core). */
 export async function axeProblems(page, impacts = ['critical', 'serious']) {
   const { readFileSync } = await import('node:fs');
+  // contrast is measured mid-fade otherwise (cookie banner, hero): let finite animations end first
+  await page.evaluate(() => Promise.all(document.getAnimations().filter((a) => a.effect.getTiming().iterations !== Infinity).map((a) => a.finished.catch(() => {}))));
   await page.evaluate(readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8'));
   return page.evaluate(async (impacts) => {
     const r = await axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice'] } });
