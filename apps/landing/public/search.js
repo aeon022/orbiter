@@ -25,6 +25,7 @@
   .sp-label{padding:10px 12px 4px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#6f6f8d}
   .sp-item{display:flex;gap:12px;align-items:flex-start;padding:9px 12px;border-radius:10px;cursor:pointer;text-decoration:none;color:inherit}
   .sp-item[aria-selected="true"]{background:rgba(139,124,248,.16)}
+  .sp-chips{display:flex;gap:6px;padding:8px 16px 0}.sp-chip{font:inherit;font-size:11px;color:#a8a8d0;background:transparent;border:1px solid rgba(139,124,248,.25);border-radius:999px;padding:3px 11px;cursor:pointer}.sp-chip[aria-pressed=true]{color:#fff;background:rgba(139,124,248,.3);border-color:rgba(139,124,248,.6)}
   .sp-kind{flex:none;margin-top:2px;min-width:68px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b7cf8}
   .sp-kind.Recent{color:#6f6f8d}.sp-kind.Roadmap{color:#4ade80}.sp-kind.Changelog{color:#f0b35a}.sp-kind.Page{color:#8a8aa8}
   .sp-main{min-width:0}
@@ -67,18 +68,25 @@
         <input id="sp-input" type="search" role="combobox" aria-expanded="true" aria-controls="sp-list" aria-autocomplete="list" placeholder="Search docs, roadmap, changelog…" autocomplete="off" spellcheck="false" />
         <span class="sp-esc">esc</span>
       </div>
+      <div class="sp-chips" role="group" aria-label="Filter results">${['', 'Docs', 'Roadmap', 'Changelog'].map((k) => `<button type="button" class="sp-chip" data-kind="${k}" aria-pressed="${k === ''}">${k || 'All'}</button>`).join('')}</div>
       <ul id="sp-list" role="listbox" aria-label="Results"></ul>
       <div class="sp-foot"><span><kbd>↑</kbd><kbd>↓</kbd>navigate</span><span><kbd>↵</kbd>open</span><span><kbd>/</kbd>or<kbd>⌘K</kbd>anywhere</span></div>
       <div class="sp-sr" id="sp-live" aria-live="polite"></div>`;
     document.body.appendChild(dlg);
     input = dlg.querySelector('#sp-input'); list = dlg.querySelector('#sp-list'); live = dlg.querySelector('#sp-live');
     input.addEventListener('input', () => run(input.value));
+    dlg.querySelector('.sp-chips').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-kind]'); if (!b) return;
+      kind = b.dataset.kind; dlg.querySelectorAll('.sp-chip').forEach((c) => c.setAttribute('aria-pressed', String(c === b)));
+      run(input.value); input.focus();
+    });
     input.addEventListener('keydown', onKey);
     list.addEventListener('mousemove', (e) => { const li = e.target.closest('[data-i]'); if (li && +li.dataset.i !== active) setActive(+li.dataset.i); });
     list.addEventListener('click', (e) => { const li = e.target.closest('[data-i]'); if (li) go(+li.dataset.i); });
     dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
   }
 
+  let kind = '';   // result filter chosen with the chips (docs / roadmap / changelog)
   function load() {
     if (index) return Promise.resolve(index);
     return (loading ||= fetch('/search-index.json').then((r) => r.json()).then((j) => {
@@ -132,7 +140,7 @@
     const tokens = query.split(/\s+/).filter(Boolean);
     load().then((entries) => {
       if (input.value.trim().toLowerCase() !== query) return;     // a newer query is already running
-      const res = entries.map((e) => [score(e, tokens, query), e]).filter(([s]) => s > 0).sort((a, b) => b[0] - a[0]).slice(0, 12).map(([, e]) => e);
+      const res = entries.filter((e) => !kind || e.k === kind).map((e) => [score(e, tokens, query), e]).filter(([s]) => s > 0).sort((a, b) => b[0] - a[0]).slice(0, 12).map(([, e]) => e);
       render(res, tokens, '');
     });
   }

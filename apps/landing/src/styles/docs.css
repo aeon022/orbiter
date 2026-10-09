@@ -355,3 +355,20 @@ body {
 
 /* links inside running text must not rely on colour alone */
 .prose p a, .prose li a { text-decoration: underline; text-underline-offset: 3px; }
+
+/* code blocks: copy button + package-manager switch */
+.prose pre { position: relative; }
+.code-tools { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; opacity: 0; transition: opacity .15s; user-select: none; }
+.prose pre:hover .code-tools, .prose pre:focus-within .code-tools, .prose pre:focus .code-tools { opacity: 1; }
+.code-tools select, .code-copy { font: inherit; font-size: 11px; color: var(--text); background: rgba(139,124,248,.14); border: 1px solid rgba(139,124,248,.35); border-radius: 6px; padding: 3px 8px; cursor: pointer; }
+.code-copy:hover, .code-tools select:hover { background: rgba(139,124,248,.28); }
+@media (hover: none) { .code-tools { opacity: 1; } }
+
+.docs-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 48px 0 0; font-size: 12px; color: var(--muted); }
+.docs-meta a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.docs-meta a:hover { color: var(--text); }
+
+/* respect the OS setting: no motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}

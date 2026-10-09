@@ -12,6 +12,14 @@ export interface Props {
 
 const { title, description, prev, next, current } = Astro.props;
 
+// "Last updated" from git history (CI checks out the full history) + an edit link
+import { execFileSync } from 'node:child_process';
+const slug = Astro.url.pathname.replace(/^\/docs\/?/, '').replace(/\/$/, '') || 'index';
+const srcFile = `src/pages/docs/${slug}.astro`;
+let updated = '';
+try { updated = execFileSync('git', ['log', '-1', '--format=%cs', '--', srcFile], { encoding: 'utf8' }).trim(); } catch { /* no git: skip */ }
+const editUrl = `https://github.com/aeon022/orbiter/edit/main/apps/landing/${srcFile}`;
+
 const nav = [
   {
     label: 'Getting started',
@@ -62,6 +70,7 @@ const nav = [
     links: [
       { href: '/docs/permissions', title: 'User roles & permissions' },
       { href: '/docs/security', title: 'Security check & secrets' },
+      { href: '/docs/disclosure',   title: 'Responsible disclosure' },
     ],
   },
   {
@@ -113,7 +122,7 @@ const nav = [
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="alternate" type="application/atom+xml" title="Orbiter changelog (Atom)" href="/changelog.xml" />
   <script src="/search.js" is:inline></script>
-  <script is:inline>document.addEventListener('astro:page-load', function () { document.querySelectorAll('pre').forEach(function (p) { p.tabIndex = 0; }); });</script>
+  <script is:inline src="/docs-code.js"></script>
   <ClientRouter />
 </head>
 <body>
@@ -164,6 +173,11 @@ const nav = [
       <article class="prose">
         <slot />
       </article>
+
+      <p class="docs-meta">
+        {updated && <span>Last updated <time datetime={updated}>{updated}</time></span>}
+        <a href={editUrl} target="_blank" rel="noopener">Edit this page on GitHub ↗</a>
+      </p>
 
       {(prev || next) && (
         <nav class="docs-page-nav" aria-label="Previous and next page">

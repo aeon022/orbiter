@@ -1,0 +1,50 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+const advisories = [
+  ['GHSA-wv82-8593-g3c5', 'Stored XSS in the inbox', 'admin 0.3.82', 'Adrian Wilczek'],
+  ['GHSA-w3h3-6g4r-hxc5', 'Collection permission bypass (singletons and export)', 'admin 0.3.82', 'Adrian Wilczek'],
+  ['GHSA-r4r2-gxr8-p3vc', 'Media path traversal', 'core 0.3.15', 'Adrian Wilczek'],
+  ['GHSA-vvp4-5qxq-47r8', 'Stored XSS through media content type', 'admin 0.3.86, integration 0.3.21', ''],
+  ['GHSA-7jg7-w84v-wg8m', 'SSRF in media import by URL', 'admin 0.3.86', ''],
+  ['GHSA-5h4q-fqfp-gq9w', 'Content API returned drafts to anonymous callers', 'integration 0.3.21', ''],
+];
+---
+<DocsLayout title="Responsible disclosure" current="/docs/disclosure" prev={{ href: '/docs/security', title: 'Security check & secrets' }}>
+
+<h1>Responsible disclosure</h1>
+<p class="lead">Found a security problem in Orbiter? Please tell us privately first. Fixes ship as normal npm releases, and every fixed issue is published as a GitHub security advisory.</p>
+
+<h2>How to report</h2>
+<ul>
+  <li><a href="https://github.com/aeon022/orbiter/security/advisories/new" target="_blank" rel="noopener">Open a private security advisory on GitHub</a> (preferred, it stays between you and the maintainers).</li>
+  <li>Or write to <a href="mailto:post@abteilung83.com">post@abteilung83.com</a>.</li>
+</ul>
+<p>Helpful in a report: affected package and version, steps to reproduce, and what an attacker gains. Please don't test against sites you don't own, and give us a chance to ship a fix before you publish details.</p>
+
+<h2>What happens next</h2>
+<ol>
+  <li>We confirm receipt and reproduce the issue.</li>
+  <li>We fix it and release new package versions.</li>
+  <li>We publish a GitHub security advisory and credit you in the form you prefer, unless you want to stay anonymous.</li>
+</ol>
+
+<h2 id="thanks">Thanks</h2>
+<p>Thank you to <a href="https://github.com/wilczekad" target="_blank" rel="noopener">Adrian Wilczek</a> for responsibly reporting three vulnerabilities: a stored XSS in the inbox, a collection permission bypass and a media path traversal. All three are fixed and published.</p>
+
+<h2>Published advisories</h2>
+<table>
+  <thead><tr><th>Advisory</th><th>Issue</th><th>Fixed in</th><th>Reported by</th></tr></thead>
+  <tbody>
+    {advisories.map(([id, what, fixed, by]) => (
+      <tr>
+        <td><a href={`https://github.com/aeon022/orbiter/security/advisories/${id}`} target="_blank" rel="noopener">{id}</a></td>
+        <td>{what}</td>
+        <td>{fixed}</td>
+        <td>{by || 'Internal audit'}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+<p>Our contact details are also available machine-readable at <a href="/.well-known/security.txt"><code>/.well-known/security.txt</code></a>.</p>
+
+</DocsLayout>

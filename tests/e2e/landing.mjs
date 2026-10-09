@@ -86,9 +86,37 @@ await check('tour: steps switch, hotspots open, keyboard works', async () => {
   assert(imgOk, 'tour images need width/height and alt'); assert(!errors().length, errors().join(' | ')); await page.close();
 });
 
+await check('docs: package-manager switch, copy button, edit link; security.txt; home: older releases + comparison collapsed, deep links open them', async () => {
+  const page = await newPage(); const errors = watchErrors(page, ['favicon']);
+  await page.goto(BASE + '/docs/cli/', { waitUntil: 'networkidle0' });
+  await page.select('.code-tools select', 'pnpm');
+  const pre = await page.$eval('.prose pre', (p) => p.textContent);
+  assert(/pnpm add -g @a83\/orbiter-cli/.test(pre), 'pnpm switch did not rewrite the install command: ' + pre.slice(0, 80));
+  assert(await page.$('.code-copy'), 'no copy button');
+  assert(await page.$eval('.docs-meta a', (a) => /github\.com\/aeon022\/orbiter\/edit\/main\/apps\/landing\/src\/pages\/docs\/cli\.astro/.test(a.href)), 'edit link wrong');
+  const sec = await (await fetch(BASE + '/.well-known/security.txt')).text();
+  assert(/^Contact: /m.test(sec) && /^Expires: /m.test(sec), 'security.txt incomplete');
+  await page.goto(BASE + '/', { waitUntil: 'networkidle0' });
+  const hidden = await page.$$eval('.update-card', (c) => c.filter((x) => getComputedStyle(x).display === 'none').length);
+  assert(hidden >= 5, 'older release cards are not collapsed (' + hidden + ' hidden)');
+  assert(!(await page.$eval('#cmp-details', (d) => d.open)), 'comparison table should start collapsed');
+  await page.goto(BASE + '/#comparison', { waitUntil: 'networkidle0' }); await sleep(200);
+  assert(await page.$eval('#cmp-details', (d) => d.open), '#comparison did not open the table');
+  const lastCard = await page.$$eval('.update-card', (c) => c.filter((x) => x.id).pop().id);
+  await page.goto(BASE + '/#' + lastCard, { waitUntil: 'networkidle0' }); await sleep(200);
+  assert(await page.$eval('#' + lastCard, (c) => getComputedStyle(c).display !== 'none'), 'deep link to an old release did not expand the list');
+  await page.keyboard.press('/'); await sleep(300);
+  await page.type('#sp-input', 'webhook'); await sleep(400);
+  await page.click('.sp-chip[data-kind="Roadmap"]'); await sleep(300);
+  const kinds = await page.$$eval('#sp-list .sp-kind', (k) => k.map((x) => x.textContent.trim().toLowerCase()));
+  assert(kinds.length && kinds.every((k) => k === 'roadmap'), 'chip filter shows: ' + kinds.join(','));
+  const e = errors(); assert(!e.length, e.join(' | '));
+  await page.close();
+});
+
 await check('a11y: no critical or serious axe violations on home, vision and docs pages', async () => {
   const problems = [];
-  for (const path of ['/', '/vision/', '/docs/', '/docs/security/']) {
+  for (const path of ['/', '/vision/', '/docs/', '/docs/security/', '/docs/disclosure/', '/docs/cli/']) {
     const page = await newPage(); await page.goto(BASE + path, { waitUntil: 'networkidle0' }); await sleep(400);
     for (const v of await axeProblems(page)) problems.push(`${path}: ${v}`);
     await page.close();

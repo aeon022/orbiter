@@ -2808,3 +2808,18 @@ html.is-leaving body {
   /* scroll reveal: show everything immediately */
   .reveal { opacity: 1; transform: none; }
 }
+
+/* respect the OS setting: no motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+/* long sections: older releases and the comparison table start collapsed */
+.updates-section:not(.show-all) .updates-feed > .update-card:nth-child(n+6) { display: none; }
+.updates-more-wrap { text-align: center; margin: 28px 0 0; }
+.updates-more, .cmp-details > summary { font: inherit; font-size: 13px; color: var(--accent); background: rgba(139,124,248,.1); border: 1px solid rgba(139,124,248,.35); border-radius: 999px; padding: 9px 20px; cursor: pointer; list-style: none; display: inline-block; }
+.updates-more:hover, .cmp-details > summary:hover { background: rgba(139,124,248,.2); }
+.cmp-details { text-align: center; }
+.cmp-details > summary::-webkit-details-marker { display: none; }
+.cmp-details[open] > summary { margin-bottom: 20px; }
+.cmp-details > .comparison-wrap { text-align: left; }
