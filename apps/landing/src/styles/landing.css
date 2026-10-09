@@ -2554,14 +2554,14 @@ html.is-leaving body {
 
 .coming-layout {
   display: grid;
-  grid-template-columns: 1fr 280px;
+  grid-template-columns: minmax(0, 960px);
+  justify-content: center;
   gap: 12px;
   margin-top: 40px;
   text-align: left;
 }
 
-.coming-main .screenshot-frame { height: 100%; }
-.coming-main .screenshot-frame img { height: 100%; object-fit: cover; object-position: top left; }
+.coming-main .screenshot-frame img { width: 100%; height: auto; }
 
 .coming-side {
   display: flex;
@@ -2576,7 +2576,9 @@ html.is-leaving body {
   display: flex;
   align-items: center;
   gap: 48px;
-  margin-top: 40px;
+  margin: 40px auto 0;
+  max-width: 960px;
+  justify-content: center;
   text-align: left;
 }
 
@@ -2833,3 +2835,5 @@ html.is-leaving body {
 .features-more { margin: 32px 0 0; }
 .features-more[open] > summary { margin-bottom: 28px; }
 @media (max-width: 700px) { .press-snippet { display: none; } }
+/* centred sections: the lead is a narrow box, so centre the box itself too */
+.coming-section .section-lead, .ai-setup-section .section-lead { margin-left: auto; margin-right: auto; max-width: 640px; }
