@@ -71,7 +71,7 @@
     .cal-mini-hdr { font-size:8px; color:var(--muted); text-align:center; letter-spacing:0.08em; padding:2px 0 4px; }
     .cal-mini-day { aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--muted); position:relative; border-radius:2px; cursor:default; }
     .cal-mini-day.today { color:var(--heading); font-weight:600; background:var(--line2); }
-    .cal-mini-day.other-month { opacity:0.3; }
+    .cal-mini-day.other-month { opacity:1; color:var(--muted); font-weight:300; }
     .cal-mini-day .cal-dot { position:absolute; bottom:1px; width:4px; height:4px; border-radius:50%; }
     .cal-mini-day .cal-dot.sched { background:var(--accent); }
     .cal-mini-day .cal-dot.pub { background:var(--jade); }
@@ -177,7 +177,7 @@
     </nav>
 
     <!-- Main -->
-    <main class="main">
+    <main class="main"><h1 class="sr-only">Dashboard</h1>
 
       <!-- Hero -->
       <div class="hero glass-card">
@@ -560,7 +560,7 @@
       const startOffset = startDay - 1;
       const prevLast = new Date(year, month, 0).getDate();
       for (let i = startOffset - 1; i >= 0; i--) {
-        grid.innerHTML += `<div class="cal-mini-day other-month">${prevLast - i}</div>`;
+        grid.innerHTML += `<div class="cal-mini-day other-month" aria-hidden="true">${prevLast - i}</div>`;
       }
       for (let d = 1; d <= last.getDate(); d++) {
         const iso = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
@@ -571,7 +571,7 @@
       const remaining = 7 - ((startOffset + last.getDate()) % 7);
       if (remaining < 7) {
         for (let i = 1; i <= remaining; i++) {
-          grid.innerHTML += `<div class="cal-mini-day other-month">${i}</div>`;
+          grid.innerHTML += `<div class="cal-mini-day other-month" aria-hidden="true">${i}</div>`;
         }
       }
 

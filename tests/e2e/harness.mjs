@@ -45,3 +45,13 @@ export function watchErrors(page, ignore = []) {
   page.on('console', (m) => { if (m.type() === 'error' && !ignore.some((i) => m.text().includes(i))) errs.push('console: ' + m.text()); });
   return () => errs.slice();
 }
+
+/** Run axe-core on the current page; returns critical/serious violations as readable lines (needs `axe-core` next to puppeteer-core). */
+export async function axeProblems(page, impacts = ['critical', 'serious']) {
+  const { readFileSync } = await import('node:fs');
+  await page.evaluate(readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8'));
+  return page.evaluate(async (impacts) => {
+    const r = await axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice'] } });
+    return r.violations.filter((v) => impacts.includes(v.impact)).map((v) => `${v.id} (${v.impact}) ×${v.nodes.length}: ${v.nodes[0].target.join(' ')}`);
+  }, impacts);
+}

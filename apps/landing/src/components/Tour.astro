@@ -32,7 +32,7 @@ import steps from '../data/tour.json';
         <div class="tour-chrome" aria-hidden="true"><span></span><span></span><span></span><em>localhost:4322 — Orbiter Admin</em></div>
         <div class="tour-shots">
           {steps.map((s, i) => (
-            <figure class={`tour-panel${i === 0 ? ' active' : ''}`} role="tabpanel" id={`tour-panel-${s.id}`} aria-labelledby={`tour-tab-${s.id}`} data-i={i} hidden={i !== 0}>
+            <figure class={`tour-panel${i === 0 ? ' active' : ''}`} id={`tour-panel-${s.id}`} aria-labelledby={`tour-tab-${s.id}`} data-i={i} hidden={i !== 0}>
               <div class="tour-canvas" style={`aspect-ratio:${s.width}/${s.height}`}>
                 <img src={s.file} width={s.width} height={s.height} alt={`Orbiter admin: ${s.title}. ${s.caption}`} loading={i === 0 ? 'eager' : 'lazy'} decoding="async" />
                 {s.hotspots.map((h, j) => (

@@ -73,7 +73,7 @@ import { ClientRouter } from 'astro:transitions';
       --accent2: #c4b9ff;
       --gold: #e6a817;
       --jade: #22c55e;
-      --muted: #555570;
+      --muted: #8585a8;
       --line: rgba(139,124,248,0.1);
       --glow: rgba(139,124,248,0.15);
     }
@@ -637,7 +637,7 @@ import { ClientRouter } from 'astro:transitions';
     .rm-chip { font: inherit; font-size: 11px; letter-spacing: .04em; color: var(--muted); background: transparent; border: 1px solid rgba(139,124,248,0.2); border-radius: 16px; padding: 6px 14px; cursor: pointer; transition: all .15s; }
     .rm-chip:hover { color: var(--heading); border-color: rgba(139,124,248,0.45); }
     .rm-chip[aria-pressed="true"] { color: var(--accent); background: rgba(139,124,248,0.14); border-color: rgba(139,124,248,0.5); }
-    .rm-chip .n { opacity: .6; margin-left: 4px; font-variant-numeric: tabular-nums; }
+    .rm-chip .n { opacity: 1; color: #9a9ab8; margin-left: 4px; font-variant-numeric: tabular-nums; }
     :global(.rm-weigh) { display: inline-block; margin: 8px 0 0 10px; font-size: 11px; color: var(--muted); text-decoration: none; border-bottom: 1px dashed rgba(139,124,248,0.35); transition: color .15s, border-color .15s; }
     :global(.rm-weigh:hover) { color: var(--accent); border-bottom-color: var(--accent); }
     .rm-suggest { text-decoration: none; display: inline-flex; align-items: center; }
@@ -1035,6 +1035,7 @@ import { ClientRouter } from 'astro:transitions';
   </div>
 </header>
 
+<main id="main">
 <!-- Hero -->
 <section class="vision-hero">
   <a href="/" class="hud-back">orbiter.sh</a>
@@ -1636,6 +1637,8 @@ import { ClientRouter } from 'astro:transitions';
   </div>
 </section>
 
+</main>
+
 <!-- Warp Footer -->
 <footer class="warp-footer">
   <div class="warp-scene">
@@ -1779,7 +1782,7 @@ import { ClientRouter } from 'astro:transitions';
       const t = el.querySelector('.rm-title').textContent.replace(/#$/, '').trim();
       const a = document.createElement('a'); a.className = 'rm-weigh'; a.target = '_blank'; a.rel = 'noopener';
       a.href = 'https://github.com/aeon022/orbiter/issues/new?labels=roadmap&title=' + encodeURIComponent('Roadmap: ' + t) + '&body=' + encodeURIComponent('I would use this because…\n\nMy setup / use case:\n');
-      a.textContent = 'Weigh in on GitHub ↗'; a.setAttribute('aria-label', 'Weigh in on “' + t + '” on GitHub (opens a new issue)');
+      a.innerHTML = 'Weigh in on GitHub <span aria-hidden="true">↗</span>'; a.setAttribute('aria-label', 'Weigh in on GitHub: ' + t + ' (opens a new issue)');
       el.querySelector('.rm-tag')?.after(a);
     });
     const count = { shipped: items.filter(i => i.dataset.kind === 'shipped').length };

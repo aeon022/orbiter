@@ -80,7 +80,7 @@
 
   // ── Status Bar ────────────────────────────────────────────────────────
   function buildStatusBar() {
-    var sb = el('div', 'xfce-sb');
+    var sb = el('div', 'xfce-sb'); sb.setAttribute('role', 'banner');
     sb.innerHTML = [
       '<div class="xfce-sb-left">',
         '<a class="xfce-sb-logo" href="/dashboard.html">',
@@ -164,7 +164,7 @@
 
   function buildMetaPanel() {
     metaPanel = el('div', 'xfce-hud');
-    metaPanel.id = 'xfce-hud';
+    metaPanel.id = 'xfce-hud'; metaPanel.setAttribute('role', 'complementary'); metaPanel.setAttribute('aria-label', 'Status');
     metaPanel.innerHTML = [
       '<div class="xfce-hud-bar">',
         '<span class="xfce-hud-title">◈ System HUD</span>',
@@ -1311,16 +1311,16 @@
     var item = isBtn ? el('button') : el('a');
     item.className = 'xfce-dock-item' + (isActive ? ' active' : '');
     if (!isBtn) item.href = hrefOrNull;
-    item.setAttribute('aria-label', label);
+    item.title = label;
     item.dataset.label = label;
-    item.innerHTML = '<span class="xfce-dock-icon">' + icon + '</span><span class="xfce-dock-lbl">' + label + '</span>';
+    item.innerHTML = '<span class="xfce-dock-icon" aria-hidden="true">' + icon + '</span><span class="xfce-dock-lbl">' + label + '</span>';
     item.style.setProperty('--ds', '1');
     return item;
   }
 
   function buildDock() {
     var dock = el('div', 'xfce-dock');
-    dock.id = 'xfce-dock';
+    dock.id = 'xfce-dock'; dock.setAttribute('role', 'navigation'); dock.setAttribute('aria-label', 'Dock');
     dockInner = el('div', 'xfce-dock-inner');
     dock.appendChild(dockInner);
 

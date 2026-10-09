@@ -3,7 +3,7 @@
 import { createServer } from 'node:http';
 import { readFileSync, existsSync, statSync, readdirSync } from 'node:fs';
 import { join, extname, resolve } from 'node:path';
-import { launch, check, assert, finish, sleep, waitFor, watchErrors } from './harness.mjs';
+import { launch, check, assert, finish, sleep, waitFor, watchErrors, axeProblems } from './harness.mjs';
 
 const DIST = resolve('apps/landing/dist');
 if (!existsSync(join(DIST, 'index.html'))) { console.error('apps/landing/dist is missing — build the landing site first'); process.exit(2); }
@@ -84,6 +84,16 @@ await check('tour: steps switch, hotspots open, keyboard works', async () => {
   assert((await page.evaluate(() => [...document.querySelectorAll('.tour-panel')].findIndex((p) => !p.hidden))) === 4, 'ArrowDown did not advance');
   const imgOk = await page.evaluate(() => [...document.querySelectorAll('.tour-panel img')].every((i) => i.getAttribute('width') && i.getAttribute('alt')));
   assert(imgOk, 'tour images need width/height and alt'); assert(!errors().length, errors().join(' | ')); await page.close();
+});
+
+await check('a11y: no critical or serious axe violations on home, vision and docs pages', async () => {
+  const problems = [];
+  for (const path of ['/', '/vision/', '/docs/', '/docs/security/']) {
+    const page = await newPage(); await page.goto(BASE + path, { waitUntil: 'networkidle0' }); await sleep(400);
+    for (const v of await axeProblems(page)) problems.push(`${path}: ${v}`);
+    await page.close();
+  }
+  assert(!problems.length, problems.join('\n'));
 });
 
 await check('mobile (390px): no horizontal overflow on home, vision and a docs page', async () => {

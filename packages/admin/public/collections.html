@@ -79,7 +79,7 @@
           <span class="table-title">${cols.length} collection${cols.length !== 1 ? 's' : ''}</span>
         </div>
         <table>
-          <thead><tr><th>Label</th><th>ID</th><th>Fields</th><th>Entries</th><th></th></tr></thead>
+          <thead><tr><th>Label</th><th>ID</th><th>Fields</th><th>Entries</th><th><span class="sr-only">Actions</span></th></tr></thead>
           <tbody>
             ${cols.map(c => {
               const fieldCount = Object.keys(c.schema ?? {}).length;

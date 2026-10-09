@@ -583,7 +583,7 @@
   </style>
 </head>
 <body>
-  <div class="focus-exit-hint">Esc · exit focus mode</div>
+  <div class="focus-exit-hint" role="complementary" aria-label="Hint">Esc · exit focus mode</div>
   <div class="shortcut-overlay" id="shortcut-overlay" onclick="this.classList.remove('open')">
     <div class="shortcut-box" onclick="event.stopPropagation()">
       <h3>Keyboard shortcuts</h3>
@@ -633,7 +633,7 @@
       <span style="color:var(--gold);">⚠</span> <span id="lock-banner-msg"></span>
     </div>
     <div class="editor-shell" id="editor-shell">
-      <div class="editor-main" id="editor-main">
+      <div class="editor-main" id="editor-main" role="main"><h1 class="sr-only">Editor</h1>
         <div class="suggest-panel" id="suggest-panel">
           <div class="suggest-head">
             <span class="suggest-head-title">✦ Suggestions</span>

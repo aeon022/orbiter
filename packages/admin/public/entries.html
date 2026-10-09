@@ -262,14 +262,14 @@
       const si = (f) => sortField === f ? (sortDir === 1 ? ' ↑' : ' ↓') : '';
       const sh = (f, label) => `<th style="cursor:pointer;user-select:none;white-space:nowrap" onclick="setSort('${f}')">${label}${si(f)}</th>`;
       const statusTh  = isTrash ? '<th>Deleted</th>'  : sh('status','Status');
-      const updatedTh = isTrash ? '<th></th>'          : sh('updated_at','Updated');
+      const updatedTh = isTrash ? '<th><span class="sr-only">Actions</span></th>'          : sh('updated_at','Updated');
       wrap.innerHTML = `
         <table>
           <thead>
             <tr>
-              ${canSort ? '<th class="drag-col"></th>' : ''}
+              ${canSort ? '<th class="drag-col"><span class="sr-only">Reorder</span></th>' : ''}
               <th class="cb-col"><input type="checkbox" id="check-all" title="Select all" aria-label="Select all" /></th>
-              ${sh('title','Title / Slug')}${statusTh}${updatedTh}<th></th>
+              ${sh('title','Title / Slug')}${statusTh}${updatedTh}<th><span class="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>

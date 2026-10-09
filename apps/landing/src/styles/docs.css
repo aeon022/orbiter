@@ -352,3 +352,6 @@ body {
   .prose h1 { font-size: 1.5rem; }
   .docs-header-links .btn-gh span { display: none; }
 }
+
+/* links inside running text must not rely on colour alone */
+.prose p a, .prose li a { text-decoration: underline; text-underline-offset: 3px; }

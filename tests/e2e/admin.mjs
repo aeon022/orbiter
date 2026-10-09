@@ -5,7 +5,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createPod, openPod, hashPassword } from '../../packages/core/src/index.js';
-import { launch, check, assert, finish, sleep, waitFor, watchErrors } from './harness.mjs';
+import { launch, check, assert, finish, sleep, waitFor, watchErrors, axeProblems } from './harness.mjs';
 
 const PORT = 4590 + Math.floor(Math.random() * 100);
 const BASE = `http://localhost:${PORT}`;
@@ -91,6 +91,13 @@ await check('every page in Station mode: one dock, scrollable, no horizontal ove
     if (m.locked && m.below) problems.push(`${p}: document scroll is locked but content continues below the fold`);
   }
   const e = errors(); if (e.length) problems.push('JS errors: ' + e.slice(0, 3).join(' | '));
+  assert(!problems.length, problems.join('\n'));
+  await page.close();
+});
+
+await check('a11y: no critical or serious axe violations on any page (Station mode)', async () => {
+  const page = await newPage(); const problems = [];
+  for (const p of PAGES) { await go(page, '/' + p); await sleep(400); for (const v of await axeProblems(page)) problems.push(`${p}: ${v}`); }
   assert(!problems.length, problems.join('\n'));
   await page.close();
 });

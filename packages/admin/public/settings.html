@@ -1051,7 +1051,7 @@
           <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">${k.key}</span>
           <span style="font-size:9px;color:var(--muted)">${k.hits} hits</span>
           <span style="font-size:9px;color:var(--muted)">${k.created}</span>
-          <button type="button" class="btn btn-ghost btn-sm" style="color:var(--danger,#e55)" data-key-id="${k.id}">Revoke</button>
+          <button type="button" class="btn btn-ghost btn-sm" style="color:var(--red,#c03848)" data-key-id="${k.id}">Revoke</button>
         </div>`).join('');
       list.querySelectorAll('[data-key-id]').forEach(btn => {
         btn.addEventListener('click', async () => {
@@ -1127,7 +1127,7 @@
           <span style="font-size:9px;color:var(--muted)">${esc(h.events.join(', '))}</span>
           <span style="font-size:9px;color:${h.signed ? 'var(--jade)' : 'var(--gold)'}" title="${h.signed ? 'Payloads carry an HMAC signature' : 'Created before signing existed — delete and re-add to get a secret'}">${h.signed ? 'signed' : 'unsigned'}</span>
           <button type="button" class="btn btn-ghost btn-sm" data-wh-test="${esc(h.id)}">Test</button>
-          <button type="button" class="btn btn-ghost btn-sm" style="color:var(--danger,#e55)" data-wh-del="${esc(h.id)}">Remove</button>
+          <button type="button" class="btn btn-ghost btn-sm" style="color:var(--red,#c03848)" data-wh-del="${esc(h.id)}">Remove</button>
         </div>`).join('') : 'No webhooks yet';
       list.querySelectorAll('[data-wh-del]').forEach(b => b.addEventListener('click', async () => {
         if (!confirm('Remove this webhook?')) return;

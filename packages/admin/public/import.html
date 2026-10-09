@@ -25,7 +25,7 @@
     .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
     .drop-icon { font-size: 28px; color: var(--muted); opacity: 0.3; margin-bottom: 12px; }
     .drop-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
-    .drop-sub { font-size: 9px; color: var(--muted); opacity: 0.6; }
+    .drop-sub { font-size: 9px; color: var(--muted); }
     .drop-chosen { font-size: 11px; color: var(--gold); margin-top: 10px; display: none; }
 
     .section { margin-bottom: 28px; }
@@ -180,7 +180,7 @@
           <div class="section">
             <div class="section-head">WordPress export file</div>
             <div class="drop-zone" id="drop-zone-wp">
-              <input type="file" id="wxr-file" accept=".xml,text/xml,application/xml" />
+              <input type="file" id="wxr-file" aria-label="WordPress export file (XML)" accept=".xml,text/xml,application/xml" />
               <div class="drop-icon">⊞</div>
               <div class="drop-label">Drop .xml file here or click to browse</div>
               <div class="drop-sub">Export your WordPress site via Tools → Export → All content.</div>

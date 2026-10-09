@@ -53,7 +53,7 @@ jobs:
       - name: Install (core, admin)
         run: npm ci --workspace=packages/core --workspace=packages/admin
       - name: Install puppeteer-core (outside the workspace, so the lockfile stays untouched)
-        run: mkdir -p /tmp/pp && cd /tmp/pp && npm init -y >/dev/null && npm i puppeteer-core
+        run: mkdir -p /tmp/pp && cd /tmp/pp && npm init -y >/dev/null && npm i puppeteer-core axe-core
       - name: Admin smoke test (uses the Chrome that ships with the runner)
         run: node tests/e2e/admin.mjs
         env:
@@ -76,7 +76,7 @@ jobs:
       - name: Build
         run: npm run build --workspace=apps/landing
       - name: Install puppeteer-core
-        run: mkdir -p /tmp/pp && cd /tmp/pp && npm init -y >/dev/null && npm i puppeteer-core
+        run: mkdir -p /tmp/pp && cd /tmp/pp && npm init -y >/dev/null && npm i puppeteer-core axe-core
       - name: Landing smoke test
         run: node tests/e2e/landing.mjs
         env:

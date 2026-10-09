@@ -2086,15 +2086,7 @@ footer a:hover { color: var(--text); text-decoration: none; }
 
 /* ===== PAGE TRANSITIONS ===== */
 
-/* enter: body fades in from transparent on every page load */
-@keyframes page-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-body {
-  animation: page-fade-in 0.28s ease forwards;
-}
+/* enter: no body fade-in — an opacity animation on <body> keeps Chrome from reporting FCP/LCP at all */
 
 /* exit: added by JS before navigating away */
 html.is-leaving {
@@ -2340,7 +2332,7 @@ html.is-leaving body {
 .t-key       { color: #c4b9ff; min-width: 200px; display: inline-block; }
 .t-val-green { color: #4ade80; }
 .t-val-amber { color: #f59e0b; }
-.t-val-muted { color: #6060a0; }
+.t-val-muted { color: #8c8cc8; }
 .t-num       { color: #f59e0b; font-weight: 700; }
 .t-spacer    { display: block; height: 4px; }
 

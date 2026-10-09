@@ -248,7 +248,7 @@ import Tour from '../components/Tour.astro';
   <div class="nebula nebula-3" aria-hidden="true"></div>
 
   <!-- NAV -->
-  <nav>
+  <nav aria-label="Main">
     <a href="#top" class="nav-logo">
       <svg class="logo-svg" viewBox="0 0 32 32" width="26" height="26" aria-hidden="true" fill="none" xmlns="http://www.w3.org/2000/svg">
         <ellipse cx="16" cy="16" rx="12" ry="4.5" stroke="rgba(139,124,248,0.35)" stroke-width="1.5" transform="rotate(-22 16 16)" stroke-dasharray="18 20" stroke-dashoffset="0"/>
@@ -302,6 +302,7 @@ import Tour from '../components/Tour.astro';
     <a href="https://github.com/aeon022/orbiter" class="mobile-menu-cta" target="_blank" rel="noopener">★ GitHub {ghStars > 0 ? `(${ghStars})` : ''}</a>
   </div>
 
+  <main id="main">
   <!-- HERO -->
   <div class="hero">
     <!-- orbital decoration -->
@@ -426,31 +427,31 @@ import Tour from '../components/Tour.astro';
     </div>
 
     <div class="screenshot-grid">
-      <button class="screenshot-thumb active" data-src="/screenshots/xfce-dashboard.webp" data-caption="Space Station mode — glass cards, stats sidebar, notes &amp; to-do, floating dock" aria-label="Space Station dashboard">
+      <button class="screenshot-thumb active" data-src="/screenshots/xfce-dashboard.webp" data-caption="Space Station mode — glass cards, stats sidebar, notes &amp; to-do, floating dock">
         <div class="screenshot-frame"><img src="/screenshots/xfce-dashboard.webp" alt="Orbiter Space Station mode dashboard" width="1440" height="900" loading="lazy" /></div>
         <div class="screenshot-caption">Station dashboard</div>
       </button>
-      <button class="screenshot-thumb" data-src="/screenshots/dashboard.webp" data-caption="Dashboard — entry counts per collection, recently changed, live/draft status" aria-label="Dashboard">
+      <button class="screenshot-thumb" data-src="/screenshots/dashboard.webp" data-caption="Dashboard — entry counts per collection, recently changed, live/draft status">
         <div class="screenshot-frame"><img src="/screenshots/dashboard.webp" alt="Orbiter classic dashboard view" width="1390" height="839" loading="lazy" /></div>
         <div class="screenshot-caption">Classic dashboard</div>
       </button>
-      <button class="screenshot-thumb" data-src="/screenshots/login.webp" data-caption="Login screen" aria-label="Login">
+      <button class="screenshot-thumb" data-src="/screenshots/login.webp" data-caption="Login screen">
         <div class="screenshot-frame"><img src="/screenshots/login.webp" alt="Orbiter admin login screen" width="1390" height="839" loading="lazy" /></div>
         <div class="screenshot-caption">Login</div>
       </button>
-      <button class="screenshot-thumb" data-src="/screenshots/settings.webp" data-caption="Settings — site config, GitHub sync mode, API token" aria-label="Settings &amp; GitHub sync">
+      <button class="screenshot-thumb" data-src="/screenshots/settings.webp" data-caption="Settings — site config, GitHub sync mode, API token">
         <div class="screenshot-frame"><img src="/screenshots/settings.webp" alt="Orbiter settings page" width="1390" height="839" loading="lazy" /></div>
         <div class="screenshot-caption">Settings &amp; GitHub sync</div>
       </button>
-      <button class="screenshot-thumb" data-src="/screenshots/import.webp" data-caption="Import Tool — WordPress WXR and Markdown files" aria-label="Import Tool">
+      <button class="screenshot-thumb" data-src="/screenshots/import.webp" data-caption="Import Tool — WordPress WXR and Markdown files">
         <div class="screenshot-frame"><img src="/screenshots/import.webp" alt="Orbiter WordPress import tool" width="1390" height="839" loading="lazy" /></div>
         <div class="screenshot-caption">Import Tool</div>
       </button>
-      <button class="screenshot-thumb" data-src="/screenshots/xfce-editor-locale.webp" data-caption="Multilingual editor — locale tab bar with DE / EN / FR variants, dashed tab = untranslated" aria-label="i18n locale editor">
+      <button class="screenshot-thumb" data-src="/screenshots/xfce-editor-locale.webp" data-caption="Multilingual editor — locale tab bar with DE / EN / FR variants, dashed tab = untranslated">
         <div class="screenshot-frame"><img src="/screenshots/xfce-editor-locale.webp" alt="Orbiter block editor with multilingual locale tabs" width="1440" height="900" loading="lazy" /></div>
         <div class="screenshot-caption">i18n locale switcher</div>
       </button>
-      <button class="screenshot-thumb" data-src="/screenshots/knowledge-graph.webp" data-caption="Knowledge Graph — force-directed map of relationships between entries, pan &amp; zoom" aria-label="Knowledge Graph">
+      <button class="screenshot-thumb" data-src="/screenshots/knowledge-graph.webp" data-caption="Knowledge Graph — force-directed map of relationships between entries, pan &amp; zoom">
         <div class="screenshot-frame"><img src="/screenshots/knowledge-graph.webp" alt="Orbiter Knowledge Graph — nodes and labeled edges showing relationships between entries" width="1440" height="813" loading="lazy" /></div>
         <div class="screenshot-caption">Knowledge Graph</div>
       </button>
@@ -1060,7 +1061,7 @@ ORBITER_POD=$(pwd)/content.pod npm start</code></pre>
       <table class="comparison-table">
         <thead>
           <tr>
-            <th scope="col"></th>
+            <th scope="col"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Feature</span></th>
             <th scope="col" class="col-orbiter">🪐 Orbiter</th>
             <th scope="col">Decap CMS</th>
             <th scope="col">Keystatic</th>
@@ -1324,7 +1325,7 @@ ORBITER_POD=$(pwd)/content.pod npm start</code></pre>
           Copy full prompt
         </button>
       </div>
-      <div class="ai-prompt-preview"><span class="hi">You are scaffolding a new Astro blog site using Orbiter CMS (https://orbiter.sh).</span>
+      <div class="ai-prompt-preview" tabindex="0" role="region" aria-label="Prompt preview"><span class="hi">You are scaffolding a new Astro blog site using Orbiter CMS (https://orbiter.sh).</span>
 <span class="hi">Orbiter is a self-hosted CMS where all content, media, schema, and users live in a</span>
 <span class="hi">single SQLite database called a POD (.pod extension). No database server. No cloud dependency.</span>
 
@@ -1561,6 +1562,8 @@ ORBITER_POD=$(pwd)/apps/demo/demo.pod npm run dev --workspace=packages/admin</co
       <a href="https://a83tech.com" target="_blank" rel="noopener" style="padding:10px 24px;border:1px solid var(--line,rgba(139,124,248,0.15));color:var(--mid,#b8b8cc);border-radius:20px;font-size:13px;text-decoration:none;transition:all 0.15s;">Dual Render ↗</a>
     </div>
   </section>
+
+  </main>
 
   <!-- FOOTER -->
   <footer>
