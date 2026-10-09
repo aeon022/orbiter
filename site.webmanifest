@@ -1,0 +1,12 @@
+{
+  "name": "Orbiter",
+  "short_name": "Orbiter",
+  "description": "CMS in one file — for Astro",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#07070f",
+  "theme_color": "#8b7cf8",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
