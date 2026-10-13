@@ -32,3 +32,6 @@ documents/
 SECURITY-TODO.md
 PLUGIN-CONCEPT.md
 apps/landing/scripts/tour/session.json
+
+# Claude Code local settings
+.claude/

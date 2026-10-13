@@ -1,11 +1,24 @@
 import { Hono } from 'hono';
 import { Client } from 'basic-ftp';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { openPod } from '@a83/orbiter-core';
 import { requireAdmin } from '../middleware/auth.js';
 
 export const deployRoutes = new Hono();
 deployRoutes.use('*', requireAdmin);
+
+// A pod holds password hashes, API keys and the FTP password itself — never upload one.
+const POD_FILE = /\.pod(-wal|-shm|-journal)?$/i;
+export function findPodFiles(dir) {
+  const hits = [];
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const p = join(dir, e.name);
+    if (e.isDirectory()) hits.push(...findPodFiles(p));
+    else if (POD_FILE.test(e.name)) hits.push(p);
+  }
+  return hits;
+}
 
 async function getFtpCfg(podPath) {
   const db = openPod(podPath);
@@ -29,6 +42,10 @@ export async function runFtpDeploy(podPath) {
   }
   if (!existsSync(cfg.localPath)) {
     throw new Error(`Local path not found: ${cfg.localPath}`);
+  }
+  const pods = findPodFiles(cfg.localPath);
+  if (pods.length) {
+    throw new Error(`Refusing to deploy: .pod file(s) in upload folder (${pods.slice(0, 3).join(', ')}). Point the local path at the built site (e.g. dist/) only.`);
   }
 
   const client = new Client();
