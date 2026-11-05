@@ -1,6 +1,6 @@
 import { openPod } from '@a83/orbiter-core';
 import { Marked } from 'marked';
-import archiver from 'archiver';
+import { ZipArchive } from 'archiver';
 import { themes, defaultTheme } from './themes/index.js';
 
 const MIME_EXT = {
@@ -241,7 +241,7 @@ export async function generateStaticSite(podPath, { themeId } = {}) {
   const rootFor = (depth) => depth === 0 ? '' : '../'.repeat(depth);
 
   // ── Archive ──────────────────────────────────
-  const archive = archiver('zip', { zlib: { level: 6 } });
+  const archive = new ZipArchive({ zlib: { level: 6 } });
   const chunks = [];
   const finished = new Promise((resolve, reject) => {
     archive.on('data', chunk => chunks.push(chunk));
