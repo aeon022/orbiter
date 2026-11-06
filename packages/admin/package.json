@@ -31,9 +31,10 @@
   },
   "dependencies": {
     "@a83/orbiter-core": "^0.3.21",
-    "@hono/node-server": "^1.14.4",
-    "archiver": "^7.0.0",
-    "basic-ftp": "^6.2.2",
+    "@hono/node-server": "^2.1.6",
+    "archiver": "^8.0.0",
+    "basic-ftp": "^6.2.6",
+    "fast-xml-parser": "^5.5.9",
     "hono": "^4.7.11",
     "marked": "^15.0.0",
     "nodemailer": "^10.0.13",
