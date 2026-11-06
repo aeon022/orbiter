@@ -24,7 +24,7 @@
     "turndown": "^7.2.0"
   },
   "devDependencies": {
-    "electron": "42.11.10",
+    "electron": "42.11.16",
     "electron-builder": "^26.0.0"
   },
   "build": {
