@@ -34,7 +34,7 @@
     "@hono/node-server": "^2.1.6",
     "archiver": "^8.0.0",
     "basic-ftp": "^6.2.6",
-    "fast-xml-parser": "^5.5.9",
+    "fast-xml-parser": "^5.12.0",
     "hono": "^4.7.11",
     "marked": "^15.0.0",
     "nodemailer": "^10.0.13",
