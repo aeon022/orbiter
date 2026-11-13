@@ -318,10 +318,14 @@
     document.body.appendChild(_previewEl);
   }
 
+  // Eigener Zeitgeber fürs verzögerte Anzeigen: wer das Feld vor Ablauf verlässt, stoppt ihn
+  // (vorher überschrieb das Ausblenden ihn nur, die Karte erschien trotzdem und blieb stehen).
+  var _renderTimer = null;
   function showColPreview(col, itemEl) {
     if (!_previewEl) buildPreview();
     clearTimeout(_previewTimer);
-    _previewTimer = setTimeout(function () { _renderPreview(col, itemEl); }, 280);
+    clearTimeout(_renderTimer);
+    _renderTimer = setTimeout(function () { _renderPreview(col, itemEl); }, 280);
   }
 
   function _renderPreview(col, itemEl) {
@@ -419,8 +423,13 @@
 
   function hideColPreview() {
     clearTimeout(_previewTimer);
+    clearTimeout(_renderTimer);
     if (_previewEl) _previewEl.classList.remove('visible');
   }
+  // Jeder Klick außerhalb der Karte (z. B. auf Notes) schließt sie sofort
+  document.addEventListener('pointerdown', function (e) {
+    if (_previewEl && !_previewEl.contains(e.target)) hideColPreview();
+  }, true);
 
   // ── Command Palette ───────────────────────────────────────────────────
   var palette, paletteInp, paletteResults, palActive = -1;
@@ -1468,7 +1477,7 @@
             item.querySelector('.xfce-dock-icon').style.cssText = 'font-size:16px;font-weight:700;font-family:var(--mono);letter-spacing:-.03em;line-height:1;';
             item.dataset.dockIdx = idx + 1;
             item.addEventListener('mouseenter', function () { showColPreview(col, item); });
-            item.addEventListener('mouseleave', function () { _previewTimer = setTimeout(hideColPreview, 150); });
+            item.addEventListener('mouseleave', function () { clearTimeout(_renderTimer); _previewTimer = setTimeout(hideColPreview, 150); });
             colGroup.appendChild(item);
             _palItems.push({ icon: abbr, label: col.label, href: href, group: 'Collections' });
             _termCols.push({ id: col.id, label: col.label, total: col.total || 0, drafts: col.drafts || 0, singleton: !!col.singleton });
@@ -1507,7 +1516,7 @@
                 a.href = gcHref;
                 a.innerHTML = '<span class="xfce-tools-icon" style="font-size:12px;font-weight:700;font-family:var(--mono);letter-spacing:-.02em">' + gc.label.substring(0, 2) + '</span><span>' + escHtml(gc.label) + '</span>' + statsHtml;
                 a.addEventListener('mouseenter', function () { showColPreview(gc, a); });
-                a.addEventListener('mouseleave', function () { _previewTimer = setTimeout(hideColPreview, 150); });
+                a.addEventListener('mouseleave', function () { clearTimeout(_renderTimer); _previewTimer = setTimeout(hideColPreview, 150); });
                 popup.appendChild(a);
                 _palItems.push({ icon: gc.label.substring(0, 2), label: gc.label, href: gcHref, group: 'Collections' });
                 _termCols.push({ id: gc.id, label: gc.label, total: gc.total || 0, drafts: gc.drafts || 0, singleton: gcSingleton });
