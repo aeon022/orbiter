@@ -12,6 +12,6 @@
     "@a83/orbiter-core": "*",
     "@a83/orbiter-integration": "*",
     "@astrojs/node": "^11.1.6",
-    "astro": "^7.3.5"
+    "astro": "^7.4.12"
   }
 }
