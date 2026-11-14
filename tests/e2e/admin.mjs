@@ -168,5 +168,23 @@ await check('classic style: dashboard and editor render without JS errors', asyn
   assert(!errors().length, errors().slice(0, 3).join(' | ')); await page.close();
 });
 
+await check('phone width (390): menu drawer, editor uses the full width, meta panel slides over', async () => {
+  for (const style of ['glass', 'xfce']) {
+    const page = await newPage({ style, width: 390, height: 844 }); const errors = watchErrors(page, ['favicon', 'status of 404']);
+    await go(page, '/entries.html?col=posts');
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), style + ': entries overflow');
+    if (style === 'glass') {
+      await page.click('.nav-toggle'); await sleep(400);
+      assert(await page.evaluate(() => document.querySelector('.sidebar').getBoundingClientRect().left >= 0), 'menu drawer did not open');
+    }
+    await go(page, '/editor.html?collection=posts&slug=hello');
+    const r = await page.evaluate(() => ({ main: document.getElementById('editor-main').offsetWidth, ov: document.documentElement.scrollWidth - innerWidth, bar: document.querySelector('.topbar-right')?.scrollWidth - document.querySelector('.topbar-right')?.clientWidth || 0 }));
+    assert(r.main > 340 && r.ov <= 0 && r.bar <= 0, style + ': editor ' + JSON.stringify(r));
+    await page.click('#meta-panel-toggle'); await sleep(400);
+    assert(await page.evaluate(() => { const b = document.getElementById('meta-panel').getBoundingClientRect(); return b.left >= 0 && b.right <= innerWidth; }), style + ': meta panel not on screen');
+    assert(!errors().length, errors().slice(0, 3).join(' | ')); await page.close();
+  }
+});
+
 await browser.close();
 finish('Admin smoke test');

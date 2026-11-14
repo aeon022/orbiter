@@ -19,6 +19,17 @@
     var activeCol = params.get('col') || params.get('collection');
     var page      = location.pathname.split('/').pop().replace('.html', '');
 
+    // Narrow screens: sidebar is a drawer, opened by a menu button in the topbar (CSS shows it ≤ 900px)
+    var nav = document.querySelector('.sidebar'), bar = document.querySelector('.topbar');
+    if (nav && bar && !bar.querySelector('.nav-toggle')) {
+      var tg = document.createElement('button');
+      tg.type = 'button'; tg.className = 'nav-toggle'; tg.textContent = '☰';
+      tg.setAttribute('aria-label', 'Menu'); tg.setAttribute('aria-expanded', 'false');
+      tg.onclick = function () { tg.setAttribute('aria-expanded', String(nav.classList.toggle('open'))); };
+      bar.insertBefore(tg, bar.firstChild);
+      nav.addEventListener('click', function (e) { if (e.target.closest('a')) { nav.classList.remove('open'); tg.setAttribute('aria-expanded', 'false'); } });
+    }
+
     fetch('/api/info', { credentials: 'include' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (info) {

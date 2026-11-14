@@ -2833,6 +2833,88 @@ html[data-zen="1"] .main {
   }
 }
 
+/* ════════════════════════════════════════════════════════════
+   RESPONSIVE — both styles (≤ 900px)
+   Normal: sidebar becomes a drawer (menu button from sidebar.js),
+   editor meta panel becomes a slide-over like in Station.
+   ════════════════════════════════════════════════════════════ */
+.nav-toggle { display: none; }
+.table-wrap { overflow-x: auto !important; }
+.table-wrap > table { min-width: 640px; }
+
+@media (max-width: 900px) {
+  html:not([data-style="xfce"]) .app { grid-template-columns: minmax(0, 1fr); }
+  html:not([data-style="xfce"]) .main { padding: 20px 16px; }
+  html[data-style="glass"] .main { padding: 0 0 24px; }
+  .topbar { padding: 0 12px; gap: 8px; min-width: 0; }
+  .topbar-right { min-width: 0; gap: 8px; }
+  .topbar .user, #editor-breadcrumb { display: none !important; }
+  .search-trigger kbd { display: none; }
+  .page-header, .page-header > * { flex-wrap: wrap; min-width: 0; }
+  #vbtn-split { display: none; }
+  .topbar .view-toggle { margin-right: 0 !important; flex-shrink: 0; }
+  #autosave-text { display: none; }
+  #editor-breadcrumb ~ .topbar-right .search-trigger { display: none; }
+  .topbar-right { overflow-x: auto; scrollbar-width: none; }
+}
+@media (max-width: 480px) {
+  .topbar .logo { font-size: 0; gap: 0; }
+}
+@media (max-width: 900px) {
+
+  .nav-toggle {
+    display: flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; margin-left: -8px; flex-shrink: 0;
+    background: none; border: none; color: var(--text); font-size: 18px; cursor: pointer;
+  }
+  html:not([data-style="xfce"]) .sidebar {
+    position: fixed; z-index: 9990;
+    top: 66px; bottom: 10px; left: 10px;
+    width: min(280px, calc(100vw - 20px));
+    transform: translateX(calc(-100% - 20px));
+    transition: transform .25s cubic-bezier(.4,0,.2,1);
+  }
+  html:not([data-style="xfce"]) .sidebar.open { transform: none; }
+
+  /* Editor: one column, meta panel slides over (same as Station) */
+  html:not([data-style="xfce"]) .editor-shell,
+  html:not([data-style="xfce"]) .editor-shell.mode-split { grid-template-columns: minmax(0, 1fr) !important; }
+  html:not([data-style="xfce"]) .editor-shell.mode-split .preview-panel { display: none; }
+  html:not([data-style="xfce"]) .editor-shell.mode-preview { grid-template-columns: 0 minmax(0, 1fr) !important; }
+  html:not([data-style="xfce"]) .editor-shell .meta-panel {
+    position: fixed !important; z-index: 9990;
+    top: 66px; right: 10px; bottom: 10px;
+    width: min(340px, calc(100vw - 20px));
+    transform: translateX(calc(100% + 20px));
+    transition: transform .25s cubic-bezier(.4,0,.2,1);
+    overflow-y: auto !important;
+    background: var(--glass-bg-side, var(--bg1)) !important;
+  }
+  html:not([data-style="xfce"]) .editor-shell .meta-panel.open { transform: none; }
+  .meta-panel-toggle { display: flex !important; }
+  .meta-panel-close {
+    display: flex !important; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 10; width: 100%;
+    padding: 12px 16px; background: inherit; border: none; border-bottom: 1px solid var(--line);
+    color: var(--text); font-family: var(--mono); font-size: 11px; cursor: pointer;
+  }
+  .editor-page { padding-left: 16px !important; padding-right: 16px !important; }
+
+  /* Station: dock becomes the bottom bar already on tablets */
+  .xfce-dock {
+    bottom: 0; left: 0; right: 0; transform: none;
+    border-radius: 0; border-left: none; border-right: none; border-bottom: none;
+    padding: 4px 6px; padding-bottom: max(4px, env(safe-area-inset-bottom));
+  }
+  .xfce-dock-inner {
+    justify-content: safe center; max-width: 100%;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .xfce-dock-item { transform: none !important; }
+  .xfce-dock-lbl { display: none; }
+  html[data-style="xfce"] .main { padding-bottom: calc(var(--dock-h) + 24px) !important; }
+}
+
 /* ── Accessibility: visible keyboard focus + respect reduced-motion ─────────── */
 :where(button, a, summary, [tabindex]):focus-visible,
 :where(select, textarea, input[type="checkbox"], input[type="radio"], input[type="range"]):focus-visible {

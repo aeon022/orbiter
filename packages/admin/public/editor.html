@@ -3178,7 +3178,7 @@
       if (btn) btn.classList.toggle('active', panel.classList.contains('open'));
     };
     // Auto-open sidebar in non-station mode
-    if (!document.documentElement.dataset.style || document.documentElement.dataset.style !== 'xfce') {
+    if (document.documentElement.dataset.style !== 'xfce' && matchMedia('(min-width: 901px)').matches) {
       const panel = document.getElementById('meta-panel');
       if (panel) panel.classList.add('open');
     }
