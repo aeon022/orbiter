@@ -243,3 +243,8 @@ Voraussetzungen: Arbeitsbaum sauber (`git status` ohne tracked Änderungen), Tes
 - admin 0.3.94 veröffentlicht (Settings in Sektionen, Zoom/no-cache, Dock-Hexagon, Sicherheitsfixes seit 0.3.92); `api.kuin.at` auf 0.3.94 (Backup vorher), audiocd-Dock auf 0.3.93.
 - Landing: neue Seite `/lander`, Doku `/docs/lander` (Sidebar „Deployment"), Changelog-Karte „Lander, Security, 10 Themes, Settings". README verlinkt Lander. Lander-Repo (privat): README verlinkt Orbiter, GitHub-Beschreibung + Homepage gesetzt. Kein Wiki angelegt (Orbiter-Wiki ist aktiviert, aber leer/nicht initialisiert).
 - Offen: kuin-at/a83-next/techblog Commits, CVE-IDs (taskctl 2026-11-16), scrypt-Parameter, CSP noch Report-Only.
+
+## 2026-11-15 — Backup/Restore in Orbiter (unveröffentlicht)
+- `packages/admin/src/routes/backup.js`: `GET /api/backup` (VACUUM INTO, ohne Sitzungen), `POST /api/backup/restore` (Validierung, Kopie `<pod>.before-restore-*`, letzte 3). Settings → Pod: Download/Restore, zeigt Dateigröße. `server.js` Mount + große Body-Grenze.
+- Getestet (Test-Server 4399, Node 22): Download, Restore (Entries zurück), kaputte/fremde Dateien 422, Editor 403, ohne Login 401, UI-Durchlauf. Nicht getestet: großer Pod, Server mit ORBITER_SECRET, Lander-Pod → Orbiter.
+- Offen: admin-Version bumpen (Version-Guard), veröffentlichen, Landing (Docs `/docs/backup`, Changelog-Karte) erst danach pushen.

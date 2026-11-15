@@ -1,0 +1,26 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Backup & restore" current="/docs/backup" prev={{ href: '/docs/lander', title: 'Lander (PHP hosting)' }} next={{ href: '/docs/git-sync', title: 'Git sync mode' }}>
+
+<h1>Backup &amp; restore</h1>
+<p class="lead">Your whole site is one SQL file (<code>.pod</code>, a plain SQLite database, only renamed). Back it up or move it to another server from the admin in two clicks.</p>
+
+<h2>Download a backup</h2>
+<p>Settings → <strong>Pod</strong> → <strong>Backup &amp; restore</strong> → <em>Download SQL file</em> (admins only). You get a consistent copy of the live database as <code>content-&lt;date&gt;.pod</code>, without active sessions. Media stored in the pod are inside the file; media on S3 are not.</p>
+
+<h2>Restore or move</h2>
+<p><em>Restore…</em> takes a <code>.pod</code> file. The server checks it first (SQLite, integrity check, required tables, at least one admin) and refuses anything else. It then keeps the current pod next to it as <code>&lt;pod&gt;.before-restore-&lt;time&gt;</code> (the last three are kept), swaps the new file in and signs you out.</p>
+<ul>
+  <li>Credentials saved encrypted need the same <code>ORBITER_SECRET</code> on the new server.</li>
+  <li>A pod from <a href="/docs/lander">Lander</a> works too; its admin passwords are PHP hashes, so reset the password with the CLI if you cannot sign in.</li>
+  <li>The upload size is capped by <code>ORBITER_MAX_UPLOAD_MB</code> (default 100).</li>
+</ul>
+
+<div class="callout"><strong>Backups are sensitive.</strong> They contain password hashes and saved credentials. Store them privately and never commit a <code>.pod</code> to a public repository.</div>
+
+<h2>API</h2>
+<pre>GET  /api/backup           — download the pod (admin)
+POST /api/backup/restore   — multipart field "file" (admin)</pre>
+
+</DocsLayout>
