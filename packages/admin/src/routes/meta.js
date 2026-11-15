@@ -44,6 +44,8 @@ const ADMIN_ONLY_KEYS = new Set([
   'email.smtp_host', 'email.smtp_port', 'email.smtp_user', 'email.smtp_from',
   'email.notify_publish', 'email.notify_comment', 'email.notify_form', 'email.notify_to',
   'api.enabled', 'workflow.review',
+  // ai.ollama_url makes the server call an arbitrary host (SSRF + prompt leak); the rest steer it / break migrations / feed mails & links
+  'ai.provider', 'ai.model', 'ai.ollama_url', 'site.url', 'format_version',
 ]);
 
 // api.token is only ever stored hashed (the site compares hashes); everything else is stored as given.
@@ -53,6 +55,10 @@ const storeValue = (key, value) => {
 };
 
 const PREVIEW_URL_RE = /^preview_url\.[a-z0-9_-]+$/;
+// preview URLs end up in an <a href> in the editor: admins only, and only http(s) or site-relative (no javascript:/data:)
+const SAFE_PREVIEW_URL_RE = /^(https?:\/\/|\/(?!\/))/i;
+const previewUrlRejected = (key, value, isAdmin) =>
+  PREVIEW_URL_RE.test(key) && (!isAdmin || (value != null && String(value) !== '' && !SAFE_PREVIEW_URL_RE.test(String(value).trim())));
 const TEMPLATES_RE   = /^templates\.[a-z0-9_-]+$/;
 
 function maskSecret(key, val) {
@@ -64,7 +70,7 @@ function maskSecret(key, val) {
 // non-admins get secrets masked and admin-only (non-secret) keys withheld —
 // mirrors the write-side ADMIN_ONLY_KEYS check below.
 // Admin-only to *change*, but every user needs to read them to render the UI correctly.
-const READABLE_BY_ALL = new Set(['workflow.review']);
+const READABLE_BY_ALL = new Set(['workflow.review', 'ai.provider', 'ai.model', 'site.url', 'format_version']);
 
 function visibleValue(key, val, isAdmin) {
   if (isAdmin) return val;
@@ -107,6 +113,7 @@ metaRoutes.put('/', async (c) => {
   for (const [key, value] of Object.entries(body)) {
     if (!ALLOWED_KEYS.includes(key) && !PREVIEW_URL_RE.test(key) && !TEMPLATES_RE.test(key)) continue;
     if (ADMIN_ONLY_KEYS.has(key) && !isAdmin) continue;
+    if (previewUrlRejected(key, value, isAdmin)) continue;
     db.setMeta(key, storeValue(key, value));
   }
   db.close();
@@ -120,6 +127,7 @@ metaRoutes.put('/:key', async (c) => {
   const user = c.get('user');
   if (ADMIN_ONLY_KEYS.has(key) && user?.role !== 'admin') return c.json({ error: 'Forbidden' }, 403);
   const { value } = await c.req.json();
+  if (previewUrlRejected(key, value, user?.role === 'admin')) return c.json({ error: 'Preview URL must be admin-set and start with http(s):// or /' }, 400);
   const db = openPod(c.get('podPath'));
   db.setMeta(key, storeValue(key, value));
   db.close();

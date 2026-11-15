@@ -83,6 +83,7 @@ templateRoutes.post('/import', requireAdmin, async (c) => {
     const entries = template.sampleEntries?.[id];
     if (Array.isArray(entries)) {
       for (const entry of entries) {
+        if (typeof entry.slug !== 'string' || /[<>"'`\\\x00-\x1f]/.test(entry.slug) || entry.slug.length > 200) continue;
         try {
           db.createEntry(safeId, entry.slug, entry.data || {}, entry.status || 'draft');
           results.entries++;

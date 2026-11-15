@@ -14,8 +14,8 @@ searchRoutes.get('/recent', (c) => {
   const colMap = Object.fromEntries(cols.map(c => [c.id, c.label]));
 
   let rows = status
-    ? db.db.prepare(`SELECT * FROM _entries WHERE status = ? ORDER BY updated_at DESC LIMIT ?`).all(status, limit)
-    : db.db.prepare(`SELECT * FROM _entries ORDER BY updated_at DESC LIMIT ?`).all(limit);
+    ? db.db.prepare(`SELECT * FROM _entries WHERE deleted_at IS NULL AND status = ? ORDER BY updated_at DESC LIMIT ?`).all(status, limit)
+    : db.db.prepare(`SELECT * FROM _entries WHERE deleted_at IS NULL ORDER BY updated_at DESC LIMIT ?`).all(limit);
   // ponytail: filters after LIMIT, so a restricted editor may see fewer than `limit`
   // results even if more exist in their allowed collections; widen the SQL LIMIT
   // (or add a WHERE collection_id IN (...)) if that under-fill matters later.

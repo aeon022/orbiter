@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { getCookie } from 'hono/cookie';
 import { createHash } from 'node:crypto';
+import { USERNAME_RE, USERNAME_MSG } from './users.js';
 import { openPod, verifyPassword, hashPassword, generateTotpSecret, verifyTotp, totpUri, generateRecoveryCodes, hashRecoveryCode } from '@a83/orbiter-core';
 
 export const accountRoutes = new Hono();
@@ -29,6 +30,7 @@ accountRoutes.put('/username', async (c) => {
   const user = c.get('user');
   const { newUsername, currentPassword } = await c.req.json();
   if (!newUsername || !currentPassword) return c.json({ error: 'Missing fields' }, 400);
+  if (!USERNAME_RE.test(newUsername)) return c.json({ error: USERNAME_MSG }, 400);
 
   const db   = openPod(c.get('podPath'));
   const full = db.getUserByUsername(user.username);

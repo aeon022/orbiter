@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { serve } from '@hono/node-server';
@@ -125,6 +126,13 @@ export function createApp(podPath) {
 
   // Protected routes — CSRF + auth
   const api = new Hono();
+  // Request size caps (checked on Content-Length and while streaming): uploads/imports get a large cap, everything else a small one.
+  const MB = 1024 * 1024;
+  const tooBig = (c) => c.json({ error: 'Payload too large' }, 413);
+  const bigMax = (parseInt(process.env.ORBITER_MAX_UPLOAD_MB ?? '100', 10) || 100) * MB;
+  const limitBig = bodyLimit({ maxSize: bigMax, onError: tooBig });
+  const limitSmall = bodyLimit({ maxSize: 5 * MB, onError: tooBig });
+  api.use('*', (c, next) => (/^\/api\/(media|import|templates|pods)(\/|$)/.test(c.req.path) ? limitBig : limitSmall)(c, next));
   api.use('*', csrfMiddleware(ALLOWED_ORIGINS));
   api.use('*', requireAuth);
   api.route('/collections',  collectionRoutes);

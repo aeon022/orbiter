@@ -30,6 +30,10 @@ function fireWebhook(podPath, event = 'publish', payload = {}) {
   fireHooks(podPath, event, payload); // signed, retried, logged — see webhooks.js
 }
 
+// Slugs end up in URLs, file names and (admin UI) HTML attributes: refuse markup/quote/control characters outright.
+const SLUG_BAD = /[<>"'`\\\x00-\x1f\x7f]/;
+export const slugInvalid = (s) => typeof s !== 'string' || !s.trim() || s.length > 200 || SLUG_BAD.test(s);
+
 // POST /api/collections/:id/entries/bulk — bulk publish or delete
 entryRoutes.post('/:collectionId/entries/bulk', async (c) => {
   const { collectionId } = c.req.param();
@@ -161,6 +165,7 @@ entryRoutes.post('/:collectionId/entries', async (c) => {
   const { collectionId } = c.req.param();
   const { slug, data = {}, status = 'draft', locale = '' } = await c.req.json();
   if (!slug) return c.json({ error: 'slug is required' }, 400);
+  if (slugInvalid(slug)) return c.json({ error: 'Invalid slug (no quotes, angle brackets or control characters; max 200 chars)' }, 400);
 
   if (!STATUSES.has(status)) return c.json({ error: 'Invalid status' }, 400);
   const db = openPod(c.get('podPath'));
@@ -189,6 +194,7 @@ entryRoutes.put('/:collectionId/entries/:slug', async (c) => {
   const locale = body.locale ?? c.req.query('locale') ?? '';
 
   if (body.status !== undefined && !STATUSES.has(body.status)) return c.json({ error: 'Invalid status' }, 400);
+  if (body.slug !== undefined && slugInvalid(body.slug)) return c.json({ error: 'Invalid slug (no quotes, angle brackets or control characters; max 200 chars)' }, 400);
   const db     = openPod(c.get('podPath'));
   const before = db.getEntry(collectionId, slug, locale);
   { const denied = publishDenied(c, db, body.status, before?.status); if (denied) { db.close(); return denied; } }

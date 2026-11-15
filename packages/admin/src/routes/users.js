@@ -6,6 +6,10 @@ import { requireAdmin } from '../middleware/auth.js';
 
 export const userRoutes = new Hono();
 
+// Usernames are shown in the admin UI and mails: letters, digits and . _ - @ + only
+export const USERNAME_RE  = /^[\p{L}\p{N}._@+-]{2,64}$/u;
+export const USERNAME_MSG = 'Username: 2–64 characters, letters, digits and . _ - @ + only';
+
 // All user management requires admin role
 userRoutes.use('*', requireAdmin);
 
@@ -21,6 +25,8 @@ userRoutes.get('/', (c) => {
 userRoutes.post('/', async (c) => {
   const { username, password, role = 'editor' } = await c.req.json();
   if (!username || !password) return c.json({ error: 'username and password are required' }, 400);
+  if (!USERNAME_RE.test(username)) return c.json({ error: USERNAME_MSG }, 400);
+  if (String(password).length < 8) return c.json({ error: 'Password must be at least 8 characters' }, 400);
   if (!['admin', 'reviewer', 'editor'].includes(role)) return c.json({ error: 'Invalid role' }, 400);
 
   const db       = openPod(c.get('podPath'));
