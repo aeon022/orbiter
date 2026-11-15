@@ -1,8 +1,25 @@
+      <div class="update-card" id="update-lander-security-hardening-settings-layout" data-date="2026-11-15" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
+        <div class="update-date">Nov<br />2026</div>
+        <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.94 · integration@0.3.23 · mcp@0.1.6 — Latest</div>
+          <div class="update-title">Lander for PHP hosting, security hardening, 10 themes and a tidier Settings page</div>
+          <ul class="update-items">
+            <li><strong>Lander</strong> — the Orbiter admin on ordinary PHP hosting (PHP 8.1+, SQLite, no Node). Same <code>.pod</code>, same Station interface, live read API for your site. <a href="/lander">Lander →</a> <a href="/docs/lander">Docs →</a></li>
+            <li><strong>Security hardening</strong> — user-supplied values are now escaped everywhere in the admin UI (closes stored-XSS paths), meta writes are limited to admins and size-capped, slugs and usernames are validated server-side, request bodies have a size limit, and GitHub Actions are pinned to commit SHAs. Dependencies updated (hono, nodemailer, fast-xml-parser, zod). Update to 0.3.92 or later.</li>
+            <li><strong>10 themes, font choice, custom colors</strong> — a 5×2 palette, your own accent colors and a phone tab bar.</li>
+            <li><strong>UI zoom applies immediately</strong>, and static files revalidate (<code>no-cache</code>) so a new admin version shows up without a hard reload.</li>
+            <li><strong>Station dock</strong> — drawers are hexagons whose fill level shows how much is in them; the outline turns on hover.</li>
+            <li><strong>Settings in sections</strong> — You, General, Content, Publishing and System, two balanced columns, collapsible cards (state is remembered), a jump bar and Expand/Collapse all. The page is less than half as long.</li>
+          </ul>
+        </div>
+      </div>
+
       <div class="update-card" id="update-two-factor-sign-in-signed-webhooks-key-limits-ve" data-date="2026-10-08" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
         <div class="update-date">Oct<br />2026</div>
         <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.88 · core@0.3.21 · mcp@0.1.5 · integration@0.3.22 · client@0.1.4 · cli@0.3.15 — Latest</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.88 · core@0.3.21 · mcp@0.1.5 · integration@0.3.22 · client@0.1.4 · cli@0.3.15</div>
           <div class="update-title">Two-factor sign-in, signed webhooks, key limits, version diff and media usage</div>
           <ul class="update-items">
             <li><strong>2FA (TOTP)</strong> — turn it on under Account with any authenticator app. Eight one-time recovery codes, codes can't be replayed, and an admin can reset a locked-out user. <a href="/docs/security">Docs →</a></li>

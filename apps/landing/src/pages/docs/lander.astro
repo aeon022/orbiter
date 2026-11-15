@@ -1,0 +1,46 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Lander (PHP hosting)" current="/docs/lander" prev={{ href: '/docs/ftp-deploy', title: 'FTP deploy' }} next={{ href: '/docs/git-sync', title: 'Git sync mode' }}>
+
+<h1>Lander — Orbiter on PHP hosting</h1>
+<p class="lead">Lander is the Orbiter admin for ordinary shared hosting: PHP 8.1+ and SQLite, no Node, no build server. Same <code>.pod</code> file, same Station interface. <a href="/lander">Overview page →</a></p>
+
+<h2>When to use it</h2>
+<p>Orbiter runs on Node. Many hosts (World4You, Strato, IONOS, cPanel) only offer PHP. Lander gives editors the same admin there, while your Astro site reads published content from a live API.</p>
+
+<h2>What you get</h2>
+<ul>
+  <li><strong>The Orbiter admin</strong> (Station mode, themes, dock) as static files, backed by a PHP API with the same paths and JSON formats.</li>
+  <li><strong>Live read API</strong> — <code>/api/public/&lt;collection&gt;[/&lt;slug&gt;]</code>, CORS for your site's domains, 60 s cache. Changes appear without a rebuild.</li>
+  <li><strong>Markdown import</strong> — <code>.md</code> with frontmatter via Admin → Import or <code>bin/lander import-md</code>.</li>
+  <li><strong>Media as files</strong> in <code>public/media/</code> (JPG, PNG, WebP, GIF, AVIF, PDF; real file type checked, PHP execution blocked in that folder). Media fields are resolved to <code>&#123;id, url, alt, type&#125;</code>.</li>
+  <li><strong>Inbox</strong> for form submissions (server-to-server with a <code>form_token</code>).</li>
+</ul>
+
+<h2>Install</h2>
+<ol>
+  <li>Upload the folder and set the <strong>document root to <code>public/</code></strong>, ideally on its own subdomain (the admin uses absolute paths).</li>
+  <li>Create <code>lander.config.php</code> (<code>public_origins</code> = your site's domain, <code>media_url</code> = full URL).</li>
+  <li>Make <code>data/</code> and <code>public/media/</code> writable for PHP.</li>
+  <li>Create a user with <code>php bin/lander user &lt;name&gt; admin</code> (SSH), or create it locally and upload <code>data/content.pod</code>.</li>
+</ol>
+
+<h2>Connect your site</h2>
+<pre>const events = await fetch('https://redaktion.example.at/api/public/events').then(r =&gt; r.json());</pre>
+<p>At build time (SEO) query the same URL in the Astro frontmatter; at runtime the page is always current.</p>
+
+<h2>Differences to Orbiter</h2>
+<table>
+  <thead><tr><th></th><th>Orbiter</th><th>Lander</th></tr></thead>
+  <tbody>
+    <tr><td>Runtime</td><td>Node (Hono)</td><td>PHP 8.1+ (PDO SQLite)</td></tr>
+    <tr><td>Media</td><td>BLOB in pod or S3</td><td>Files in a folder</td></tr>
+    <tr><td>Sections</td><td>all</td><td>Dashboard, collections, entries, editor, media, import, settings, account</td></tr>
+    <tr><td>2FA, review workflow, webhooks, analytics, form builder</td><td>yes</td><td>not yet</td></tr>
+  </tbody>
+</table>
+
+<div class="callout"><strong>Status.</strong> Lander is used on a first live site. The source lives in a private GitHub repository (<code>aeon022/lander</code>); it is MIT licensed and the interface comes from Orbiter.</div>
+
+</DocsLayout>

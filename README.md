@@ -154,6 +154,12 @@ curl http://localhost:4322/health
 
 ---
 
+## Lander — Orbiter on PHP hosting
+
+No Node on your host? **[Lander](https://orbiter.sh/lander)** runs the same admin on ordinary PHP hosting (PHP 8.1+, SQLite): same `.pod`, same Station interface, plus a live read API (`/api/public/<collection>`) for your site. Docs: [orbiter.sh/docs/lander](https://orbiter.sh/docs/lander). Source: [aeon022/lander](https://github.com/aeon022/lander) (MIT, currently a private repository).
+
+---
+
 ## Install
 
 ### Admin (recommended)

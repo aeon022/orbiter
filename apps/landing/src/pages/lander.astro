@@ -1,0 +1,65 @@
+---
+import '../styles/landing.css';
+import FooterSignature from '../components/FooterSignature.astro';
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lander — Orbiter on PHP hosting</title>
+  <meta name="description" content="Lander runs the Orbiter admin on ordinary PHP hosting: PHP 8.1+ and SQLite, no Node. Same .pod, same Station interface, live API for your site." />
+  <link rel="canonical" href="https://orbiter.sh/lander/" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <script src="/search.js" defer></script>
+</head>
+<body id="top">
+  <div class="nebula nebula-1" aria-hidden="true"></div>
+  <header class="cl-head">
+    <a href="/" class="cl-logo">🪐 Orbiter</a>
+    <nav aria-label="Site">
+      <a href="/">Home</a><a href="/docs/">Docs</a><a href="/changelog/">Changelog</a>
+      <button type="button" class="sp-trigger" data-search-open aria-label="Search the site (press /)">Search <kbd>/</kbd></button>
+      <a href="https://github.com/aeon022/orbiter" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+  <main id="main" class="ld">
+    <h1>Lander</h1>
+    <p class="ld-lead">Orbiter stays in orbit. Lander sets down on any web host with PHP.</p>
+    <p class="ld-sub">The Orbiter admin on shared hosting — PHP 8.1+ and SQLite, no Node, no build server. Same <code>.pod</code> file, same Station interface.</p>
+    <p class="ld-cta"><a class="ld-btn" href="/docs/lander">Read the docs</a> <a class="ld-btn ld-ghost" href="/changelog/">What's new</a></p>
+
+    <div class="ld-grid">
+      <div><h2>Same admin</h2><p>Station mode, themes, dock and editor — the Orbiter interface unchanged, backed by a PHP API with the same paths.</p></div>
+      <div><h2>Live API</h2><p><code>/api/public/&lt;collection&gt;</code> with CORS and a 60 s cache. Edits show on your site without a rebuild.</p></div>
+      <div><h2>Markdown import</h2><p>Bring in <code>.md</code> files with frontmatter from the admin or with <code>bin/lander import-md</code>.</p></div>
+      <div><h2>Media as files</h2><p>Uploads land in a plain folder, file type checked, PHP execution blocked there.</p></div>
+    </div>
+
+    <h2 class="ld-h">Setup in four steps</h2>
+    <pre>1. Upload the folder, document root = public/
+2. cp lander.config.example.php lander.config.php
+3. Make data/ and public/media/ writable
+4. php bin/lander user &lt;name&gt; admin</pre>
+    <p class="ld-note">Lander is MIT licensed; the source is in a private repository (<code>aeon022/lander</code>) and is used on a first live site. Not yet in Lander: 2FA, review workflow, webhooks, analytics, form builder.</p>
+  </main>
+  <FooterSignature />
+</body>
+</html>
+
+<style is:global>
+  .ld { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 48px 24px 32px; }
+  .ld h1 { font-size: clamp(2.4rem, 6vw, 4rem); margin: 0 0 8px; }
+  .ld-lead { font-size: 1.35rem; color: var(--text); margin: 0 0 8px; }
+  .ld-sub { color: var(--muted); max-width: 640px; }
+  .ld-cta { display: flex; gap: 12px; flex-wrap: wrap; margin: 24px 0 40px; }
+  .ld-btn { padding: 10px 20px; border-radius: 999px; background: var(--accent); color: #fff; text-decoration: none; font-weight: 600; }
+  .ld-ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  .ld-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .ld-grid > div { border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .ld-grid h2 { font-size: 1rem; margin: 0 0 6px; }
+  .ld-grid p { margin: 0; color: var(--muted); font-size: .92rem; }
+  .ld-h { margin: 44px 0 12px; font-size: 1.3rem; }
+  .ld pre { overflow-x: auto; }
+  .ld-note { color: var(--muted); font-size: .9rem; margin-top: 20px; }
+</style>
