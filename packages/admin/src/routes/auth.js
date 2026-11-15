@@ -1,13 +1,13 @@
 import { Hono } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
-import { openPod, verifyPassword, generateToken, verifyTotp, hashRecoveryCode } from '@a83/orbiter-core';
+import { openPod, verifyPassword, needsRehash, hashPassword, generateToken, verifyTotp, hashRecoveryCode } from '@a83/orbiter-core';
 import { clientIp } from '../net.js';
 import { allow } from '../ratelimit.js';
 
 export const authRoutes = new Hono();
 
 // Valid-format hash of a random password; only used to burn the same CPU time for unknown users.
-const DUMMY_HASH = `${'0'.repeat(32)}:${'0'.repeat(128)}`;
+const DUMMY_HASH = `scrypt:16:8:2:${'0'.repeat(32)}:${'0'.repeat(128)}`; // current cost, so unknown users take as long as real ones
 const LOGIN_MAX     = 5;
 const LOGIN_WINDOW  = 15 * 60 * 1000; // 15 min
 const loginAttempts = new Map(); // ip → { count, resetAt }
@@ -75,6 +75,11 @@ authRoutes.post('/login', async (c) => {
     if (!verified) { db.close(); recordFailure(ip); return c.json({ error: 'Invalid code', totp: true }, 401); }
   }
   clearAttempts(ip);
+
+  // Upgrade an older, cheaper password hash now that we hold the plaintext.
+  if (needsRehash(user.password)) {
+    try { db.db.prepare('UPDATE _users SET password = ? WHERE id = ?').run(await hashPassword(password), user.id); } catch {}
+  }
 
   const token     = generateToken();
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)

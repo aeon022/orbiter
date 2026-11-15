@@ -1,7 +1,7 @@
 // Run: node --test packages/core/src/auth.test.js
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkApiKey, hashApiKey, hashApiToken, checkApiToken, safeEqual } from './auth.js';
+import { hashPassword, verifyPassword, needsRehash, checkApiKey, hashApiKey, hashApiToken, checkApiToken, safeEqual } from './auth.js';
 
 function fakeDb(meta) {
   return {
@@ -82,4 +82,29 @@ test('preview tokens: bound to collection+slug, expire, master still accepted, g
   assert.equal(checkPreviewToken(master, master, 'posts', 'anything'), true, 'legacy master token');
   assert.equal(checkPreviewToken(master, '', 'posts', 'hello'), false);
   assert.equal(checkPreviewToken('', t, 'posts', 'hello'), false);
+});
+
+test('password hashes: new format verifies, wrong password fails, carries its cost', async () => {
+  const h = await hashPassword('correct horse');
+  assert.match(h, /^scrypt:16:8:2:[0-9a-f]{32}:[0-9a-f]{128}$/);
+  assert.equal(await verifyPassword('correct horse', h), true);
+  assert.equal(await verifyPassword('wrong', h), false);
+  assert.equal(needsRehash(h), false);
+});
+
+test('legacy salt:hash passwords still verify and are flagged for rehash', async () => {
+  const { scryptSync } = await import('node:crypto');
+  const salt = 'ab'.repeat(16);
+  const legacy = `${salt}:${scryptSync('old pass', salt, 64).toString('hex')}`;
+  assert.equal(await verifyPassword('old pass', legacy), true);
+  assert.equal(await verifyPassword('nope', legacy), false);
+  assert.equal(needsRehash(legacy), true);
+});
+
+test('password hashes: garbage and absurd parameters are rejected without work', async () => {
+  assert.equal(await verifyPassword('x', ''), false);
+  assert.equal(await verifyPassword('x', null), false);
+  assert.equal(await verifyPassword('x', 'scrypt:99:8:2:aa:bb'), false);   // N=2^99 would exhaust memory
+  assert.equal(await verifyPassword('x', 'scrypt:16:8:2:aa'), false);
+  assert.equal(needsRehash('garbage'), false);
 });

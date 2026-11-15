@@ -7,35 +7,60 @@ import { promisify } from 'node:util';
 
 const scryptAsync = promisify(scrypt);
 
+// scrypt cost. Legacy hashes ("salt:hash", Node defaults N=16384) stay valid; new hashes carry their parameters
+// ("scrypt:<log2 N>:<r>:<p>:<salt>:<hash>", N=2^16 r=8 p=2 = OWASP-recommended 64 MiB) and old ones are upgraded on login.
+const COST = { ln: 16, r: 8, p: 2 };
+const MAXMEM = 160 * 1024 * 1024;
+const derive = (password, salt, { ln, r, p }) => scryptAsync(password, salt, 64, { N: 2 ** ln, r, p, maxmem: MAXMEM });
+
 /**
  * Hash a plaintext password with scrypt + random salt.
- * Returns a string in the format "salt:hash" (both hex-encoded).
+ * Returns "scrypt:<ln>:<r>:<p>:<salt>:<hash>" (salt and hash hex-encoded).
  * @param {string} password
  * @returns {Promise<string>}
  */
 export async function hashPassword(password) {
   const salt = randomBytes(16).toString('hex');
-  const buf  = await scryptAsync(password, salt, 64);
-  return `${salt}:${buf.toString('hex')}`;
+  const buf  = await derive(password, salt, COST);
+  return `scrypt:${COST.ln}:${COST.r}:${COST.p}:${salt}:${buf.toString('hex')}`;
+}
+
+function parseHash(stored) {
+  const parts = String(stored ?? '').split(':');
+  if (parts[0] === 'scrypt' && parts.length === 6) {
+    const [, ln, r, p, salt, hash] = parts;
+    const cost = { ln: +ln, r: +r, p: +p };
+    // refuse absurd parameters from a tampered pod (memory/CPU denial of service)
+    if (!(cost.ln >= 10 && cost.ln <= 20 && cost.r >= 1 && cost.r <= 16 && cost.p >= 1 && cost.p <= 8)) return null;
+    return { cost, salt, hash };
+  }
+  if (parts.length === 2 && parts[0] && parts[1]) return { cost: { ln: 14, r: 8, p: 1 }, salt: parts[0], hash: parts[1], legacy: true };
+  return null;
 }
 
 /**
- * Verify a plaintext password against a stored "salt:hash" string.
+ * Verify a plaintext password against a stored hash (current or legacy format).
  * Uses constant-time comparison to prevent timing attacks.
  * @param {string} password
- * @param {string} stored — "salt:hash" from hashPassword()
+ * @param {string} stored — from hashPassword()
  * @returns {Promise<boolean>}
  */
 export async function verifyPassword(password, stored) {
-  const [salt, hash] = (stored ?? '').split(':');
-  if (!salt || !hash) return false;
+  const h = parseHash(stored);
+  if (!h) return false;
   try {
-    const hashBuf = Buffer.from(hash, 'hex');
-    const derived = await scryptAsync(password, salt, 64);
-    return timingSafeEqual(hashBuf, derived);
+    const hashBuf = Buffer.from(h.hash, 'hex');
+    const derived = await derive(password, h.salt, h.cost);
+    return hashBuf.length === derived.length && timingSafeEqual(hashBuf, derived);
   } catch {
     return false;
   }
+}
+
+/** True when a stored hash uses weaker parameters than the current ones (rehash after a successful login). */
+export function needsRehash(stored) {
+  const h = parseHash(stored);
+  return !!h && (h.legacy || h.cost.ln < COST.ln || h.cost.r < COST.r || h.cost.p < COST.p);
 }
 
 /**
