@@ -238,3 +238,8 @@ Voraussetzungen: Arbeitsbaum sauber (`git status` ohne tracked Änderungen), Tes
 - **Audit-Rest erledigt (2026-11-15):** `analytics.html` – `currentPath` (aus Beacon-Daten, Klick auf Zeile) und `l.lang` waren unescaped → `esc()`; `/api/search/recent` filtert `deleted_at`; Template-Import (`/api/templates/import`, admin-only) lehnt Slugs mit `<>"'`\`/Steuerzeichen ab; GitHub-Actions per Commit-SHA gepinnt (`# v4`-Kommentar, `.github/workflows/*`).
 - **Noch offen im Audit:** Desktop-App, scrypt-Parameter (Hash `salt:hash` ohne Parameter, wird auch von Lander/PHP verifiziert → Migration muss beide Seiten umfassen, N=2^17 braucht `maxmem`), Build-Webhook-`fetch` ohne safeFetch (nur Admin-URL).
 - **Lander** (`~/Sites/lander`, uncommittet): Orbiter-Oberfläche per 3-Wege-Merge nachgezogen (10 Themes, Fonts, Custom Colors, Responsive/Tab-Leiste, XSS-Fixes); Lander-Branding/-Blöcke erhalten. Siehe `~/Sites/lander/stage.md`.
+
+## 2026-11-15 — Release 0.3.94, Lander-Verknüpfung
+- admin 0.3.94 veröffentlicht (Settings in Sektionen, Zoom/no-cache, Dock-Hexagon, Sicherheitsfixes seit 0.3.92); `api.kuin.at` auf 0.3.94 (Backup vorher), audiocd-Dock auf 0.3.93.
+- Landing: neue Seite `/lander`, Doku `/docs/lander` (Sidebar „Deployment"), Changelog-Karte „Lander, Security, 10 Themes, Settings". README verlinkt Lander. Lander-Repo (privat): README verlinkt Orbiter, GitHub-Beschreibung + Homepage gesetzt. Kein Wiki angelegt (Orbiter-Wiki ist aktiviert, aber leer/nicht initialisiert).
+- Offen: kuin-at/a83-next/techblog Commits, CVE-IDs (taskctl 2026-11-16), scrypt-Parameter, CSP noch Report-Only.
