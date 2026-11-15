@@ -26,6 +26,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <pre>ORBITER_SECRET="$(openssl rand -base64 32)" npm run admin</pre>
 <p>On startup the admin encrypts every stored credential in place (AES-256-GCM, key derived with scrypt, each value bound to its setting name). Reading and saving settings works as before. The pod can then be committed or backed up without carrying usable credentials.</p>
 <div class="callout"><strong>Keep the secret.</strong> Without the same <code>ORBITER_SECRET</code> the encrypted values can't be read — the settings show as empty, and saving an empty field will not overwrite them. Store the secret in your password manager or hosting provider's environment settings, not in the repository. If you don't set it, nothing changes: credentials stay plaintext.</div>
+<p><strong>Passwords</strong> are hashed with scrypt (N=2<sup>16</sup>, r=8, p=2, a random salt per user; the cost is stored with the hash). Hashes from older versions keep working and are upgraded the next time that user signs in. Because the format changed, a pod whose passwords were upgraded cannot be signed in to with an admin older than 0.3.96 (core older than 0.3.22); reset the password with the CLI if you ever roll back.</p>
 <p>Covered: GitHub tokens, AI API key, S3 keys, SMTP password, FTP password. API tokens and API keys are stored as hashes instead. Passwords of user accounts are always hashed (scrypt).</p>
 
 <h2>Two-factor sign-in (TOTP)</h2>

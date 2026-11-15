@@ -9,6 +9,22 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <h2>Download a backup</h2>
 <p>Settings → <strong>Pod</strong> → <strong>Backup &amp; restore</strong> → <em>Download SQL file</em> (admins only). You get a consistent copy of the live database as <code>content-&lt;date&gt;.pod</code>, without active sessions. Media stored in the pod are inside the file; media on S3 are not.</p>
 
+<h2>Automatic backups</h2>
+<p>The admin copies the pod into a <code>backups/</code> folder next to it, by default <strong>every 7 days</strong> (checked at startup and every six hours), and keeps the newest four. <em>Back up now</em> in the same card does it on demand. Tune it with environment variables:</p>
+<table>
+  <thead><tr><th>Variable</th><th>Default</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><code>ORBITER_BACKUP_DAYS</code></td><td>7</td><td>Days between automatic backups, <code>0</code> turns them off</td></tr>
+    <tr><td><code>ORBITER_BACKUP_KEEP</code></td><td>4</td><td>How many automatic (and manual) copies to keep</td></tr>
+    <tr><td><code>ORBITER_BACKUP_DIR</code></td><td><code>&lt;pod folder&gt;/backups</code></td><td>Where the copies go</td></tr>
+    <tr><td><code>ORBITER_POD_WARN_MB</code></td><td>60</td><td>Size above which the dashboard and the card warn</td></tr>
+  </tbody>
+</table>
+<p>With automatic backups off, the dashboard reminds you when the last backup is older than two weeks. A copy on the same disk protects against mistakes, not against losing the server: download one now and then.</p>
+
+<h2>Keeping the pod small</h2>
+<p>The card shows the file size and how much of it is media stored inside the pod. If you want to stay below a limit, choose a media backend under <strong>Settings → Media</strong> (local folder, S3 or GitHub) and press <em>Move media out of the pod…</em>: the files are uploaded one by one (a file that fails stays where it is), then the pod is shrunk with <code>VACUUM</code>. Make a backup first. Moving to S3 or GitHub needs working credentials; the local folder is the simplest.</p>
+
 <h2>Restore or move</h2>
 <p><em>Restore…</em> takes a <code>.pod</code> file. The server checks it first (SQLite, integrity check, required tables, at least one admin) and refuses anything else. It then keeps the current pod next to it as <code>&lt;pod&gt;.before-restore-&lt;time&gt;</code> (the last three are kept), swaps the new file in and signs you out.</p>
 <ul>
@@ -21,6 +37,10 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 
 <h2>API</h2>
 <pre>GET  /api/backup           — download the pod (admin)
-POST /api/backup/restore   — multipart field "file" (admin)</pre>
+POST /api/backup/restore   — multipart field "file" (admin)
+GET  /api/backup/status    — size, last backup, automatic backups
+POST /api/backup/run       — back up now into the backup folder
+POST /api/backup/offload-media?limit=25 — move media out of the pod
+POST /api/backup/vacuum    — shrink the pod file</pre>
 
 </DocsLayout>

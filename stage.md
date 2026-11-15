@@ -248,3 +248,10 @@ Voraussetzungen: Arbeitsbaum sauber (`git status` ohne tracked Änderungen), Tes
 - `packages/admin/src/routes/backup.js`: `GET /api/backup` (VACUUM INTO, ohne Sitzungen), `POST /api/backup/restore` (Validierung, Kopie `<pod>.before-restore-*`, letzte 3). Settings → Pod: Download/Restore, zeigt Dateigröße. `server.js` Mount + große Body-Grenze.
 - Getestet (Test-Server 4399, Node 22): Download, Restore (Entries zurück), kaputte/fremde Dateien 422, Editor 403, ohne Login 401, UI-Durchlauf. Nicht getestet: großer Pod, Server mit ORBITER_SECRET, Lander-Pod → Orbiter.
 - Offen: admin-Version bumpen (Version-Guard), veröffentlichen, Landing (Docs `/docs/backup`, Changelog-Karte) erst danach pushen.
+
+## 2026-11-15 — Auto-Backup, Pod-Größe, Medien auslagern, scrypt (unveröffentlicht)
+- core 0.3.22: `hashPassword` → `scrypt:16:8:2:salt:hash` (OWASP 64 MiB), Legacy `salt:hash` verifiziert weiter, `needsRehash`, absurde Parameter abgelehnt. admin 0.3.96: Upgrade beim Login, DUMMY_HASH mit aktuellen Kosten (kein Timing-Leck), admin dependsOn core ^0.3.22 (importiert `needsRehash`).
+- admin: `routes/backup.js` → Auto-Backup (`startAutoBackup`, ORBITER_BACKUP_DAYS/KEEP/DIR), `GET /status`, `POST /run`, `POST /offload-media`, `POST /vacuum`; Settings-Pod-Karte (Status, Jetzt sichern, Medien auslagern), Dashboard-Hinweis (Größe > ORBITER_POD_WARN_MB, kein Backup).
+- Getestet (Testserver 4399): Status, Auto-Backup nach 30 s, Run-now, Offload mit `local`-Backend (4 Dateien, alle weiter ausgeliefert, Pod 319→184 KB per VACUUM), Editor 403, Passwort-Upgrade legacy→neu per Login, falsches Passwort 401, UI. Nicht getestet: S3/GitHub-Offload (keine Zugangsdaten), großer Pod, Passenger/Plesk (Speicher für scrypt 64 MiB).
+- Bewusst NICHT gemacht: CSP von Report-Only auf aktiv. Die Admin-Seiten nutzen überall Inline-Skripte/-Handler; Enforcement bräuchte Nonces/Hashes für alle (großer Umbau).
+- Offen: Version-Guard ok (core+admin gebumpt), veröffentlichen (core zuerst, dann admin), Landing pushen, api.kuin.at aktualisieren (Backup vorher).

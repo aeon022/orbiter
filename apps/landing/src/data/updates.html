@@ -1,8 +1,23 @@
+      <div class="update-card" id="update-automatic-backups-pod-size-stronger-passwords" data-date="2026-11-15" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
+        <div class="update-date">Nov<br />2026</div>
+        <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.96 · core@0.3.22 — Latest</div>
+          <div class="update-title">Automatic backups, pod size watch, media out of the pod, stronger password hashing</div>
+          <ul class="update-items">
+            <li><strong>Automatic backups</strong> — the pod is copied to a <code>backups/</code> folder every 7 days (keeps four), plus <em>Back up now</em>. Configurable with <code>ORBITER_BACKUP_DAYS</code>, <code>_KEEP</code>, <code>_DIR</code>. <a href="/docs/backup">Docs →</a></li>
+            <li><strong>Pod size watch</strong> — Settings → Pod shows the file size and the media inside it; the dashboard warns above <code>ORBITER_POD_WARN_MB</code> (default 60) or when no backup exists.</li>
+            <li><strong>Move media out of the pod</strong> — with a media backend set (local folder, S3, GitHub), one button moves the files out and shrinks the pod. A file that fails stays where it is.</li>
+            <li><strong>Stronger password hashing</strong> — scrypt with a higher cost, stored with the hash; old hashes keep working and are upgraded at the next sign-in. <a href="/docs/security">Docs →</a></li>
+          </ul>
+        </div>
+      </div>
+
       <div class="update-card" id="update-backup-restore-from-settings" data-date="2026-11-15" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
         <div class="update-date">Nov<br />2026</div>
         <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.95 — Latest</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.95</div>
           <div class="update-title">Backup and restore from Settings</div>
           <ul class="update-items">
             <li><strong>Download a backup</strong> — Settings → Pod → <em>Download SQL file</em> gives you a consistent copy of the live pod (no sessions), and shows the current file size. <a href="/docs/backup">Docs →</a></li>
