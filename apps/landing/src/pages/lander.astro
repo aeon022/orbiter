@@ -97,6 +97,7 @@ const events = await fetch('https://redaktion.example.at/api/public/events')
         <a class="ld-btn" href="https://github.com/aeon022/lander" target="_blank" rel="noopener">github.com/aeon022/lander</a>
         <a class="ld-btn ld-ghost" href="/docs/lander">Documentation →</a>
       </div>
+      <p class="ld-support">Lander is free and stays free. If it saves you time, you can support its development.<br /><a class="ld-btn ld-coffee" href="https://buy.polar.sh/polar_cl_SFvmYDegcsKDv8O8ZylLlIiXzyNRM7Br9nBx942rj4Q" target="_blank" rel="noopener noreferrer">☕ Buy us a coffee</a></p>
     </section>
   </main>
   <FooterSignature />
@@ -161,5 +162,8 @@ const events = await fetch('https://redaktion.example.at/api/public/events')
   .ld-code .c { color: var(--muted); }
   .ld-end { margin-top: 96px; padding: 56px 24px; text-align: center; border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); border-radius: 20px; background: radial-gradient(ellipse at 50% 0%, rgba(139,124,248,.18), transparent 70%), var(--surface); }
   .ld-end p { max-width: 520px; margin: 0 auto; color: var(--muted); }
+  .ld-support { margin-top: 28px !important; padding-top: 24px; border-top: 1px solid var(--border); }
+  .ld-coffee { display: inline-block; margin-top: 14px; background: color-mix(in srgb, var(--amber) 16%, transparent); color: var(--amber); border: 1px solid color-mix(in srgb, var(--amber) 45%, transparent); box-shadow: none; }
+  .ld-coffee:hover { box-shadow: 0 0 30px rgba(245,158,11,.35); }
   @media (max-width: 640px) { .ld-flow { flex-direction: column; align-items: stretch; } .ld-pod { margin: -1px 0 0; } .ld-hero { padding-top: 32px; } }
 </style>
