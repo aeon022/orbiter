@@ -53,7 +53,7 @@ import FooterSignature from '../components/FooterSignature.astro';
       <h2>Everything an editor needs</h2>
       <div class="ld-grid">
         <div><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg><h3>The real admin</h3><p>Station mode, themes, dock, editor and media library. Not a lookalike: the Orbiter interface, served as static files.</p></div>
-        <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><h3>Live API</h3><p><code>/api/public/&lt;collection&gt;</code> with CORS and a 60 s cache. Edits show on your site without a rebuild.</p></div>
+        <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><h3>Live API</h3><p><code>/api/public/&lt;collection&gt;</code> with CORS and a short cache (10 s by default). Edits show on your site without a rebuild.</p></div>
         <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M9 13l2 2 4-4"/></svg><h3>Markdown import</h3><p>Bring in <code>.md</code> files with frontmatter from the admin, or with <code>bin/lander import-md</code>.</p></div>
         <div><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5-5-8 8"/></svg><h3>Media as files</h3><p>Uploads go to a plain folder. File type is checked, PHP execution is blocked there.</p></div>
         <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg><h3>Hardened</h3><p>Server-side validation, size limits, escaped output, admin-only meta writes. The same fixes as Orbiter 0.3.92+.</p></div>
@@ -71,7 +71,7 @@ import FooterSignature from '../components/FooterSignature.astro';
             <tr><td>Hosting</td><td>VPS, local, desktop app</td><td>Any PHP shared host</td></tr>
             <tr><td>Media</td><td>In the SQL file or S3</td><td>Files in a folder</td></tr>
             <tr><td>Admin, editor, import, inbox</td><td class="y">✓</td><td class="y">✓</td></tr>
-            <tr><td>2FA, review workflow, webhooks, analytics, form builder</td><td class="y">✓</td><td class="n">not yet</td></tr>
+            <tr><td>2FA, reviewer role, review workflow, webhooks, analytics, form builder</td><td class="y">✓</td><td class="n">not yet</td></tr>
           </tbody>
         </table>
       </div>

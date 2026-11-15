@@ -12,10 +12,12 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <h2>What you get</h2>
 <ul>
   <li><strong>The Orbiter admin</strong> (Station mode, themes, dock) as static files, backed by a PHP API with the same paths and JSON formats.</li>
-  <li><strong>Live read API</strong> — <code>/api/public/&lt;collection&gt;[/&lt;slug&gt;]</code>, CORS for your site's domains, 60 s cache. Changes appear without a rebuild.</li>
+  <li><strong>Live read API</strong> — <code>/api/public/&lt;collection&gt;[/&lt;slug&gt;]</code>, CORS for your site's domains and a short cache (10 s by default, <code>public_cache_seconds</code>). Changes appear without a rebuild.</li>
   <li><strong>Markdown import</strong> — <code>.md</code> with frontmatter via Admin → Import or <code>bin/lander import-md</code>.</li>
   <li><strong>Media as files</strong> in <code>public/media/</code> (JPG, PNG, WebP, GIF, AVIF, PDF; real file type checked, PHP execution blocked in that folder). Media fields are resolved to <code>&#123;id, url, alt, type&#125;</code>.</li>
   <li><strong>Inbox</strong> for form submissions (server-to-server with a <code>form_token</code>).</li>
+  <li><strong>Users</strong> — admins add editors and admins in the admin (create, change role, reset password, delete).</li>
+  <li><strong>Install and update</strong> — an installer that detects subfolder or domain root, weekly automatic backups, image variants (<code>?w=800&amp;fmt=webp</code>), and a hint in the admin when a newer release exists.</li>
 </ul>
 
 <h2>Install</h2>
@@ -40,7 +42,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
     <tr><td>Runtime</td><td>Node (Hono)</td><td>PHP 8.1+ (PDO SQLite)</td></tr>
     <tr><td>Media</td><td>BLOB in the SQL file or S3</td><td>Files in a folder</td></tr>
     <tr><td>Sections</td><td>all</td><td>Dashboard, collections, entries, editor, media, import, settings, account</td></tr>
-    <tr><td>2FA, review workflow, webhooks, analytics, form builder</td><td>yes</td><td>not yet</td></tr>
+    <tr><td>2FA, reviewer role, per-collection limits, review workflow, webhooks, analytics, form builder</td><td>yes</td><td>not yet</td></tr>
   </tbody>
 </table>
 
