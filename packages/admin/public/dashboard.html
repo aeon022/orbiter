@@ -192,6 +192,25 @@
         </div>
       </div>
 
+      <!-- Pod size / backup hint (admins only; hidden when everything is fine) -->
+      <div id="pod-hint" class="glass-card" style="display:none;padding:12px 18px;font-size:13px;line-height:1.5;border-color:var(--amber, #f59e0b)">
+        <span id="pod-hint-text"></span> <a href="/settings.html" style="color:var(--accent)">Settings → Pod →</a>
+      </div>
+      <script>
+        (function () {
+          fetch('/api/backup/status', { credentials: 'include' }).then(r => r.ok ? r.json() : null).then(st => {
+            if (!st) return;
+            const MB = 1048576, msgs = [];
+            if (st.podBytes > st.warnMb * MB) msgs.push('The pod file is ' + (st.podBytes / MB).toFixed(0) + ' MB (limit ' + st.warnMb + ' MB)' + (st.mediaInPodCount ? ': media inside it take ' + (st.mediaInPodBytes / MB).toFixed(0) + ' MB and can be moved out.' : '.'));
+            const age = st.last ? (Date.now() - Date.parse(st.last)) / 86400000 : Infinity;
+            if (st.auto.days <= 0 && age > 14) msgs.push(st.last ? 'The last backup is ' + Math.floor(age) + ' days old.' : 'There is no backup yet.');
+            if (!msgs.length) return;
+            document.getElementById('pod-hint-text').textContent = msgs.join(' ');
+            document.getElementById('pod-hint').style.display = '';
+          }).catch(() => {});
+        })();
+      </script>
+
       <!-- Stats row -->
       <div class="stats-row glass-card">
         <div class="stat-cell">

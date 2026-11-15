@@ -38,7 +38,7 @@ import { publishRoutes }  from './routes/publish.js';
 import { qualityRoutes }       from './routes/quality.js';
 import { schemaMigrateRoutes } from './routes/schema_migrate.js';
 import { podRoutes }           from './routes/pods.js';
-import { backupRoutes } from './routes/backup.js';
+import { backupRoutes, startAutoBackup } from './routes/backup.js';
 import { apiKeyRoutes }        from './routes/api-keys.js';
 import { securityRoutes }      from './routes/security.js';
 import { webhookRoutes }       from './routes/webhooks.js';
@@ -211,6 +211,8 @@ serve({ fetch: createApp(POD_PATH).fetch, port: PORT, hostname: HOST }, () => {
   console.log(`Orbiter Admin API  →  http://localhost:${PORT}`);
   console.log(`Pod: ${POD_PATH}`);
 });
+
+startAutoBackup(POD_PATH);
 
 // Scheduled publishing — check every 60 s
 setInterval(() => {

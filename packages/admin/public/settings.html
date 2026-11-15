@@ -1015,8 +1015,11 @@
         <div id="backup-box" style="padding:12px 20px;border-top:1px solid var(--line)">
           <div class="pod-stat-label" style="margin-bottom:8px">Backup &amp; restore <span id="backup-size" style="text-transform:none;letter-spacing:0;color:var(--muted)"></span></div>
           <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">The SQL file (<code>.pod</code>) holds all content, media (unless on S3), users and settings. Keep backups private: they contain password hashes and saved credentials. Use this to back up or move the site to another server.</div>
+          <div id="backup-status" style="font-size:12px;line-height:1.6;margin-bottom:10px;color:var(--muted)"></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
             <a class="btn btn-ghost btn-sm" id="backup-sql" href="/api/backup" download>⬇ Download SQL file (.pod)</a>
+            <button type="button" class="btn btn-ghost btn-sm" id="backup-run">⏺ Back up now (on the server)</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="offload-btn" style="display:none">↗ Move media out of the pod…</button>
             <button type="button" class="btn btn-ghost btn-sm" id="restore-btn">⬆ Restore…</button>
             <input type="file" id="restore-file" accept=".pod,.sqlite,.db" hidden />
           </div>
@@ -1043,11 +1046,45 @@
     (function () {
       const btn = document.getElementById('restore-btn'), inp = document.getElementById('restore-file'), msg = document.getElementById('restore-msg');
       if (!btn || !inp) return;
-      fetch('/api/pods', { credentials: 'include' }).then(r => r.json()).then(p => {
-        const cur = Array.isArray(p) && p.find(x => x.current); const el = document.getElementById('backup-size');
-        if (cur && el) el.textContent = '· current file: ' + (cur.fileSize / 1048576).toFixed(1) + ' MB';
-      }).catch(() => {});
       const say = (t, ok) => { msg.style.display = ''; msg.style.color = ok ? 'var(--green, #4ade80)' : 'var(--red, #f87171)'; msg.textContent = t; };
+      const mb = n => (n / 1048576).toFixed(1) + ' MB';
+      const esc = t => String(t).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+      const post = (u) => fetch(u, { method: 'POST', credentials: 'include' }).then(r => r.json().catch(() => ({})).then(j => ({ ok: r.ok, ...j })));
+      async function loadStatus() {
+        const box = document.getElementById('backup-status'), off = document.getElementById('offload-btn');
+        try {
+          const st = await fetch('/api/backup/status', { credentials: 'include' }).then(r => r.json());
+          const over = st.podBytes > st.warnMb * 1048576;
+          const lines = [];
+          lines.push('Pod file: <b style="color:' + (over ? 'var(--red, #f87171)' : 'var(--text)') + '">' + mb(st.podBytes) + '</b>' + (st.mediaInPodCount ? ' · media inside the file: ' + mb(st.mediaInPodBytes) + ' (' + st.mediaInPodCount + ' files)' : ''));
+          if (over) lines.push('<span style="color:var(--red, #f87171)">Larger than your ' + st.warnMb + ' MB limit' + (st.mediaInPodCount ? ' — moving the media out would shrink it.' : '.') + '</span>');
+          if (st.mediaInPodCount && st.mediaBackend === 'blob') lines.push('To move media out, first choose a media backend under Settings → Media (local folder, S3 or GitHub).');
+          lines.push('Last backup: ' + (st.last ? new Date(st.last).toLocaleString() : '<b>none yet</b>') + ' · automatic: ' + (st.auto.days > 0 ? 'every ' + st.auto.days + ' days, keeping ' + st.auto.keep : 'off') + ' · folder <code>' + esc(st.auto.dir) + '</code>');
+          if (st.files.length) lines.push('On the server: ' + st.files.slice(0, 4).map(f => esc(f.name) + ' (' + mb(f.size) + ')').join(', ') + (st.files.length > 4 ? ' …' : ''));
+          box.innerHTML = lines.join('<br>');
+          off.style.display = (st.mediaInPodCount && st.mediaBackend !== 'blob') ? '' : 'none';
+        } catch { box.textContent = ''; }
+      }
+      loadStatus();
+      document.getElementById('backup-run')?.addEventListener('click', async (e) => {
+        e.target.disabled = true; say('Backing up…', true);
+        const r = await post('/api/backup/run'); e.target.disabled = false;
+        if (r.ok) { say('Saved ' + r.name + ' (' + mb(r.size) + ')', true); loadStatus(); } else say(r.error || 'Backup failed', false);
+      });
+      document.getElementById('offload-btn')?.addEventListener('click', async (e) => {
+        if (!confirm('Move all media stored inside the pod to the configured media backend?\n\nMake a backup first. Files are uploaded one by one; a file that fails stays where it is. Afterwards the pod file can be shrunk.')) return;
+        e.target.disabled = true; let moved = 0, failed = 0, last;
+        do {
+          say('Moving media… ' + moved + ' done' + (failed ? ', ' + failed + ' failed' : ''), true);
+          last = await post('/api/backup/offload-media?limit=25');
+          if (!last.ok) { say(last.error || 'Moving failed', false); e.target.disabled = false; return; }
+          moved += last.moved; failed += last.failed.length;
+          if (last.moved === 0 && last.remaining > 0) break;   // nothing progressed: stop instead of looping
+        } while (last.remaining > 0);
+        let msg = 'Moved ' + moved + ' file(s)' + (failed ? ', ' + failed + ' failed (kept in the pod)' : '') + '.';
+        if (moved) { const v = await post('/api/backup/vacuum'); if (v.ok) msg += ' Pod file ' + mb(v.before) + ' → ' + mb(v.after) + '.'; }
+        say(msg, failed === 0); e.target.disabled = false; loadStatus();
+      });
       btn.addEventListener('click', () => inp.click());
       inp.addEventListener('change', async () => {
         const f = inp.files[0]; inp.value = '';
