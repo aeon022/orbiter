@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Orbiter Admin — Analytics</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css" />
   <script src="/theme.js"></script>
   <style>
@@ -272,7 +271,7 @@
       const filterLabel = document.getElementById('an-filter-label');
       if (currentPath) {
         filterLabel.style.display = '';
-        filterLabel.innerHTML = `<span style="cursor:pointer" title="Clear filter" onclick="loadStats(currentDays)">✕</span> ${currentPath}`;
+        filterLabel.innerHTML = `<span style="cursor:pointer" title="Clear filter" onclick="loadStats(currentDays)">✕</span> ${esc(currentPath)}`;
       } else {
         filterLabel.style.display = 'none';
       }
@@ -358,7 +357,7 @@
       // Languages
       const langsTbody = document.querySelector('#an-langs tbody');
       langsTbody.innerHTML = (stats.langs||[]).map(l =>
-        `<tr><td>${l.lang}</td><td>${l.count}</td></tr>`
+        `<tr><td>${esc(l.lang)}</td><td>${l.count}</td></tr>`
       ).join('') || '<tr><td colspan="2" style="color:var(--muted)">No data</td></tr>';
 
       // AI Agents breakdown (compact)

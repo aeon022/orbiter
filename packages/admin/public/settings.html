@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Orbiter Admin — Settings</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@300;400;500;600&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css" />
   <script src="/theme.js"></script>
   <style>
@@ -329,8 +329,10 @@
 
     const ghConfigured   = !!(get('github.token') && get('github.repo'));
     const currentTheme  = localStorage.getItem('orb_theme') || get('ui.theme') || 'space'; // what is actually applied
+    const THEMES = [{"id": "space", "name": "Space", "sub": "Calm blue &amp; teal", "sw": ["#080e18", "#6a9ed4", "#46c8a8", "#38b89c"]}, {"id": "missionctl", "name": "missionctl", "sub": "Terminal green \u00b7 indigo \u00b7 violet", "sw": ["#0a0a0f", "#00d97e", "#00d97e", "#f59e0b"]}, {"id": "zen", "name": "Zen", "sub": "Japandi \u00b7 slate &amp; mauve", "sw": ["#0f0e10", "#7888a0", "#80a884", "#c89090"]}, {"id": "catppuccin", "name": "Catppuccin", "sub": "Mocha / Latte \u00b7 soft pastel", "sw": ["#11111b", "#cba6f7", "#a6e3a1", "#fab387"]}, {"id": "amber", "name": "Terminal", "sub": "Amber phosphor \u00b7 neutral paper", "sw": ["#0c0b08", "#d99a1a", "#8cc46a", "#e0a100"]}, {"id": "paper", "name": "Paper", "sub": "Whiteboard \u00b7 black &amp; white", "sw": ["#0a0a0a", "#e8e8e8", "#6fcf8a", "#e8e8e8"]}, {"id": "nord", "name": "Nord", "sub": "Arctic \u00b7 frost blue", "sw": ["#242933", "#88c0d0", "#a3be8c", "#ebcb8b"]}, {"id": "gruvbox", "name": "Gruvbox", "sub": "Retro \u00b7 warm earth tones", "sw": ["#1d2021", "#83a598", "#b8bb26", "#fabd2f"]}, {"id": "dracula", "name": "Dracula", "sub": "Purple &amp; pink on charcoal", "sw": ["#1e1f29", "#bd93f9", "#5be08a", "#ece27e"]}, {"id": "tokyo-night", "name": "Tokyo Night", "sub": "Neon city \u00b7 blue &amp; violet", "sw": ["#16161e", "#7aa2f7", "#9ece6a", "#e0af68"]}];
+    const CC = (() => { try { return JSON.parse(localStorage.getItem('orb_custom') || '{}'); } catch { return {}; } })();
     const currentScheme = localStorage.getItem('orb_scheme') || 'auto';
-    const currentStyle  = localStorage.getItem('orb_style')  || 'glass'; // same default as theme.js
+    const currentStyle  = localStorage.getItem('orb_style')  || 'xfce'; // same default as theme.js
 
     const wrap = document.getElementById('settings-content');
     wrap.innerHTML = `
@@ -748,49 +750,33 @@
           </div>
         </div>
         <div style="padding:10px 20px">
+          <div class="setting-label" style="margin-bottom:8px">Font</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm font-btn ${!localStorage.getItem('orb_font')?'active':''}" data-f="">Theme default</button>
+            <button class="btn btn-ghost btn-sm font-btn ${localStorage.getItem('orb_font')==='sans'?'active':''}" data-f="sans" style="font-family:var(--f-sans)">Sans (Plex)</button>
+            <button class="btn btn-ghost btn-sm font-btn ${localStorage.getItem('orb_font')==='mono'?'active':''}" data-f="mono" style="font-family:var(--f-mono)">Mono</button>
+          </div>
+        </div>
+        <div style="padding:10px 20px">
           <div class="setting-label" style="margin-bottom:8px">Palette</div>
           <div class="theme-cards">
-            <button class="theme-card ${currentTheme==='space'?'active':''}" data-theme="space">
-              <div class="theme-swatch">
-                <span style="background:#080e18"></span>
-                <span style="background:#5088c0"></span>
-                <span style="background:#38c8a8"></span>
-                <span style="background:#2eb89a"></span>
-              </div>
-              <div class="theme-card-name">Space</div>
-              <div class="theme-card-sub">Space station · electric blue &amp; teal</div>
-            </button>
-            <button class="theme-card ${currentTheme==='zen'?'active':''}" data-theme="zen">
-              <div class="theme-swatch">
-                <span style="background:#0f0e10"></span>
-                <span style="background:#566070"></span>
-                <span style="background:#6b8c6e"></span>
-                <span style="background:#ad7575"></span>
-              </div>
-              <div class="theme-card-name">Zen</div>
-              <div class="theme-card-sub">Japandi · slate &amp; mauve</div>
-            </button>
-            <button class="theme-card ${currentTheme==='catppuccin'?'active':''}" data-theme="catppuccin">
-              <div class="theme-swatch">
-                <span style="background:#11111b"></span>
-                <span style="background:#cba6f7"></span>
-                <span style="background:#a6e3a1"></span>
-                <span style="background:#f9e2af"></span>
-              </div>
-              <div class="theme-card-name">Catppuccin</div>
-              <div class="theme-card-sub">Mocha / Latte · pastel</div>
-            </button>
-            <button class="theme-card ${currentTheme==='amber'?'active':''}" data-theme="amber">
-              <div class="theme-swatch">
-                <span style="background:#0b0a07"></span>
-                <span style="background:#ffb000"></span>
-                <span style="background:#8fcf6a"></span>
-                <span style="background:#ff7a3d"></span>
-              </div>
-              <div class="theme-card-name">Terminal</div>
-              <div class="theme-card-sub">Amber phosphor · Paper in light</div>
-            </button>
+            ${THEMES.map(t => `
+            <button class="theme-card ${currentTheme===t.id?'active':''}" data-theme="${t.id}">
+              <div class="theme-swatch">${t.sw.map(c => `<span style="background:${c}"></span>`).join('')}</div>
+              <div class="theme-card-name">${t.name}</div>
+              <div class="theme-card-sub">${t.sub}</div>
+            </button>`).join('')}
           </div>
+          <details class="custom-colors" style="margin-top:14px">
+            <summary class="setting-label" style="cursor:pointer">Custom colors</summary>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-top:10px">
+              <label class="setting-desc">Accent <input type="color" id="cc-accent" value="${CC.accent||'#6a9ed4'}"></label>
+              <label class="setting-desc">Background <input type="color" id="cc-bg" value="${CC.bg||'#0a0a0f'}"></label>
+              <label class="setting-desc">Text <input type="color" id="cc-text" value="${CC.text||'#d5dce8'}"></label>
+              <button class="btn btn-ghost btn-sm" id="cc-reset" type="button">Reset to theme</button>
+            </div>
+            <div class="setting-desc" style="margin-top:6px">Overrides the selected theme. Pick a dark background with light text (or the reverse).</div>
+          </details>
         </div>
         <div style="padding:10px 20px;border-top:1px solid var(--line2)">
           <div class="setting-label" style="margin-bottom:8px">Style</div>
@@ -856,7 +842,7 @@
       <div id="account-banner" class="banner" style="display:none"></div>
       <div class="settings-grid" style="margin-bottom:8px">
       <div class="settings-group">
-        <div class="group-header">Account — ${me.user.username}</div>
+        <div class="group-header">Account — ${orbEsc(me.user.username)}</div>
         <form id="pw-form">
           <div class="setting-row">
             <div><div class="setting-label">Current password</div></div>
@@ -877,7 +863,7 @@
         <form id="un-form" style="border-top:1px solid var(--line);">
           <div class="setting-row">
             <div><div class="setting-label">New username</div><div class="setting-desc">Current: <strong>${me.user.username}</strong></div></div>
-            <input class="input" type="text" name="new_username" autocomplete="username" required placeholder="${me.user.username}" />
+            <input class="input" type="text" name="new_username" autocomplete="username" required placeholder="${orbEsc(me.user.username)}" />
           </div>
           <div class="setting-row">
             <div><div class="setting-label">Confirm with password</div></div>
@@ -1210,11 +1196,34 @@
       });
     });
 
+    // Custom colors (applied by theme.js on every page)
+    const ccApply = () => {
+      const c = { accent: document.getElementById('cc-accent').value, bg: document.getElementById('cc-bg').value, text: document.getElementById('cc-text').value };
+      localStorage.setItem('orb_custom', JSON.stringify(c));
+      window.orbApplyCustom && window.orbApplyCustom();
+    };
+    ['cc-accent', 'cc-bg', 'cc-text'].forEach(id => document.getElementById(id).addEventListener('input', ccApply));
+    document.getElementById('cc-reset').addEventListener('click', () => {
+      localStorage.removeItem('orb_custom');
+      window.orbApplyCustom && window.orbApplyCustom();
+    });
+
+    // Font buttons
+    document.querySelectorAll('.font-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const f = btn.dataset.f;
+        document.querySelectorAll('.font-btn').forEach(b => b.classList.toggle('active', b === btn));
+        const root = document.documentElement;
+        if (f) { root.setAttribute('data-font', f); localStorage.setItem('orb_font', f); }
+        else   { root.removeAttribute('data-font'); localStorage.removeItem('orb_font'); }
+      });
+    });
+
     // Style cards (classic / glass)
     document.querySelectorAll('.style-card').forEach(btn => {
       btn.addEventListener('click', () => {
         const s = btn.dataset.style;
-        const wasXfce = (localStorage.getItem('orb_style') || 'glass') === 'xfce';
+        const wasXfce = (localStorage.getItem('orb_style') || 'xfce') === 'xfce';
         document.querySelectorAll('.style-card').forEach(b => b.classList.toggle('active', b.dataset.style === s));
         const root = document.documentElement;
         root.removeAttribute('data-style');
@@ -1387,7 +1396,7 @@
                   <input type="checkbox" class="nav-vis-cb" data-col="${c.id}" ${hidden ? '' : 'checked'} />
                   <span class="toggle-slider"></span>
                 </label>
-                <span class="pod-col-name" style="flex:1;${hidden ? 'opacity:.4' : ''}">${c.label}</span>
+                <span class="pod-col-name" style="flex:1;${hidden ? 'opacity:.4' : ''}">${orbEsc(c.label)}</span>
                 <select class="input nav-group-sel" data-col="${c.id}" style="width:auto;min-width:90px;font-size:10px;padding:3px 6px;">
                   <option value="">— no group —</option>
                   ${groups.map(g => `<option value="${g}" ${group===g?'selected':''}>${g}</option>`).join('')}

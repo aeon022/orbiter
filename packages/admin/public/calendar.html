@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Orbiter Admin — Calendar</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@300;400;500;600&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css" />
   <script src="/theme.js"></script>
   <style>
@@ -252,7 +252,7 @@
       let evHtml = '';
       const shown = dayEvents.slice(0, maxShow);
       for (const ev of shown) {
-        evHtml += `<a class="cal-event ${ev.eventType}" href="/editor.html?collection=${ev.collection}&slug=${ev.slug}" title="${ev.title} (${ev.label})">${ev.title}</a>`;
+        evHtml += `<a class="cal-event ${ev.eventType}" href="/editor.html?collection=${encodeURIComponent(ev.collection)}&slug=${encodeURIComponent(ev.slug)}" title="${orbEsc(ev.title)} (${orbEsc(ev.label)})">${orbEsc(ev.title)}</a>`;
       }
       if (dayEvents.length > maxShow) {
         evHtml += `<div class="cal-event-more">+${dayEvents.length - maxShow} more</div>`;
@@ -295,7 +295,7 @@
             <div class="cal-side-entry-title">${escHtml(e.title)}</div>
             <div class="cal-side-entry-meta">
               <span class="pill ${e.status}">${typeLabel}</span>
-              <span>${e.label}</span>
+              <span>${orbEsc(e.label)}</span>
               ${time ? `<span>${time}</span>` : ''}
             </div>
           </a>

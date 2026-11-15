@@ -4,7 +4,7 @@
  * Also bootstraps xfce.js when orb_style === 'xfce'.
  */
 ;(function () {
-  if (localStorage.getItem('orb_style') === 'xfce') {
+  if ((localStorage.getItem('orb_style') || 'xfce') === 'xfce') {
     var xs = document.createElement('script');
     xs.src = '/xfce.js';
     var cs = document.currentScript;
@@ -28,6 +28,18 @@
       tg.onclick = function () { tg.setAttribute('aria-expanded', String(nav.classList.toggle('open'))); };
       bar.insertBefore(tg, bar.firstChild);
       nav.addEventListener('click', function (e) { if (e.target.closest('a')) { nav.classList.remove('open'); tg.setAttribute('aria-expanded', 'false'); } });
+    }
+
+    // Phones (Classic + Glass): bottom tab bar for the main areas; "Menu" opens the full sidebar drawer
+    if (nav && bar && (localStorage.getItem('orb_style') || 'xfce') !== 'xfce' && !document.querySelector('.mobile-tabbar')) {
+      var tabs = [['dashboard', '◧', 'Home'], ['calendar', '▤', 'Calendar'], ['media', '▣', 'Media'], ['settings', '⚙', 'Settings']];
+      var tb = document.createElement('nav');
+      tb.className = 'mobile-tabbar'; tb.setAttribute('aria-label', 'Main');
+      tb.innerHTML = tabs.map(function (t) {
+        return '<a href="/' + t[0] + '.html"' + (page === t[0] ? ' class="active" aria-current="page"' : '') + '><span>' + t[1] + '</span>' + t[2] + '</a>';
+      }).join('') + '<button type="button" class="mt-menu"><span>☰</span>Menu</button>';
+      tb.querySelector('.mt-menu').onclick = function () { var t = bar.querySelector('.nav-toggle'); if (t) t.click(); };
+      document.body.appendChild(tb);
     }
 
     fetch('/api/info', { credentials: 'include' })

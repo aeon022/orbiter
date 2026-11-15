@@ -1876,7 +1876,7 @@
       // ⌘⇧L — switch back to glass mode
       if (mod && e.shiftKey && (e.key === 'l' || e.key === 'L')) {
         e.preventDefault();
-        localStorage.setItem('orb_style', 'glass');
+        localStorage.setItem('orb_style', 'glass'); // explicit, since the default is now xfce
         location.reload();
         return;
       }

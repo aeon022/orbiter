@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Orbiter Admin — Pods</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@300;400;500;600&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css" />
   <script src="/theme.js"></script>
   <style>
@@ -120,7 +120,7 @@
       grid.innerHTML = pods.map(p => `
         <div class="pod-card ${p.current?'current':''}">
           <div style="display:flex;align-items:baseline;gap:4px;">
-            <div class="pod-name">${p.name}</div>
+            <div class="pod-name">${orbEsc(p.name)}</div>
             ${p.current?'<span class="current-tag">current</span>':''}
           </div>
           <div class="pod-stats">
@@ -138,8 +138,8 @@
             </div>
           </div>
           <div class="pod-date">Last modified: ${fmtDate(p.lastModified)}</div>
-          <div class="pod-path">${p.path}</div>
-          ${!p.current?`<div class="pod-actions"><button class="btn btn-sm" data-unlink="${p.path}">Unlink</button></div>`:''}
+          <div class="pod-path">${orbEsc(p.path)}</div>
+          ${!p.current?`<div class="pod-actions"><button class="btn btn-sm" data-unlink="${orbEsc(p.path)}">Unlink</button></div>`:''}
         </div>
       `).join('');
       grid.querySelectorAll('[data-unlink]').forEach(btn => btn.addEventListener('click', async () => {

@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Orbiter Admin — Editor</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@300;400;500;600&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css" />
   <script src="/theme.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
@@ -944,6 +944,7 @@
       if (!btn || !previewUrlTemplate) return;
       const slug = document.getElementById('slug-input')?.value || currentSlug || SLUG;
       const base = previewUrlTemplate.replace('{slug}', slug);
+      if (!/^(https?:\/\/|\/(?!\/))/i.test(base)) { btn.style.display = 'none'; return; } // never put javascript:/data: URLs in a link (older pods may hold one)
       const sep  = base.includes('?') ? '&' : '?';
       btn.href = base;
       btn.dataset.sep = sep;
@@ -1156,7 +1157,7 @@
       const actHtml = activityData.slice(0,10).map(a=>`
         <div style="display:flex;align-items:baseline;gap:8px;padding:4px 0;border-bottom:1px solid var(--line2);font-size:10px;">
           <span style="color:var(--text);font-weight:500;flex-shrink:0">${actionLabel[a.action]??a.action}</span>
-          <span style="color:var(--muted);flex:1;text-align:right">${a.username}</span>
+          <span style="color:var(--muted);flex:1;text-align:right">${orbEsc(a.username)}</span>
           <span style="color:var(--muted);font-family:var(--mono);flex-shrink:0">${new Date(a.created_at).toLocaleDateString()}</span>
         </div>
       `).join('');
@@ -1947,7 +1948,7 @@
 
         if (data.seo) {
           const preview = [];
-          if (data.seo.title) preview.push(`<strong>Title:</strong> ${data.seo.title}`);
+          if (data.seo.title) preview.push(`<strong>Title:</strong> ${orbEsc(data.seo.title)}`);
           if (data.seo.description) preview.push(`<strong>Desc:</strong> ${data.seo.description}`);
           sections.push(`<div class="suggest-section">
             <span class="suggest-label">SEO</span>
@@ -1960,7 +1961,7 @@
           for (const f of data.fills) {
             const preview = Array.isArray(f.value) ? f.value.join(', ') : String(f.value).slice(0, 100);
             sections.push(`<div class="suggest-section">
-              <span class="suggest-label">${f.label}</span>
+              <span class="suggest-label">${orbEsc(f.label)}</span>
               <div class="suggest-content"><span style="font-size:10px;color:var(--mid)">${preview}</span></div>
               <button class="suggest-btn" onclick="applyField('${f.field}',${JSON.stringify(f.value).replace(/"/g,'&quot;')})">Apply</button>
             </div>`);
@@ -1980,7 +1981,7 @@
           sections.push(`<div class="suggest-section">
             <span class="suggest-label">Related</span>
             <div class="suggest-content">${data.related.map(e =>
-              `<a class="suggest-entry" href="/editor.html?collection=${e.collection}&slug=${e.slug}">${e.title}</a><span class="suggest-col-badge">${e.collectionLabel}</span>`
+              `<a class="suggest-entry" href="/editor.html?collection=${encodeURIComponent(e.collection)}&slug=${encodeURIComponent(e.slug)}">${orbEsc(e.title)}</a><span class="suggest-col-badge">${orbEsc(e.collectionLabel)}</span>`
             ).join('')}</div>
           </div>`);
         }
@@ -1989,7 +1990,7 @@
           sections.push(`<div class="suggest-section">
             <span class="suggest-label">Quality</span>
             <div class="suggest-content">${data.quality.map(h =>
-              `<span class="suggest-hint${h.severity === 'warn' ? ' warn' : ''}">${h.severity === 'warn' ? '⚠' : 'ℹ'} ${h.message}</span>`
+              `<span class="suggest-hint${h.severity === 'warn' ? ' warn' : ''}">${h.severity === 'warn' ? '⚠' : 'ℹ'} ${orbEsc(h.message)}</span>`
             ).join('')}</div>
           </div>`);
         }

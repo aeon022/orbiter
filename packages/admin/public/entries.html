@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Orbiter Admin — Entries</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@300;400;500;600&family=Noto+Serif+JP:wght@200;300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css" />
   <script src="/theme.js"></script>
   <style>
@@ -284,9 +284,9 @@
               const schedInfo   = e.status === 'scheduled' && e.publish_at ? ` · ${e.publish_at.split(' ')[0]}` : '';
               const localeParam = e.locale ? `&locale=${encodeURIComponent(e.locale)}` : '';
               const localeBadge = e.locale ? `<span style="font-family:var(--mono);font-size:9px;color:var(--muted);background:var(--bg3);border:1px solid var(--line);border-radius:4px;padding:1px 5px;margin-left:5px;vertical-align:middle">${e.locale}</span>` : '';
-              return `<tr data-slug="${e.slug}" data-locale="${e.locale ?? ''}"${canSort ? ' draggable="true"' : ''}>
+              return `<tr data-slug="${orbEsc(e.slug)}" data-locale="${orbEsc(e.locale ?? '')}"${canSort ? ' draggable="true"' : ''}>
                 ${canSort ? `<td class="drag-col"><span class="drag-handle" title="Drag to reorder">⠿</span></td>` : ''}
-                <td class="cb-col"><input type="checkbox" class="row-cb" data-slug="${e.slug}" data-locale="${e.locale ?? ''}" ${selected.has(e.slug) ? 'checked' : ''} /></td>
+                <td class="cb-col"><input type="checkbox" class="row-cb" data-slug="${orbEsc(e.slug)}" data-locale="${orbEsc(e.locale ?? '')}" ${selected.has(e.slug) ? 'checked' : ''} /></td>
                 <td>
                   <div style="color:var(--heading);font-weight:500">${escHtml(title)}${localeBadge}</div>
                   <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px">${escHtml(e.slug)}</div>
@@ -296,12 +296,12 @@
                 <td style="width:1%;white-space:nowrap">
                   <div class="row-actions">
                     ${isTrash
-                      ? `<button class="btn-row restore-btn" data-slug="${e.slug}" data-locale="${e.locale ?? ''}">Restore</button>
-                         <button class="btn-row btn-row-danger perm-del-btn" data-slug="${e.slug}" data-locale="${e.locale ?? ''}">Delete forever</button>`
-                      : `<a class="btn-row" href="/editor.html?collection=${colId}&slug=${e.slug}${localeParam}">Edit</a>
-                         <button class="btn-row btn-row-toggle status-toggle" data-slug="${e.slug}" data-locale="${e.locale ?? ''}" data-next="${e.status === 'in_review' && !canPublish ? 'draft' : nextStatus}">${toggleLabel}</button>
-                         <button class="btn-row btn-row-icon dup-btn" data-slug="${e.slug}" data-locale="${e.locale ?? ''}" title="Duplicate">⧉</button>
-                         <button class="btn-row btn-row-danger delete-btn" data-slug="${e.slug}" data-locale="${e.locale ?? ''}">Trash</button>`
+                      ? `<button class="btn-row restore-btn" data-slug="${orbEsc(e.slug)}" data-locale="${orbEsc(e.locale ?? '')}">Restore</button>
+                         <button class="btn-row btn-row-danger perm-del-btn" data-slug="${orbEsc(e.slug)}" data-locale="${orbEsc(e.locale ?? '')}">Delete forever</button>`
+                      : `<a class="btn-row" href="/editor.html?collection=${colId}&slug=${orbEsc(e.slug)}${localeParam}">Edit</a>
+                         <button class="btn-row btn-row-toggle status-toggle" data-slug="${orbEsc(e.slug)}" data-locale="${orbEsc(e.locale ?? '')}" data-next="${e.status === 'in_review' && !canPublish ? 'draft' : nextStatus}">${toggleLabel}</button>
+                         <button class="btn-row btn-row-icon dup-btn" data-slug="${orbEsc(e.slug)}" data-locale="${orbEsc(e.locale ?? '')}" title="Duplicate">⧉</button>
+                         <button class="btn-row btn-row-danger delete-btn" data-slug="${orbEsc(e.slug)}" data-locale="${orbEsc(e.locale ?? '')}">Trash</button>`
                     }
                   </div>
                 </td>
