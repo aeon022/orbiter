@@ -1,8 +1,21 @@
+      <div class="update-card" id="update-backup-restore-from-settings" data-date="2026-11-15" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
+        <div class="update-date">Nov<br />2026</div>
+        <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.95 — Latest</div>
+          <div class="update-title">Backup and restore from Settings</div>
+          <ul class="update-items">
+            <li><strong>Download a backup</strong> — Settings → Pod → <em>Download SQL file</em> gives you a consistent copy of the live pod (no sessions), and shows the current file size. <a href="/docs/backup">Docs →</a></li>
+            <li><strong>Restore or move</strong> — upload a <code>.pod</code>: it is checked first (SQLite, integrity, required tables, at least one admin), the current pod is kept as <code>&lt;pod&gt;.before-restore-…</code>, then swapped in. Works for moving to another server, and for pods from <a href="/lander">Lander</a>.</li>
+          </ul>
+        </div>
+      </div>
+
       <div class="update-card" id="update-lander-security-hardening-settings-layout" data-date="2026-11-15" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
         <div class="update-date">Nov<br />2026</div>
         <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.94 · integration@0.3.23 · mcp@0.1.6 — Latest</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.94 · integration@0.3.23 · mcp@0.1.6</div>
           <div class="update-title">Lander for PHP hosting, security hardening, 10 themes and a tidier Settings page</div>
           <ul class="update-items">
             <li><strong>Lander</strong> — the Orbiter admin on ordinary PHP hosting (PHP 8.1+, SQLite, no Node). Same SQL file (<code>.pod</code>), same Station interface, live read API for your site. <a href="/lander">Lander →</a> <a href="/docs/lander">Docs →</a></li>

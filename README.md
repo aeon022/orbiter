@@ -984,13 +984,9 @@ Trash (soft delete + restore + permanent delete), activity log, bulk actions (pu
 
 ### Themes
 
-Three themes × two schemes (dark/light) × two layouts, switchable in Settings:
+Ten themes × two schemes (dark/light) × three styles (Classic, Glass, Station), switchable in Settings → Appearance, plus font choice, custom colours and UI zoom:
 
-| Theme | Dark | Light |
-|-------|------|-------|
-| **Space** | Space station HUD — cyan + electric blue | Solar Command — ice blue |
-| **Zen** | Japandi — slate, mauve, moss | Japandi light |
-| **Catppuccin** | Mocha | Latte |
+Space (default), missionctl, Zen, Catppuccin, Terminal, Paper, Nord, Gruvbox, Dracula, Tokyo Night.
 
 **Layouts:** Classic (sidebar + content grid) or **Station** (Space Station mode — floating magnification dock, HUD panel with stats/notes, frosted glass page headers). Layout and theme saved to `localStorage`.
 
