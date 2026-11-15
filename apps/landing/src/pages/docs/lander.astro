@@ -30,6 +30,9 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <pre>const events = await fetch('https://redaktion.example.at/api/public/events').then(r =&gt; r.json());</pre>
 <p>At build time (SEO) query the same URL in the Astro frontmatter; at runtime the page is always current.</p>
 
+<h2>Backup and restore</h2>
+<p>Settings → Pod → <strong>Backup &amp; restore</strong> (admins only). Download the <strong>SQL file</strong> (<code>.pod</code>, small and fast) or a <strong>ZIP with media</strong>. <strong>Restore</strong> takes either one back: the server checks the file (SQLite, integrity, required tables, at least one admin), keeps a copy of the current pod in <code>data/before-restore-*.pod</code>, swaps it in, unpacks media (images and PDF only, real file type checked) and rewrites media paths for the new host. This is also how you move to another host. Limits: <code>max_restore_mb</code> and PHP's <code>upload_max_filesize</code> / <code>post_max_size</code>; put very large media folders on the new host via FTP. Backups contain password hashes, so keep them private.</p>
+
 <h2>Differences to Orbiter</h2>
 <table>
   <thead><tr><th></th><th>Orbiter</th><th>Lander</th></tr></thead>
