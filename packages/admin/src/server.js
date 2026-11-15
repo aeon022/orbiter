@@ -189,7 +189,8 @@ export function createApp(podPath) {
   app.use('/*', htmlHandler(join(ADMIN_ROOT, 'public')));
 
   // Serve static frontend files from public/
-  app.use('/*', serveStatic({ root: join(ADMIN_ROOT, 'public') }));
+  // no-cache = always revalidate (Last-Modified), so a package update shows up without a hard refresh
+  app.use('/*', serveStatic({ root: join(ADMIN_ROOT, 'public'), onFound: (_p, c) => { c.header('Cache-Control', 'no-cache'); } }));
 
   return app;
 }

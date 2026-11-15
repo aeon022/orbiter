@@ -54,8 +54,11 @@ window.orbEsc = function (s) {
   };
   window.orbApplyCustom();
 
-  var zoom = localStorage.getItem('orb_ui_zoom') || '100';
-  if (zoom !== '100') root.style.zoom = (parseInt(zoom) / 100);
+  window.orbApplyZoom = function () {
+    var z = localStorage.getItem('orb_ui_zoom') || '100';
+    root.style.zoom = z === '100' ? '' : (parseInt(z, 10) / 100);
+  };
+  window.orbApplyZoom();
 
   // Wire up toggle button once DOM is ready
   document.addEventListener('DOMContentLoaded', function () {

@@ -117,6 +117,8 @@
 
     /* Theme cards */
     .theme-cards { display: flex; gap: 10px; flex-wrap: wrap; }
+    .theme-cards.palette { display: grid; grid-template-columns: repeat(5, 1fr); }
+    @media (max-width: 640px) { .theme-cards.palette { grid-template-columns: repeat(2, 1fr); } }
     .theme-card {
       flex: 1; min-width: 110px;
       background: var(--bg0);
@@ -759,7 +761,7 @@
         </div>
         <div style="padding:10px 20px">
           <div class="setting-label" style="margin-bottom:8px">Palette</div>
-          <div class="theme-cards">
+          <div class="theme-cards palette">
             ${THEMES.map(t => `
             <button class="theme-card ${currentTheme===t.id?'active':''}" data-theme="${t.id}">
               <div class="theme-swatch">${t.sw.map(c => `<span style="background:${c}"></span>`).join('')}</div>
@@ -1236,7 +1238,7 @@
       });
     });
 
-    // UI Zoom — no live preview (causes layout jump), value shown, applied on next page load
+    // UI Zoom — applied when the slider is released (not while dragging, avoids layout jumps)
     const zoomSlider = document.getElementById('ui-zoom-slider');
     const zoomVal = document.getElementById('ui-zoom-val');
     if (zoomSlider) {
@@ -1245,13 +1247,14 @@
       });
       zoomSlider.addEventListener('change', () => {
         localStorage.setItem('orb_ui_zoom', zoomSlider.value);
-        zoomVal.textContent = zoomSlider.value + '% — applies on next page';
+        window.orbApplyZoom?.();
+        zoomVal.textContent = zoomSlider.value + '%';
       });
       document.getElementById('ui-zoom-reset')?.addEventListener('click', () => {
         zoomSlider.value = '100';
         zoomVal.textContent = '100%';
         localStorage.setItem('orb_ui_zoom', '100');
-        document.documentElement.style.zoom = '';
+        window.orbApplyZoom?.();
       });
     }
 
