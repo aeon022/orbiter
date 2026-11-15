@@ -8,7 +8,7 @@ import FooterSignature from '../components/FooterSignature.astro';
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Lander — Orbiter on PHP hosting</title>
-  <meta name="description" content="Lander runs the Orbiter admin on ordinary PHP hosting: PHP 8.1+ and SQLite, no Node. Same .pod, same Station interface, live API for your site." />
+  <meta name="description" content="Lander runs the Orbiter admin on ordinary PHP hosting: PHP 8.1+ and SQLite, no Node. Same SQL file (.pod), same Station interface, live API for your site." />
   <link rel="canonical" href="https://orbiter.sh/lander/" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <script src="/search.js" defer></script>
@@ -28,7 +28,7 @@ import FooterSignature from '../components/FooterSignature.astro';
     <section class="ld-hero">
       <span class="ld-badge">PHP 8.1+ · SQLite · MIT</span>
       <h1>Orbiter,<br /><span>on any web host.</span></h1>
-      <p class="ld-sub">Orbiter stays in orbit. <strong>Lander</strong> sets down on ordinary shared hosting: the same admin, the same <code>.pod</code> file, no Node and no build server.</p>
+      <p class="ld-sub">Orbiter stays in orbit. <strong>Lander</strong> sets down on ordinary shared hosting: the same admin, the same SQL file (<code>.pod</code>), no Node and no build server.</p>
       <div class="ld-cta">
         <a class="ld-btn" href="https://github.com/aeon022/lander" target="_blank" rel="noopener">Get Lander on GitHub</a>
         <a class="ld-btn ld-ghost" href="/docs/lander">Read the docs →</a>
@@ -40,11 +40,11 @@ import FooterSignature from '../components/FooterSignature.astro';
     </section>
 
     <section class="ld-sec">
-      <h2>One pod, two runtimes</h2>
-      <p class="ld-lead">Your content lives in a single <code>.pod</code> file. Run it on Node with Orbiter, or on PHP with Lander. Copy the file, and the site moves with it.</p>
+      <h2>One SQL file, two runtimes</h2>
+      <p class="ld-lead">Your content lives in a single SQL file (<code>.pod</code>). It is a plain SQLite database, <strong>only renamed</strong> to <code>.pod</code>: open it with any SQLite tool. Run it on Node with Orbiter or on PHP with Lander, and copy the file to move the whole site.</p>
       <div class="ld-flow">
         <div class="ld-node"><b>Orbiter</b><small>Node · Hono</small><em>VPS, local, desktop</em></div>
-        <div class="ld-pod"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6M4 11.5v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg><b>content.pod</b><small>the same file</small></div>
+        <div class="ld-pod"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6M4 11.5v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg><b>content.pod</b><small>SQL file · just renamed SQLite</small></div>
         <div class="ld-node ld-node-hl"><b>Lander</b><small>PHP · PDO SQLite</small><em>shared hosting</em></div>
       </div>
     </section>
@@ -69,7 +69,7 @@ import FooterSignature from '../components/FooterSignature.astro';
           <tbody>
             <tr><td>Runtime</td><td>Node (Hono)</td><td>PHP 8.1+ (PDO SQLite)</td></tr>
             <tr><td>Hosting</td><td>VPS, local, desktop app</td><td>Any PHP shared host</td></tr>
-            <tr><td>Media</td><td>In the pod or S3</td><td>Files in a folder</td></tr>
+            <tr><td>Media</td><td>In the SQL file or S3</td><td>Files in a folder</td></tr>
             <tr><td>Admin, editor, import, inbox</td><td class="y">✓</td><td class="y">✓</td></tr>
             <tr><td>2FA, review workflow, webhooks, analytics, form builder</td><td class="y">✓</td><td class="n">not yet</td></tr>
           </tbody>
