@@ -1,8 +1,40 @@
+      <div class="update-card" id="update-lander-0-3-1-one-click-update" data-date="2026-11-15" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
+        <div class="update-date">Nov<br />2026</div>
+        <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">lander@0.3.1 — Latest</div>
+          <div class="update-title">Lander: signed one-click update</div>
+          <ul class="update-items">
+            <li><strong>Update now</strong> — the Lander admin installs a newer release with one click, from the dashboard hint or Settings → Pod.</li>
+            <li><strong>Signed releases</strong> — every release ZIP carries an Ed25519 signature that Lander checks before it writes a file. A tampered download is refused and nothing changes.</li>
+            <li><strong>Rollback copy</strong> — the pod and the current code are saved to <code>data/update-rollback/</code> first. Config, <code>data/</code>, media and the subfolder paths stay as they are.</li>
+            <li>Needs the PHP <code>zip</code> and <code>sodium</code> extensions; otherwise the admin says why and you replace the files by hand. <code>update_check =&gt; false</code> switches it off. <a href="/docs/lander">Docs →</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="update-card" id="update-lander-0-3-0" data-date="2026-11-15" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
+        <div class="update-date">Nov<br />2026</div>
+        <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">lander@0.3.0</div>
+          <div class="update-title">Lander 0.3: users, installer, subfolders, backups, image sizes</div>
+          <ul class="update-items">
+            <li><strong>Installer</strong> — open <code>install.php</code> once; it detects a subfolder or domain root, writes the config, creates the first admin and deletes itself.</li>
+            <li><strong>Subfolder or subdomain</strong> — <code>example.at/lander/</code> works as well as <code>redaktion.example.at</code>.</li>
+            <li><strong>Users</strong> — admins add editors and admins, reset passwords and delete accounts.</li>
+            <li><strong>Backup and restore</strong> — weekly automatic backups, SQL file or ZIP with media, restore with validation.</li>
+            <li><strong>Image sizes</strong> — <code>?w</code>, <code>?ar</code> and <code>?fmt</code> variants with a cache; public <code>/api/public/media/&lt;id&gt;</code>.</li>
+            <li><strong>Inbox</strong> visible in the menu, a short public cache (10 s by default) and an update hint. <a href="/lander">Lander →</a></li>
+          </ul>
+        </div>
+      </div>
+
       <div class="update-card" id="update-automatic-backups-pod-size-stronger-passwords" data-date="2026-11-15" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
         <div class="update-date">Nov<br />2026</div>
         <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.96 · core@0.3.22 — Latest</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.96 · core@0.3.22</div>
           <div class="update-title">Automatic backups, pod size watch, media out of the pod, stronger password hashing</div>
           <ul class="update-items">
             <li><strong>Automatic backups</strong> — the pod is copied to a <code>backups/</code> folder every 7 days (keeps four), plus <em>Back up now</em>. Configurable with <code>ORBITER_BACKUP_DAYS</code>, <code>_KEEP</code>, <code>_DIR</code>. <a href="/docs/backup">Docs →</a></li>

@@ -17,7 +17,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
   <li><strong>Media as files</strong> in <code>public/media/</code> (JPG, PNG, WebP, GIF, AVIF, PDF; real file type checked, PHP execution blocked in that folder). Media fields are resolved to <code>&#123;id, url, alt, type&#125;</code>.</li>
   <li><strong>Inbox</strong> for form submissions (server-to-server with a <code>form_token</code>).</li>
   <li><strong>Users</strong> — admins add editors and admins in the admin (create, change role, reset password, delete).</li>
-  <li><strong>Install and update</strong> — an installer that detects subfolder or domain root, weekly automatic backups, image variants (<code>?w=800&amp;fmt=webp</code>), and a hint in the admin when a newer release exists.</li>
+  <li><strong>Install and update</strong> — an installer that detects subfolder or domain root, weekly automatic backups, image variants (<code>?w=800&amp;fmt=webp</code>), and a signed one-click update from the admin.</li>
 </ul>
 
 <h2>Install</h2>
@@ -34,6 +34,10 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 
 <h2>Backup and restore</h2>
 <p>Settings → Pod → <strong>Backup &amp; restore</strong> (admins only). Download the <strong>SQL file</strong> (<code>.pod</code>, small and fast) or a <strong>ZIP with media</strong>. <strong>Restore</strong> takes either one back: the server checks the file (SQLite, integrity, required tables, at least one admin), keeps a copy of the current pod in <code>data/before-restore-*.pod</code>, swaps it in, unpacks media (images and PDF only, real file type checked) and rewrites media paths for the new host. This is also how you move to another host. Limits: <code>max_restore_mb</code> and PHP's <code>upload_max_filesize</code> / <code>post_max_size</code>; put very large media folders on the new host via FTP. Backups contain password hashes, so keep them private.</p>
+
+<h2>Update</h2>
+<p>When a newer release exists, the dashboard and <strong>Settings → Pod</strong> show it with an <strong>Update now</strong> button. Lander downloads the release ZIP and its signature from GitHub and checks the Ed25519 signature against the public key built into the code. Only then does it replace <code>src/</code>, <code>bin/</code> and <code>public/</code>; the config, <code>data/</code>, media and the subfolder paths stay. A copy of the pod and the previous code is saved to <code>data/update-rollback/</code> first.</p>
+<p>It needs the PHP <code>zip</code> and <code>sodium</code> extensions and outgoing HTTPS. If something is missing, the admin tells you what, and you replace the files by hand: unzip the release over the install, keep <code>lander.config.php</code> and <code>data/</code>, and run <code>php bin/lander rebase &lt;base&gt;</code> in a subfolder. <code>update_check =&gt; false</code> turns the hint and the button off. Updating from 0.3.0 to 0.3.1 is manual (0.3.0 has no button); from there on it is one click.</p>
 
 <h2>Differences to Orbiter</h2>
 <table>

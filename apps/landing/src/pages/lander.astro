@@ -90,6 +90,16 @@ const events = await fetch('https://redaktion.example.at/api/public/events')
   .then(r =&gt; r.json());</pre>
     </section>
 
+    <section class="ld-sec">
+      <h2>Changelog</h2>
+      <ul class="ld-log">
+        <li><b>0.3.1</b> <em>Nov 2026</em> Signed one-click update from the admin, with a rollback copy.</li>
+        <li><b>0.3.0</b> <em>Nov 2026</em> Users, installer, subfolder install, backups, image sizes, inbox, 10 s cache, update hint.</li>
+        <li><b>0.2.0</b> <em>Nov 2026</em> Installer, subfolder support, automatic backups.</li>
+      </ul>
+      <p class="ld-lead"><a href="/changelog/">Full changelog →</a> · <a href="https://github.com/aeon022/lander/releases" target="_blank" rel="noopener">Releases on GitHub</a></p>
+    </section>
+
     <section class="ld-end">
       <h2>Ready to land?</h2>
       <p>Lander is MIT licensed and in use on a first live site. It is young: expect rough edges and a growing feature list.</p>
@@ -114,6 +124,9 @@ const events = await fetch('https://redaktion.example.at/api/public/events')
   .ld-links .sp-trigger { font: inherit; font-size: 12px; color: var(--muted); background: transparent; border: 1px solid var(--border-hi); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
   .ld { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px 40px; }
   .ld-hero { text-align: center; padding: 56px 0 24px; }
+  .ld-log { list-style: none; padding: 0; margin: 0 auto; max-width: 720px; text-align: left; }
+  .ld-log li { padding: 10px 0; border-bottom: 1px solid var(--border-hi); color: var(--muted); }
+  .ld-log b { color: var(--text); margin-right: 8px; } .ld-log em { font-style: normal; font-size: 12px; margin-right: 8px; opacity: .7; }
   .ld-badge { display: inline-block; font: 500 12px/1 'JetBrains Mono', ui-monospace, monospace; letter-spacing: .08em; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); background: color-mix(in srgb, var(--accent) 10%, transparent); border-radius: 999px; padding: 8px 14px; }
   .ld h1 { font-size: clamp(2.6rem, 7vw, 5rem); line-height: 1.05; letter-spacing: -.03em; margin: 22px 0 18px; color: #fff; }
   .ld h1 span { background: linear-gradient(100deg, #b4a9ff, #8b7cf8 40%, #5eead4); -webkit-background-clip: text; background-clip: text; color: transparent; }
