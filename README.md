@@ -10,6 +10,8 @@
 
 > Portable single-file CMS for Astro — everything in one `.pod` file.
 
+**[orbiter.sh](https://orbiter.sh)** · [Docs](https://orbiter.sh/docs) · **No Node on your host? → [Lander](https://github.com/aeon022/lander)**, the same admin on PHP hosting.
+
 Content, media, schema, config, users — all in one SQLite database. Copy the file and your entire site moves with it. No cloud. No API keys. No external services.
 
 ```
