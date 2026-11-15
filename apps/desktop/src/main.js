@@ -67,10 +67,12 @@ const TEMPLATE_IDS = ['blank', 'blog', 'portfolio', 'business', 'events', 'dossi
 
 async function seedPod(podPath, templateId) {
   const { createPod, hashPassword } = await import('@a83/orbiter-core');
-  const { randomUUID } = require('node:crypto');
+  const { randomUUID, randomBytes } = require('node:crypto');
 
   const db = createPod(podPath);
-  const pw = await hashPassword('admin');
+  // Zufälliges Startpasswort (statt «admin»): der Server lauscht zwar nur lokal, aber auf einem Rechner mit mehreren Konten soll nicht jeder hineinkommen.
+  const plainPw = randomBytes(9).toString('base64url');
+  const pw = await hashPassword(plainPw);
   db.insertUser(randomUUID(), 'admin', pw, 'admin');
 
   if (templateId === 'blog') {
@@ -270,6 +272,7 @@ async function seedPod(podPath, templateId) {
   // 'blank': nur Admin-User, keine Collections
 
   db.close();
+  return plainPw;
 }
 
 async function pickTemplateAndSeed(filePath) {
@@ -277,13 +280,18 @@ async function pickTemplateAndSeed(filePath) {
     type:      'question',
     title:     'Template wählen',
     message:   'Welches Template soll verwendet werden?',
-    detail:    `Datei: ${path.basename(filePath)}\n\nLogin nach dem Start: admin / admin\n(Passwort bitte danach ändern)`,
+    detail:    `Datei: ${path.basename(filePath)}\n\nDas Startpasswort für den Benutzer «admin» wird danach angezeigt.`,
     buttons:   ['Leer', 'Blog', 'Portfolio', 'Business', 'Events', 'Dossier', 'Abbrechen'],
     defaultId: 0,
     cancelId:  6,
   });
   if (response === 6) return false;
-  await seedPod(filePath, TEMPLATE_IDS[response]);
+  const startPw = await seedPod(filePath, TEMPLATE_IDS[response]);
+  await dialog.showMessageBox({
+    type: 'info', title: 'Zugangsdaten', message: 'Login für diesen POD',
+    detail: `Benutzer: admin\nPasswort: ${startPw}\n\nBitte notieren. Du kannst es nach dem Start unter «Account» ändern.`,
+    buttons: ['OK'],
+  });
   return true;
 }
 
