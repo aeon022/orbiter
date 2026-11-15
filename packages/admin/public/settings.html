@@ -1526,6 +1526,7 @@
       btn.addEventListener('click', () => {
         document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === btn.dataset.lang));
         localStorage.setItem('orb_lang', btn.dataset.lang);
+        location.reload();
       });
     });
 

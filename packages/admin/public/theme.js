@@ -96,3 +96,6 @@ window.orbEsc = function (s) {
     updateBtn();
   });
 })();
+
+// Admin language: German strings are loaded only when chosen (Settings → General → Admin language)
+try { if (localStorage.getItem('orb_lang') === 'de') document.write('<script src="/i18n-de.js"><\/script><script src="/i18n.js"><\/script>'); } catch (e) {}
