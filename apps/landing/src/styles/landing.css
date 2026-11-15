@@ -2837,3 +2837,6 @@ html.is-leaving body {
 @media (max-width: 700px) { .press-snippet { display: none; } }
 /* centred sections: the lead is a narrow box, so centre the box itself too */
 .coming-section .section-lead, .ai-setup-section .section-lead { margin-left: auto; margin-right: auto; max-width: 640px; }
+
+.lander-strip { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; max-width: 900px; margin: 8px auto 24px; padding: 12px 20px; border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); border-radius: 999px; font-size: 14px; color: var(--muted); text-align: center; }
+.lander-strip a { color: var(--accent); font-weight: 600; text-decoration: none; white-space: nowrap; }

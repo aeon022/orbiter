@@ -277,6 +277,7 @@ import Tour from '../components/Tour.astro';
       <a href="#faq"           data-section="faq">FAQ</a>
       <a href="/vision" class="nav-vision">Vision</a>
       <a href="/docs">Docs</a>
+      <a href="/lander">Lander</a>
       <div class="nav-divider" aria-hidden="true"></div>
       <button type="button" class="sp-trigger" data-search-open aria-label="Search the site (press /)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Search <kbd>/</kbd></button>
       <a href="#try" class="nav-try" data-section="try">Try in 60s →</a>
@@ -298,6 +299,7 @@ import Tour from '../components/Tour.astro';
     <a href="#faq">FAQ</a>
     <a href="/vision" class="nav-vision">Vision</a>
     <a href="/docs">Docs</a>
+    <a href="/lander">Lander</a>
     <a href="#try" class="mobile-menu-try">Try in 60 seconds →</a>
     <a href="https://github.com/aeon022/orbiter" class="mobile-menu-cta" target="_blank" rel="noopener">★ GitHub {ghStars > 0 ? `(${ghStars})` : ''}</a>
   </div>
@@ -381,6 +383,12 @@ import Tour from '../components/Tour.astro';
       <span class="metric-value">&lt; 2 min</span>
       <span class="metric-label">to first admin</span>
     </div>
+  </div>
+
+  <!-- LANDER TEASER -->
+  <div class="lander-strip">
+    <span><strong>No Node on your host?</strong> <em>Lander</em> runs the Orbiter admin on ordinary PHP hosting — first version, same <code>.pod</code>.</span>
+    <a href="/lander">Meet Lander →</a>
   </div>
 
   <!-- PRESS / AS SEEN ON -->
