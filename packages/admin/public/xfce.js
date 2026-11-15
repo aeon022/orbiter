@@ -1485,6 +1485,12 @@
 
           // Drawer groups
           if (navGroups) {
+            var drawerMax = 0, _hexSeq = 0;
+            Object.keys(navGroups).forEach(function (g) {
+              var n = (navGroups[g] || []).map(function (id) { return colById[id]; }).filter(Boolean)
+                .reduce(function (a, c) { return a + (c.total || 0) + (c.drafts || 0); }, 0);
+              if (n > drawerMax) drawerMax = n;
+            });
             Object.keys(navGroups).forEach(function (groupLabel) {
               var colIds = navGroups[groupLabel] || [];
               var grpCols = colIds.map(function (id) { return colById[id]; }).filter(Boolean);
@@ -1494,6 +1500,21 @@
                 return (page === 'entries' && activeCol === c.id) || (page === 'editor' && activeCol === c.id);
               });
               var drawerItem = makeDockItem('⬡', groupLabel, null, anyActive, true);
+              // Hexagon with a fill level (entries in this drawer relative to the fullest drawer);
+              // the outline turns a full 60° step on hover (CSS), the fill stays level.
+              var gCount = grpCols.reduce(function (n, c) { return n + (c.total || 0) + (c.drafts || 0); }, 0);
+              var gLevel = gCount > 0 ? Math.max(0.2, gCount / (drawerMax || 1)) : 0;
+              var gId = 'dhx' + (++_hexSeq);
+              var gHex = 'M12 2.5 20.2 7.25v9.5L12 21.5 3.8 16.75v-9.5z';
+              drawerItem.querySelector('.xfce-dock-icon').innerHTML =
+                '<svg class="xfce-hex" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><g class="xfce-hex-spin">' +
+                '<clipPath id="' + gId + '"><path d="' + gHex + '"/></clipPath>' +
+                '<g clip-path="url(#' + gId + ')"><g class="xfce-hex-counter"><rect class="xfce-hex-fill" x="-6" y="0" width="36" height="32" style="transform:translateY(24px)" data-y="' + Math.round((1 - gLevel) * 24) + '"/></g></g>' +
+                '<path class="xfce-hex-line" d="' + gHex + '"/></g></svg>';
+              drawerItem.title = groupLabel + ' · ' + gCount + (gCount === 1 ? ' entry' : ' entries');
+              requestAnimationFrame(function () { requestAnimationFrame(function () {
+                var r = drawerItem.querySelector('.xfce-hex-fill'); if (r) r.style.transform = 'translateY(' + r.dataset.y + 'px)';
+              }); });
               // inherits base .xfce-dock-icon sizing (20px, opacity .82)
               colGroup.appendChild(drawerItem);
 

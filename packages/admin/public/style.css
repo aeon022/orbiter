@@ -2738,19 +2738,20 @@ a.xfce-sb-logo:hover     { opacity: .8; }
   padding: 0 3px; pointer-events: none; line-height: 1;
 }
 .xfce-dock-item { position: relative; }
-.xfce-dock-col-group::after {
-  content: '▲'; position: absolute; top: 8px; right: 8px;
-  font-size: 6px; color: var(--muted); line-height: 1;
-  opacity: .5; pointer-events: none;
-  transition: top .25s ease, right .25s ease, opacity .15s;
+/* Drawer button: hexagon with fill level; outline turns one 60° step on hover, fill stays level */
+.xfce-hex { display: block; overflow: visible; }
+.xfce-hex-line { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
+.xfce-hex-fill { fill: var(--accent); opacity: .8; transition: transform .7s cubic-bezier(.22,1,.36,1); }
+.xfce-hex-spin, .xfce-hex-counter {
+  transform-origin: 12px 12px; transform-box: view-box;
+  transition: transform .45s cubic-bezier(.34,1.4,.64,1);
 }
-.xfce-dock-col-group:hover::after {
-  top: 0px; right: calc(50% - 3px);
-  opacity: 1; color: var(--accent);
-  animation: drawer-pulse .9s ease-in-out infinite alternate;
+.xfce-dock-col-group:hover .xfce-hex-spin { transform: rotate(60deg); }
+.xfce-dock-col-group:hover .xfce-hex-counter { transform: rotate(-60deg); }
+.xfce-dock-col-group:hover .xfce-hex-fill { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .xfce-hex-spin, .xfce-hex-counter, .xfce-hex-fill { transition: none; }
 }
-.xfce-dock-col-group.active::after { color: var(--accent); opacity: .7; }
-@keyframes drawer-pulse { from { opacity: .65; transform: translateY(0); } to { opacity: 1; transform: translateY(-1px); } }
 
 /* Hover preview card above collection dock items */
 .xfce-col-preview {
