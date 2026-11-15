@@ -38,6 +38,7 @@ import { publishRoutes }  from './routes/publish.js';
 import { qualityRoutes }       from './routes/quality.js';
 import { schemaMigrateRoutes } from './routes/schema_migrate.js';
 import { podRoutes }           from './routes/pods.js';
+import { backupRoutes } from './routes/backup.js';
 import { apiKeyRoutes }        from './routes/api-keys.js';
 import { securityRoutes }      from './routes/security.js';
 import { webhookRoutes }       from './routes/webhooks.js';
@@ -132,7 +133,7 @@ export function createApp(podPath) {
   const bigMax = (parseInt(process.env.ORBITER_MAX_UPLOAD_MB ?? '100', 10) || 100) * MB;
   const limitBig = bodyLimit({ maxSize: bigMax, onError: tooBig });
   const limitSmall = bodyLimit({ maxSize: 5 * MB, onError: tooBig });
-  api.use('*', (c, next) => (/^\/api\/(media|import|templates|pods)(\/|$)/.test(c.req.path) ? limitBig : limitSmall)(c, next));
+  api.use('*', (c, next) => (/^\/api\/(media|import|templates|pods|backup)(\/|$)/.test(c.req.path) ? limitBig : limitSmall)(c, next));
   api.use('*', csrfMiddleware(ALLOWED_ORIGINS));
   api.use('*', requireAuth);
   api.route('/collections',  collectionRoutes);
@@ -159,6 +160,7 @@ export function createApp(podPath) {
   api.route('/quality',      qualityRoutes);
   api.route('/collections',  schemaMigrateRoutes);
   api.route('/pods',         podRoutes);
+  api.route('/backup',       backupRoutes);
   api.route('/api-keys',     apiKeyRoutes);
   api.route('/security-check', securityRoutes);
   api.route('/webhooks',     webhookRoutes);

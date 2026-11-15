@@ -1012,6 +1012,16 @@
             <button type="button" class="btn btn-ghost btn-sm" id="nav-save-btn">Save nav</button>
           </div>
         </div>
+        <div id="backup-box" style="padding:12px 20px;border-top:1px solid var(--line)">
+          <div class="pod-stat-label" style="margin-bottom:8px">Backup &amp; restore <span id="backup-size" style="text-transform:none;letter-spacing:0;color:var(--muted)"></span></div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">The SQL file (<code>.pod</code>) holds all content, media (unless on S3), users and settings. Keep backups private: they contain password hashes and saved credentials. Use this to back up or move the site to another server.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <a class="btn btn-ghost btn-sm" id="backup-sql" href="/api/backup" download>⬇ Download SQL file (.pod)</a>
+            <button type="button" class="btn btn-ghost btn-sm" id="restore-btn">⬆ Restore…</button>
+            <input type="file" id="restore-file" accept=".pod,.sqlite,.db" hidden />
+          </div>
+          <div id="restore-msg" role="status" style="font-size:12px;margin-top:10px;display:none;line-height:1.5"></div>
+        </div>
       </div>
 
       <div class="save-row">
@@ -1028,6 +1038,32 @@
       </div>
     `;
     enhanceSettingsLayout(wrap);
+
+    // Backup: show the pod size; restore = upload a .pod, the server validates it and keeps the current pod.
+    (function () {
+      const btn = document.getElementById('restore-btn'), inp = document.getElementById('restore-file'), msg = document.getElementById('restore-msg');
+      if (!btn || !inp) return;
+      fetch('/api/pods', { credentials: 'include' }).then(r => r.json()).then(p => {
+        const cur = Array.isArray(p) && p.find(x => x.current); const el = document.getElementById('backup-size');
+        if (cur && el) el.textContent = '· current file: ' + (cur.fileSize / 1048576).toFixed(1) + ' MB';
+      }).catch(() => {});
+      const say = (t, ok) => { msg.style.display = ''; msg.style.color = ok ? 'var(--green, #4ade80)' : 'var(--red, #f87171)'; msg.textContent = t; };
+      btn.addEventListener('click', () => inp.click());
+      inp.addEventListener('change', async () => {
+        const f = inp.files[0]; inp.value = '';
+        if (!f) return;
+        if (!confirm('Restore "' + f.name + '"?\n\nThis replaces ALL content, media, users and settings with the backup. A copy of the current pod is kept next to it (…before-restore-…). You will be signed out.')) return;
+        const fd = new FormData(); fd.append('file', f);
+        btn.disabled = true; say('Restoring…', true);
+        try {
+          const r = await fetch('/api/backup/restore', { method: 'POST', body: fd, credentials: 'include' });
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok || !j.ok) { say(j.error || 'Restore failed (' + r.status + ')', false); btn.disabled = false; return; }
+          say('Restored: ' + j.entries + ' entries. ' + (j.warnings || []).join(' ') + ' Signing out…', true);
+          setTimeout(() => { location.href = '/login.html'; }, (j.warnings || []).length ? 6000 : 2500);
+        } catch (e) { say('Restore failed: ' + e.message, false); btn.disabled = false; }
+      });
+    })();
 
     // Media backend: show/hide conditional fields
     function updateMediaFields() {
