@@ -12,6 +12,26 @@
   <style>
     .settings-wrap { max-width:1100px; padding-bottom:24px; }
 
+
+    /* Sections + masonry columns + collapsible cards (built by enhanceSettingsLayout) */
+    .set-nav { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:0 0 14px; position:sticky; top:64px; z-index:40; padding:6px 0; }
+    .set-nav button { font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); background:var(--bg2); border:1px solid var(--line); border-radius:999px; padding:5px 12px; cursor:pointer; transition:color .15s, border-color .15s; }
+    .set-nav button:hover, .set-nav button.on { color:var(--accent); border-color:var(--accent); }
+    .set-nav .set-nav-all { margin-left:auto; border-style:dashed; }
+    .set-sec { margin-bottom:22px; scroll-margin-top:120px; }
+    .set-sec-title { font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); margin:0 2px 8px; font-weight:500; }
+    .set-cols > .settings-group.wide, .set-cols > .set-seg { margin-bottom:8px; }
+    .set-seg { display:flex; gap:8px; align-items:flex-start; }
+    .set-col { flex:1; min-width:0; display:flex; flex-direction:column; gap:8px; }
+    @media (max-width: 860px) { .set-seg { flex-direction:column; } .set-col { width:100%; } }
+    .settings-group.collapsible > .group-header { cursor:pointer; user-select:none; }
+    .settings-group.collapsible > .group-header::after { content:'▾'; margin-left:auto; font-size:11px; color:var(--muted); transition:transform .2s; }
+    .settings-group.collapsible > .group-header:hover { color:var(--heading); }
+    .settings-group.collapsible.collapsed > .group-header { border-bottom-color:transparent; }
+    .settings-group.collapsible.collapsed > .group-header::after { transform:rotate(-90deg); }
+    .settings-group.collapsible.collapsed > :not(.group-header) { display:none !important; }
+    .settings-group.collapsible > .group-header:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
+
     /* Two-column grid for settings groups */
     .settings-grid {
       display: grid;
@@ -335,6 +355,93 @@
     const CC = (() => { try { return JSON.parse(localStorage.getItem('orb_custom') || '{}'); } catch { return {}; } })();
     const currentScheme = localStorage.getItem('orb_scheme') || 'auto';
     const currentStyle  = localStorage.getItem('orb_style')  || 'xfce'; // same default as theme.js
+
+
+    // Sections, balanced columns, collapsible cards, jump bar. The DOM above stays as is; this only regroups it.
+    function enhanceSettingsLayout(root) {
+      const form = root.querySelector('#site-form');
+      // controls inside the form keep submitting with it after their cards move out
+      if (form) form.querySelectorAll('input,select,textarea,button').forEach(el => { if (!el.hasAttribute('form')) el.setAttribute('form', 'site-form'); });
+      const SECTIONS = [
+        ['you',      'You',        ['Appearance', 'Account']],
+        ['general',  'General',    ['Site', 'Dashboard widgets', 'Build & Language', 'AI Assistant', 'Email notifications']],
+        ['content',  'Content',    ['Media', 'Preview URLs', 'Import', 'Templates']],
+        ['publish',  'Publishing', ['GitHub', 'GitHub Sync', 'Public API', 'FTP / FTPS Deploy']],
+        ['system',   'System',     ['Pod']],
+      ];
+      const OPEN = new Set(['Appearance', 'Account', 'Site', 'Dashboard widgets', 'Build & Language']);
+      const WIDE = new Set(['Appearance', 'Account', 'Pod', 'Import', 'Templates', 'FTP / FTPS Deploy']);
+      let saved = {}; try { saved = JSON.parse(localStorage.getItem('orb_set_open') || '{}'); } catch {}
+      const titleOf = g => { const h = g.querySelector(':scope > .group-header'); return h ? h.textContent.replace(/^Account\s*—.*/, 'Account').trim() : ''; };
+      const groups = [...root.querySelectorAll('.settings-group')].filter(g => g.querySelector(':scope > .group-header'));
+      const byTitle = new Map(groups.map(g => [titleOf(g), g]));
+      const nav = document.createElement('nav'); nav.className = 'set-nav'; nav.setAttribute('aria-label', 'Settings sections');
+      const frag = document.createDocumentFragment();
+      const siteBanner = root.querySelector('#site-banner'); if (siteBanner) frag.appendChild(siteBanner);
+      frag.appendChild(nav);
+      if (form) { form.hidden = true; frag.appendChild(form); }
+      const used = new Set();
+      const mk = (id, label, titles) => {
+        const items = titles.map(t => byTitle.get(t)).filter(Boolean);
+        if (!items.length) return;
+        const sec = document.createElement('section'); sec.className = 'set-sec'; sec.id = 'sec-' + id;
+        sec.innerHTML = '<h2 class="set-sec-title">' + label + '</h2><div class="set-cols"></div>';
+        const cols = sec.querySelector('.set-cols');
+        let seg = null;
+        items.forEach(g => {
+          used.add(g);
+          // conditional status banners belong to their card
+          const b = root.querySelector({ 'GitHub Sync': '#github-banner', 'Account': '#account-banner' }[titleOf(g)] || '#none');
+          const t = titleOf(g); const wide = WIDE.has(t); g.classList.toggle('wide', wide);
+          const h = g.querySelector(':scope > .group-header');
+          if (b) h.after(b);
+          g.classList.add('collapsible'); g.dataset.t = t;
+          const open = t in saved ? !!saved[t] : OPEN.has(t);
+          g.classList.toggle('collapsed', !open);
+          h.tabIndex = 0; h.setAttribute('role', 'button'); h.setAttribute('aria-expanded', String(open));
+          const toggle = () => { const c = g.classList.toggle('collapsed'); h.setAttribute('aria-expanded', String(!c)); saved[t] = !c; try { localStorage.setItem('orb_set_open', JSON.stringify(saved)); } catch {} balanceAll(); };
+          h.addEventListener('click', toggle);
+          h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+          if (wide) { seg = null; cols.appendChild(g); return; }
+          if (!seg) { seg = document.createElement('div'); seg.className = 'set-seg'; seg._cards = []; seg.innerHTML = '<div class="set-col"></div><div class="set-col"></div>'; cols.appendChild(seg); }
+          seg._cards.push(g); seg.firstChild.appendChild(g);
+        });
+        const btn = document.createElement('button'); btn.type = 'button'; btn.textContent = label; btn.dataset.sec = id;
+        btn.addEventListener('click', () => sec.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+        nav.appendChild(btn); frag.appendChild(sec);
+      };
+      // two columns, each card goes to the currently shorter one (measured), re-run on toggle/resize
+      const balanceAll = () => {
+        const narrow = window.matchMedia('(max-width: 860px)').matches;
+        root.querySelectorAll('.set-seg').forEach(seg => {
+          const [a, bb] = seg.children; const cards = seg._cards;
+          cards.forEach(c => a.appendChild(c));
+          if (narrow) return;
+          const hs = cards.map(c => c.offsetHeight); let ha = 0, hb = 0;
+          cards.forEach((c, i) => { if (ha <= hb) { ha += hs[i] + 8; } else { hb += hs[i] + 8; bb.appendChild(c); } });
+        });
+      };
+      let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(balanceAll, 150); });
+      window.addEventListener('load', balanceAll);
+      SECTIONS.forEach(([id, label, titles]) => mk(id, label, titles));
+      // anything unknown (future cards) goes into a trailing section
+      const rest = groups.filter(g => !used.has(g));
+      if (rest.length) { rest.forEach(g => byTitle.set('~' + titleOf(g), g)); mk('more', 'More', rest.map(g => '~' + titleOf(g))); }
+      const all = document.createElement('button'); all.type = 'button'; all.className = 'set-nav-all'; all.textContent = 'Expand all';
+      all.addEventListener('click', () => {
+        const gs = [...root.querySelectorAll('.settings-group.collapsible')];
+        const open = gs.some(g => g.classList.contains('collapsed'));
+        gs.forEach(g => { g.classList.toggle('collapsed', !open); g.querySelector(':scope > .group-header').setAttribute('aria-expanded', String(open)); saved[g.dataset.t] = open; });
+        try { localStorage.setItem('orb_set_open', JSON.stringify(saved)); } catch {}
+        all.textContent = open ? 'Collapse all' : 'Expand all'; balanceAll();
+      });
+      nav.appendChild(all);
+      // keep everything else (site banner, save row, support widget) in order after the sections
+      const keep = [...root.children].filter(el => !el.classList.contains('set-sec') && el !== form);
+      root.innerHTML = ''; root.appendChild(frag);
+      keep.forEach(el => { if (el.classList.contains('save-row') || el.classList.contains('support-widget') || el.classList.contains('banner')) root.appendChild(el); });
+      balanceAll();
+    }
 
     const wrap = document.getElementById('settings-content');
     wrap.innerHTML = `
@@ -920,6 +1027,7 @@
         <a href="https://polar.sh/a83" class="btn-support" target="_blank" rel="noopener">Support on Polar →</a>
       </div>
     `;
+    enhanceSettingsLayout(wrap);
 
     // Media backend: show/hide conditional fields
     function updateMediaFields() {
