@@ -1854,6 +1854,16 @@
       autosaveTimer = setTimeout(()=>{ setIndicator('saving'); saveEntry(document.getElementById('status-select')?.value??'draft', true); }, 2000);
     }
 
+    // Plain fields (text, dates, switches, selects) autosave like the title and the body do
+    ['input', 'change'].forEach(function (ev) {
+      document.addEventListener(ev, function (e) {
+        var t = e.target;
+        if (!t || !t.name || !t.closest || !t.closest('#fields-card-body, #fields-source, .main-fields')) return;
+        if (ev === 'input' && (t.type === 'checkbox' || t.type === 'radio' || t.tagName === 'SELECT')) return; // these fire 'change' too
+        scheduleAutosave();
+      });
+    });
+
     window.titleInput = function(el) { orbH.grow(el); window.onTitleInput(); };
     window.onTitleInput = function() {
       const slugInput = document.getElementById('slug-input');
