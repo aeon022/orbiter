@@ -1,3 +1,16 @@
+      <div class="update-card" id="update-lander-webhooks" data-date="2026-11-16" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
+        <div class="update-date">Nov<br />2026</div>
+        <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">lander@0.4.0 — Latest</div>
+          <div class="update-title">Lander: webhooks and build trigger</div>
+          <ul class="update-items">
+            <li><strong>Rebuild on publish</strong> — a build webhook (Settings → Build) is called whenever an entry is published, so a static Astro site on Netlify, Vercel or GitHub Actions rebuilds itself.</li>
+            <li><strong>Signed webhooks</strong> — publish and delete events with an HMAC-SHA256 signature, a log of the last 50 deliveries and a test button. Same contract as Orbiter. <a href="/docs/lander">Docs →</a></li>
+          </ul>
+        </div>
+      </div>
+
       <div class="update-card" id="update-lander-2fa" data-date="2026-11-16" style="border-color:color-mix(in srgb,var(--red) 50%,var(--line))">
         <div class="update-date">Nov<br />2026</div>
         <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
@@ -15,7 +28,7 @@
         <div class="update-date">Nov<br />2026</div>
         <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.98 — Latest</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.98</div>
           <div class="update-title">Security: strict Content-Security-Policy enforced</div>
           <ul class="update-items">
             <li><strong>Scripts need a nonce</strong> — the admin now blocks every script that is not part of its own pages. An injected <code>&lt;script&gt;</code> or <code>onerror=</code> handler in content cannot run, even if it slipped past escaping.</li>

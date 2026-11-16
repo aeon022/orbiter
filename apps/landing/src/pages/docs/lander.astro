@@ -35,6 +35,9 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <h2>Backup and restore</h2>
 <p>Settings → Pod → <strong>Backup &amp; restore</strong> (admins only). Download the <strong>SQL file</strong> (<code>.pod</code>, small and fast) or a <strong>ZIP with media</strong>. <strong>Restore</strong> takes either one back: the server checks the file (SQLite, integrity, required tables, at least one admin), keeps a copy of the current pod in <code>data/before-restore-*.pod</code>, swaps it in, unpacks media (images and PDF only, real file type checked) and rewrites media paths for the new host. This is also how you move to another host. Limits: <code>max_restore_mb</code> and PHP's <code>upload_max_filesize</code> / <code>post_max_size</code>; put very large media folders on the new host via FTP. Backups contain password hashes, so keep them private.</p>
 
+<h2>Rebuild on publish</h2>
+<p>Under <strong>Settings → Build</strong>, enter a build webhook (Netlify, Vercel, GitHub Actions …). Lander calls it with a POST whenever an entry is published. Under <strong>Settings → Webhooks</strong> you can add signed hooks for publish and delete events: the body is JSON, the header <code>X-Orbiter-Signature: sha256=…</code> is the HMAC-SHA256 of <code>timestamp.body</code> with the hook's secret (shown once). The last 50 deliveries are logged. Each hook gets one attempt; there is no retry queue.</p>
+
 <h2>Update</h2>
 <p>When a newer release exists, the dashboard and <strong>Settings → Pod</strong> show it with an <strong>Update now</strong> button. Lander downloads the release ZIP and its signature from GitHub and checks the Ed25519 signature against the public key built into the code. Only then does it replace <code>src/</code>, <code>bin/</code> and <code>public/</code>; the config, <code>data/</code>, media and the subfolder paths stay. A copy of the pod and the previous code is saved to <code>data/update-rollback/</code> first.</p>
 <p>It needs the PHP <code>zip</code> and <code>sodium</code> extensions and outgoing HTTPS. If something is missing, the admin tells you what, and you replace the files by hand: unzip the release over the install, keep <code>lander.config.php</code> and <code>data/</code>, and run <code>php bin/lander rebase &lt;base&gt;</code> in a subfolder. <code>update_check =&gt; false</code> turns the hint and the button off. Updating from 0.3.0 to 0.3.1 is manual (0.3.0 has no button); from there on it is one click.</p>
@@ -46,7 +49,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
     <tr><td>Runtime</td><td>Node (Hono)</td><td>PHP 8.1+ (PDO SQLite)</td></tr>
     <tr><td>Media</td><td>BLOB in the SQL file or S3</td><td>Files in a folder</td></tr>
     <tr><td>Sections</td><td>all</td><td>Dashboard, collections, entries, editor, media, import, settings, account</td></tr>
-    <tr><td>Reviewer role, per-collection limits, review workflow, webhooks, analytics, form builder</td><td>yes</td><td>not yet</td></tr>
+    <tr><td>Reviewer role, per-collection limits, review workflow, analytics, form builder</td><td>yes</td><td>not yet</td></tr>
   </tbody>
 </table>
 
