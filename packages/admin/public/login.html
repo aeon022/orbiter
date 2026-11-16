@@ -53,7 +53,7 @@
     window.digiidLogin = function () {
       var box = document.getElementById('digiid-box'), msg = document.getElementById('digiid-msg');
       msg.textContent = 'Starting…';
-      fetch('/api/digiid/challenge', { method: 'POST', credentials: 'include' }).then(function (r) { return r.json(); }).then(function (ch) {
+      fetch('/api/digiid/challenge', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }).then(function (ch) {
         if (!ch.uri) { msg.textContent = ch.error || 'Digi-ID is not available.'; return; }
         msg.textContent = 'Scan with a Digi-ID wallet (DigiByte Go, Digi-ID app).';
         orbDigiid.show(box, ch, function (st) {
