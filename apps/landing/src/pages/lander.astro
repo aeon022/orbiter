@@ -70,8 +70,8 @@ import FooterSignature from '../components/FooterSignature.astro';
             <tr><td>Runtime</td><td>Node (Hono)</td><td>PHP 8.1+ (PDO SQLite)</td></tr>
             <tr><td>Hosting</td><td>VPS, local, desktop app</td><td>Any PHP shared host</td></tr>
             <tr><td>Media</td><td>In the SQL file or S3</td><td>Files in a folder</td></tr>
-            <tr><td>Admin, editor, import, inbox</td><td class="y">✓</td><td class="y">✓</td></tr>
-            <tr><td>2FA, reviewer role, review workflow, webhooks, analytics, form builder</td><td class="y">✓</td><td class="n">not yet</td></tr>
+            <tr><td>Admin, editor, import, inbox, users, backup, 2FA</td><td class="y">✓</td><td class="y">✓</td></tr>
+            <tr><td>Reviewer role, review workflow, webhooks, analytics, form builder</td><td class="y">✓</td><td class="n">not yet</td></tr>
           </tbody>
         </table>
       </div>
@@ -93,6 +93,7 @@ const events = await fetch('https://redaktion.example.at/api/public/events')
     <section class="ld-sec">
       <h2>Changelog</h2>
       <ul class="ld-log">
+        <li><b>0.3.3</b> <em>Nov 2026</em> Two-factor sign-in (TOTP) with recovery codes.</li>
         <li><b>0.3.2</b> <em>Nov 2026</em> German admin interface (Settings → Admin language).</li>
         <li><b>0.3.1</b> <em>Nov 2026</em> Signed one-click update from the admin, with a rollback copy.</li>
         <li><b>0.3.0</b> <em>Nov 2026</em> Users, installer, subfolder install, backups, image sizes, inbox, 10 s cache, update hint.</li>
