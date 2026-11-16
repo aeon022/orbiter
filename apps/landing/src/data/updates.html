@@ -1,8 +1,22 @@
+      <div class="update-card" id="update-lander-csp" data-date="2026-11-16" style="border-color:color-mix(in srgb,var(--red) 50%,var(--line))">
+        <div class="update-date">Nov<br />2026</div>
+        <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">lander@0.6.0 — Latest</div>
+          <div class="update-title">Lander: strict Content-Security-Policy for the admin</div>
+          <ul class="update-items">
+            <li><strong>Nonce on every script</strong> — the admin pages are served through PHP with a one-time nonce and a strict policy. An injected <code>&lt;script&gt;</code> or <code>onerror=</code> handler cannot run, the same protection Orbiter got in 0.3.98.</li>
+            <li><strong>No inline handlers</strong> — all 81 <code>onclick</code>-style handlers moved to <code>data-on-click</code>. Behaviour is unchanged. Works at the domain root and in a subfolder, in English and German.</li>
+            <li><strong>Earlier today (0.5.6):</strong> the pod and its backups are written owner-only (600). If a page looks odd after updating, hard-reload once. <a href="/docs/lander">Docs →</a></li>
+          </ul>
+        </div>
+      </div>
+
       <div class="update-card" id="update-desktop-0-2-3" data-date="2026-11-16" style="border-color:color-mix(in srgb,var(--red) 50%,var(--line))">
         <div class="update-date">Nov<br />2026</div>
         <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">desktop@0.2.3 — Latest</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">desktop@0.2.3</div>
           <div class="update-title">Desktop app: no more admin / admin</div>
           <ul class="update-items">
             <li><strong>Random start password</strong> — a new pod no longer gets <code>admin / admin</code>. The app creates a random password and shows it once after creating the pod.</li>
