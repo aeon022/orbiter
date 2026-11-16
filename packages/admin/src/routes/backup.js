@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import { createReadStream, existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync, writeFileSync, openSync, readSync, closeSync } from 'node:fs';
+import { chmodSync, createReadStream, existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync, writeFileSync, openSync, readSync, closeSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { Readable } from 'node:stream';
 import { dirname, basename, join } from 'node:path';
@@ -24,6 +24,8 @@ function snapshot(podPath, dest) {
   try { src.pragma('wal_checkpoint(PASSIVE)'); src.exec(`VACUUM INTO '${dest.replace(/'/g, "''")}'`); } finally { src.close(); }
   const c = new Database(dest);
   try { c.exec('DELETE FROM _sessions'); } finally { c.close(); }
+  // a backup holds password hashes and saved credentials: owner only (it often lies inside a folder the web server serves)
+  try { chmodSync(dest, 0o600); } catch { /* not supported (Windows) */ }
 }
 
 // GET /api/backup — download the pod (a plain SQLite file) as content-<date>.pod
@@ -69,7 +71,8 @@ export function runBackup(podPath, { force = false, kind = 'auto' } = {}) {
   const base = basename(podPath).replace(/\.pod$/, '');
   const mine = listBackups(podPath).filter(f => f.name.startsWith(`${base}-${kind}-`));
   if (!force && mine[0] && Date.now() - Date.parse(mine[0].mtime) < days * 86400e3) return null;
-  mkdirSync(dir, { recursive: true });
+  mkdirSync(dir, { recursive: true, mode: 0o700 });
+  try { chmodSync(dir, 0o700); } catch { /* ignore */ }
   const name = `${base}-${kind}-${stampNow()}.pod`;
   snapshot(podPath, join(dir, name));
   for (const old of mine.slice(Math.max(0, envInt('ORBITER_BACKUP_KEEP', 4) - 1))) rmSync(join(dir, old.name), { force: true });

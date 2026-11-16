@@ -20,6 +20,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
     <tr><td><code>ORBITER_POD_WARN_MB</code></td><td>60</td><td>Size above which the dashboard and the card warn</td></tr>
   </tbody>
 </table>
+<p><strong>Keep the backup folder private.</strong> A backup holds password hashes and saved settings. Since admin 0.3.105 the files are written with mode <code>600</code> in a <code>700</code> folder. Still prefer a folder outside any directory your web server serves (<code>ORBITER_BACKUP_DIR</code>), and check that <code>https://your-host/backups/</code> does not answer. Older versions wrote the files world-readable.</p>
 <p>With automatic backups off, the dashboard reminds you when the last backup is older than two weeks. A copy on the same disk protects against mistakes, not against losing the server: download one now and then.</p>
 
 <h2>Keeping the pod small</h2>

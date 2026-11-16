@@ -1,8 +1,22 @@
+      <div class="update-card" id="update-private-backups" data-date="2026-11-16" style="border-color:color-mix(in srgb,var(--red) 50%,var(--line))">
+        <div class="update-date">Nov<br />2026</div>
+        <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.105 · lander@0.5.6 — Latest</div>
+          <div class="update-title">Security: backups are owner-only</div>
+          <ul class="update-items">
+            <li><strong>Automatic backups were world-readable.</strong> Since 0.3.96 (Orbiter) the automatic backup landed in a <code>backups/</code> folder next to the pod with default permissions (644). If that folder lies inside a directory the web server serves, the backup (password hashes, saved settings) could be downloaded by anyone who guessed the file name. Backups are now written with mode 600 in a 700 folder.</li>
+            <li><strong>What to do:</strong> update, then check that <code>https://your-host/backups/</code> and old <code>*.pod</code> files are not reachable, and delete old backups from a served folder. If one was exposed, change the user passwords and any SMTP, API or FTP secrets stored in the pod. Set <code>ORBITER_BACKUP_DIR</code> to a folder outside the web root for good measure.</li>
+            <li><strong>Lander</strong> also writes the pod and its backups owner-only (600), so a host that ignores <code>data/.htaccess</code> does not expose them. Lander's <code>data/.htaccess</code> already blocked the folder on Apache.</li>
+          </ul>
+        </div>
+      </div>
+
       <div class="update-card" id="update-autosave-fields" data-date="2026-11-16" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
         <div class="update-date">Nov<br />2026</div>
         <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.103 · lander@0.5.5 — Latest</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.103 · lander@0.5.5</div>
           <div class="update-title">Autosave for every field</div>
           <ul class="update-items">
             <li>The editor already saved the title and the text two seconds after typing. Now <strong>all other fields</strong> (text fields, dates, switches, dropdowns) autosave the same way, so a notice or a short entry no longer needs a manual save.</li>
