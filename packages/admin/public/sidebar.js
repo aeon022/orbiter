@@ -119,6 +119,7 @@
         if (!assetsSection) return;
 
         var collections = info.collections || [];
+        (function () { var o = (info.nav && info.nav.order) || []; if (o.length) collections = collections.map(function (c, i) { return [c, i]; }).sort(function (a, b) { var x = o.indexOf(a[0].id), y = o.indexOf(b[0].id); return (x < 0 ? 1e6 : x) - (y < 0 ? 1e6 : y) || a[1] - b[1]; }).map(function (z) { return z[0]; }); })();
         var navHidden = new Set((info.nav && info.nav.hidden) || []);
         var navGroups = (info.nav && info.nav.groups) || null;
 

@@ -17,8 +17,10 @@
     return out ? m[1] + out + m[3] : s;
   }
   function skip(el) { return !el || SKIP.test(el.tagName) || el.isContentEditable || (el.closest && el.closest('.ProseMirror,[contenteditable="true"],[data-no-i18n]')); }
+  // the dock has little room: its labels use the shorter ORB_DE_DOCK words where one exists
+  function trDock(s) { var k = s.trim().replace(/\s+/g, ' '), d = (window.ORB_DE_DOCK || {})[k]; return d ? s.replace(k, d) : tr(s); }
   function node(n) {
-    if (n.nodeType === 3) { var p = n.parentElement; if (p && !skip(p)) { var v = tr(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; } return; }
+    if (n.nodeType === 3) { var p = n.parentElement; if (p && !skip(p)) { var v = p.closest('.xfce-dock-lbl') ? trDock(n.nodeValue) : tr(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; } return; }
     if (n.nodeType !== 1 || skip(n)) return;
     ['placeholder', 'title', 'aria-label', 'data-tip'].forEach(function (a) { var v = n.getAttribute && n.getAttribute(a); if (v) { var t = tr(v); if (t !== v) n.setAttribute(a, t); } });
     if (n.tagName === 'INPUT' && /^(button|submit)$/.test(n.type)) { var t2 = tr(n.value); if (t2 !== n.value) n.value = t2; }

@@ -1,8 +1,21 @@
+      <div class="update-card" id="update-dock-order" data-date="2026-11-16" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
+        <div class="update-date">Nov<br />2026</div>
+        <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.102 · lander@0.5.4 — Latest</div>
+          <div class="update-title">Dock: shorter German labels and your own order</div>
+          <ul class="update-items">
+            <li><strong>Shorter dock labels</strong> in German (Start, Nutzer, To-dos, Setup, Auto …), so the dock fits more items.</li>
+            <li><strong>Own order for collections</strong> — the setting <code>nav.order</code> (a list of collection IDs) decides the order in the dock and the sidebar; collections not listed follow after. Set it with <code>PUT /api/meta</code> or in the pod.</li>
+          </ul>
+        </div>
+      </div>
+
       <div class="update-card" id="update-account-page-fix" data-date="2026-11-16" style="border-color:color-mix(in srgb,var(--red) 50%,var(--line))">
         <div class="update-date">Nov<br />2026</div>
         <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.101 · lander@0.5.1 — Latest</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.101 · lander@0.5.1</div>
           <div class="update-title">Fix: Account page (2FA, Digi-ID) did nothing after in-app navigation</div>
           <ul class="update-items">
             <li>Opening <strong>Account</strong> through the dock or sidebar swapped the page in place, so its scripts did not run: the 2FA card stayed on “Loading…” and “Link an address” did nothing until a hard refresh. The page now loads normally.</li>

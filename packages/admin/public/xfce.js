@@ -1316,6 +1316,12 @@
   // ── Dock ──────────────────────────────────────────────────────────────
   var dockInner;
 
+  function orbNavSort(list, info) {
+    var order = (info.nav && info.nav.order) || [];
+    if (!order.length) return list;
+    var rank = function (c) { var i = order.indexOf(c.id); return i < 0 ? 1e6 : i; };
+    return list.map(function (c, i) { return [c, i]; }).sort(function (a, b) { return rank(a[0]) - rank(b[0]) || a[1] - b[1]; }).map(function (x) { return x[0]; });
+  }
   function makeDockItem(icon, label, hrefOrNull, isActive, isBtn) {
     var item = isBtn ? el('button') : el('a');
     item.className = 'xfce-dock-item' + (isActive ? ' active' : '');
@@ -1459,7 +1465,7 @@
           var groupedIds = new Set();
           if (navGroups) { Object.keys(navGroups).forEach(function (g) { (navGroups[g] || []).forEach(function (id) { groupedIds.add(id); }); }); }
 
-          var allCols = (info.collections || []).filter(function (c) { return !navHidden.has(c.id); });
+          var allCols = orbNavSort((info.collections || []).filter(function (c) { return !navHidden.has(c.id); }), info);
           var topLevel = allCols.filter(function (c) { return !c.parent; });
           var colById = {};
           allCols.forEach(function (c) { colById[c.id] = c; });

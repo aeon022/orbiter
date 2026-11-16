@@ -23,7 +23,7 @@ const ALLOWED_KEYS = [
   'email.smtp_from', 'email.notify_publish', 'email.notify_comment', 'email.notify_form', 'email.notify_to',
   'ftp.host', 'ftp.port', 'ftp.user', 'ftp.password',
   'ftp.remote_path', 'ftp.local_path', 'ftp.secure', 'ftp.auto_deploy',
-  'nav.hidden', 'nav.groups',
+  'nav.hidden', 'nav.groups', 'nav.order',
   'llms.collections',
 ];
 

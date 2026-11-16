@@ -138,3 +138,6 @@ window.orbDate = function (d) {
   var m = /^(\w+), (\w+) (\d+)$/.exec(d);
   return m && wd[m[1]] && mo[m[2]] ? wd[m[1]] + ', ' + m[3] + '. ' + mo[m[2]] : d;
 };
+
+// Shorter words for the dock labels (English text → short German)
+window.ORB_DE_DOCK = { 'Dashboard': 'Start', 'Settings': 'Setup', 'Users': 'Nutzer', 'To-Do': 'To-dos', 'To-do': 'To-dos', 'Tools': 'Tools', 'Auto': 'Auto', 'Notes': 'Notizen', 'Calendar': 'Kalender', 'Media': 'Medien', 'Inbox': 'Eingang', 'Analytics': 'Statistik', 'Forms': 'Formulare', 'Light': 'Hell', 'Dark': 'Dunkel' };

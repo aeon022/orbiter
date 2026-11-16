@@ -31,6 +31,7 @@ infoRoutes.get('/', (c) => {
   const version   = db.getMeta('format_version') ?? '1';
   const navHidden = db.getMeta('nav.hidden') ?? '';
   const navGroups = db.getMeta('nav.groups') ?? '';
+  let navOrder = []; try { const o = JSON.parse(db.getMeta('nav.order') || '[]'); if (Array.isArray(o)) navOrder = o.filter(x => typeof x === 'string'); } catch {}
   db.close();
   let navGroupsParsed = null;
   try { navGroupsParsed = navGroups ? JSON.parse(navGroups) : null; } catch {}
@@ -39,6 +40,7 @@ infoRoutes.get('/', (c) => {
     nav: {
       hidden: navHidden ? navHidden.split(',').map(s => s.trim()).filter(Boolean) : [],
       groups: navGroupsParsed,
+      order: navOrder,
     },
   });
 });
