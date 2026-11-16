@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, Tray, Menu, dialog, nativeImage, shell, utilityProcess } = require('electron');
+const { app, BrowserWindow, Tray, Menu, dialog, nativeImage, shell, utilityProcess, session } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path  = require('path');
 const net   = require('net');
@@ -450,7 +450,7 @@ function startServer(podPath, port) {
       ...process.env,
       PORT:         String(port),
       ORBITER_POD:  podPath,
-      ADMIN_ORIGIN: `http://localhost:${port}`,
+      ADMIN_ORIGIN: `http://127.0.0.1:${port}`,
       ELECTRON:     '1',
     },
     stdio: 'pipe',
@@ -509,7 +509,7 @@ function buildAppMenu() {
         { type: 'separator' },
         {
           label: 'Im Browser öffnen',
-          click: () => serverPort && shell.openExternal(`http://localhost:${serverPort}`),
+          click: () => serverPort && shell.openExternal(`http://127.0.0.1:${serverPort}`),
         },
         { type: 'separator' },
         { role: 'close', label: 'Fenster schließen' },
@@ -574,7 +574,11 @@ function createWindow(port, podPath) {
     },
   });
 
-  mainWindow.loadURL(`http://localhost:${port}/dashboard.html`);
+  // The admin needs no camera, microphone, location, notifications …: deny every permission request and check.
+  session.defaultSession.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
+  session.defaultSession.setPermissionCheckHandler(() => false);
+
+  mainWindow.loadURL(`http://127.0.0.1:${port}/dashboard.html`);
 
   // X hides window; app stays alive in tray + dock
   mainWindow.on('close', e => {
@@ -588,7 +592,7 @@ function createWindow(port, podPath) {
   const openIfWeb = (url) => { if (/^https?:\/\//i.test(url)) shell.openExternal(url); };
   mainWindow.webContents.setWindowOpenHandler(({ url }) => { openIfWeb(url); return { action: 'deny' }; });
   mainWindow.webContents.on('will-navigate', (e, url) => {
-    if (new URL(url).origin !== `http://localhost:${port}`) { e.preventDefault(); openIfWeb(url); }
+    if (new URL(url).origin !== `http://127.0.0.1:${port}`) { e.preventDefault(); openIfWeb(url); }
   });
 }
 
@@ -610,7 +614,7 @@ function createTray(port, podPath) {
     { label: `Orbiter — ${path.basename(podPath)}`, enabled: false },
     { type: 'separator' },
     { label: 'Fenster öffnen',    click: () => { mainWindow?.show(); mainWindow?.focus(); } },
-    { label: 'Im Browser öffnen', click: () => shell.openExternal(`http://localhost:${port}`) },
+    { label: 'Im Browser öffnen', click: () => shell.openExternal(`http://127.0.0.1:${port}`) },
     { type: 'separator' },
     { label: 'POD wechseln…',        click: switchPod },
     { label: 'Neuen POD erstellen…', click: createNewPod },

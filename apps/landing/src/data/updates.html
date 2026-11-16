@@ -1,8 +1,23 @@
+      <div class="update-card" id="update-desktop-0-2-3" data-date="2026-11-16" style="border-color:color-mix(in srgb,var(--red) 50%,var(--line))">
+        <div class="update-date">Nov<br />2026</div>
+        <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">desktop@0.2.3 — Latest</div>
+          <div class="update-title">Desktop app: no more admin / admin</div>
+          <ul class="update-items">
+            <li><strong>Random start password</strong> — a new pod no longer gets <code>admin / admin</code>. The app creates a random password and shows it once after creating the pod.</li>
+            <li><strong>Loopback address</strong> — the app talks to <code>127.0.0.1</code> instead of <code>localhost</code> (you sign in once again after the update, the address is a new site for the browser cookie).</li>
+            <li><strong>No browser permissions</strong> — camera, microphone, location and notification requests are always denied.</li>
+            <li>Includes the current admin: enforced Content-Security-Policy, German interface, signed backups and Digi-ID sign-in. The macOS app is still unsigned (open it with right-click → Open).</li>
+          </ul>
+        </div>
+      </div>
+
       <div class="update-card" id="update-private-backups" data-date="2026-11-16" style="border-color:color-mix(in srgb,var(--red) 50%,var(--line))">
         <div class="update-date">Nov<br />2026</div>
         <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.105 · lander@0.5.6 — Latest</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.105 · lander@0.5.6</div>
           <div class="update-title">Security: backups are owner-only</div>
           <ul class="update-items">
             <li><strong>Automatic backups were world-readable.</strong> Since 0.3.96 (Orbiter) the automatic backup landed in a <code>backups/</code> folder next to the pod with default permissions (644). If that folder lies inside a directory the web server serves, the backup (password hashes, saved settings) could be downloaded by anyone who guessed the file name. Backups are now written with mode 600 in a 700 folder.</li>

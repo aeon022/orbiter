@@ -289,3 +289,7 @@ Voraussetzungen: Arbeitsbaum sauber (`git status` ohne tracked Änderungen), Tes
 - GitHub: Lander jetzt mit Dependabot-Alerts + Sicherheits-Updates, Secret Scanning + Push Protection, privates Schwachstellen-Melden, SECURITY.md. Orbiter: 0 Alerts, 0 PRs. Keine Secrets in der Git-Historie (4 Repos geprüft).
 - Pina/kuin-at: `npm audit fix` (astro, @astrojs/node, devalue) → 0; Pina baut. kuin-at-Deploy mit neuer Lock **nicht** ausgeführt (deploy.sh macht kein `npm ci`).
 - Offen: api.kuin.at liefert `package.json`, `app.js`, `*.bak*`, `package-lock.json` statisch aus (Info-Leck, niedrig; braucht nginx-Regel oder Docroot-Umzug); CVE-IDs; Desktop-Release; Lander ohne CSP.
+
+## 2026-11-16 — Desktop 0.2.3
+- Zufallspasswort statt `admin/admin` (`seedPod`, einmal im Dialog), `127.0.0.1` statt `localhost` (Fenster, `ADMIN_ORIGIN`, Navigations-/Extern-Prüfung), `session.setPermissionRequestHandler/-CheckHandler` verweigern alles. Docs (`docs/desktop`) und Changelog angepasst. Release per Tag `desktop-v0.2.3` (GitHub Actions baut DMG + Windows-Installer; Mac weiterhin unsigniert).
+- Hinweis: die `admin / admin`-Zeilen in README/Landing betreffen die CLI-Vorlagen (`npm create`), nicht die Desktop-App.
