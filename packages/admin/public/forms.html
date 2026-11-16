@@ -156,6 +156,10 @@
     let activeId = null;
     let fields = [];
     let formLabel = '';
+    window.setFormLabel = (v) => { formLabel = v; };
+    window.enterAddField = (e) => { if (e.key === 'Enter') addField(); };
+    window.setHoneypot = (v) => { settings.honeypot = v; render(); };
+    window.setSubmitLabel = (v) => { settings.submitLabel = v; render(); };
     let settings = { honeypot: true, submitLabel: 'Send', successMessage: 'Thank you!' };
 
     const FIELD_TYPES = [
@@ -261,8 +265,8 @@
       let html = `<div class="fb-header">
         <div class="fb-title">Form Builder</div>
         <div class="fb-actions">
-          <button class="btn-ghost" onclick="newForm()">+ New form</button>
-          ${activeId ? `<button class="btn-save" onclick="saveForm()">Save</button>` : ''}
+          <button class="btn-ghost" data-on-click="newForm()">+ New form</button>
+          ${activeId ? `<button class="btn-save" data-on-click="saveForm()">Save</button>` : ''}
         </div>
       </div>`;
 
@@ -272,7 +276,7 @@
         html += '<div style="padding:20px;text-align:center;color:var(--muted);font-size:11px">No forms yet. Click "+ New form" to start.</div>';
       }
       for (const c of configs) {
-        html += `<div class="fb-list-item${c.form_id===activeId?' active':''}" onclick="selectForm('${esc(c.form_id)}')">
+        html += `<div class="fb-list-item${c.form_id===activeId?' active':''}" data-on-click="selectForm('${esc(c.form_id)}')">
           <span class="fb-list-name">${esc(c.label || c.form_id)}</span>
           <span class="fb-list-count">${c.form_id}</span>
         </div>`;
@@ -282,7 +286,7 @@
       if (activeId) {
         // Form name
         html += `<div class="fb-form-name">
-          <input value="${esc(formLabel)}" placeholder="Form label" oninput="formLabel=this.value" />
+          <input value="${esc(formLabel)}" placeholder="Form label" data-on-input="setFormLabel(this.value)" />
           <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">${esc(activeId)}</span>
         </div>`;
 
@@ -293,30 +297,30 @@
             <span class="fb-drag">⠿</span>
             <span class="fb-field-name">${esc(f.label || f.name)}</span>
             <span class="fb-field-type">${f.type}</span>
-            <span class="fb-field-req" style="cursor:pointer" onclick="toggleRequired(${i})">${f.required ? '● required' : '○ optional'}</span>
-            <button class="fb-field-del" onclick="removeField(${i})">✕</button>
+            <span class="fb-field-req" style="cursor:pointer" data-on-click="toggleRequired(${i})">${f.required ? '● required' : '○ optional'}</span>
+            <button class="fb-field-del" data-on-click="removeField(${i})">✕</button>
           </div>`;
         });
         html += '</div>';
 
         // Add field
         html += `<div class="fb-add-row">
-          <input id="fb-new-name" placeholder="field name" onkeydown="if(event.key==='Enter')addField()" />
+          <input id="fb-new-name" placeholder="field name" data-on-keydown="enterAddField(event)" />
           <select id="fb-new-type">
             ${FIELD_TYPES.map(t => `<option value="${t.value}">${t.label}</option>`).join('')}
           </select>
-          <button class="fb-add-btn" onclick="addField()">+ Add</button>
+          <button class="fb-add-btn" data-on-click="addField()">+ Add</button>
         </div>`;
 
         // Settings
         html += `<div class="fb-settings">
           <div class="fb-setting">
             <span class="fb-setting-label">Honeypot spam filter</span>
-            <input type="checkbox" ${settings.honeypot?'checked':''} onchange="settings.honeypot=this.checked;render()" />
+            <input type="checkbox" ${settings.honeypot?'checked':''} data-on-change="setHoneypot(this.checked)" />
           </div>
           <div class="fb-setting">
             <span class="fb-setting-label">Submit button text</span>
-            <input style="width:120px;background:var(--bg0);border:1px solid var(--line);border-radius:var(--radius);padding:4px 8px;color:var(--heading);font-family:var(--mono);font-size:10px;outline:none;text-align:right" value="${esc(settings.submitLabel)}" oninput="settings.submitLabel=this.value;render()" />
+            <input style="width:120px;background:var(--bg0);border:1px solid var(--line);border-radius:var(--radius);padding:4px 8px;color:var(--heading);font-family:var(--mono);font-size:10px;outline:none;text-align:right" value="${esc(settings.submitLabel)}" data-on-input="setSubmitLabel(this.value)" />
           </div>
         </div>`;
       }

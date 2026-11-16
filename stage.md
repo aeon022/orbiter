@@ -266,3 +266,8 @@ Voraussetzungen: Arbeitsbaum sauber (`git status` ohne tracked Änderungen), Tes
 - `packages/admin/public/i18n.js` + `i18n-de.js` (≈600 Einträge + Regex-Regeln), `theme.js` lädt sie bei `orb_lang=de`; Einstellungen → Admin-Sprache lädt neu. Per Puppeteer geprüft (Dashboard, Einstellungen, Einträge, Editor, Medien, Benutzer). Nicht übersetzt: dynamisch erzeugte Texte, die nicht im Dictionary stehen; Docs/Landing bleiben Englisch.
 - Lander: signierter Ein-Klick-Updater (Ed25519, Schlüssel `~/.lander-signing/release.key`, siehe Lander/stage.md), echter Test 0.3.1 → 0.3.2 über GitHub erfolgreich. Landing: Changelog-Karten, /lander-Changelog, Docs „Update".
 - Offen: CSP-Enforcement (≈95 Inline-Handler), Desktop-Release mit Zufallspasswort, Cve-IDs prüfen (Task 2026-11-22).
+
+## 2026-11-16 — CSP erzwungen (admin 0.3.98)
+- Alle 95 Inline-Handler → `data-on-<event>="fn(args)"`, ausgewertet von einem eval-freien Dispatcher in `theme.js` (Capture-Phase, Bubbling nachgebildet; `orbH.*` für Sonderfälle, `@` = JSON aus `data-args`). `csp.js` sendet jetzt `Content-Security-Policy` (Env `ORBITER_CSP=report` = zurück auf Report-Only). i18n-Skripte werden per `createElement` geladen (strict-dynamic blockt `document.write`).
+- Geprüft (Puppeteer, 4399): alle Seiten EN+DE ohne Verletzung; alle Handler-Funktionen existieren; Klicks Vorschau/Bild-Picker/Overlay-Schließen/Titel-Wachstum funktionieren. Nicht einzeln durchgeklickt: jede übrige Editor-Aktion (Tabellen, Video, AI-Vorschläge).
+- Lander hat keine CSP (statisches Apache-HTML, keine Nonces) und behält Inline-Handler.

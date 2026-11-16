@@ -260,7 +260,7 @@
       const canSort = !activeFilter;
       const sorted  = sortEntries(entries);
       const si = (f) => sortField === f ? (sortDir === 1 ? ' ↑' : ' ↓') : '';
-      const sh = (f, label) => `<th style="cursor:pointer;user-select:none;white-space:nowrap" onclick="setSort('${f}')">${label}${si(f)}</th>`;
+      const sh = (f, label) => `<th style="cursor:pointer;user-select:none;white-space:nowrap" data-on-click="setSort('${f}')">${label}${si(f)}</th>`;
       const statusTh  = isTrash ? '<th>Deleted</th>'  : sh('status','Status');
       const updatedTh = isTrash ? '<th><span class="sr-only">Actions</span></th>'          : sh('updated_at','Updated');
       wrap.innerHTML = `

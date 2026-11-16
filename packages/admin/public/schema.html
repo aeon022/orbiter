@@ -240,7 +240,7 @@
               <span class="req-box" style="${S.reqBox}${required?'background:var(--gold);border-color:var(--gold);color:var(--bg0);':'color:transparent;'}">${required?'✓':''}</span>
               <span style="${S.reqTxt}">Required</span>
             </label>
-            <button type="button" style="${S.btnRm}" onclick="this.closest('[style]').remove()">✕</button>
+            <button type="button" style="${S.btnRm}" data-on-click="orbH.rmClosest(this,'[style]')">✕</button>
           </div>
           <div class="fr-opts-validate" style="display:${VALIDATABLE_TYPES.has(type)?'flex':'none'};gap:4px;">
             <input class="f-min" type="number" style="${S.input};width:52px" placeholder="min" value="${escHtml(String(min??''))}" title="Min length (text) or min value (number)" />

@@ -65,9 +65,9 @@
         <canvas id="graph-canvas"></canvas>
         <div class="graph-info" id="graph-info">Loading…</div>
         <div class="graph-toolbar">
-          <button class="graph-btn" onclick="resetZoom()">⟲ Reset</button>
-          <button class="graph-btn" onclick="zoomIn()">+</button>
-          <button class="graph-btn" onclick="zoomOut()">−</button>
+          <button class="graph-btn" data-on-click="resetZoom()">⟲ Reset</button>
+          <button class="graph-btn" data-on-click="zoomIn()">+</button>
+          <button class="graph-btn" data-on-click="zoomOut()">−</button>
         </div>
         <div class="graph-legend">
           <span><span class="legend-dot" style="background:var(--accent)"></span>Entry</span>

@@ -1,11 +1,9 @@
 /**
- * Nonce-based Content-Security-Policy for the admin pages — currently REPORT-ONLY.
+ * Nonce-based Content-Security-Policy for the admin pages — ENFORCING (ORBITER_CSP=report = report-only).
  *
- * Every served .html gets a fresh nonce on all of its <script> tags and a
- * Content-Security-Policy-Report-Only header. The admin UI still has ~90 inline event handlers
- * (onclick="…") that a strict policy would block, so we collect violation reports first
- * (GET /api/security-check/csp-reports, admin only), convert those handlers, and only then switch
- * the header to enforcing. The always-on baseline in server.js (frame-ancestors, object-src …) is unaffected.
+ * Every served .html gets a fresh nonce on all of its <script> tags and a Content-Security-Policy header.
+ * The pages carry no inline event handlers any more: they use data-on-click="fn(args)" (see theme.js, no eval).
+ * Violations are still reported (GET /api/security-check/csp-reports, admin only).
  */
 import { Hono } from 'hono';
 import { readFileSync, existsSync } from 'node:fs';
@@ -42,7 +40,8 @@ export function htmlHandler(publicDir) {
     const file = join(root, name);
     if (!existsSync(file)) return next();
     const nonce = randomBytes(16).toString('base64');
-    c.header('Content-Security-Policy-Report-Only', policy(nonce));
+    // enforcing by default; ORBITER_CSP=report switches back to report-only if a page ever breaks
+    c.header(process.env.ORBITER_CSP === 'report' ? 'Content-Security-Policy-Report-Only' : 'Content-Security-Policy', policy(nonce));
     c.header('Cache-Control', 'no-cache');
     return c.html(addNonce(readFileSync(file, 'utf8'), nonce));
   };

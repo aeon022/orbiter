@@ -262,6 +262,7 @@
     });
 
     let currentDays = 30;
+    window.loadStatsCurrent = () => loadStats(currentDays);
     let currentPath = null;
     const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -271,7 +272,7 @@
       const filterLabel = document.getElementById('an-filter-label');
       if (currentPath) {
         filterLabel.style.display = '';
-        filterLabel.innerHTML = `<span style="cursor:pointer" title="Clear filter" onclick="loadStats(currentDays)">✕</span> ${esc(currentPath)}`;
+        filterLabel.innerHTML = `<span style="cursor:pointer" title="Clear filter" data-on-click="loadStatsCurrent()">✕</span> ${esc(currentPath)}`;
       } else {
         filterLabel.style.display = 'none';
       }

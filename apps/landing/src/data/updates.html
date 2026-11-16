@@ -1,8 +1,22 @@
+      <div class="update-card" id="update-csp-enforced" data-date="2026-11-16" style="border-color:color-mix(in srgb,var(--red) 50%,var(--line))">
+        <div class="update-date">Nov<br />2026</div>
+        <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.98 — Latest</div>
+          <div class="update-title">Security: strict Content-Security-Policy enforced</div>
+          <ul class="update-items">
+            <li><strong>Scripts need a nonce</strong> — the admin now blocks every script that is not part of its own pages. An injected <code>&lt;script&gt;</code> or <code>onerror=</code> handler in content cannot run, even if it slipped past escaping.</li>
+            <li><strong>No inline handlers</strong> — all 95 <code>onclick="…"</code> style handlers are replaced by <code>data-on-click</code> attributes handled by a small dispatcher (no <code>eval</code>). Behaviour is unchanged.</li>
+            <li>Custom admin pages that still use inline handlers: switch to <code>data-on-…</code>, or set <code>ORBITER_CSP=report</code> to go back to report-only. <a href="/docs/security">Docs →</a></li>
+          </ul>
+        </div>
+      </div>
+
       <div class="update-card" id="update-german-admin" data-date="2026-11-15" style="border-color:color-mix(in srgb,var(--accent) 50%,var(--line))">
         <div class="update-date">Nov<br />2026</div>
         <div class="update-dot" style="background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.97 · lander@0.3.2 — Latest</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">admin@0.3.97 · lander@0.3.2</div>
           <div class="update-title">German admin interface</div>
           <ul class="update-items">
             <li><strong>Admin language DE</strong> — Settings → General → Admin language now switches the whole interface to German: navigation, dashboard, entries, editor, media, users, settings, import and analytics (about 600 labels and hints). Anything not translated yet stays English.</li>

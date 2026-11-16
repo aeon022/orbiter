@@ -584,8 +584,8 @@
 </head>
 <body>
   <div class="focus-exit-hint" role="complementary" aria-label="Hint">Esc · exit focus mode</div>
-  <div class="shortcut-overlay" id="shortcut-overlay" onclick="this.classList.remove('open')">
-    <div class="shortcut-box" onclick="event.stopPropagation()">
+  <div class="shortcut-overlay" id="shortcut-overlay" data-on-click="this.classList.remove('open')">
+    <div class="shortcut-box" data-on-click="event.stopPropagation()">
       <h3>Keyboard shortcuts</h3>
       <div class="shortcut-row">Save<span class="shortcut-key">⌘S</span></div>
       <div class="shortcut-row">Publish<span class="shortcut-key">⌘⇧S</span></div>
@@ -617,10 +617,10 @@
       <div class="topbar-right">
         <span id="autosave-indicator"><span class="autosave-dot" id="autosave-dot"></span><span id="autosave-text"></span></span>
         <span id="wc" style="font-size:10px;color:var(--muted);padding:0 8px;"></span>
-        <div class="view-toggle" onmousedown="event.preventDefault()" style="margin-left:0;margin-right:12px;">
-          <button type="button" class="view-btn active" id="vbtn-edit"    onclick="setViewMode('edit')">Edit</button>
-          <button type="button" class="view-btn"        id="vbtn-split"   onclick="setViewMode('split')">Split</button>
-          <button type="button" class="view-btn"        id="vbtn-preview" onclick="setViewMode('preview')">Preview</button>
+        <div class="view-toggle" data-on-mousedown="event.preventDefault()" style="margin-left:0;margin-right:12px;">
+          <button type="button" class="view-btn active" id="vbtn-edit"    data-on-click="setViewMode('edit')">Edit</button>
+          <button type="button" class="view-btn"        id="vbtn-split"   data-on-click="setViewMode('split')">Split</button>
+          <button type="button" class="view-btn"        id="vbtn-preview" data-on-click="setViewMode('preview')">Preview</button>
         </div>
         <a id="btn-preview-link" href="#" target="_blank" rel="noopener" title="Open preview" style="display:none;font-size:11px;color:var(--muted);text-decoration:none;padding:4px 8px;border:1px solid var(--line);border-radius:var(--radius);">↗ Preview</a>
         <button class="search-trigger" id="search-btn" title="Search (⌘K)" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 8px;font-size:13px;">⌘K</button>
@@ -642,39 +642,39 @@
           <div id="suggest-sections"></div>
         </div>
         <div class="editor-toolbar">
-          <div class="tool-group" onmousedown="event.preventDefault()">
-            <button type="button" class="tool-btn" onclick="beCmd('bold')" title="Bold (⌘B)"><b style="font-size:11px;">B</b></button>
-            <button type="button" class="tool-btn" onclick="beCmd('italic')" title="Italic (⌘I)"><i style="font-size:11px;">I</i></button>
-            <button type="button" class="tool-btn" onclick="beCmd('code')" title="Inline code (⌘E)" style="font-size:9px;">&lt;/&gt;</button>
+          <div class="tool-group" data-on-mousedown="event.preventDefault()">
+            <button type="button" class="tool-btn" data-on-click="beCmd('bold')" title="Bold (⌘B)"><b style="font-size:11px;">B</b></button>
+            <button type="button" class="tool-btn" data-on-click="beCmd('italic')" title="Italic (⌘I)"><i style="font-size:11px;">I</i></button>
+            <button type="button" class="tool-btn" data-on-click="beCmd('code')" title="Inline code (⌘E)" style="font-size:9px;">&lt;/&gt;</button>
           </div>
           <div class="tool-sep"></div>
-          <div class="tool-group" onmousedown="event.preventDefault()">
-            <button type="button" class="tool-btn" onclick="changeBlockType('h1')"         style="font-size:9px;">H1</button>
-            <button type="button" class="tool-btn" onclick="changeBlockType('h2')"         style="font-size:9px;">H2</button>
-            <button type="button" class="tool-btn" onclick="changeBlockType('h3')"         style="font-size:9px;">H3</button>
-            <button type="button" class="tool-btn" onclick="changeBlockType('blockquote')" >❝</button>
-            <button type="button" class="tool-btn" onclick="changeBlockType('ul')"         style="font-size:12px;">·</button>
-            <button type="button" class="tool-btn" onclick="insertHr()"                   style="font-size:9px;">—</button>
+          <div class="tool-group" data-on-mousedown="event.preventDefault()">
+            <button type="button" class="tool-btn" data-on-click="changeBlockType('h1')"         style="font-size:9px;">H1</button>
+            <button type="button" class="tool-btn" data-on-click="changeBlockType('h2')"         style="font-size:9px;">H2</button>
+            <button type="button" class="tool-btn" data-on-click="changeBlockType('h3')"         style="font-size:9px;">H3</button>
+            <button type="button" class="tool-btn" data-on-click="changeBlockType('blockquote')" >❝</button>
+            <button type="button" class="tool-btn" data-on-click="changeBlockType('ul')"         style="font-size:12px;">·</button>
+            <button type="button" class="tool-btn" data-on-click="insertHr()"                   style="font-size:9px;">—</button>
           </div>
           <div class="tool-sep"></div>
-          <div class="tool-group" onmousedown="event.preventDefault()">
-            <button type="button" class="tool-btn" onclick="openImgPicker()" title="Insert image">
+          <div class="tool-group" data-on-mousedown="event.preventDefault()">
+            <button type="button" class="tool-btn" data-on-click="openImgPicker()" title="Insert image">
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="display:block"><rect x=".75" y="1.75" width="11.5" height="9.5" rx="1.5" stroke="currentColor" stroke-width="1.1"/><circle cx="4.25" cy="5" r=".9" fill="currentColor"/><path d="M.75 9l2.9-2.9L6 8.45l1.85-1.85L12.25 10.5" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
-            <button type="button" class="tool-btn" onclick="openVideoPicker()" title="Insert video (YouTube, Vimeo, mp4)">
+            <button type="button" class="tool-btn" data-on-click="openVideoPicker()" title="Insert video (YouTube, Vimeo, mp4)">
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="display:block"><rect x=".75" y="2.25" width="11.5" height="8.5" rx="1.5" stroke="currentColor" stroke-width="1.1"/><path d="M5.25 4.75l3.5 1.75-3.5 1.75V4.75z" fill="currentColor"/></svg>
             </button>
-            <button type="button" class="tool-btn" onclick="openFilePicker()" title="Insert file / PDF download link">
+            <button type="button" class="tool-btn" data-on-click="openFilePicker()" title="Insert file / PDF download link">
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="display:block"><path d="M3.5 1.5h4l3 3V11a.5.5 0 01-.5.5h-6.5a.5.5 0 01-.5-.5V2a.5.5 0 01.5-.5z" stroke="currentColor" stroke-width="1.1"/><path d="M7.5 1.5V4.5H10.5" stroke="currentColor" stroke-width="1.1"/><line x1="5" y1="7" x2="8.5" y2="7" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><line x1="5" y1="9" x2="8.5" y2="9" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>
             </button>
-            <button type="button" class="tool-btn" onclick="exportMarkdown()" title="Export Markdown (⌘⇧E)" style="font-size:9px;letter-spacing:.04em;">↓ md</button>
+            <button type="button" class="tool-btn" data-on-click="exportMarkdown()" title="Export Markdown (⌘⇧E)" style="font-size:9px;letter-spacing:.04em;">↓ md</button>
             <div class="tool-sep"></div>
             <div class="ai-btn-group">
-              <button type="button" class="ai-toolbar-btn" onclick="openAiPanel()" title="AI Assistant">✦ AI</button>
-              <button type="button" class="suggest-toolbar-btn" id="suggest-trigger-btn" onclick="triggerSuggestions()" title="Smart Suggestions">✦ Suggest</button>
+              <button type="button" class="ai-toolbar-btn" data-on-click="openAiPanel()" title="AI Assistant">✦ AI</button>
+              <button type="button" class="suggest-toolbar-btn" id="suggest-trigger-btn" data-on-click="triggerSuggestions()" title="Smart Suggestions">✦ Suggest</button>
             </div>
             <div id="saved-flash" class="saved-flash">Saved</div>
-            <button type="button" class="meta-panel-toggle" id="meta-panel-toggle" onclick="toggleMetaPanel()" title="Toggle sidebar (⌘⇧P)"></button>
+            <button type="button" class="meta-panel-toggle" id="meta-panel-toggle" data-on-click="toggleMetaPanel()" title="Toggle sidebar (⌘⇧P)"></button>
             <span class="word-count" id="word-count"></span>
             <span id="autosave-indicator-toolbar" style="font-size:9px;color:var(--muted);padding-left:8px;white-space:nowrap;display:flex;align-items:center;gap:5px;"><span class="autosave-dot" id="autosave-dot-toolbar"></span><span id="autosave-text-toolbar"></span></span>
           </div>
@@ -686,8 +686,8 @@
         <div class="editor-scroll">
           <div class="editor-page">
             <textarea id="title-input" class="editor-title-input" placeholder="Untitled" rows="1"
-              oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';onTitleInput()"></textarea>
-            <div class="editor-slug-line">/<span id="collection-id-display"></span>/<span id="slug-preview">…</span><button type="button" class="copy-slug-btn" onclick="copySlug()" title="Copy slug">⧉</button></div>
+              data-on-input="titleInput(this)"></textarea>
+            <div class="editor-slug-line">/<span id="collection-id-display"></span>/<span id="slug-preview">…</span><button type="button" class="copy-slug-btn" data-on-click="copySlug()" title="Copy slug">⧉</button></div>
             <div id="main-fields" class="main-fields" style="display:none"></div>
             <div id="be-editor" class="be-editor" spellcheck="false"></div>
             <textarea id="body-input" style="display:none"></textarea>
@@ -699,8 +699,8 @@
       <!-- Preview panel -->
       <div class="preview-panel" id="preview-panel">
         <div class="preview-src-bar">
-          <button class="src-btn active" id="src-md"   onclick="setPreviewSrc('md')">Markdown</button>
-          <button class="src-btn"        id="src-site" onclick="setPreviewSrc('site')">Site</button>
+          <button class="src-btn active" id="src-md"   data-on-click="setPreviewSrc('md')">Markdown</button>
+          <button class="src-btn"        id="src-site" data-on-click="setPreviewSrc('site')">Site</button>
         </div>
         <div class="preview-scroll" id="preview-md-pane">
           <div class="md-preview-title" id="preview-title"></div>
@@ -720,7 +720,7 @@
   <div class="ai-panel" id="ai-panel">
     <div class="ai-panel-header">
       <div class="ai-panel-title">✦ AI Assistant</div>
-      <button class="ai-panel-close" onclick="closeAiPanel()">✕ close</button>
+      <button class="ai-panel-close" data-on-click="closeAiPanel()">✕ close</button>
     </div>
     <div class="ai-presets">
       <button class="ai-preset" data-prompt="Rewrite this text to be more concise">Shorten</button>
@@ -734,13 +734,13 @@
     </div>
     <div class="ai-panel-body">
       <textarea class="ai-prompt" id="ai-prompt" placeholder="Ask AI anything… or select a preset above" rows="1"></textarea>
-      <button class="ai-send" id="ai-send" onclick="sendAiRequest()">Generate</button>
+      <button class="ai-send" id="ai-send" data-on-click="sendAiRequest()">Generate</button>
     </div>
     <div class="ai-result" id="ai-result"></div>
     <div class="ai-actions" id="ai-actions" style="display:none">
-      <button class="ai-act-btn primary" onclick="aiInsert()">Insert</button>
-      <button class="ai-act-btn" onclick="aiReplace()">Replace selection</button>
-      <button class="ai-act-btn" onclick="aiRetry()">Retry</button>
+      <button class="ai-act-btn primary" data-on-click="aiInsert()">Insert</button>
+      <button class="ai-act-btn" data-on-click="aiReplace()">Replace selection</button>
+      <button class="ai-act-btn" data-on-click="aiRetry()">Retry</button>
     </div>
   </div>
 
@@ -1062,10 +1062,10 @@
           const tbodyHtml = `<tbody>${tblRows.slice(1).map(r=>`<tr>${Array.from({length:tblCols},(_,i)=>`<td contenteditable="true">${escHtml(String(r[i]??''))}</td>`).join('')}</tr>`).join('')}</tbody>`;
           fieldsHtml += `<div class="tbl-field-wrap" id="tbl-wrap-${key}" ${isApa?'data-format="apa7"':''}>
             <div class="table-toolbar">
-              <button type="button" onclick="tblAddRow('${key}')">+ Row</button>
-              <button type="button" onclick="tblAddCol('${key}')">+ Col</button>
-              <button type="button" onclick="tblDelRow('${key}')">− Row</button>
-              <button type="button" onclick="tblDelCol('${key}')">− Col</button>
+              <button type="button" data-on-click="tblAddRow('${key}')">+ Row</button>
+              <button type="button" data-on-click="tblAddCol('${key}')">+ Col</button>
+              <button type="button" data-on-click="tblDelRow('${key}')">− Row</button>
+              <button type="button" data-on-click="tblDelCol('${key}')">− Col</button>
             </div>
             <div class="tbl-field-scroll"><table class="be-table" id="tbl-${key}">${theadHtml}${tbodyHtml}</table></div>
             ${isApa ? `<div class="cite-preview" id="cite-preview-${key}"><div class="cite-preview-label">APA 7 Preview</div><div id="cite-list-${key}" class="cite-empty">Add sources above…</div></div>` : ''}
@@ -1127,7 +1127,7 @@
           } else {
             const count = (fieldGroupMap[grp].match(/data-field-key=/g) || []).length;
             fieldsSectionHtml += `<div class="meta-section" style="padding-bottom:6px;"><div class="field-group${openGroups.has(grp)?' open':''}" data-group="${grp}">
-              <div class="field-group-header" onclick="this.parentElement.classList.toggle('open')">
+              <div class="field-group-header" data-on-click="this.parentElement.classList.toggle('open')">
                 <span class="field-group-arrow">▶</span>
                 <span class="field-group-name">${escHtml(grp)}</span>
                 <span class="field-group-count">${count}</span>
@@ -1168,7 +1168,7 @@
       const _seoOg    = _seoData.ogImage ?? '';
 
       panel.innerHTML = `
-        <button class="meta-panel-close" id="meta-panel-close" onclick="toggleMetaPanel()"><span class="mp-title">◈ Sidebar</span><span class="mp-x">✕</span></button>
+        <button class="meta-panel-close" id="meta-panel-close" data-on-click="toggleMetaPanel()"><span class="mp-title">◈ Sidebar</span><span class="mp-x">✕</span></button>
         <div id="fields-source">${fieldsSectionHtml}</div>
         <div class="meta-section">
           <div class="meta-label">SEO</div>
@@ -1192,8 +1192,8 @@
               <img id="seo-og-img" src="${_seoOg?`/api/media/${_seoOg}/raw`:''}" alt="" style="width:100%;height:auto;display:block;max-height:120px;object-fit:cover;" />
             </div>
             <div style="display:flex;gap:6px;">
-              <button type="button" class="btn-draft" style="flex:1;font-size:10px;padding:5px 8px;" onclick="openSeoOgPicker()">Choose image</button>
-              <button type="button" class="btn-draft" style="font-size:10px;padding:5px 8px;${_seoOg?'':'display:none'}" id="seo-og-clear" onclick="clearSeoOg()">✕</button>
+              <button type="button" class="btn-draft" style="flex:1;font-size:10px;padding:5px 8px;" data-on-click="openSeoOgPicker()">Choose image</button>
+              <button type="button" class="btn-draft" style="font-size:10px;padding:5px 8px;${_seoOg?'':'display:none'}" id="seo-og-clear" data-on-click="clearSeoOg()">✕</button>
             </div>
           </div>
         </div>
@@ -1240,7 +1240,7 @@
         <div class="meta-section">
           <div class="meta-label" style="margin-bottom:6px">Template</div>
           <input class="field-input" id="tpl-name-input" placeholder="Template name…" style="width:100%;box-sizing:border-box;margin-bottom:6px;" />
-          <button type="button" onclick="saveAsTemplate()" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:10px;font-family:var(--mono);background:none;border:1px solid var(--line);border-radius:var(--radius);color:var(--mid);cursor:pointer;transition:all .12s;" onmouseover="this.style.borderColor='var(--mid)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--mid)'">⌗ Save as template</button>
+          <button type="button" data-on-click="saveAsTemplate()" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:10px;font-family:var(--mono);background:none;border:1px solid var(--line);border-radius:var(--radius);color:var(--mid);cursor:pointer;transition:all .12s;" data-on-mouseover="orbH.hover(this,'var(--mid)','var(--text)')" data-on-mouseout="orbH.hover(this,'var(--line)','var(--mid)')">⌗ Save as template</button>
           <div id="tpl-save-msg" style="font-size:10px;color:var(--jade);margin-top:6px;display:none">✓ Saved</div>
         </div>
         ${IS_NEW ? '' : `<div class="meta-section" id="comments-section">
@@ -1854,6 +1854,7 @@
       autosaveTimer = setTimeout(()=>{ setIndicator('saving'); saveEntry(document.getElementById('status-select')?.value??'draft', true); }, 2000);
     }
 
+    window.titleInput = function(el) { orbH.grow(el); window.onTitleInput(); };
     window.onTitleInput = function() {
       const slugInput = document.getElementById('slug-input');
       const title = document.getElementById('title-input').value;
@@ -1942,7 +1943,7 @@
           sections.push(`<div class="suggest-section">
             <span class="suggest-label">Tags</span>
             <div class="suggest-content">${data.tags.map(t => `<span class="suggest-tag">${t}</span>`).join('')}</div>
-            <button class="suggest-btn" onclick="applyTags(${JSON.stringify(data.tags).replace(/"/g,'&quot;')})">Apply</button>
+            <button class="suggest-btn" data-on-click="applyTags(@)" data-args="${orbEsc(JSON.stringify([data.tags]))}">Apply</button>
           </div>`);
         }
 
@@ -1953,7 +1954,7 @@
           sections.push(`<div class="suggest-section">
             <span class="suggest-label">SEO</span>
             <div class="suggest-content"><span class="suggest-seo-preview">${preview.join('<br>')}</span></div>
-            <button class="suggest-btn" onclick="applySeo(${data.seo.title?`'${data.seo.title.replace(/'/g,"\\'")}'`:'null'},${data.seo.description?`'${data.seo.description.replace(/'/g,"\\'")}'`:'null'})">Apply</button>
+            <button class="suggest-btn" data-on-click="applySeo(@)" data-args="${orbEsc(JSON.stringify([data.seo.title || null, data.seo.description || null]))}">Apply</button>
           </div>`);
         }
 
@@ -1963,7 +1964,7 @@
             sections.push(`<div class="suggest-section">
               <span class="suggest-label">${orbEsc(f.label)}</span>
               <div class="suggest-content"><span style="font-size:10px;color:var(--mid)">${preview}</span></div>
-              <button class="suggest-btn" onclick="applyField('${f.field}',${JSON.stringify(f.value).replace(/"/g,'&quot;')})">Apply</button>
+              <button class="suggest-btn" data-on-click="applyField(@)" data-args="${orbEsc(JSON.stringify([f.field, f.value]))}">Apply</button>
             </div>`);
           }
         }
@@ -1973,7 +1974,7 @@
           sections.push(`<div class="suggest-section">
             <span class="suggest-label">Prompts</span>
             <div class="suggest-content">${preview}</div>
-            <button class="suggest-btn" onclick="applyField('${data.prompts.field}',${JSON.stringify(data.prompts.value).replace(/"/g,'&quot;')})">Apply</button>
+            <button class="suggest-btn" data-on-click="applyField(@)" data-args="${orbEsc(JSON.stringify([data.prompts.field, data.prompts.value]))}">Apply</button>
           </div>`);
         }
 
@@ -2280,10 +2281,10 @@
       else if (type==='table') {
         el.contentEditable='false';
         el.innerHTML = `<div class="table-toolbar">
-          <button onclick="tableAddRow(this)">+ Row</button>
-          <button onclick="tableAddCol(this)">+ Col</button>
-          <button onclick="tableDelRow(this)">− Row</button>
-          <button onclick="tableDelCol(this)">− Col</button>
+          <button data-on-click="tableAddRow(this)">+ Row</button>
+          <button data-on-click="tableAddCol(this)">+ Col</button>
+          <button data-on-click="tableDelRow(this)">− Row</button>
+          <button data-on-click="tableDelCol(this)">− Col</button>
         </div>
         <table class="be-table">
           <thead><tr><th contenteditable="true"></th><th contenteditable="true"></th></tr></thead>
@@ -2299,10 +2300,10 @@
       el.className='be-block'; el.dataset.type='table'; el.dataset.ph='';
       el.contentEditable='false';
       el.innerHTML = `<div class="table-toolbar">
-        <button onclick="tableAddRow(this)">+ Row</button>
-        <button onclick="tableAddCol(this)">+ Col</button>
-        <button onclick="tableDelRow(this)">− Row</button>
-        <button onclick="tableDelCol(this)">− Col</button>
+        <button data-on-click="tableAddRow(this)">+ Row</button>
+        <button data-on-click="tableAddCol(this)">+ Col</button>
+        <button data-on-click="tableDelRow(this)">− Row</button>
+        <button data-on-click="tableDelCol(this)">− Col</button>
       </div>`;
       el.appendChild(tableEl);
       return el;
@@ -2316,7 +2317,7 @@
       el.innerHTML=`<div class="be-file-block">
         <span class="be-file-icon">📎</span>
         <span class="be-file-name">${escHtml(filename)}</span>
-        <button class="be-file-del" onclick="fileBlockDelete(this)" title="Remove">✕</button>
+        <button class="be-file-del" data-on-click="fileBlockDelete(this)" title="Remove">✕</button>
       </div>`;
       return el;
     }
@@ -2812,12 +2813,12 @@
       el.contentEditable='false';
       el.innerHTML = `
         <div class="be-img-ctrl">
-          <button class="img-ab" data-align="left"   title="Float left"   onclick="imgAlign(this)">◧ left</button>
-          <button class="img-ab" data-align="center" title="Center"       onclick="imgAlign(this)">▣ center</button>
-          <button class="img-ab" data-align="right"  title="Float right"  onclick="imgAlign(this)">◨ right</button>
-          <button class="img-ab" data-align="full"   title="Full width"   onclick="imgAlign(this)">▭ full</button>
+          <button class="img-ab" data-align="left"   title="Float left"   data-on-click="imgAlign(this)">◧ left</button>
+          <button class="img-ab" data-align="center" title="Center"       data-on-click="imgAlign(this)">▣ center</button>
+          <button class="img-ab" data-align="right"  title="Float right"  data-on-click="imgAlign(this)">◨ right</button>
+          <button class="img-ab" data-align="full"   title="Full width"   data-on-click="imgAlign(this)">▭ full</button>
           <div class="img-ctrl-sep"></div>
-          <button class="img-ab del" title="Remove image" onclick="imgDelete(this)">✕</button>
+          <button class="img-ab del" title="Remove image" data-on-click="imgDelete(this)">✕</button>
         </div>
         <img class="be-img" src="/api/media/${mediaId}/raw" alt="">
         <input class="be-img-cap" type="text" placeholder="Caption / alt text…" value="">
@@ -2901,7 +2902,7 @@
         list.innerHTML='<div class="img-pick-empty">Noch keine Dateien.<br>PDF oder Dokument hochladen.</div>'; return;
       }
       list.innerHTML=files.map(m=>`
-        <div class="file-pick-item" onclick="pickFileInsert('${m.id}','${escHtml(m.filename)}')">
+        <div class="file-pick-item" data-on-click="pickFileInsert('${m.id}','${escHtml(m.filename)}')">
           <span class="file-pick-icon">📎</span>
           <span class="file-pick-name">${escHtml(m.filename)}</span>
           <span class="file-pick-size">${fmtBytes(m.size)}</span>
@@ -2930,7 +2931,7 @@
         grid.innerHTML='<div class="img-pick-empty">No images yet.<br>Upload one to get started.</div>'; return;
       }
       grid.innerHTML=images.map(m=>`
-        <div class="img-pick-thumb" onclick="pickInsert('${m.id}','${escHtml(m.alt??m.filename)}')">
+        <div class="img-pick-thumb" data-on-click="pickInsert('${m.id}','${escHtml(m.alt??m.filename)}')">
           <img src="/api/media/${m.id}/raw" alt="${escHtml(m.alt??m.filename)}" loading="lazy">
           <div class="img-pick-name">${escHtml(m.filename)}</div>
         </div>`).join('');
@@ -3109,7 +3110,7 @@
         <div class="be-video-wrap">${mediaHtml}</div>
         <div class="be-vid-ctrl">
           <input class="be-vid-url" type="text" value="${escHtml(url)}" readonly tabindex="-1">
-          <button class="img-ab del" onclick="vidDelete(this)" title="Remove video">✕ remove</button>
+          <button class="img-ab del" data-on-click="vidDelete(this)" title="Remove video">✕ remove</button>
         </div>`;
       el.addEventListener('click', e=>{
         if (e.target.closest('.img-ab')) return;
@@ -3418,31 +3419,31 @@
     if (!IS_NEW) setIndicator('saved');
   </script>
   <!-- Video URL dialog -->
-  <div id="vid-url-overlay" class="vid-url-overlay" onclick="if(event.target===this)closeVideoPicker()">
+  <div id="vid-url-overlay" class="vid-url-overlay" data-on-click="orbH.ifSelf(event,this,closeVideoPicker)">
     <div class="vid-url-box">
       <div class="vid-url-title">Insert Video</div>
       <input id="vid-url-inp" class="vid-url-inp" type="url" placeholder="https://youtu.be/… or https://vimeo.com/… or .mp4 URL" />
       <div class="vid-url-hint">YouTube · Vimeo · Wistia · direct MP4/WebM URL</div>
       <div class="vid-url-actions">
-        <button class="vid-url-cancel" onclick="closeVideoPicker()">Cancel</button>
-        <button class="vid-url-ok" onclick="confirmVideoUrl()">Insert</button>
+        <button class="vid-url-cancel" data-on-click="closeVideoPicker()">Cancel</button>
+        <button class="vid-url-ok" data-on-click="confirmVideoUrl()">Insert</button>
       </div>
     </div>
   </div>
 
   <!-- Image picker sheet -->
-  <div id="img-pick-overlay" class="img-pick-overlay" onclick="if(event.target===this)closeImgPicker()">
+  <div id="img-pick-overlay" class="img-pick-overlay" data-on-click="orbH.ifSelf(event,this,closeImgPicker)">
     <div class="img-pick-sheet">
       <div class="img-pick-head">
         <span class="img-pick-title">Insert Image</span>
-        <button class="img-pick-upload" onclick="document.getElementById('img-file-inp').click()">↑ Upload</button>
-        <button class="img-pick-close" onclick="closeImgPicker()">×</button>
+        <button class="img-pick-upload" data-on-click="orbH.clickId('img-file-inp')">↑ Upload</button>
+        <button class="img-pick-close" data-on-click="closeImgPicker()">×</button>
       </div>
       <div class="img-pick-tabs">
-        <button class="img-pick-tab active" onclick="imgPickTab('library',this)">Library</button>
-        <button class="img-pick-tab" onclick="imgPickTab('url',this)">From URL</button>
-        <button class="img-pick-tab" onclick="imgPickTab('link',this)">External link</button>
-        <button class="img-pick-tab" id="img-pick-tab-files" onclick="imgPickTab('files',this)">📎 Files</button>
+        <button class="img-pick-tab active" data-on-click="imgPickTab('library',this)">Library</button>
+        <button class="img-pick-tab" data-on-click="imgPickTab('url',this)">From URL</button>
+        <button class="img-pick-tab" data-on-click="imgPickTab('link',this)">External link</button>
+        <button class="img-pick-tab" id="img-pick-tab-files" data-on-click="imgPickTab('files',this)">📎 Files</button>
       </div>
       <div id="img-pick-pane-library" class="img-pick-pane active">
         <div class="img-pick-body">
@@ -3459,7 +3460,7 @@
             <strong>Jede öffentliche Bild-URL</strong>
           </div>
           <div id="img-url-status" class="img-url-status"></div>
-          <button id="img-url-btn" class="img-url-btn" onclick="importFromUrl()">Importieren</button>
+          <button id="img-url-btn" class="img-url-btn" data-on-click="importFromUrl()">Importieren</button>
         </div>
       </div>
       <div id="img-pick-pane-link" class="img-pick-pane">
@@ -3471,12 +3472,12 @@
             <strong>Cloudinary</strong>, jede öffentlich zugängliche URL.
           </div>
           <div id="img-link-status" class="img-url-status"></div>
-          <button id="img-link-btn" class="img-url-btn" onclick="addExternalLink()">Verknüpfen</button>
+          <button id="img-link-btn" class="img-url-btn" data-on-click="addExternalLink()">Verknüpfen</button>
         </div>
       </div>
       <div id="img-pick-pane-files" class="img-pick-pane">
         <div style="padding:10px 16px 4px;display:flex;justify-content:flex-end;">
-          <button id="file-pick-upload-btn" class="img-pick-upload" onclick="document.getElementById('file-file-inp').click()">↑ Upload</button>
+          <button id="file-pick-upload-btn" class="img-pick-upload" data-on-click="orbH.clickId('file-file-inp')">↑ Upload</button>
         </div>
         <div class="img-pick-body" id="img-pick-file-list"></div>
       </div>
