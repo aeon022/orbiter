@@ -69,10 +69,24 @@ await check('security headers + script nonces on HTML pages', async () => {
   const r = await fetch(BASE + '/login.html'); const html = await r.text();
   assert(/frame-ancestors 'self'/.test(r.headers.get('content-security-policy') ?? ''), 'missing frame-ancestors');
   assert(r.headers.get('x-content-type-options') === 'nosniff', 'missing nosniff');
-  const nonce = (r.headers.get('content-security-policy-report-only') ?? '').match(/nonce-([^']+)'/)?.[1];
-  assert(nonce, 'no nonce in the report-only policy');
+  // the script policy is ENFORCED (not report-only), nonce-based, without 'unsafe-inline' for scripts
+  assert(!r.headers.get('content-security-policy-report-only'), 'CSP is still report-only');
+  const csp = r.headers.get('content-security-policy') ?? '';
+  const nonce = csp.match(/script-src[^;]*nonce-([^']+)'/)?.[1];
+  assert(nonce, 'no nonce in the enforced script-src');
+  assert(!/script-src[^;]*'unsafe-inline'/.test(csp), "script-src allows 'unsafe-inline'");
   const scripts = html.match(/<script\b[^>]*>/g) ?? [];
   assert(scripts.length && scripts.every((s) => s.includes(`nonce="${nonce}"`)), 'a <script> tag has no matching nonce');
+});
+
+await check('no inline event handlers (onclick=…) on any admin page: the enforced CSP would block them', async () => {
+  const bad = [];
+  for (const f of ['login', 'dashboard', 'entries', 'editor', 'collections', 'media', 'inbox', 'forms', 'analytics', 'calendar', 'settings', 'users', 'schema', 'pods', 'account', 'graph', 'import', 'publish', 'snippets', 'build']) {
+    const h = await (await fetch(`${BASE}/${f}.html`)).text();
+    const m = h.match(/\son(click|input|change|keydown|keyup|mousedown|mouseover|mouseout|submit|focus|blur|load|error)=/i);
+    if (m) bad.push(`${f}.html (${m[0].trim()})`);
+  }
+  assert(!bad.length, 'inline handlers in: ' + bad.join(', '));
 });
 
 const PAGES = ['dashboard.html', 'entries.html?col=posts&label=Posts', 'collections.html', 'media.html', 'inbox.html', 'forms.html', 'analytics.html', 'calendar.html', 'settings.html', 'users.html', 'schema.html', 'build.html', 'import.html', 'publish.html', 'pods.html', 'account.html', 'snippets.html'];

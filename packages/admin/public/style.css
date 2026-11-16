@@ -3489,7 +3489,9 @@ html[data-zen="1"] .main {
 }
 
 /* contrast: white label on every theme's accent */
-.btn-primary { background: color-mix(in srgb, var(--accent) 78%, #000); }
+.btn-primary { background: color-mix(in srgb, var(--accent) 70%, #000); }
+/* hover darkens instead of fading (opacity .88 on the accent dropped the white label below 4.5:1) */
+.btn-primary:hover { opacity: 1; background: color-mix(in srgb, var(--accent) 58%, #000); }
 
 .sr-only { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 

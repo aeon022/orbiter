@@ -2,7 +2,7 @@
   "name": "orbiter",
   "version": "0.0.1",
   "private": true,
-  "description": "Orbiter — Portable single-file CMS for Astro",
+  "description": "Orbiter \u2014 Portable single-file CMS for Astro",
   "workspaces": [
     "packages/*",
     "apps/*"
@@ -29,6 +29,15 @@
   "overrides": {
     "miniflare": {
       "sharp": "0.35.5"
+    },
+    "app-builder-lib": {
+      "minimatch": "$minimatch"
+    },
+    "@electron/universal": {
+      "minimatch": "$minimatch"
     }
+  },
+  "devDependencies": {
+    "minimatch": "11.0.1"
   }
 }

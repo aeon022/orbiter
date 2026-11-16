@@ -1,6 +1,6 @@
 import { openPod } from '@a83/orbiter-core';
 import { Marked } from 'marked';
-import { ZipArchive } from 'archiver';
+import ZipStream from 'zip-stream';
 import { themes, defaultTheme } from './themes/index.js';
 
 const MIME_EXT = {
@@ -241,7 +241,12 @@ export async function generateStaticSite(podPath, { themeId } = {}) {
   const rootFor = (depth) => depth === 0 ? '' : '../'.repeat(depth);
 
   // ── Archive ──────────────────────────────────
-  const archive = new ZipArchive({ zlib: { level: 6 } });
+  // zip-stream (the zipper inside archiver) directly: archiver's file-globbing dependency (readdir-glob → minimatch) is not needed here.
+  const archive = new ZipStream({ zlib: { level: 6 } });
+  let queue = Promise.resolve(); // zip-stream wants one entry at a time
+  const append = (data, { name }) => {
+    queue = queue.then(() => new Promise((res, rej) => archive.entry(typeof data === 'string' ? Buffer.from(data) : data, { name }, (e) => (e ? rej(e) : res()))));
+  };
   const chunks = [];
   const finished = new Promise((resolve, reject) => {
     archive.on('data', chunk => chunks.push(chunk));
@@ -250,11 +255,11 @@ export async function generateStaticSite(podPath, { themeId } = {}) {
   });
 
   // style.css
-  archive.append(theme.css(), { name: 'style.css' });
+  append(theme.css(), { name: 'style.css' });
 
   // index.html
   const homeContent = theme.homepageHTML(site, navSummaries, rootFor(0));
-  archive.append(theme.layoutHTML(site, homeContent, { title: '', description: site.description }, navSummaries, rootFor(0)), { name: 'index.html' });
+  append(theme.layoutHTML(site, homeContent, { title: '', description: site.description }, navSummaries, rootFor(0)), { name: 'index.html' });
 
   // Collection pages + entry pages
   for (const col of collections) {
@@ -282,7 +287,7 @@ export async function generateStaticSite(podPath, { themeId } = {}) {
       _parent: parentCol ? { id: parentCol.id, label: parentCol.label } : null,
     };
     const listContent = theme.collectionListHTML(site, colMeta, listItems, rootFor(1));
-    archive.append(theme.layoutHTML(site, listContent, { title: col.label }, navSummaries, rootFor(1)), { name: `${col.id}/index.html` });
+    append(theme.layoutHTML(site, listContent, { title: col.label }, navSummaries, rootFor(1)), { name: `${col.id}/index.html` });
     sitemapPages.push({ path: `/${col.id}/`, updated: null });
 
     // Individual entries
@@ -309,7 +314,7 @@ export async function generateStaticSite(podPath, { themeId } = {}) {
 
       const entryContent = theme.entryHTML(site, colMeta, entryData, renderedBody, rootFor(2));
       const ogImage = (heroImage && site.url) ? `${site.url.replace(/\/+$/, '')}/${mediaMap.get(entry.data[imageKey]) || ''}` : '';
-      archive.append(theme.layoutHTML(site, entryContent, {
+      append(theme.layoutHTML(site, entryContent, {
         title,
         description: (excerptKey && entry.data[excerptKey]) || '',
         canonical: site.url ? `${site.url.replace(/\/+$/, '')}/${col.id}/${entry.slug}/` : '',
@@ -327,14 +332,14 @@ export async function generateStaticSite(podPath, { themeId } = {}) {
 
   // Media files
   for (const item of mediaItems) {
-    archive.append(item.data, { name: item.path });
+    append(item.data, { name: item.path });
   }
 
   // Sitemap + robots
-  archive.append(buildSitemap(site.url, sitemapPages), { name: 'sitemap.xml' });
-  archive.append(buildRobots(site.url), { name: 'robots.txt' });
+  append(buildSitemap(site.url, sitemapPages), { name: 'sitemap.xml' });
+  append(buildRobots(site.url), { name: 'robots.txt' });
 
   db.close();
-  archive.finalize();
+  queue.then(() => archive.finalize()).catch((e) => archive.emit('error', e));
   return finished;
 }
