@@ -45,6 +45,10 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <p>When a newer release exists, the dashboard and <strong>Settings → Pod</strong> show it with an <strong>Update now</strong> button. Lander downloads the release ZIP and its signature from GitHub and checks the Ed25519 signature against the public key built into the code. Only then does it replace <code>src/</code>, <code>bin/</code> and <code>public/</code>; the config, <code>data/</code>, media and the subfolder paths stay. A copy of the pod and the previous code is saved to <code>data/update-rollback/</code> first.</p>
 <p>It needs the PHP <code>zip</code> and <code>sodium</code> extensions and outgoing HTTPS. If something is missing, the admin tells you what, and you replace the files by hand: unzip the release over the install, keep <code>lander.config.php</code> and <code>data/</code>, and run <code>php bin/lander rebase &lt;base&gt;</code> in a subfolder. <code>update_check =&gt; false</code> turns the hint and the button off. Updating from 0.3.0 to 0.3.1 is manual (0.3.0 has no button); from there on it is one click.</p>
 
+<h3>Where is the update button?</h3>
+<p>The update line sits at the very bottom of the <strong>Pod</strong> card in <strong>Settings</strong>; the dashboard shows the same hint at the top. It always names the installed version. The <strong>Update now</strong> button appears <em>only if a newer release exists</em>. If you uploaded the files by hand and the line reads your version without a hint, you are up to date and there is nothing to click. Reload the admin with Cmd/Ctrl+Shift+R first, otherwise the browser may still show old files.</p>
+<p>No update line at all means the install is older than 0.3.1. Update it once by hand (unzip over <code>src/</code>, <code>bin/</code>, <code>public/</code>; never replace <code>public/media/</code> or <code>data/</code>); from then on it is one click.</p>
+
 <h2>Differences to Orbiter</h2>
 <table>
   <thead><tr><th></th><th>Orbiter</th><th>Lander</th></tr></thead>
