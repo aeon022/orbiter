@@ -260,6 +260,21 @@
           </div>
         </div>
 
+        <!-- Digi-ID -->
+        <div id="banner-digiid" class="banner"></div>
+        <div class="settings-group">
+          <div class="group-header">Digi-ID (DigiByte wallet)</div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Sign in with your wallet</div>
+              <div class="setting-desc">Link a DigiByte address, then scan the QR code on the login page instead of typing a password. Legacy addresses starting with "D".</div>
+            </div>
+            <div><button class="btn-save" id="digiid-link-btn">Link an address</button></div>
+          </div>
+          <div id="digiid-qr" style="padding:0 20px 8px"></div>
+          <div id="digiid-list" style="padding:6px 20px 12px;font-size:12px"></div>
+        </div>
+
         <!-- Active sessions -->
         <div id="banner-sessions" class="banner"></div>
         <div class="settings-group">
@@ -354,6 +369,32 @@
       body: body ? JSON.stringify(body) : undefined,
     }).then(r => r.json()).catch(() => ({ error: 'Network error' }));
 
+    // ── Digi-ID ──────────────────────────────────────────────────────
+    async function loadDigiid() {
+      const r = await api('/api/account/digiid', 'GET');
+      $('digiid-list').innerHTML = (r.addresses || []).length
+        ? r.addresses.map(a => `<div style="display:flex;justify-content:space-between;gap:8px;padding:4px 0"><code style="word-break:break-all">${esc(a.address)}</code><button class="btn-save" data-on-click="digiidRemove(this.dataset.a)" data-a="${esc(a.address)}">Remove</button></div>`).join('')
+        : '<span style="color:var(--muted)">No address linked.</span>';
+    }
+    window.digiidRemove = async (addr) => {
+      const currentPassword = prompt('Confirm your password to remove this address:');
+      if (!currentPassword) return;
+      const r = await api('/api/account/digiid/' + encodeURIComponent(addr), 'DELETE', { currentPassword });
+      showBanner('banner-digiid', !!r.ok, r.ok ? 'Address removed.' : (r.error || 'Failed.'));
+      loadDigiid();
+    };
+    $('digiid-link-btn').addEventListener('click', async () => {
+      const currentPassword = prompt('Confirm your password to link an address:');
+      if (!currentPassword) return;
+      const ch = await api('/api/account/digiid/link', 'POST', { currentPassword });
+      if (!ch.uri) return showBanner('banner-digiid', false, ch.error || 'Could not start.');
+      orbDigiid.show($('digiid-qr'), ch, (st) => {
+        showBanner('banner-digiid', st === 'ok', st === 'ok' ? 'Address linked.' : st === 'taken' ? 'That address belongs to another account.' : 'The code expired. Try again.');
+        loadDigiid();
+      });
+    });
+    loadDigiid();
+
     async function loadTfa() {
       const s = await api('/api/account/2fa', 'GET');
       $('tfa-setup').style.display = 'none';
@@ -421,5 +462,7 @@
   </script>
   <script src="/sidebar.js"></script>
   <script src="/search.js"></script>
+  <script src="/qrcode.js"></script>
+  <script src="/digiid.js"></script>
 </body>
 </html>

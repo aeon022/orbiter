@@ -38,9 +38,31 @@
             Sign in
           </button>
         </form>
+        <div id="digiid-wrap" style="margin-top:16px;text-align:center">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px">or</div>
+          <button class="btn" type="button" id="digiid-btn" data-on-click="digiidLogin()" style="width:100%;justify-content:center">Sign in with Digi-ID</button>
+          <div id="digiid-box" style="margin-top:12px"></div>
+          <div id="digiid-msg" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
+        </div>
       </div>
     </div>
   </div>
+  <script src="/qrcode.js"></script>
+  <script src="/digiid.js"></script>
+  <script>
+    window.digiidLogin = function () {
+      var box = document.getElementById('digiid-box'), msg = document.getElementById('digiid-msg');
+      msg.textContent = 'Starting…';
+      fetch('/api/digiid/challenge', { method: 'POST', credentials: 'include' }).then(function (r) { return r.json(); }).then(function (ch) {
+        if (!ch.uri) { msg.textContent = ch.error || 'Digi-ID is not available.'; return; }
+        msg.textContent = 'Scan with a Digi-ID wallet (DigiByte Go, Digi-ID app).';
+        orbDigiid.show(box, ch, function (st) {
+          if (st === 'ok') { location.replace('/dashboard.html'); return; }
+          msg.textContent = st === 'unknown' ? 'This address is not linked to an account. Sign in with your password and link it under Account.' : 'The code expired. Try again.';
+        });
+      }).catch(function () { msg.textContent = 'Network error'; });
+    };
+  </script>
 
   <script type="module">
     // Redirect if already logged in

@@ -46,6 +46,7 @@ import { previewRoutes }       from './routes/preview.js';
 import { htmlHandler, cspPublicRoutes, cspAdminRoutes } from './csp.js';
 import { requireAuth }      from './middleware/auth.js';
 import { csrfMiddleware }  from './middleware/csrf.js';
+import { digiidPublicRoutes, digiidAccountRoutes } from './routes/digiid.js';
 
 const { version: adminVersion } = JSON.parse(
   readFileSync(join(__dirname, '../package.json'), 'utf8')
@@ -90,6 +91,8 @@ export function createApp(podPath) {
 
   // Public routes (no CSRF needed — login can't be meaningfully CSRF-attacked)
   app.route('/api/auth', authRoutes);
+  // Digi-ID: the wallet posts to /callback without cookies or an Origin header, so it lives outside the CSRF-checked group
+  app.route('/api/digiid', digiidPublicRoutes);
 
   // Public form submission — wide CORS (called from any static site)
   app.use('/api/form/*', cors({ origin: '*', allowMethods: ['POST', 'OPTIONS'] }));
@@ -141,6 +144,7 @@ export function createApp(podPath) {
   api.route('/media',        mediaRoutes);
   api.route('/users',        userRoutes);
   api.route('/meta',         metaRoutes);
+  api.route('/account/digiid', digiidAccountRoutes);
   api.route('/account',      accountRoutes);
   api.route('/build',        buildRoutes);
   api.route('/search',       searchRoutes);

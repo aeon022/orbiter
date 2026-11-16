@@ -33,6 +33,10 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <p><strong>Account → Two-factor authentication</strong>: confirm your password, add the shown setup key to an authenticator app (Google Authenticator, 1Password, Aegis …) and enter a code to switch it on. You get eight one-time <strong>recovery codes</strong> — save them, they are shown once. From then on sign-in asks for the 6-digit code after the password; a code can't be used twice. Turning 2FA on signs out your other devices.</p>
 <p>Lost your phone and your recovery codes? An admin can reset your 2FA from <strong>Users</strong> (this also signs you out everywhere). The TOTP secret is encrypted at rest when <code>ORBITER_SECRET</code> is set.</p>
 
+<h2>Digi-ID sign-in (DigiByte wallet)</h2>
+<p>As an extra way to sign in, a user can link one or more DigiByte addresses under <strong>Account → Digi-ID</strong> (a password is needed to link or remove one). The login page then shows a <strong>Sign in with Digi-ID</strong> button with a QR code. The wallet signs a one-time <code>digiid://</code> URI that contains your domain, so a look-alike site cannot reuse the proof. Challenges live five minutes and work once; the browser that started the sign-in polls with its own secret.</p>
+<p>A Digi-ID sign-in counts as a full sign-in (like a passkey): no password and no extra 2FA code. The password login stays as the fallback. It needs a public HTTPS address the phone can reach, so it does not work on <code>localhost</code> or in the desktop app. Legacy addresses starting with <code>D</code> are supported.</p>
+
 <h2>Active sessions</h2>
 <p><strong>Account → Active sessions</strong> lists every device that is signed in (browser, IP, time). Sign out a single device or all others. A login session lasts 30 days.</p>
 

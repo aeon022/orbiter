@@ -107,6 +107,13 @@ window.ORB_DE = {
   'Dracula': 'Dracula', 'Nord': 'Nord', 'Gruvbox': 'Gruvbox', 'Tokyo Night': 'Tokyo Night', 'Catppuccin': 'Catppuccin', 'Zen': 'Zen', 'Paper': 'Papier', 'Space': 'Weltraum', '◐ Business': '◐ Business', '◈ System HUD': '◈ System-HUD', 'HUD': 'HUD', 'Casual': 'Locker', 'Professional': 'Professionell',
   // Lander
   'draft': 'Entwurf', 'published': 'veröffentlicht', 'scheduled': 'geplant', 'files': 'Dateien', 'of total': 'vom Ganzen', 'in review': 'in Prüfung', 'trashed': 'gelöscht', 'Entries ': 'Einträge',
+  'Sign in with Digi-ID': 'Mit Digi-ID anmelden', 'or': 'oder', 'Open in wallet': 'In der Wallet öffnen', 'Starting…': 'Startet…',
+  'Scan with a Digi-ID wallet (DigiByte Go, Digi-ID app).': 'Mit einer Digi-ID-Wallet scannen (DigiByte Go, Digi-ID-App).',
+  'Digi-ID (DigiByte wallet)': 'Digi-ID (DigiByte-Wallet)', 'Sign in with your wallet': 'Mit der Wallet anmelden', 'Link an address': 'Adresse verknüpfen', 'No address linked.': 'Keine Adresse verknüpft.',
+  'Link a DigiByte address, then scan the QR code on the login page instead of typing a password. Legacy addresses starting with "D".': 'Verknüpfe eine DigiByte-Adresse und scanne dann auf der Anmeldeseite den QR-Code statt ein Passwort einzutippen. Klassische Adressen, die mit „D" beginnen.',
+  'Address linked.': 'Adresse verknüpft.', 'Address removed.': 'Adresse entfernt.', 'The code expired. Try again.': 'Der Code ist abgelaufen. Bitte erneut versuchen.', 'That address belongs to another account.': 'Diese Adresse gehört zu einem anderen Konto.',
+  'This address is not linked to an account. Sign in with your password and link it under Account.': 'Diese Adresse ist keinem Konto zugeordnet. Melde dich mit dem Passwort an und verknüpfe sie unter Konto.',
+  'Remove': 'Entfernen',
   'Update now': 'Jetzt aktualisieren', 'Updating…': 'Wird aktualisiert…', 'Release notes →': 'Versionshinweise →', 'check now': 'jetzt prüfen', 'up to date': 'aktuell', 'could not check for updates': 'Update-Prüfung nicht möglich', 'update check is off': 'Update-Prüfung ist aus', 'Update failed': 'Update fehlgeschlagen', 'Done – reloading': 'Fertig – lädt neu',
   'Update Lander to': 'Lander aktualisieren auf', 'Admins only': 'Nur für Admins'
 };
