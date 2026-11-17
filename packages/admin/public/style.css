@@ -3667,7 +3667,8 @@ input, textarea, select, .field-input { font-family: var(--sans, system-ui, sans
   .entries-filter-bar::-webkit-scrollbar { display: none; }
   .entries-filter-bar > * { flex: none; }
   /* editor: toolbar fades out on the right (it scrolls), the floating save button never covers the last field */
-  .editor-toolbar { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); }
+  /* fade at the right edge shows that the toolbar scrolls (a mask would trap the fixed save button inside the toolbar) */
+  .editor-toolbar::after { content: ''; position: sticky; right: 0; flex: 0 0 28px; align-self: stretch; margin-left: -28px; background: linear-gradient(90deg, transparent, var(--bg2)); pointer-events: none; }
   .editor-scroll { padding-bottom: 150px !important; }
   .editor-page { padding-top: 28px; }
   .meta-panel-toggle { position: fixed; }
