@@ -1289,6 +1289,200 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 
 ## Changelog
 
+> The full, current changelog lives on **[orbiter.sh/changelog](https://orbiter.sh/changelog)**. Entries from admin 0.3.81 on are mirrored here.
+
+### Nov 2026 · admin@0.3.110 · lander@0.7.4 — Admin on phones and tablets, and a faster dock
+
+- **Dock labels and drawers** — on touch devices every dock item shows its name. A drawer opens as a floating glass panel above the dock (like Notes and To-do) with a close button; tapping outside closes it.
+- **Lists on a phone** — one main action per row plus a “⋯” menu (edit, duplicate, trash). Swipe left for the menu, swipe right to publish or unpublish (asks first). Slug and repeated names stay out of the card; filter chips scroll in one line.
+- **Editor** — the floating save button no longer covers the last field, the toolbar fades out where it scrolls, a pulsing dot shows unsaved changes, and *Preview* opens the site in a sheet.
+- **Touch targets** — buttons, chips, fields and calendar days are at least 40–44 px high on touch screens; forms use a calmer sans-serif instead of monospace.
+- **Draft badges** — the dock shows how many drafts a collection or drawer holds. Empty lists get a call to action, loading lists a shimmer.
+- **Lander** — the admin is German by default (switch under Settings → Admin language). Update with one click in Settings → Pod.
+
+### Nov 2026 · admin@0.3.110 · lander@0.7.3 — A dock that glides, and pages that open without a reload
+
+- **Sliding pill** — one glass pill follows the item under the cursor with a spotlight, and rests behind the active item with a slow aurora ring. It stays on a drawer while you reach into it, and returns only after a short grace period.
+- **Pages swap in place** — dock and status bar stay put, the old page stays until the new one is ready (thin progress bar), pages are prefetched on hover or touch and cached for five minutes. Editor, calendar, users and a few others still reload fully.
+- **Soft transitions** — a quick fade with a hint of blur and lift; full page loads use the browser’s view transitions where available. Off for “reduce motion”.
+- **Instant dock** — the dock is drawn from the last `/api/info` answer on the first frame and rebuilt only if something changed. The cache is cleared on sign-out.
+- **Versioned assets** — scripts and styles carry `?v=…` and may stay in the browser cache for a year; the version changes with every file change. Lander needs `mod_headers` and `mod_rewrite` for the long cache (it still works without).
+- **Recently visited** — the command palette (⌘K) lists the last pages you opened. Kept in this browser only.
+- **Security** — the page cache expires and notices a lost session instead of showing an empty page.
+
+### Nov 2026 · lander@0.7.0 — Lander for artists: music, video, preview, quick-create
+
+- **Audio and video uploads** — MP3, M4A, AAC, OGG, WAV, FLAC, MP4, WebM and MOV, served with range requests so Safari can play and seek. The upload limit is 40 MB for new installs.
+- **Preview** — a *Preview* button opens the real website page for an entry, drafts included while you are signed in (Settings meta `site.preview` and `site.url`).
+- **Quick-create** — the “new entry” dialog asks for the list columns (title, band, date, place) and can publish right away. **Copy with a new date** duplicates an entry and renames its slug.
+- **Relations** — a relation field can be single-choice (`multiple: false`), shown as a dropdown; list columns show the related title.
+- **Editor role** — editors see a short dock (no schema, users, build, import) and the server refuses those actions with 403. Plain-language save errors replace “Error”.
+- **Installable** — web-app manifest and icons, iOS meta tags and safe areas, so the admin can live on the home screen.
+
+### Nov 2026 · lander@0.6.1 — Lander: the dock copes with many collections
+
+- **"More" drawer** — with more than six ungrouped collections the extra ones move into a drawer instead of stretching the dock.
+- **Short dock names** — long titles are shortened to their first part (no more "…"); the full name stays in the tooltip.
+- **Never wider than the screen** — long drawers scroll. Group collections by topic in Settings → Navigation. Update with one click in Settings → Pod.
+
+### Nov 2026 · lander@0.6.0 — Lander: strict Content-Security-Policy for the admin
+
+- **Nonce on every script** — the admin pages are served through PHP with a one-time nonce and a strict policy. An injected `<script>` or `onerror=` handler cannot run, the same protection Orbiter got in 0.3.98.
+- **No inline handlers** — all 81 `onclick`-style handlers moved to `data-on-click`. Behaviour is unchanged. Works at the domain root and in a subfolder, in English and German.
+- **Earlier today (0.5.6):** the pod and its backups are written owner-only (600). If a page looks odd after updating, hard-reload once. [Docs →](https://orbiter.sh/docs/lander)
+
+### Nov 2026 · desktop@0.2.3 — Desktop app: no more admin / admin
+
+- **Random start password** — a new pod no longer gets `admin / admin`. The app creates a random password and shows it once after creating the pod.
+- **Loopback address** — the app talks to `127.0.0.1` instead of `localhost` (you sign in once again after the update, the address is a new site for the browser cookie).
+- **No browser permissions** — camera, microphone, location and notification requests are always denied.
+- Includes the current admin: enforced Content-Security-Policy, German interface, signed backups and Digi-ID sign-in. The macOS app is still unsigned (open it with right-click → Open).
+
+### Nov 2026 · admin@0.3.105 · lander@0.5.6 — Security: backups are owner-only
+
+- **Automatic backups were world-readable.** Since 0.3.96 (Orbiter) the automatic backup landed in a `backups/` folder next to the pod with default permissions (644). If that folder lies inside a directory the web server serves, the backup (password hashes, saved settings) could be downloaded by anyone who guessed the file name. Backups are now written with mode 600 in a 700 folder.
+- **What to do:** update, then check that `https://your-host/backups/` and old `*.pod` files are not reachable, and delete old backups from a served folder. If one was exposed, change the user passwords and any SMTP, API or FTP secrets stored in the pod. Set `ORBITER_BACKUP_DIR` to a folder outside the web root for good measure.
+- **Lander** also writes the pod and its backups owner-only (600), so a host that ignores `data/.htaccess` does not expose them. Lander's `data/.htaccess` already blocked the folder on Apache.
+
+### Nov 2026 · admin@0.3.103 · lander@0.5.5 — Autosave for every field
+
+- The editor already saved the title and the text two seconds after typing. Now **all other fields** (text fields, dates, switches, dropdowns) autosave the same way, so a notice or a short entry no longer needs a manual save.
+- Autosave keeps the entry's current status: a *published* entry goes live with the change (after the short public cache), a draft stays a draft.
+
+### Nov 2026 · admin@0.3.102 · lander@0.5.4 — Dock: shorter German labels and your own order
+
+- **Shorter dock labels** in German (Start, Nutzer, To-dos, Setup, Auto …), so the dock fits more items.
+- **Own order for collections** — the setting `nav.order` (a list of collection IDs) decides the order in the dock and the sidebar; collections not listed follow after. Set it with `PUT /api/meta` or in the pod.
+
+### Nov 2026 · admin@0.3.101 · lander@0.5.1 — Fix: Account page (2FA, Digi-ID) did nothing after in-app navigation
+
+- Opening **Account** through the dock or sidebar swapped the page in place, so its scripts did not run: the 2FA card stayed on “Loading…” and “Link an address” did nothing until a hard refresh. The page now loads normally.
+
+### Nov 2026 · lander@0.5.0 · admin@0.3.100 — Digi-ID sign-in in Lander
+
+- **Digi-ID for Lander** — link a DigiByte address under Account, then scan the QR code on the login page. Same contract as Orbiter 0.3.99. Needs PHP `gmp` or `bcmath` (the signature check is done in PHP, no extra library to install).
+- **Fix (admin 0.3.100, Lander)** — the sign-in request now sends a JSON body: some hosts and proxies answer a body-less POST with 403. [Docs →](https://orbiter.sh/docs/lander)
+
+### Nov 2026 · admin@0.3.100 — Sign in with Digi-ID (DigiByte wallet)
+
+- **Passwordless sign-in** — link a DigiByte address under Account → Digi-ID, then scan the QR code on the login page with a Digi-ID wallet. The password login stays.
+- **Bound to your domain** — the wallet signs a one-time URI that contains the site address; challenges expire after five minutes and work once. Linking or removing an address needs the password. [Docs →](https://orbiter.sh/docs/security)
+- Needs a public HTTPS address (not `localhost` or the desktop app). Legacy `D…` addresses.
+
+### Nov 2026 · lander@0.4.0 — Lander: webhooks and build trigger
+
+- **Rebuild on publish** — a build webhook (Settings → Build) is called whenever an entry is published, so a static Astro site on Netlify, Vercel or GitHub Actions rebuilds itself.
+- **Signed webhooks** — publish and delete events with an HMAC-SHA256 signature, a log of the last 50 deliveries and a test button. Same contract as Orbiter. [Docs →](https://orbiter.sh/docs/lander)
+
+### Nov 2026 · lander@0.3.3 — Lander: two-factor sign-in (TOTP)
+
+- **2FA for Lander** — Settings → Security. Works with Google Authenticator, 1Password and Aegis; eight one-time recovery codes; a code cannot be replayed; wrong codes are throttled per account.
+- Same format as Orbiter, so an Orbiter pod with 2FA users can move to Lander (before, Lander refused to sign these accounts in). Install it with **Update now**.
+
+### Nov 2026 · admin@0.3.98 — Security: strict Content-Security-Policy enforced
+
+- **Scripts need a nonce** — the admin now blocks every script that is not part of its own pages. An injected `<script>` or `onerror=` handler in content cannot run, even if it slipped past escaping.
+- **No inline handlers** — all 95 `onclick="…"` style handlers are replaced by `data-on-click` attributes handled by a small dispatcher (no `eval`). Behaviour is unchanged.
+- Custom admin pages that still use inline handlers: switch to `data-on-…`, or set `ORBITER_CSP=report` to go back to report-only. [Docs →](https://orbiter.sh/docs/security)
+
+### Nov 2026 · admin@0.3.97 · lander@0.3.2 — German admin interface
+
+- **Admin language DE** — Settings → General → Admin language now switches the whole interface to German: navigation, dashboard, entries, editor, media, users, settings, import and analytics (about 600 labels and hints). Anything not translated yet stays English.
+- The choice is kept per browser. The strings live in `i18n-de.js`; your own content, the editor text and form fields are never touched. More languages can be added the same way.
+- Lander 0.3.2 gets the same German interface. It is the first release installed with the signed one-click update.
+
+### Nov 2026 · lander@0.3.1 — Lander: signed one-click update
+
+- **Update now** — the Lander admin installs a newer release with one click, from the dashboard hint or Settings → Pod.
+- **Signed releases** — every release ZIP carries an Ed25519 signature that Lander checks before it writes a file. A tampered download is refused and nothing changes.
+- **Rollback copy** — the pod and the current code are saved to `data/update-rollback/` first. Config, `data/`, media and the subfolder paths stay as they are.
+- Needs the PHP `zip` and `sodium` extensions; otherwise the admin says why and you replace the files by hand. `update_check => false` switches it off. [Docs →](https://orbiter.sh/docs/lander)
+
+### Nov 2026 · lander@0.3.0 — Lander 0.3: users, installer, subfolders, backups, image sizes
+
+- **Installer** — open `install.php` once; it detects a subfolder or domain root, writes the config, creates the first admin and deletes itself.
+- **Subfolder or subdomain** — `example.at/lander/` works as well as `redaktion.example.at`.
+- **Users** — admins add editors and admins, reset passwords and delete accounts.
+- **Backup and restore** — weekly automatic backups, SQL file or ZIP with media, restore with validation.
+- **Image sizes** — `?w`, `?ar` and `?fmt` variants with a cache; public `/api/public/media/<id>`.
+- **Inbox** visible in the menu, a short public cache (10 s by default) and an update hint. [Lander →](https://orbiter.sh/lander)
+
+### Nov 2026 · admin@0.3.96 · core@0.3.22 — Automatic backups, pod size watch, media out of the pod, stronger password hashing
+
+- **Automatic backups** — the pod is copied to a `backups/` folder every 7 days (keeps four), plus *Back up now*. Configurable with `ORBITER_BACKUP_DAYS`, `_KEEP`, `_DIR`. [Docs →](https://orbiter.sh/docs/backup)
+- **Pod size watch** — Settings → Pod shows the file size and the media inside it; the dashboard warns above `ORBITER_POD_WARN_MB` (default 60) or when no backup exists.
+- **Move media out of the pod** — with a media backend set (local folder, S3, GitHub), one button moves the files out and shrinks the pod. A file that fails stays where it is.
+- **Stronger password hashing** — scrypt with a higher cost, stored with the hash; old hashes keep working and are upgraded at the next sign-in. [Docs →](https://orbiter.sh/docs/security)
+
+### Nov 2026 · admin@0.3.95 — Backup and restore from Settings
+
+- **Download a backup** — Settings → Pod → *Download SQL file* gives you a consistent copy of the live pod (no sessions), and shows the current file size. [Docs →](https://orbiter.sh/docs/backup)
+- **Restore or move** — upload a `.pod`: it is checked first (SQLite, integrity, required tables, at least one admin), the current pod is kept as `<pod>.before-restore-…`, then swapped in. Works for moving to another server, and for pods from [Lander](https://orbiter.sh/lander).
+
+### Nov 2026 · admin@0.3.94 · integration@0.3.23 · mcp@0.1.6 — Lander for PHP hosting, security hardening, 10 themes and a tidier Settings page
+
+- **Lander** — the Orbiter admin on ordinary PHP hosting (PHP 8.1+, SQLite, no Node). Same SQL file (`.pod`), same Station interface, live read API for your site. [Lander →](https://orbiter.sh/lander) [Docs →](https://orbiter.sh/docs/lander)
+- **Security hardening** — user-supplied values are now escaped everywhere in the admin UI (closes stored-XSS paths), meta writes are limited to admins and size-capped, slugs and usernames are validated server-side, request bodies have a size limit, and GitHub Actions are pinned to commit SHAs. Dependencies updated (hono, nodemailer, fast-xml-parser, zod). Update to 0.3.92 or later.
+- **10 themes, font choice, custom colors** — a 5×2 palette, your own accent colors and a phone tab bar.
+- **UI zoom applies immediately**, and static files revalidate (`no-cache`) so a new admin version shows up without a hard reload.
+- **Station dock** — drawers are hexagons whose fill level shows how much is in them; the outline turns on hover.
+- **Settings in sections** — You, General, Content, Publishing and System, two balanced columns, collapsible cards (state is remembered), a jump bar and Expand/Collapse all. The page is less than half as long.
+
+### Oct 2026 · admin@0.3.88 · core@0.3.21 · mcp@0.1.5 · integration@0.3.22 · client@0.1.4 · cli@0.3.15 — Two-factor sign-in, signed webhooks, key limits, version diff and media usage
+
+- **2FA (TOTP)** — turn it on under Account with any authenticator app. Eight one-time recovery codes, codes can't be replayed, and an admin can reset a locked-out user. [Docs →](https://orbiter.sh/docs/security)
+- **Active sessions** — see every signed-in device (browser, IP, time) and sign out one or all others.
+- **API key limits** — restrict a key to collections, give it an expiry date or a requests-per-minute limit. Applies to the REST API and MCP. A new dialog replaces the prompt chain.
+- **Editor layout** — custom fields now live in a collapsible “Details” card in the main column (grouped, two per row, long inputs full width; remembers open/closed per collection) instead of small boxes in the sidebar, so the body stays the main content. Collections without a body field drop the block-editing tools. Also fixed: validation errors on publish were never shown, the long dock popups in Station mode (many collections / tools) now scroll instead of running off the screen, and the Schema page can be scrolled in Station mode again.
+- **Webhook recipes** — tested receiver plus copy-paste handlers: Slack/Telegram on review, IndexNow, Cloudflare purge, Mastodon. [Docs →](https://orbiter.sh/docs/webhook-recipes)
+- **AI translation of missing locales** — one click in the editor creates the missing language versions as drafts (never overwrites, never publishes). [Docs →](https://orbiter.sh/docs/i18n)
+- **Image variants + focal point** — `/orbiter/media/<id>?w=800&fmt=webp&ar=16:9` serves a resized, re-encoded or cropped version; crops keep the focal point you set in the media library. Bounded and cached. [Docs →](https://orbiter.sh/docs/media)
+- **Review workflow** — optional. Editors submit entries for review; admins and the new *reviewer* role approve or request changes. Enforced on every publishing route. [Docs →](https://orbiter.sh/docs/permissions#review)
+- **Preview links** — the editor's Preview button now uses a one-hour token bound to that entry instead of the master preview token (which also fixes previews for editors, who only got a masked token before).
+- **Version diff** — see field by field what a restore would change. Restoring now keeps the content it replaces, so a restore can be undone (previously the replaced content was lost, and the newest snapshot couldn't be restored at all).
+- **Media usage** — each file shows where it is used; filter *Unused* files and *Broken refs*; deleting a file that is in use warns first.
+- **Signed webhooks** — HMAC-SHA256 signatures, retries (5 s, 30 s, 5 min) and a delivery log, managed in Settings. Webhook URLs are now admin-only (editors could previously set them). [Docs →](https://orbiter.sh/docs/webhooks)
+
+### Oct 2026 · admin@0.3.87 · core@0.3.20 · mcp@0.1.4 · cli@0.3.14 — Security check, encrypted secrets, draft-only agent keys, Terminal theme
+
+- **`orbiter doctor` + dashboard card** — flags a pod tracked by git, plaintext credentials, an open Content API and more, with the fix next to each finding. [Docs →](https://orbiter.sh/docs/security)
+- **Encrypted secrets** — set `ORBITER_SECRET` and stored FTP/SMTP/AI/GitHub/S3 credentials are encrypted at rest (AES-256-GCM). Opt-in; nothing changes without it.
+- **Draft-only keys for agents** — an API key can be allowed to create and edit *drafts* over MCP. It can never publish or touch live entries.
+- **Terminal theme** — a fourth palette: amber phosphor on near-black, with a warm paper light variant.
+- **Admin polish** — Settings style cards show their active state, the style default matches the app, leaving the XFCE dock reloads cleanly, visible keyboard focus, and reduced-motion support.
+
+### Oct 2026 · admin@0.3.86 · core@0.3.19 · integration@0.3.21 · mcp@0.1.3 — Security follow-up: uploaded files, URL imports, login limits, and what gets pushed to GitHub
+
+- **GitHub push no longer ships secrets** — the GitHub push feature committed the whole `.pod`, including live session tokens, password hashes and stored credentials (FTP, SMTP, AI and GitHub tokens). It now pushes a scrubbed copy. If you pushed before, rotate those credentials and check your repo history.
+- **Uploaded files can't run script** — media is served with `nosniff` and a sandboxing CSP, and anything that isn't an image, video, audio or PDF is forced to download. Applies to the admin and the public `/orbiter/media` route.
+- **Server-side request forgery** — importing or linking media by URL could be pointed at internal addresses (localhost, private networks, cloud metadata). Private and reserved targets are now blocked, redirects re-checked, downloads capped at 50 MB. Set `ORBITER_ALLOW_PRIVATE_FETCH=1` if you need to import from your LAN in development.
+- **Login rate limit** — it trusted a client-supplied `X-Forwarded-For` header, so it could be bypassed. The header is now only honoured when the connection comes from a reverse proxy on a private address.
+- **Restricted editors** — AI suggestions, the collection list/detail, `/api/info` and the quality report no longer expose collections an editor isn't allowed to see. Form-builder configs are admin-only.
+- **Content API drafts** — with the API enabled but no token set, `?status=draft` on `/orbiter/api/[collection]` returned unpublished entries to anyone. Drafts now require a configured, matching token.
+- **API token hashed** — the optional single `api.token` is now stored as a SHA-256 hash like API keys (existing plaintext values keep working and migrate on first use).
+- **Desktop app** — the embedded server only listens on loopback (it was reachable from your LAN), the window is sandboxed, only http(s) links are handed to the OS, and navigation away from the local admin is blocked.
+- **Smaller fixes** — CSV export works again and neutralises spreadsheet formulas, the login no longer reveals which usernames exist through timing, WordPress media import is covered by the same SSRF protection, and `/health` no longer exposes the pod path.
+- **Sessions and public endpoints** — changing a password signs out all other sessions. The public form and analytics endpoints are rate-limited and size-capped, and notification mails are capped. The Content API token is compared in constant time.
+
+### Oct 2026 · admin@0.3.85 · core@0.3.18 · mcp@0.1.2 · client@0.1.3 · integration@0.3.20 · cli@0.3.13 — Security hardening pass: 3 privately-disclosed bugs fixed, full-repo audit, 0 known dependency vulnerabilities
+
+- **Stored XSS** — unescaped field names/IPs in the Inbox, unescaped media filenames and analytics paths from fully unauthenticated endpoints, and the same pattern in `apps/demo`'s public post/page/event pages. Fixed with consistent escaping (and DOMPurify on the demo frontend) everywhere user- or visitor-supplied text reaches `innerHTML`.
+- **Collection permission bypass** — an editor restricted to specific collections could still reach draft content via the singleton endpoint, the terminal CSV/JSON export, search/calendar widgets, comments, and edit-locks. All now enforce the same `requireCollectionAccess` check as the main entry routes. See the new [permissions docs](https://orbiter.sh/docs/permissions).
+- **Path traversal** — the local media backend's `folder` parameter could write outside the configured media directory; the GitHub and S3 backends had the same unvalidated join. All three now resolve and reject anything that would escape the configured root.
+- **Plaintext API keys** — Bearer tokens for the Public Content API and MCP server were stored and compared in plaintext, inside a `.pod` file that Orbiter's own `orbiter init` template commits to git by design. Now hashed (SHA-256, constant-time compare), with transparent migration for already-issued keys.
+- **Missing/inverted access checks** — `api-keys` management, schema field rename/delete, and the embeddable-widget endpoint (`/api/widget/:collection` — inverted logic made it allow-by-default instead of deny-by-default like every other API gate) each had a broken or missing permission check. All fixed.
+- **Dependency audit** — `npm audit` went from 40 vulnerabilities to 0: removed an unused, outdated `electron-builder` devDependency pulling in most of them on its own, bumped nodemailer/sharp/adm-zip/electron to patched versions, and — the big one — **Astro 5 → 7** and **@astrojs/node 9 → 11** across `apps/demo`, `apps/landing`, and the `orbiter init` scaffold template, closing a critical RCE in Astro's AVIF image optimization.
+- **Process** — new [SECURITY.md](https://github.com/aeon022/orbiter/security/policy), GitHub private vulnerability reporting and Dependabot security updates turned on for the repo, and a weekly `npm audit` CI check.
+
+### Aug 2026 · mcp@0.1.0 · admin@0.3.81 — MCP server for AI agents, Public Content API, JSON-LD, API keys
+
+- **`@a83/orbiter-mcp`** — new MCP server package. `list_collections`, `get_entries`, `get_entry`, `search_content` tools for Claude Desktop and other MCP clients. stdio for local trusted access, `--http` for remote (same auth as the Public Content API).
+- **Public Content API** — `/api/public/[collection]` read-only JSON endpoints, opt-in per collection, CORS enabled.
+- **API keys** — generate/revoke Bearer tokens in Settings, optional enforcement on the Public Content API and MCP HTTP transport, hit counters and last-used tracking.
+- **JSON-LD / schema.org** — `BlogPosting` and `WebSite` structured data on published HTML, both themes.
+- **OpenAPI spec + API discovery** — auto-generated spec and a discovery endpoint listing available collections and auth requirements.
+- **Admin panel routing fix** — clean extensionless URLs (`/login`, `/dashboard`, etc.) now redirect correctly.
+
 ### June 2026 · admin@0.3.80 / integration@0.3.18 / cli@0.3.10 — Public Content API, JSON-LD, API Keys, Agent Analytics
 
 **Public Content API**
