@@ -1805,6 +1805,7 @@ html:not([data-style="xfce"]) .xfce-hud { display: none !important; }
   box-shadow: var(--glass-shadow), 0 0 0 1px color-mix(in srgb, var(--accent) 8%, transparent);
   display: flex;
   align-items: flex-end;
+  max-width: calc(100vw - 16px);
 }
 
 .xfce-dock-inner {
@@ -3498,3 +3499,6 @@ html[data-zen="1"] .main {
 /* links in running text must not rely on colour alone */
 .setting-desc a, .card-desc a, p a { text-decoration: underline; text-underline-offset: 2px; }
 .config-hint a, .hint a, [class*="-hint"] a { text-decoration: underline; text-underline-offset: 2px; }
+
+/* long drawer lists scroll instead of running off the screen */
+.xfce-drawer-popup { max-height: 70vh; overflow-y: auto; }

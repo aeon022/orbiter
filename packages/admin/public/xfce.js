@@ -1479,7 +1479,10 @@
               ? page === 'editor' && activeCol === col.id
               : page === 'entries' && activeCol === col.id;
             var abbr = col.label.substring(0, 2);
-            var item = makeDockItem(abbr, col.label, href, isActive, false);
+            // dock name: the first part of the label ("Referenzen (Projekte)" → "Referenzen", "Auftraggeber & Partner" → "Auftraggeber")
+            var short = col.label.replace(/\s*\(.*?\)\s*/g, ' ').split(/\s+[&\/·,–-]\s+|,/)[0].trim() || col.label;
+            var item = makeDockItem(abbr, short, href, isActive, false);
+            item.title = col.label;   // the dock shows the short name; the full name shows on hover
             item.querySelector('.xfce-dock-icon').style.cssText = 'font-size:16px;font-weight:700;font-family:var(--mono);letter-spacing:-.03em;line-height:1;';
             item.dataset.dockIdx = idx + 1;
             item.addEventListener('mouseenter', function () { showColPreview(col, item); });
@@ -1487,6 +1490,17 @@
             colGroup.appendChild(item);
             _palItems.push({ icon: abbr, label: col.label, href: href, group: 'Collections' });
             _termCols.push({ id: col.id, label: col.label, total: col.total || 0, drafts: col.drafts || 0, singleton: !!col.singleton });
+          }
+
+          // Safety net: groups are made by hand (Settings → Navigation, by topic). If more than DOCK_MAX collections stay
+          // ungrouped, the rest moves into one "More" drawer so the dock never outgrows the screen.
+          var DOCK_MAX = 6;
+          var loose = topLevel.filter(function (c) { return !groupedIds.has(c.id); });
+          if (loose.length > DOCK_MAX) {
+            var over = loose.slice(DOCK_MAX - 1);   // the drawer itself takes the last free place
+            navGroups = navGroups || {};
+            navGroups['More'] = (navGroups['More'] || []).concat(over.map(function (c) { return c.id; }));
+            over.forEach(function (c) { groupedIds.add(c.id); });
           }
 
           // Drawer groups
