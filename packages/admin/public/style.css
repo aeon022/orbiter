@@ -3564,3 +3564,10 @@ html[data-style="xfce"] .btn-ghost:active { transform: translateY(0) scale(.97);
   .xfce-dock-lbl { font-size: 9.5px; max-width: 72px; }
   .xfce-dock-item.active::after { bottom: 2px; }
 }
+
+/* Dock on desktop: every item the same size (the active one used to grow with its bold, spaced label) */
+@media (min-width: 901px) {
+  .xfce-dock-item { box-sizing: border-box; width: 72px; min-width: 72px; padding-left: 4px; padding-right: 4px; }
+  .xfce-dock-lbl, .xfce-dock-item.active .xfce-dock-lbl { max-width: 100%; overflow: hidden; text-overflow: ellipsis; letter-spacing: .02em; font-weight: 500; }
+  .xfce-dock-item.active .xfce-dock-lbl { font-weight: 700; }
+}
