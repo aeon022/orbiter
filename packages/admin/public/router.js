@@ -16,7 +16,8 @@
 
   // Inject transition rule once
   var transCSS = document.createElement('style');
-  transCSS.textContent = '.main { transition: opacity 0.12s ease; } .main.fading { opacity: 0; }';
+  transCSS.textContent = '.main { transition: opacity 0.14s ease; } .main.fading { opacity: 0; } #orb-progress { position: fixed; top: 0; left: 0; height: 2px; width: 0; z-index: 100002; background: var(--accent); box-shadow: 0 0 8px var(--accent); opacity: 0; transition: width .4s ease, opacity .2s; pointer-events: none; } #orb-progress.on { opacity: 1; width: 70%; } #orb-progress.done { opacity: 0; width: 100%; transition: width .15s, opacity .3s .1s; }';
+  var bar = document.createElement('div'); bar.id = 'orb-progress'; document.body.appendChild(bar);
   document.head.appendChild(transCSS);
 
   // --- helpers ---
@@ -111,48 +112,37 @@
     });
   }
 
+  // Page shells are static; the data is loaded by each page's own script, so the HTML can be cached and warmed up.
+  var pageCache = {};
+  function getPage(href) {
+    if (!pageCache[href]) pageCache[href] = fetch(href, { credentials: 'include' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); }).catch(function (e) { delete pageCache[href]; throw e; });
+    return pageCache[href];
+  }
+
+  var navSeq = 0;
   function navigate(href, replace) {
-    // Kick off fade-out and fetch in parallel
-    main.classList.add('fading');
+    var seq = ++navSeq;
+    // The old page stays visible (dock, sidebar and content) until the new one is ready; a thin bar shows progress.
+    bar.classList.remove('done'); void bar.offsetWidth; bar.classList.add('on');
 
-    var fetchP = fetch(href, { credentials: 'include' }).then(function (r) { return r.text(); });
-    var timerP = new Promise(function (res) { setTimeout(res, 120); });
-
-    Promise.all([fetchP, timerP]).then(function (results) {
-      var html = results[0];
+    getPage(href).then(function (html) {
+      if (seq !== navSeq) return;   // a newer click won
       var doc = new DOMParser().parseFromString(html, 'text/html');
-
-      // Swap page-specific <style>
-      swapPageStyle(doc);
-
-      // Swap <title>
-      var newTitle = doc.querySelector('title');
-      if (newTitle) document.title = newTitle.textContent;
-
-      // Swap .main content
-      var newMain = doc.querySelector('.main');
-      main.innerHTML = newMain ? newMain.innerHTML : '';
-
-      // Update URL
-      if (replace) {
-        history.replaceState(null, '', href);
-      } else {
-        history.pushState(null, '', href);
-      }
-
-      // Update sidebar active state
-      updateActiveNav(href);
-
-      // Re-execute module scripts (now live inside .main on every page)
-      execModuleScripts(main);
-
-      // Fade back in on next frame
-      requestAnimationFrame(function () {
-        main.classList.remove('fading');
-      });
-
-      // Scroll to top
-      main.scrollTop = 0;
+      main.classList.add('fading');
+      setTimeout(function () {
+        if (seq !== navSeq) return;
+        swapPageStyle(doc);
+        var newTitle = doc.querySelector('title');
+        if (newTitle) document.title = newTitle.textContent;
+        var newMain = doc.querySelector('.main');
+        main.innerHTML = newMain ? newMain.innerHTML : '';
+        if (replace) history.replaceState(null, '', href); else history.pushState(null, '', href);
+        updateActiveNav(href);
+        execModuleScripts(main);
+        main.scrollTop = 0;
+        requestAnimationFrame(function () { main.classList.remove('fading'); });
+        bar.classList.remove('on'); bar.classList.add('done');
+      }, 90);
     }).catch(function () {
       location.href = href; // fallback: full navigation
     });
@@ -160,28 +150,27 @@
 
   // --- intercept clicks ---
 
+  var FULL_RELOAD = ['/login.html', '/editor.html', '/calendar.html', '/analytics.html', '/forms.html', '/graph.html', '/users.html', '/account.html', '/pods.html'];
+  function routable(e) {
+    var a = e.target.closest && e.target.closest('a[href]');
+    if (!a || a.target === '_blank') return null;
+    var raw = a.getAttribute('href'); if (!raw) return null;
+    var url; try { url = new URL(raw, location.origin); } catch (err) { return null; }
+    if (url.origin !== location.origin || !url.pathname.endsWith('.html') || FULL_RELOAD.indexOf(url.pathname) !== -1) return null;
+    return url;
+  }
   document.addEventListener('click', function (e) {
-    var a = e.target.closest('a[href]');
-    if (!a || a.target === '_blank') return;
-    var raw = a.getAttribute('href');
-    if (!raw) return;
-    var url;
-    try { url = new URL(raw, location.origin); } catch (e) { return; }
-    if (url.origin !== location.origin) return;
-    if (!url.pathname.endsWith('.html')) return;
-    if (url.pathname === '/login.html') return;
-    if (url.pathname === '/editor.html') return; // full-screen layout, no .main to swap
-    if (url.pathname === '/calendar.html') return; // top-level await, needs full reload
-    if (url.pathname === '/analytics.html') return;
-    if (url.pathname === '/forms.html') return;
-    if (url.pathname === '/graph.html') return; // canvas, needs full reload
-    if (url.pathname === '/users.html') return; // module scripts, needs full reload
-    if (url.pathname === '/account.html') return; // module + classic scripts outside .main (2FA, Digi-ID), needs full reload
-    if (url.pathname === '/pods.html') return;  // module script with top-level await, needs full reload
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
+    var url = routable(e); if (!url) return;
     e.preventDefault();
     if (url.href === location.href) return;
     navigate(url.href, false);
   }, true); // capture phase so editor-internal links don't block
+
+  // Warm the page while the finger or cursor is still on its way
+  ['mouseover', 'touchstart', 'focusin'].forEach(function (ev) {
+    document.addEventListener(ev, function (e) { var url = routable(e); if (url && url.href !== location.href) getPage(url.href).catch(function () {}); }, { passive: true, capture: true });
+  });
 
   // --- browser back/forward ---
 
