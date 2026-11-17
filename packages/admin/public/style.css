@@ -3134,7 +3134,7 @@ html[data-zen="1"] .main {
   /* Reduce chrome heights */
   html[data-style="xfce"] {
     --sb-h:   22px;
-    --dock-h: 62px;
+    --dock-h: 70px;
     --dock-item-base: 38px;
   }
 
@@ -3166,8 +3166,9 @@ html[data-zen="1"] .main {
   .xfce-dock-group { gap: 2px; }
   .xfce-dock-sep   { margin: 0 3px; }
 
-  /* Hide labels — save horizontal space */
-  .xfce-dock-lbl { display: none; }
+  /* Labels stay visible on touch: a drawer or a tab without a name is a guessing game */
+  .xfce-dock-lbl { display: block; max-width: 68px; overflow: hidden; text-overflow: ellipsis; font-size: 9px; letter-spacing: 0; margin-top: 2px; line-height: 1.1; }
+  .xfce-dock-item { min-width: 44px; align-items: center; }
 
   /* Tighter item padding */
   .xfce-dock-item {
@@ -3382,7 +3383,9 @@ html[data-zen="1"] .main {
     overflow-x: auto; scrollbar-width: none;
   }
   .xfce-dock-item { transform: none !important; }
-  .xfce-dock-lbl { display: none; }
+  /* Labels stay visible on touch: a drawer or a tab without a name is a guessing game */
+  .xfce-dock-lbl { display: block; max-width: 68px; overflow: hidden; text-overflow: ellipsis; font-size: 9px; letter-spacing: 0; margin-top: 2px; line-height: 1.1; }
+  .xfce-dock-item { min-width: 44px; align-items: center; }
   html[data-style="xfce"] .main { padding-bottom: calc(var(--dock-h) + 24px) !important; }
 }
 
@@ -3502,3 +3505,16 @@ html[data-zen="1"] .main {
 
 /* long drawer lists scroll instead of running off the screen */
 .xfce-drawer-popup { max-height: 70vh; overflow-y: auto; }
+
+/* Drawer on phone and tablet: opens as a bottom sheet with big rows (names always readable) */
+@media (max-width: 900px) {
+  .xfce-drawer-popup.open {
+    left: 0 !important; right: 0 !important; top: auto !important; bottom: 0 !important; transform: none !important;
+    width: 100%; max-width: none; max-height: 72dvh; border-radius: 18px 18px 0 0; border-bottom: none;
+    padding: 6px 8px calc(10px + env(safe-area-inset-bottom)); z-index: 100001;
+    box-shadow: 0 0 0 100vmax rgba(0,0,0,.5), var(--glass-shadow);
+  }
+  .xfce-drawer-popup .xfce-tools-item { min-height: 52px; font-size: 16px; padding: 10px 14px; }
+  .xfce-drawer-popup .xfce-tools-icon { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 9px; background: color-mix(in srgb, var(--accent) 14%, transparent); }
+  .xfce-drawer-popup > div:first-child { font-size: 11px !important; padding: 12px 14px 10px !important; }
+}

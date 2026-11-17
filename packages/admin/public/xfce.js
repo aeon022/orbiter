@@ -1612,7 +1612,14 @@
                 drawerTimer = setTimeout(function () { popup.classList.remove('open'); hideColPreview(); }, 250);
                 _activeDrawerTimer = drawerTimer;
               }
-              drawerItem.addEventListener('mouseenter', showDrawer);
+              // Touch: tap toggles the drawer (the emulated mouseenter would reopen it, so remember the state before it)
+              var wasOpen = false;
+              drawerItem.addEventListener('pointerdown', function () { wasOpen = popup.classList.contains('open'); });
+              drawerItem.addEventListener('click', function () {
+                if (!window.matchMedia('(max-width: 900px)').matches) return;
+                if (wasOpen) { popup.classList.remove('open'); hideColPreview(); } else showDrawer();
+              });
+              drawerItem.addEventListener('mouseenter', function () { if (!window.matchMedia('(max-width: 900px)').matches) showDrawer(); });
               drawerItem.addEventListener('mouseleave', scheduleHide);
               popup.addEventListener('mouseenter', function () { clearTimeout(drawerTimer); clearTimeout(_activeDrawerTimer); });
               popup.addEventListener('mouseleave', scheduleHide);
@@ -1958,6 +1965,11 @@
       }
     });
   }
+
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('.xfce-drawer-popup, .xfce-dock-col-group')) return;
+    document.querySelectorAll('.xfce-drawer-popup.open').forEach(function (p) { p.classList.remove('open'); });
+  });
 
   // ── Build status in status bar ────────────────────────────────────────
   var _buildPolling = false;
