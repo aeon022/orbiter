@@ -3571,3 +3571,8 @@ html[data-style="xfce"] .btn-ghost:active { transform: translateY(0) scale(.97);
   .xfce-dock-lbl, .xfce-dock-item.active .xfce-dock-lbl { max-width: 100%; overflow: hidden; text-overflow: ellipsis; letter-spacing: .02em; font-weight: 500; }
   .xfce-dock-item.active .xfce-dock-lbl { font-weight: 700; }
 }
+
+/* Hexagon drawer icons sit on the same baseline as the other dock icons */
+.xfce-dock-icon .xfce-hex { display: block; }
+.xfce-dock-icon { height: 24px; display: flex; align-items: center; justify-content: center; }
+.xfce-dock-lbl { line-height: 12px; height: 12px; }
