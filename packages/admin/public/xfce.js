@@ -1971,6 +1971,12 @@
     document.querySelectorAll('.xfce-drawer-popup.open').forEach(function (p) { p.classList.remove('open'); });
   });
 
+  // Phone: bring the active dock item into view once the dock is filled
+  window.addEventListener('load', function () { setTimeout(function () {
+    var a = document.querySelector('.xfce-dock-item.active');
+    if (a && window.matchMedia('(max-width: 640px)').matches) a.scrollIntoView({ inline: 'center', block: 'nearest' });
+  }, 600); });
+
   // ── Build status in status bar ────────────────────────────────────────
   var _buildPolling = false;
 

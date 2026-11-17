@@ -3518,3 +3518,49 @@ html[data-zen="1"] .main {
   .xfce-drawer-popup .xfce-tools-icon { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 9px; background: color-mix(in srgb, var(--accent) 14%, transparent); }
   .xfce-drawer-popup > div:first-child { font-size: 11px !important; padding: 12px 14px 10px !important; }
 }
+
+/* ════ Polish: frames, hover buttons, phone status bar and dock (admin 0.3.107) ════ */
+html[data-style="xfce"] .glass-card {
+  border-color: color-mix(in srgb, var(--accent) 16%, var(--glass-border));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 55%, transparent),
+    0 1px 2px color-mix(in srgb, var(--heading) 8%, transparent),
+    0 14px 34px -16px color-mix(in srgb, var(--heading) 28%, transparent);
+  transition: box-shadow .2s, border-color .2s;
+}
+html[data-style="xfce"] .glass-card:hover { border-color: color-mix(in srgb, var(--accent) 30%, var(--glass-border)); }
+html[data-style="xfce"] .btn,
+html[data-style="xfce"] .btn-ghost {
+  border-radius: 999px;
+  transition: transform .14s cubic-bezier(.34,1.4,.64,1), box-shadow .14s, background .14s, border-color .14s, color .14s;
+}
+html[data-style="xfce"] .btn:hover,
+html[data-style="xfce"] .btn-ghost:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--accent) 60%, transparent), inset 0 1px 0 color-mix(in srgb, white 30%, transparent);
+}
+html[data-style="xfce"] .btn:active,
+html[data-style="xfce"] .btn-ghost:active { transform: translateY(0) scale(.97); box-shadow: none; }
+/* Dock: calmer hover (soft ring and lift instead of a strong glow) */
+.xfce-dock-item:hover {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent), 0 8px 18px -8px color-mix(in srgb, var(--accent) 55%, transparent), inset 0 1px 0 color-mix(in srgb, white 26%, transparent);
+}
+.xfce-dock { box-shadow: var(--glass-shadow), inset 0 1px 0 color-mix(in srgb, white 40%, transparent), 0 0 0 1px color-mix(in srgb, var(--accent) 8%, transparent); }
+
+@media (max-width: 640px) {
+  /* Status bar: icon + site name on one line (the wordmark is hidden, the name is what you need) */
+  .xfce-sb-left { min-width: 0; flex: 1 1 auto; overflow: hidden; }
+  .xfce-sb-logo { font-size: 0; flex: none; }
+  .xfce-sb-logo svg { width: 16px; height: 16px; margin-right: 0 !important; }
+  #xfce-sb-site { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; font-weight: 600; letter-spacing: .02em; }
+  /* Dock: fade at both ends shows that it scrolls; items keep their size */
+  .xfce-dock-inner {
+    gap: 4px; scroll-snap-type: x proximity; padding: 0 14px;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
+  }
+  .xfce-dock-item { scroll-snap-align: center; flex: none; border-radius: 14px; }
+  .xfce-dock-lbl { font-size: 9.5px; max-width: 72px; }
+  .xfce-dock-item.active::after { bottom: 2px; }
+}
