@@ -113,10 +113,16 @@
   }
 
   // Page shells are static; the data is loaded by each page's own script, so the HTML can be cached and warmed up.
-  var pageCache = {};
+  var pageCache = {}, PAGE_TTL = 5 * 60 * 1000;
   function getPage(href) {
-    if (!pageCache[href]) pageCache[href] = fetch(href, { credentials: 'include' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); }).catch(function (e) { delete pageCache[href]; throw e; });
-    return pageCache[href];
+    var c = pageCache[href];
+    if (c && Date.now() - c.t < PAGE_TTL) return c.p;
+    var p = fetch(href, { credentials: 'include' }).then(function (r) {
+      if (!r.ok || /\/login\.html/.test(r.url)) throw new Error('no page');   // session over: full navigation shows the login
+      return r.text();
+    }).catch(function (e) { delete pageCache[href]; throw e; });
+    pageCache[href] = { t: Date.now(), p: p };
+    return p;
   }
 
   var navSeq = 0;

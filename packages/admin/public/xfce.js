@@ -136,6 +136,7 @@
 
     // Logout
     document.getElementById('xfce-sb-logout').addEventListener('click', function () {
+      try { localStorage.removeItem(_infoKey); } catch (e) {}
       fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
         .finally(function () { location.href = '/login.html'; });
     });
@@ -1509,7 +1510,7 @@
     var shown = null;
     try { var cachedInfo = localStorage.getItem(_infoKey); if (cachedInfo) { shown = cachedInfo; applyInfo(JSON.parse(cachedInfo)); } } catch (e) { shown = null; }
     fetch('/api/info', { credentials: 'include' })
-      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (r) { if (!r.ok) { try { localStorage.removeItem(_infoKey); } catch (e) {} return null; } return r.json(); })
       .then(function (info) {
         if (!info) return;
         var raw = JSON.stringify(info);
