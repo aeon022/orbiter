@@ -1647,7 +1647,8 @@
 
               // Build drawer popup with stats (reuses xfce-tools-popup styling)
               var popup = el('div', 'xfce-tools-popup xfce-drawer-popup');
-              popup.innerHTML = '<div style="padding:7px 14px 6px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px"><span style="font-size:11px;opacity:.6">⬡</span>' + escHtml(groupLabel) + '</div>';
+              popup.innerHTML = '<div style="padding:7px 14px 6px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px"><span style="font-size:11px;opacity:.6">⬡</span>' + escHtml(groupLabel) + '<button type="button" class="xfce-drawer-x" aria-label="Close">✕</button></div>';
+              popup.querySelector('.xfce-drawer-x').addEventListener('click', function (e) { e.stopPropagation(); popup.classList.remove('open'); hideColPreview(); });
               grpCols.forEach(function (gc) {
                 var gcSingleton = !!gc.singleton;
                 var gcHref = gcSingleton

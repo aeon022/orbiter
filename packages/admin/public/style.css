@@ -3506,18 +3506,21 @@ html[data-zen="1"] .main {
 /* long drawer lists scroll instead of running off the screen */
 .xfce-drawer-popup { max-height: 70vh; overflow-y: auto; }
 
-/* Drawer on phone and tablet: opens as a bottom sheet with big rows (names always readable) */
+/* Drawer on phone and tablet: a floating glass panel above the dock, like Notes and To-do (header with close button, rounded, no dimming) */
 @media (max-width: 900px) {
   .xfce-drawer-popup.open {
-    left: 0 !important; right: 0 !important; top: auto !important; bottom: 0 !important; transform: none !important;
-    width: 100%; max-width: none; max-height: 72dvh; border-radius: 18px 18px 0 0; border-bottom: none;
-    padding: 6px 8px calc(10px + env(safe-area-inset-bottom)); z-index: 100001;
-    box-shadow: 0 0 0 100vmax rgba(0,0,0,.5), var(--glass-shadow);
+    left: 3vw !important; right: 3vw !important; top: auto !important; bottom: calc(var(--dock-h) + 10px) !important; transform: none !important;
+    width: auto; min-width: 0; max-width: none; max-height: calc(100dvh - var(--dock-h) - var(--sb-h, 26px) - 40px);
+    border-radius: 16px; padding: 0 6px 8px; z-index: 99996;
+    box-shadow: var(--glass-shadow), 0 0 0 1px color-mix(in srgb, var(--accent) 14%, transparent), 0 0 32px color-mix(in srgb, var(--accent) 8%, transparent);
+    animation: orb-rise .22s cubic-bezier(.2,.7,.2,1);
   }
   .xfce-drawer-popup .xfce-tools-item { min-height: 52px; font-size: 16px; padding: 10px 14px; }
   .xfce-drawer-popup .xfce-tools-icon { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 9px; background: color-mix(in srgb, var(--accent) 14%, transparent); }
-  .xfce-drawer-popup > div:first-child { font-size: 11px !important; padding: 12px 14px 10px !important; }
+  .xfce-drawer-popup > div:first-child { font-size: 11px !important; padding: 12px 8px 10px 12px !important; margin: 0 -6px 6px; background: color-mix(in srgb, var(--accent) 4%, transparent); border-radius: 15px 15px 0 0; }
+  .xfce-drawer-popup .xfce-drawer-x { display: inline-flex; margin-left: auto; min-width: 44px; min-height: 44px; margin-top: -10px; margin-bottom: -10px; align-items: center; justify-content: center; background: none; border: none; color: var(--heading); font-size: 18px; cursor: pointer; }
 }
+.xfce-drawer-x { display: none; }
 
 /* ════ Polish: frames, hover buttons, phone status bar and dock (admin 0.3.107) ════ */
 html[data-style="xfce"] .glass-card {
