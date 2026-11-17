@@ -14,7 +14,11 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
   <li><strong>The Orbiter admin</strong> (Station mode, themes, dock) as static files, backed by a PHP API with the same paths and JSON formats.</li>
   <li><strong>Live read API</strong> — <code>/api/public/&lt;collection&gt;[/&lt;slug&gt;]</code>, CORS for your site's domains and a short cache (10 s by default, <code>public_cache_seconds</code>). Changes appear without a rebuild.</li>
   <li><strong>Markdown import</strong> — <code>.md</code> with frontmatter via Admin → Import or <code>bin/lander import-md</code>.</li>
-  <li><strong>Media as files</strong> in <code>public/media/</code> (JPG, PNG, WebP, GIF, AVIF, PDF; real file type checked, PHP execution blocked in that folder). Media fields are resolved to <code>&#123;id, url, alt, type&#125;</code>.</li>
+  <li><strong>Media as files</strong> in <code>public/media/</code> (JPG, PNG, WebP, GIF, AVIF, PDF, MP3, M4A, WAV, MP4 and more; real file type checked, PHP execution blocked in that folder). Media fields are resolved to <code>&#123;id, url, alt, type&#125;</code>.</li>
+  <li><strong>Music and video</strong> — MP3, M4A, AAC, OGG, WAV, FLAC, MP4, WebM and MOV can be uploaded (limit <code>max_upload_mb</code>, 40 for new installs) and are served with range requests. Use a <code>file</code> field and read <code>.url</code> in your site.</li>
+  <li><strong>Made for phones and tablets</strong> — dock labels, drawers as panels, list rows with a “⋯” menu and swipes, touch-sized controls, an installable admin (home screen, safe areas). The admin is German by default; change it under Settings → Admin language.</li>
+  <li><strong>Preview</strong> — set the meta <code>site.preview</code> (for example <code>&#123;"events": "/events/?vorschau=&#123;slug&#125;"&#125;</code>) and <code>site.url</code>; the editor then shows a <em>Preview</em> button that opens the real page, drafts included while you are signed in.</li>
+  <li><strong>Editor role</strong> — editors see a short dock and cannot touch schema, users, build or import (the server answers 403).</li>
   <li><strong>Inbox</strong> for form submissions (server-to-server with a <code>form_token</code>).</li>
   <li><strong>Users</strong> — admins add editors and admins in the admin (create, change role, reset password, delete).</li>
   <li><strong>Install and update</strong> — an installer that detects subfolder or domain root, weekly automatic backups, image variants (<code>?w=800&amp;fmt=webp</code>), and a signed one-click update from the admin.</li>
@@ -27,6 +31,9 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
   <li>Make <code>data/</code> and <code>public/media/</code> writable for PHP.</li>
   <li>Create a user with <code>php bin/lander user &lt;name&gt; admin</code> (SSH), or create it locally and upload the SQL file <code>data/content.pod</code>.</li>
 </ol>
+
+<h2>Speed: versioned assets</h2>
+<p>The admin pages are sent through PHP, which adds <code>?v=…</code> to scripts and styles; the version changes with every file change. With <code>mod_rewrite</code> and <code>mod_headers</code> those files may stay in the browser cache for a year (<code>public/.htaccess</code> ships the rule). Without them everything still works, the browser just asks again each time.</p>
 
 <h2>Connect your site</h2>
 <pre>const events = await fetch('https://redaktion.example.at/api/public/events').then(r =&gt; r.json());</pre>

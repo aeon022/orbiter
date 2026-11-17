@@ -293,3 +293,11 @@ Voraussetzungen: Arbeitsbaum sauber (`git status` ohne tracked Änderungen), Tes
 ## 2026-11-16 — Desktop 0.2.3
 - Zufallspasswort statt `admin/admin` (`seedPod`, einmal im Dialog), `127.0.0.1` statt `localhost` (Fenster, `ADMIN_ORIGIN`, Navigations-/Extern-Prüfung), `session.setPermissionRequestHandler/-CheckHandler` verweigern alles. Docs (`docs/desktop`) und Changelog angepasst. Release per Tag `desktop-v0.2.3` (GitHub Actions baut DMG + Windows-Installer; Mac weiterhin unsigniert).
 - Hinweis: die `admin / admin`-Zeilen in README/Landing betreffen die CLI-Vorlagen (`npm create`), nicht die Desktop-App.
+
+
+## 2026-11-17 — Dock, Handy, Tempo (admin 0.3.106–0.3.110, Lander 0.6.2–0.7.4)
+- **Dock:** Beschriftungen und Schubladen als schwebendes Glas-Panel auf Touch (wie Notizen/To-do, mit ✕), einzeilige Titelleiste am Handy, einheitlich große Einträge am Desktop, gleitende Pille mit Spotlight und Aurora-Ring (`initDockPill` in xfce.js; Lupe aus), Entwurfs-Badges, Pille bleibt auf der offenen Schublade.
+- **Tempo:** Router lässt die alte Seite stehen (Fortschrittsbalken), Seiten-Cache 5 min + Prefetch bei Hover/Touch; Dock aus localStorage-Cache von `/api/info` (`orb_info_v1:<host>`, beim Abmelden/401 gelöscht); js/css mit `?v=<md5 der mtimes>` (csp.js `assetVersion`/`addVersion`, server.js `immutable`); View-Transitions für Voll-Reloads. Editor, Kalender, Analytics, Forms, Graph, Users, Account, Pods laden weiter voll (FULL_RELOAD in router.js).
+- **Audit-Runde Handy:** Listen mit Hauptaktion + «⋯»-Sheet und Wischgesten, Touch-Ziele ≥ 40–44 px, Eingabefelder in Sans, Skeletons, Leerzustände mit Aktion, Ungespeichert-Punkt, Vorschau-Sheet (Lander), «Zuletzt besucht» in der Palette (`orb_visited:<host>`).
+- **Orbiter lokal starten:** nur mit Node 22.23.5 (nvm); Node 26 oder 22.22 brechen (better-sqlite3-ABI bzw. Astro verlangt ≥ 22.23.4). Demo-Admin lokal: `admin` / `orbiter-local-123` (demo.pod ist nicht im Git).
+- **Nicht npm-veröffentlicht:** admin 0.3.106–0.3.110 liegen auf main, npm-Token läuft seit 2026-11-05 ab → erneuern, dann veröffentlichen.

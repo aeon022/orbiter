@@ -1,8 +1,60 @@
+      <div class="update-card" id="update-phone-audit" data-date="2026-11-17" style="border-color:color-mix(in srgb,var(--red) 50%,var(--line))">
+        <div class="update-date">Nov<br />2026</div>
+        <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.110 · lander@0.7.4 — Latest</div>
+          <div class="update-title">Admin on phones and tablets, and a faster dock</div>
+          <ul class="update-items">
+            <li><strong>Dock labels and drawers</strong> — on touch devices every dock item shows its name. A drawer opens as a floating glass panel above the dock (like Notes and To-do) with a close button; tapping outside closes it.</li>
+            <li><strong>Lists on a phone</strong> — one main action per row plus a “⋯” menu (edit, duplicate, trash). Swipe left for the menu, swipe right to publish or unpublish (asks first). Slug and repeated names stay out of the card; filter chips scroll in one line.</li>
+            <li><strong>Editor</strong> — the floating save button no longer covers the last field, the toolbar fades out where it scrolls, a pulsing dot shows unsaved changes, and <em>Preview</em> opens the site in a sheet.</li>
+            <li><strong>Touch targets</strong> — buttons, chips, fields and calendar days are at least 40–44 px high on touch screens; forms use a calmer sans-serif instead of monospace.</li>
+            <li><strong>Draft badges</strong> — the dock shows how many drafts a collection or drawer holds. Empty lists get a call to action, loading lists a shimmer.</li>
+            <li><strong>Lander</strong> — the admin is German by default (switch under Settings → Admin language). Update with one click in Settings → Pod.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="update-card" id="update-dock-speed" data-date="2026-11-17" style="border-color:color-mix(in srgb,var(--red) 50%,var(--line))">
+        <div class="update-date">Nov<br />2026</div>
+        <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.110 · lander@0.7.3</div>
+          <div class="update-title">A dock that glides, and pages that open without a reload</div>
+          <ul class="update-items">
+            <li><strong>Sliding pill</strong> — one glass pill follows the item under the cursor with a spotlight, and rests behind the active item with a slow aurora ring. It stays on a drawer while you reach into it, and returns only after a short grace period.</li>
+            <li><strong>Pages swap in place</strong> — dock and status bar stay put, the old page stays until the new one is ready (thin progress bar), pages are prefetched on hover or touch and cached for five minutes. Editor, calendar, users and a few others still reload fully.</li>
+            <li><strong>Soft transitions</strong> — a quick fade with a hint of blur and lift; full page loads use the browser’s view transitions where available. Off for “reduce motion”.</li>
+            <li><strong>Instant dock</strong> — the dock is drawn from the last <code>/api/info</code> answer on the first frame and rebuilt only if something changed. The cache is cleared on sign-out.</li>
+            <li><strong>Versioned assets</strong> — scripts and styles carry <code>?v=…</code> and may stay in the browser cache for a year; the version changes with every file change. Lander needs <code>mod_headers</code> and <code>mod_rewrite</code> for the long cache (it still works without).</li>
+            <li><strong>Recently visited</strong> — the command palette (⌘K) lists the last pages you opened. Kept in this browser only.</li>
+            <li><strong>Security</strong> — the page cache expires and notices a lost session instead of showing an empty page.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="update-card" id="update-lander-artists" data-date="2026-11-17" style="border-color:color-mix(in srgb,var(--red) 50%,var(--line))">
+        <div class="update-date">Nov<br />2026</div>
+        <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">lander@0.7.0</div>
+          <div class="update-title">Lander for artists: music, video, preview, quick-create</div>
+          <ul class="update-items">
+            <li><strong>Audio and video uploads</strong> — MP3, M4A, AAC, OGG, WAV, FLAC, MP4, WebM and MOV, served with range requests so Safari can play and seek. The upload limit is 40 MB for new installs.</li>
+            <li><strong>Preview</strong> — a <em>Preview</em> button opens the real website page for an entry, drafts included while you are signed in (Settings meta <code>site.preview</code> and <code>site.url</code>).</li>
+            <li><strong>Quick-create</strong> — the “new entry” dialog asks for the list columns (title, band, date, place) and can publish right away. <strong>Copy with a new date</strong> duplicates an entry and renames its slug.</li>
+            <li><strong>Relations</strong> — a relation field can be single-choice (<code>multiple: false</code>), shown as a dropdown; list columns show the related title.</li>
+            <li><strong>Editor role</strong> — editors see a short dock (no schema, users, build, import) and the server refuses those actions with 403. Plain-language save errors replace “Error”.</li>
+            <li><strong>Installable</strong> — web-app manifest and icons, iOS meta tags and safe areas, so the admin can live on the home screen.</li>
+          </ul>
+        </div>
+      </div>
+
       <div class="update-card" id="update-lander-dock" data-date="2026-11-16" style="border-color:color-mix(in srgb,var(--red) 50%,var(--line))">
         <div class="update-date">Nov<br />2026</div>
         <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">lander@0.6.1 — Latest</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">lander@0.6.1</div>
           <div class="update-title">Lander: the dock copes with many collections</div>
           <ul class="update-items">
             <li><strong>"More" drawer</strong> — with more than six ungrouped collections the extra ones move into a drawer instead of stretching the dock.</li>

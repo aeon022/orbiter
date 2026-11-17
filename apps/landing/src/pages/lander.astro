@@ -58,6 +58,9 @@ import FooterSignature from '../components/FooterSignature.astro';
         <div><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5-5-8 8"/></svg><h3>Media as files</h3><p>Uploads go to a plain folder. File type is checked, PHP execution is blocked there.</p></div>
         <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg><h3>Hardened</h3><p>Server-side validation, size limits, escaped output, admin-only meta writes. The same fixes as Orbiter 0.3.92+.</p></div>
         <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7l8-4 8 4v10l-8 4-8-4z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg><h3>Zero build</h3><p>Upload a folder, point the document root at <code>public/</code>. No Node, no composer, no build step.</p></div>
+        <div><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg><h3>Made for phones</h3><p>Dock with names, drawers as panels, lists with a “⋯” menu and swipes, big touch targets, installable on the home screen. German by default.</p></div>
+        <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><h3>Music and video</h3><p>Upload MP3, M4A, WAV, FLAC, OGG, MP4, WebM and MOV. Served with range requests, so Safari plays and seeks.</p></div>
+        <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg><h3>Preview drafts</h3><p>A button opens the real page of your site for an entry, drafts included while you are signed in.</p></div>
       </div>
     </section>
 
@@ -93,6 +96,14 @@ const events = await fetch('https://redaktion.example.at/api/public/events')
     <section class="ld-sec">
       <h2>Changelog</h2>
       <ul class="ld-log">
+        <li><b>0.7.4</b> <em>Nov 2026</em> Phone: dock drawers open like Notes and To-do.</li>
+        <li><b>0.7.3</b> <em>Nov 2026</em> Sliding dock pill, draft badges, pages swap in place with soft transitions, faster loading (cached dock, versioned assets), “recently visited” in the palette, German by default.</li>
+        <li><b>0.7.2</b> <em>Nov 2026</em> Uniform dock items, aligned labels.</li>
+        <li><b>0.7.1</b> <em>Nov 2026</em> Dock labels and drawers on phones, single-line title bar.</li>
+        <li><b>0.7.0</b> <em>Nov 2026</em> For artists: audio and video upload, preview, quick-create, copy with a new date, single relations, editor role, installable admin.</li>
+        <li><b>0.6.2</b> <em>Nov 2026</em> Fix: media folder works on hosts that reject <code>-ExecCGI</code>.</li>
+        <li><b>0.6.1</b> <em>Nov 2026</em> The dock copes with many collections (“More” drawer, short names).</li>
+        <li><b>0.6.0</b> <em>Nov 2026</em> Strict Content-Security-Policy for the admin.</li>
         <li><b>0.5.0</b> <em>Nov 2026</em> Digi-ID (DigiByte wallet) sign-in.</li>
         <li><b>0.4.0</b> <em>Nov 2026</em> Webhooks and build trigger on publish.</li>
         <li><b>0.3.3</b> <em>Nov 2026</em> Two-factor sign-in (TOTP) with recovery codes.</li>
