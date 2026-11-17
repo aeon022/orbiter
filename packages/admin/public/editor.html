@@ -1816,8 +1816,8 @@
       const svg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236d28d9'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='18' font-family='sans-serif' font-weight='700' fill='white'%3E%E2%97%86%3C/text%3E%3Ccircle cx='26' cy='6' r='5' fill='%23e6a817'/%3E%3C/svg%3E`;
       link.href = svg;
     }
-    function markDirty() { _dirty = true; setFaviconBadge(true); }
-    function markClean() { _dirty = false; setFaviconBadge(false); }
+    function markDirty() { _dirty = true; setFaviconBadge(true); document.documentElement.classList.add('orb-dirty'); }
+    function markClean() { _dirty = false; setFaviconBadge(false); document.documentElement.classList.remove('orb-dirty'); }
 
     window.addEventListener('beforeunload', e => {
       if (_dirty) { e.preventDefault(); e.returnValue = ''; }

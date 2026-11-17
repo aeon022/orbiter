@@ -3621,3 +3621,69 @@ html[data-style="xfce"] .btn-ghost:active { transform: translateY(0) scale(.97);
   @keyframes orb-vt-out { to { opacity: 0; filter: blur(3px); } }
   @keyframes orb-vt-in { from { opacity: 0; transform: translateY(6px); filter: blur(4px); } }
 }
+
+/* ════ Audit pass: touch targets, calmer type in forms, phone lists, sheets, skeletons, badges ════ */
+input, textarea, select, .field-input { font-family: var(--sans, system-ui, sans-serif); }
+.xfce-dock-badge {
+  position: absolute; top: 3px; right: 10px; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center; font: 700 9px/1 var(--mono);
+  background: var(--accent); color: var(--bg0, #fff); box-shadow: 0 0 0 2px var(--glass-bg-side, transparent); pointer-events: none;
+}
+.orb-skel-list { display: grid; gap: 10px; padding: 14px; }
+.orb-skel { height: 52px; border-radius: 12px; background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 6%, transparent), color-mix(in srgb, var(--accent) 16%, transparent), color-mix(in srgb, var(--accent) 6%, transparent)); background-size: 200% 100%; animation: orb-skel 1.2s ease-in-out infinite; }
+@keyframes orb-skel { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .orb-skel { animation: none; } }
+.more-btn { display: none; }
+.orb-sheet-bd { position: fixed; inset: 0; z-index: 100003; background: rgba(0,0,0,.5); display: flex; align-items: flex-end; animation: orb-fade .15s ease; }
+.orb-sheet { width: 100%; background: var(--glass-bg-side, var(--bg1)); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border-radius: 18px 18px 0 0; padding: 8px 10px calc(12px + env(safe-area-inset-bottom)); border: 1px solid var(--glass-border, var(--line)); border-bottom: none; animation: orb-rise .22s cubic-bezier(.2,.7,.2,1); }
+.orb-sheet-title { padding: 12px 12px 8px; font: 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--line); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.orb-sheet-item { display: block; width: 100%; min-height: 52px; padding: 12px 14px; text-align: left; background: none; border: none; border-radius: 10px; font: 16px var(--sans, system-ui); color: var(--heading); cursor: pointer; }
+.orb-sheet-item:active { background: var(--accent-bg); }
+.orb-sheet-item.danger { color: var(--red, #d33); }
+@keyframes orb-fade { from { opacity: 0; } }
+@keyframes orb-rise { from { transform: translateY(40px); opacity: 0; } }
+
+@media (pointer: coarse) {
+  .btn, .btn-ghost, .btn-primary, .btn-row, .filter-tab { min-height: 44px; }
+  .filter-tab { padding: 0 16px; font-size: 12px; }
+  .tool-btn, .view-btn { min-height: 40px; min-width: 40px; }
+  .editor-toolbar { height: 56px; }
+  .cal-mini-day { min-height: 38px; }
+  .xfce-sb-cheat { display: none; }          /* no keyboard, no shortcuts sheet */
+}
+@media (max-width: 900px) {
+  /* lists: one primary action plus "⋯"; slug and repeated band name stay out of the card */
+  #entries-wrap td.c-act .row-edit, #entries-wrap td.c-act .dup-btn, #entries-wrap td.c-act .delete-btn { display: none; }
+  #entries-wrap td.c-act .more-btn { display: inline-flex; min-width: 44px; }
+  #entries-wrap td.c-act .row-actions { justify-content: flex-start; }
+  #entries-wrap td.c-title > div:nth-child(2) { display: none; }
+  #entries-wrap td.c-list.dup-hide { display: none; }
+  /* filter chips: one line, swipe sideways with an edge fade */
+  .entries-filter-bar { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding-bottom: 2px;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); }
+  .entries-filter-bar::-webkit-scrollbar { display: none; }
+  .entries-filter-bar > * { flex: none; }
+  /* editor: toolbar fades out on the right (it scrolls), the floating save button never covers the last field */
+  .editor-toolbar { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); }
+  .editor-scroll { padding-bottom: 150px !important; }
+  .editor-page { padding-top: 28px; }
+  .meta-panel-toggle { position: fixed; }
+  html.orb-dirty .meta-panel-toggle::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--bg0, #fff); margin-right: 8px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--bg0, #fff) 40%, transparent); animation: orb-pulse 1.6s ease-in-out infinite; }
+  @keyframes orb-pulse { 50% { opacity: .35; } }
+}
+@media (max-width: 640px) {
+  .editor-title-input { font-size: 26px !important; }
+  .cal-strip { grid-template-columns: 1fr !important; }
+  .cal-strip-panel + .cal-strip-panel { border-left: none !important; border-top: 1px solid var(--line); }
+}
+
+/* Touch: every control gets a thumb-sized target (the status bar keeps its height: the hit area grows invisibly) */
+@media (pointer: coarse) {
+  .btn-sm, .ws-export-btn, .todo-add-btn, .filter-btn, .btn-copy-url, .btn-focal, .btn-del-media, .btn-save, .btn-draft, .btn-publish,
+  .btn-schedule, .btn-expiry, .copy-slug-btn, .set-nav-all, .xfce-hud-close { min-height: 44px; min-width: 44px; }
+  input.input, .field-input, .field-select, .todo-input, input[type=text], input[type=search], input[type=email], input[type=url], select { min-height: 44px; }
+  .xfce-hud-draft-link { display: inline-block; padding: 12px 0; }
+  .xfce-sb a, .xfce-sb button { position: relative; }
+  .xfce-sb a::after, .xfce-sb button::after { content: ''; position: absolute; inset: -12px -6px; }
+}
+.orb-skel-list { display: grid; }

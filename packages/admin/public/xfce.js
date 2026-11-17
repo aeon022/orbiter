@@ -1380,6 +1380,12 @@
     requestAnimationFrame(rest);
   }
 
+  function dockBadge(item, n) {
+    if (!(n > 0)) return;
+    var b = el('span', 'xfce-dock-badge'); b.textContent = n > 99 ? '99+' : String(n); b.setAttribute('aria-label', n + ' drafts');
+    item.appendChild(b);
+  }
+
   function buildDock() {
     var dock = el('div', 'xfce-dock');
     dock.id = 'xfce-dock'; dock.setAttribute('role', 'navigation'); dock.setAttribute('aria-label', 'Dock');
@@ -1555,6 +1561,7 @@
             var short = col.label.replace(/\s*\(.*?\)\s*/g, ' ').split(/\s+[&\/·,–-]\s+|,/)[0].trim() || col.label;
             var item = makeDockItem(abbr, short, href, isActive, false);
             item.title = col.label;   // the dock shows the short name; the full name shows on hover
+            dockBadge(item, col.drafts || 0);
             item.querySelector('.xfce-dock-icon').style.cssText = 'font-size:16px;font-weight:700;font-family:var(--mono);letter-spacing:-.03em;line-height:1;';
             item.dataset.dockIdx = idx + 1;
             item.addEventListener('mouseenter', function () { showColPreview(col, item); });
@@ -1592,6 +1599,7 @@
                 return (page === 'entries' && activeCol === c.id) || (page === 'editor' && activeCol === c.id);
               });
               var drawerItem = makeDockItem('⬡', groupLabel, null, anyActive, true);
+              dockBadge(drawerItem, grpCols.reduce(function (n, c) { return n + (c.drafts || 0); }, 0));
               // Hexagon with a fill level (entries in this drawer relative to the fullest drawer);
               // the outline turns a full 60° step on hover (CSS), the fill stays level.
               var gCount = grpCols.reduce(function (n, c) { return n + (c.total || 0) + (c.drafts || 0); }, 0);

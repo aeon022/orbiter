@@ -237,6 +237,40 @@
       }
     }
 
+    window.openNew = () => document.getElementById('new-btn')?.click();
+
+    // ── Phone: "⋯" sheet and swipe on a row (left: actions, right: publish/unpublish after asking) ──
+    function openRowSheet(tr) {
+      document.querySelectorAll('.orb-sheet-bd').forEach(n => n.remove());
+      const bd = document.createElement('div'); bd.className = 'orb-sheet-bd';
+      const sh = document.createElement('div'); sh.className = 'orb-sheet'; sh.setAttribute('role', 'dialog');
+      const title = (tr.querySelector('.c-title div') || tr.querySelector('td:nth-child(3) div'))?.textContent?.trim() || '';
+      sh.innerHTML = '<div class="orb-sheet-title"></div>';
+      sh.firstChild.textContent = title;
+      const add = (label, fn, danger) => { const b = document.createElement('button'); b.className = 'orb-sheet-item' + (danger ? ' danger' : ''); b.textContent = label; b.addEventListener('click', () => { bd.remove(); fn(); }); sh.appendChild(b); };
+      add('Edit', () => { location.href = tr.dataset.edit || tr.querySelector('.row-edit')?.getAttribute('href') || location.href; });
+      const tg = tr.querySelector('.status-toggle'); if (tg) add(tg.textContent.trim(), () => tg.click());
+      add('Duplicate', () => tr.querySelector('.dup-btn')?.click());
+      add('Trash', () => tr.querySelector('.delete-btn')?.click(), true);
+      add('Cancel', () => {});
+      bd.addEventListener('click', ev => { if (ev.target === bd) bd.remove(); });
+      bd.appendChild(sh); document.body.appendChild(bd);
+      if (window.ORB_i18n && ORB_i18n.apply) ORB_i18n.apply(bd);
+    }
+    (function () {
+      const wrap = document.getElementById('entries-wrap'); if (!wrap) return;
+      wrap.addEventListener('click', ev => { const b = ev.target.closest('.more-btn'); if (b) { ev.stopPropagation(); openRowSheet(b.closest('tr')); } });
+      let sx = 0, sy = 0, st = null;
+      wrap.addEventListener('touchstart', ev => { const t = ev.touches[0]; sx = t.clientX; sy = t.clientY; st = ev.target.closest('tr[data-edit]'); if (ev.target.closest('input,button,a,.drag-handle')) st = null; }, { passive: true });
+      wrap.addEventListener('touchend', ev => {
+        if (!st || !matchMedia('(max-width: 900px)').matches || activeFilter === 'trash') return;
+        const t = ev.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy, tr = st; st = null;
+        if (Math.abs(dx) < 90 || Math.abs(dy) > 40) return;
+        if (dx < 0) openRowSheet(tr);
+        else { const tg = tr.querySelector('.status-toggle'); if (tg && confirm(tg.textContent.trim() + ': «' + (tr.querySelector('.c-title div')?.textContent?.trim() || '') + '»?')) tg.click(); }
+      }, { passive: true });
+    })();
+
     async function loadEntries() {
       selected.clear();
       updateBulkBar();
@@ -244,6 +278,8 @@
       if (activeFilter) qp.set('status', activeFilter);
       if (activeLocale !== undefined) qp.set('locale', activeLocale);
       const url = `/api/collections/${colId}/entries` + (qp.toString() ? '?' + qp.toString() : '');
+      const w0 = document.getElementById('entries-wrap');
+      if (w0 && !w0.querySelector('table')) w0.innerHTML = '<div class="orb-skel-list" aria-hidden="true">' + '<div class="orb-skel"></div>'.repeat(5) + '</div>';
       allEntries = await fetch(url, { credentials: 'include' }).then(r => r.json());
       renderEntries(allEntries);
     }
@@ -253,7 +289,7 @@
       // entry count shown in page-sub
       const wrap = document.getElementById('entries-wrap');
       if (entries.length === 0) {
-        wrap.innerHTML = '<div class="empty"><div class="empty-icon">◈</div>No entries yet</div>';
+        wrap.innerHTML = '<div class="empty"><div class="empty-icon">◈</div>No entries yet' + (activeFilter ? '' : '<div style="margin-top:14px"><button class="btn btn-primary" data-on-click="openNew()">+ New entry</button></div>') + '</div>';
         return;
       }
       const isTrash = activeFilter === 'trash';
@@ -298,10 +334,11 @@
                     ${isTrash
                       ? `<button class="btn-row restore-btn" data-slug="${orbEsc(e.slug)}" data-locale="${orbEsc(e.locale ?? '')}">Restore</button>
                          <button class="btn-row btn-row-danger perm-del-btn" data-slug="${orbEsc(e.slug)}" data-locale="${orbEsc(e.locale ?? '')}">Delete forever</button>`
-                      : `<a class="btn-row" href="/editor.html?collection=${colId}&slug=${orbEsc(e.slug)}${localeParam}">Edit</a>
+                      : `<a class="btn-row row-edit" href="/editor.html?collection=${colId}&slug=${orbEsc(e.slug)}${localeParam}">Edit</a>
                          <button class="btn-row btn-row-toggle status-toggle" data-slug="${orbEsc(e.slug)}" data-locale="${orbEsc(e.locale ?? '')}" data-next="${e.status === 'in_review' && !canPublish ? 'draft' : nextStatus}">${toggleLabel}</button>
                          <button class="btn-row btn-row-icon dup-btn" data-slug="${orbEsc(e.slug)}" data-locale="${orbEsc(e.locale ?? '')}" title="Duplicate">⧉</button>
-                         <button class="btn-row btn-row-danger delete-btn" data-slug="${orbEsc(e.slug)}" data-locale="${orbEsc(e.locale ?? '')}">Trash</button>`
+                         <button class="btn-row btn-row-danger delete-btn" data-slug="${orbEsc(e.slug)}" data-locale="${orbEsc(e.locale ?? '')}">Trash</button>
+                         <button class="btn-row btn-row-icon more-btn" aria-label="More actions" title="More actions">⋯</button>`
                     }
                   </div>
                 </td>

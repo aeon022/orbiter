@@ -141,3 +141,6 @@ window.orbDate = function (d) {
 
 // Shorter words for the dock labels (English text → short German)
 window.ORB_DE_DOCK = { 'More': 'Mehr', 'Dashboard': 'Start', 'Settings': 'Setup', 'Users': 'Nutzer', 'To-Do': 'To-dos', 'To-do': 'To-dos', 'Tools': 'Tools', 'Auto': 'Auto', 'Notes': 'Notizen', 'Calendar': 'Kalender', 'Media': 'Medien', 'Inbox': 'Eingang', 'Analytics': 'Statistik', 'Forms': 'Formulare', 'Light': 'Hell', 'Dark': 'Dunkel' };
+
+Object.assign(window.ORB_DE, { 'More actions': 'Weitere Aktionen', 'Duplicate': 'Duplizieren', 'Cancel': 'Abbrechen', 'Edit': 'Bearbeiten', 'Add an entry →': 'Eintrag anlegen →', 'No entries this month': 'Diesen Monat keine Einträge', 'No entries yet': 'Noch keine Einträge', '+ New entry': '+ Neuer Eintrag', 'New entry': 'Neuer Eintrag' });
+Object.assign(window.ORB_DE, { 'Preview': 'Vorschau' });

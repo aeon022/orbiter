@@ -600,7 +600,7 @@
       const upcoming = [...scheduled, ...recentEdits].slice(0, 5);
       const upEl = document.getElementById('cal-upcoming');
       if (!upcoming.length) {
-        upEl.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:8px 0;font-family:var(--mono)">No entries this month</div>';
+        upEl.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:8px 0;font-family:var(--mono)">No entries this month</div><a class="btn btn-ghost" href="/collections.html" style="margin-top:8px;text-decoration:none">Add an entry →</a>';
       } else {
         upEl.innerHTML = '<div class="cal-upcoming">' + upcoming.map(e => {
           const prefix = e.type === 'sched' ? '↑' : e.type === 'expire' ? '↓' : '·';
