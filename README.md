@@ -1291,6 +1291,11 @@ The admin ships with **English** and **German**. To add a locale, add translatio
 
 > The full, current changelog lives on **[orbiter.sh/changelog](https://orbiter.sh/changelog)**. Entries from admin 0.3.81 on are mirrored here.
 
+### Nov 2026 · admin@0.3.111 · lander@0.7.5 — Fix: Save and Publish were not tappable in the phone editor
+
+- **What was wrong.** Since admin 0.3.109 and Lander 0.7.3 the fade at the right edge of the editor toolbar used a CSS mask, which trapped the floating *Save · Publish* button: it showed, but a tap did not reach it. Update to admin 0.3.111 or Lander 0.7.5.
+- **Lander also:** tapping a list row opens the entry again (it only worked after "select all" since 0.7.0).
+
 ### Nov 2026 · admin@0.3.110 · lander@0.7.4 — Admin on phones and tablets, and a faster dock
 
 - **Dock labels and drawers** — on touch devices every dock item shows its name. A drawer opens as a floating glass panel above the dock (like Notes and To-do) with a close button; tapping outside closes it.

@@ -1,8 +1,22 @@
+      <div class="update-card" id="update-phone-hotfix" data-date="2026-11-17" style="border-color:color-mix(in srgb,var(--red) 50%,var(--line))">
+        <div class="update-date">Nov<br />2026</div>
+        <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
+        <div class="update-body">
+          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.111 · lander@0.7.5 — Latest</div>
+          <div class="update-title">Fix: Save and Publish were not tappable in the phone editor</div>
+          <ul class="update-items">
+            <li><strong>What was wrong.</strong> Since admin 0.3.109 and Lander 0.7.3 the fade at the right edge of the editor toolbar used a CSS mask, which trapped the floating <em>Save · Publish</em> button: it showed, but a tap did not reach it, so the panel could not be opened on a phone. Update to admin 0.3.111 or Lander 0.7.5 (one click in Settings → Pod).</li>
+            <li><strong>Lander also:</strong> tapping a list row opens the entry again (it only worked after “select all” since 0.7.0).</li>
+            <li><strong>How it was found.</strong> The admin browser smoke test failed (“meta panel not on screen”); it passes again, and the fix was checked on a live Lander as an editor account.</li>
+          </ul>
+        </div>
+      </div>
+
       <div class="update-card" id="update-phone-audit" data-date="2026-11-17" style="border-color:color-mix(in srgb,var(--red) 50%,var(--line))">
         <div class="update-date">Nov<br />2026</div>
         <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.110 · lander@0.7.4 — Latest</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.110 · lander@0.7.4</div>
           <div class="update-title">Admin on phones and tablets, and a faster dock</div>
           <ul class="update-items">
             <li><strong>Dock labels and drawers</strong> — on touch devices every dock item shows its name. A drawer opens as a floating glass panel above the dock (like Notes and To-do) with a close button; tapping outside closes it.</li>
