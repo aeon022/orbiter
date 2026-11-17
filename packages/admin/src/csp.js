@@ -6,9 +6,9 @@
  * Violations are still reported (GET /api/security-check/csp-reports, admin only).
  */
 import { Hono } from 'hono';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, createHash } from 'node:crypto';
 import { allow } from './ratelimit.js';
 import { requireAdmin } from './middleware/auth.js';
 
@@ -29,6 +29,17 @@ export function policy(nonce) {
   ].join('; ');
 }
 
+/** Version token of the UI files (changes whenever a js/css file changes) → asset URLs get ?v=… and may stay cached for a year. */
+export function assetVersion(root) {
+  const stamp = readdirSync(root).filter((f) => /\.(js|css)$/.test(f)).map((f) => statSync(join(root, f)).mtimeMs).join(',');
+  return createHash('md5').update(stamp).digest('hex').slice(0, 8);
+}
+export function addVersion(html, v, nonce) {
+  return html
+    .replace(/((?:src|href)=")(?!https?:|\/\/)([^"?]+\.(?:js|css))"/g, `$1$2?v=${v}"`)
+    .replace(/<head>/i, `<head><script nonce="${nonce}">window.__orbV="?v=${v}";</script>`);
+}
+
 export const addNonce = (html, nonce) => html.replace(/<script\b(?![^>]*\bnonce=)/gi, `<script nonce="${nonce}"`);
 
 /** Hono handler for GET /:file.html — serves public/<file> with nonce + report-only header. */
@@ -43,7 +54,7 @@ export function htmlHandler(publicDir) {
     // enforcing by default; ORBITER_CSP=report switches back to report-only if a page ever breaks
     c.header(process.env.ORBITER_CSP === 'report' ? 'Content-Security-Policy-Report-Only' : 'Content-Security-Policy', policy(nonce));
     c.header('Cache-Control', 'no-cache');
-    return c.html(addNonce(readFileSync(file, 'utf8'), nonce));
+    return c.html(addVersion(addNonce(readFileSync(file, 'utf8'), nonce), assetVersion(root), nonce));
   };
 }
 

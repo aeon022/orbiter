@@ -98,7 +98,7 @@ window.orbEsc = function (s) {
 })();
 
 // Admin language: German strings are loaded only when chosen (Settings → General → Admin language)
-try { if (localStorage.getItem('orb_lang') === 'de') { var a = document.createElement('script'); a.src = '/i18n-de.js'; a.onload = function () { var b = document.createElement('script'); b.src = '/i18n.js'; document.head.appendChild(b); }; document.head.appendChild(a); } } catch (e) {}
+try { if (localStorage.getItem('orb_lang') === 'de') { var a = document.createElement('script'); a.src = '/i18n-de.js' + (window.__orbV || ''); a.onload = function () { var b = document.createElement('script'); b.src = '/i18n.js' + (window.__orbV || ''); document.head.appendChild(b); }; document.head.appendChild(a); } } catch (e) {}
 
 // ── Inline-handler replacement (CSP) ────────────────────────────────────────────
 // Pages mark handlers as data-on-<event>="fn('arg', this, event)" instead of onclick="…". No eval: the call is parsed

@@ -1337,7 +1337,7 @@
   function initDockPill(inner) {
     var pill = el('div', 'xfce-dock-pill'); pill.setAttribute('aria-hidden', 'true');
     inner.insertBefore(pill, inner.firstChild);
-    var hovering = false;
+    var hovering = false, leaveTimer = 0;
     function place(item, hover) {
       if (!item) { pill.style.opacity = '0'; return; }
       pill.style.opacity = '1';
@@ -1345,22 +1345,37 @@
       pill.style.transform = 'translate(' + item.offsetLeft + 'px,' + item.offsetTop + 'px)';
       pill.classList.toggle('rest', !hover);
     }
-    function rest() { if (!hovering) place(inner.querySelector('.xfce-dock-item.active'), false); }
+    // While a drawer is open the pill stays on its button (you are on your way into the drawer); otherwise it goes back to the active item.
+    function openDrawerBtn() { var p = document.querySelector('.xfce-drawer-popup.open'); return p && p._drawerBtn; }
+    function rest() {
+      if (hovering) return;
+      var d = openDrawerBtn();
+      if (d) place(d, true); else place(inner.querySelector('.xfce-dock-item.active'), false);
+    }
     inner.addEventListener('mouseover', function (e) {
       var it = e.target.closest && e.target.closest('.xfce-dock-item'); if (!it) return;
-      hovering = true; place(it, !it.classList.contains('active'));
+      clearTimeout(leaveTimer); hovering = true; place(it, !it.classList.contains('active'));
     });
     inner.addEventListener('mousemove', function (e) {
       var r = pill.getBoundingClientRect();
       pill.style.setProperty('--px', Math.round(e.clientX - r.left) + 'px'); pill.style.setProperty('--py', Math.round(e.clientY - r.top) + 'px');
     });
-    inner.addEventListener('mouseleave', function () { hovering = false; rest(); });
+    // Short grace period, so a slight slip off the dock does not send the pill back; the drawer popup also counts as "still on the way".
+    inner.addEventListener('mouseleave', function () { clearTimeout(leaveTimer); leaveTimer = setTimeout(function () { hovering = false; rest(); }, 380); });
+    document.addEventListener('mouseover', function (e) {
+      if (e.target.closest && e.target.closest('.xfce-drawer-popup')) { clearTimeout(leaveTimer); hovering = false; rest(); }
+    });
     var queued = false;
+    function later() { if (queued) return; queued = true; requestAnimationFrame(function () { queued = false; rest(); }); }
     new MutationObserver(function (m) {
-      if (queued || m.every(function (x) { return x.target === pill || x.target.parentNode === pill; })) return;
-      queued = true; requestAnimationFrame(function () { queued = false; rest(); });
+      if (m.every(function (x) { return x.target === pill || x.target.parentNode === pill; })) return;
+      later();
     }).observe(inner, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
-    window.addEventListener('resize', rest); window.addEventListener('load', function () { setTimeout(rest, 300); });
+    // drawer popups live in <body>: react when one opens or closes
+    new MutationObserver(function (m) {
+      if (m.some(function (x) { return x.target.classList && x.target.classList.contains('xfce-drawer-popup'); })) later();
+    }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
+    window.addEventListener('resize', later); window.addEventListener('load', function () { setTimeout(later, 300); });
     requestAnimationFrame(rest);
   }
 
@@ -1479,10 +1494,34 @@
   }
 
   // ── Load /api/info ────────────────────────────────────────────────────
+  // The dock comes from /api/info. The last answer is kept in localStorage, so the dock is there on the first frame and is rebuilt only if something changed.
+  var _infoKey = 'orb_info_v1:' + location.host;
+  var _colKeys = [];
+  function resetColumns() {
+    var cg = document.getElementById('xfce-dock-cols'); if (cg) cg.innerHTML = '';
+    document.querySelectorAll('.xfce-drawer-popup').forEach(function (p) { p.remove(); });
+    _palItems = _palItems.filter(function (p) { return p.group !== 'Collections'; });
+    _termCols.length = 0;
+    _colKeys.forEach(function (k) { delete G_MAP[k]; }); _colKeys = [];
+    document.querySelectorAll('.xfce-cheat-dyn').forEach(function (n) { n.remove(); });
+  }
   function loadInfo() {
+    var shown = null;
+    try { var cachedInfo = localStorage.getItem(_infoKey); if (cachedInfo) { shown = cachedInfo; applyInfo(JSON.parse(cachedInfo)); } } catch (e) { shown = null; }
     fetch('/api/info', { credentials: 'include' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (info) {
+        if (!info) return;
+        var raw = JSON.stringify(info);
+        try { localStorage.setItem(_infoKey, raw); } catch (e) {}
+        if (raw === shown) return;
+        if (shown) resetColumns();
+        applyInfo(info);
+      })
+      .catch(function () {});
+    loadInfoExtras();
+  }
+  function applyInfo(info) {
         if (!info) return;
 
         // Site name in status bar
@@ -1677,6 +1716,7 @@
               var ch = label[ci];
               if (/[a-z]/.test(ch) && !usedKeys.has(ch)) {
                 G_MAP[ch] = href;
+                _colKeys.push(ch);
                 usedKeys.add(ch);
                 colShortcuts.push({ key: ch, label: col.label });
                 break;
@@ -1700,10 +1740,11 @@
             var navCol = _cheatEl.querySelector('.xfce-cheat-col');
             if (navCol && colShortcuts.length) {
               var dockRow = navCol.querySelector('.xfce-cheat-row:last-child');
-              var html = '<div class="xfce-cheat-section" style="margin-top:10px">Collections (g + key)</div>';
+              var html = '<div class="xfce-cheat-dyn"><div class="xfce-cheat-section" style="margin-top:10px">Collections (g + key)</div>';
               colShortcuts.forEach(function (cs) {
                 html += cheatRow('g &nbsp;+&nbsp; ' + cs.key, cs.label);
               });
+              html += '</div>';
               if (dockRow) dockRow.insertAdjacentHTML('afterend', html);
             }
           }
@@ -1741,9 +1782,9 @@
             + '<span class="xfce-sb-crumb-sep"> › </span>'
             + '<span class="xfce-sb-crumb-page">' + crumbPage + '</span>';
         }
-      })
-      .catch(function () {});
+  }
 
+  function loadInfoExtras() {
     // HUD Drafts
     fetch('/api/search/recent?status=draft&limit=10', { credentials: 'include' })
       .then(function (r) { return r.ok ? r.json() : []; })

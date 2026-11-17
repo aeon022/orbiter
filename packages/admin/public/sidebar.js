@@ -6,7 +6,7 @@
 ;(function () {
   if ((localStorage.getItem('orb_style') || 'xfce') === 'xfce') {
     var xs = document.createElement('script');
-    xs.src = '/xfce.js';
+    xs.src = '/xfce.js' + (window.__orbV || '');
     var cs = document.currentScript;
     if (cs && cs.parentNode) cs.parentNode.insertBefore(xs, cs.nextSibling);
     else document.head.appendChild(xs);
