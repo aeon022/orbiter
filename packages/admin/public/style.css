@@ -3609,3 +3609,15 @@ html[data-style="xfce"] .btn-ghost:active { transform: translateY(0) scale(.97);
 @media (hover: none) { .xfce-dock-pill { transition: transform .25s ease, width .2s ease; } }
 /* the pill is the hover feedback: no magnification that would pull the item off its pill */
 .xfce-dock-item { transform: none !important; }
+
+/* ════ Page transitions: quick, soft, a little sci-fi ════ */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+  .xfce-dock { view-transition-name: orb-dock; }
+  .xfce-sb { view-transition-name: orb-statusbar; }
+  ::view-transition-old(root) { animation: orb-vt-out .12s ease both; }
+  ::view-transition-new(root) { animation: orb-vt-in .22s cubic-bezier(.2,.7,.2,1) both; }
+  ::view-transition-group(orb-dock), ::view-transition-group(orb-statusbar) { animation-duration: 0s; }
+  @keyframes orb-vt-out { to { opacity: 0; filter: blur(3px); } }
+  @keyframes orb-vt-in { from { opacity: 0; transform: translateY(6px); filter: blur(4px); } }
+}

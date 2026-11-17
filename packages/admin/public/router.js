@@ -16,7 +16,7 @@
 
   // Inject transition rule once
   var transCSS = document.createElement('style');
-  transCSS.textContent = '.main { transition: opacity 0.14s ease; } .main.fading { opacity: 0; } #orb-progress { position: fixed; top: 0; left: 0; height: 2px; width: 0; z-index: 100002; background: var(--accent); box-shadow: 0 0 8px var(--accent); opacity: 0; transition: width .4s ease, opacity .2s; pointer-events: none; } #orb-progress.on { opacity: 1; width: 70%; } #orb-progress.done { opacity: 0; width: 100%; transition: width .15s, opacity .3s .1s; }';
+  transCSS.textContent = '.main { transition: opacity .14s ease, transform .2s ease, filter .2s ease; } .main.fading { opacity: 0; transform: translateY(5px); filter: blur(3px); } @media (prefers-reduced-motion: reduce) { .main, .main.fading { transition: none; transform: none; filter: none; } } #orb-progress { position: fixed; top: 0; left: 0; height: 2px; width: 0; z-index: 100002; background: var(--accent); box-shadow: 0 0 8px var(--accent); opacity: 0; transition: width .4s ease, opacity .2s; pointer-events: none; } #orb-progress.on { opacity: 1; width: 70%; } #orb-progress.done { opacity: 0; width: 100%; transition: width .15s, opacity .3s .1s; }';
   var bar = document.createElement('div'); bar.id = 'orb-progress'; document.body.appendChild(bar);
   document.head.appendChild(transCSS);
 
