@@ -155,23 +155,77 @@
     });
   }
 
+  // --- the editor: opens in place (Station mode only); leaving it is always a full navigation, which tears down its many listeners and timers cleanly ---
+
+  var EDITOR_PAGE = '/editor.html';
+  var editorMode = false;   // true once the editor was opened in place: from then on every link is a normal navigation
+  function station() { return document.documentElement.getAttribute('data-style') === 'xfce'; }
+  function ensureMarked() {
+    if (window.marked) return Promise.resolve();
+    return new Promise(function (res) {
+      var s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/marked@12/marked.min.js';
+      s.onload = res; s.onerror = res; document.head.appendChild(s);
+    });
+  }
+  function enterEditor(href) {
+    var seq = ++navSeq;
+    bar.classList.remove('done'); void bar.offsetWidth; bar.classList.add('on');
+    getPage(href).then(function (html) {
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      var app = doc.querySelector('.app'), shell = doc.querySelector('.editor-shell'), mod = doc.querySelector('body script[type="module"]');
+      if (!app || !shell || !mod) throw new Error('not an editor page');
+      return ensureMarked().then(function () {
+        if (seq !== navSeq) return;
+        main.classList.add('fading');
+        setTimeout(function () {
+          if (seq !== navSeq) return;
+          swapPageStyle(doc);
+          var t = doc.querySelector('title'); if (t) document.title = t.textContent;
+          // body-level overlays that come before the app (shortcut sheet, focus hint)
+          var liveApp = main.closest('.app') || document.querySelector('.app');
+          // every other element of the editor page that sits next to the app (overlays, pickers, hidden file inputs)
+          [].slice.call(doc.body.children).forEach(function (n) {
+            if (n !== app && n.tagName !== 'SCRIPT') liveApp.parentNode.insertBefore(document.importNode(n, true), liveApp);
+          });
+          liveApp.innerHTML = app.innerHTML;
+          editorMode = true;
+          history.pushState(null, '', href);
+          updateActiveNav(href);
+          var blob = new Blob([mod.textContent], { type: 'text/javascript' }), u = URL.createObjectURL(blob);
+          import(u).catch(function (e) { console.error('[router] editor error:', e); }).finally(function () { URL.revokeObjectURL(u); });
+          window.dispatchEvent(new Event('orb:navigated'));
+          bar.classList.remove('on'); bar.classList.add('done');
+        }, 90);
+      });
+    }).catch(function () { location.href = href; });   // anything unexpected: a normal navigation
+  }
+
   // --- intercept clicks ---
 
-  var FULL_RELOAD = ['/login.html', '/editor.html', '/calendar.html', '/analytics.html', '/forms.html', '/graph.html', '/users.html', '/account.html', '/pods.html'];
+  var FULL_RELOAD = ['/login.html', '/calendar.html', '/analytics.html', '/forms.html', '/graph.html', '/users.html', '/account.html', '/pods.html'];
   function routable(e) {
+    if (editorMode) return null;
     var a = e.target.closest && e.target.closest('a[href]');
     if (!a || a.target === '_blank') return null;
     var raw = a.getAttribute('href'); if (!raw) return null;
     var url; try { url = new URL(raw, location.origin); } catch (err) { return null; }
     if (url.origin !== location.origin || !url.pathname.endsWith('.html') || FULL_RELOAD.indexOf(url.pathname) !== -1) return null;
+    if (url.pathname === EDITOR_PAGE && !station()) return null;
     return url;
   }
+  function go(url) { if (url.pathname === EDITOR_PAGE) enterEditor(url.href); else navigate(url.href, false); }
+  // for page scripts (the entries list): open a page through the router when possible
+  window.__orbGo = function (href) {
+    var url; try { url = new URL(href, location.origin); } catch (err) { location.href = href; return; }
+    if (editorMode || url.origin !== location.origin || !url.pathname.endsWith('.html') || FULL_RELOAD.indexOf(url.pathname) !== -1 || (url.pathname === EDITOR_PAGE && !station())) { location.href = href; return; }
+    go(url);
+  };
   document.addEventListener('click', function (e) {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
     var url = routable(e); if (!url) return;
     e.preventDefault();
     if (url.href === location.href) return;
-    navigate(url.href, false);
+    go(url);
   }, true); // capture phase so editor-internal links don't block
 
   // Warm the page while the finger or cursor is still on its way
@@ -182,6 +236,7 @@
   // --- browser back/forward ---
 
   window.addEventListener('popstate', function () {
+    if (editorMode || new URL(location.href).pathname === EDITOR_PAGE) { location.reload(); return; }   // from or to the editor: a clean load
     navigate(location.href, true);
   });
 

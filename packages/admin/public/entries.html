@@ -622,7 +622,7 @@
       if (menu.style.display === 'none' || !menu.style.display) openTplMenu();
       else menu.style.display = 'none';
     });
-    document.addEventListener('click', () => { document.getElementById('tpl-menu').style.display = 'none'; });
+    document.addEventListener('click', () => { const m = document.getElementById('tpl-menu'); if (m) m.style.display = 'none'; });
 
     function escHtml(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
