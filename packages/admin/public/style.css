@@ -3576,3 +3576,36 @@ html[data-style="xfce"] .btn-ghost:active { transform: translateY(0) scale(.97);
 .xfce-dock-icon .xfce-hex { display: block; }
 .xfce-dock-icon { height: 24px; display: flex; align-items: center; justify-content: center; }
 .xfce-dock-lbl { line-height: 12px; height: 12px; }
+
+/* ════ Dock: sliding glass pill with cursor spotlight, aurora ring on the active item ════ */
+@property --ang { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+.xfce-dock-inner { position: relative; }
+.xfce-dock-pill {
+  position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; border-radius: 14px; opacity: 0;
+  background:
+    radial-gradient(90px circle at var(--px, 50%) var(--py, 0%), color-mix(in srgb, var(--accent) 34%, transparent), transparent 70%),
+    color-mix(in srgb, var(--accent) 9%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 30%, transparent), 0 8px 20px -10px color-mix(in srgb, var(--accent) 60%, transparent);
+  transition: transform .38s cubic-bezier(.34,1.45,.64,1), width .28s ease, height .28s ease, opacity .2s, background .2s;
+}
+.xfce-dock-pill::before {   /* thin rim: lit where the cursor is, a rotating aurora at rest */
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+  background: radial-gradient(70px circle at var(--px, 50%) var(--py, 0%), color-mix(in srgb, var(--accent) 90%, white), transparent 70%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+.xfce-dock-pill.rest { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.xfce-dock-pill.rest::before {
+  background: conic-gradient(from var(--ang), transparent 0deg, color-mix(in srgb, var(--accent) 95%, white) 70deg, transparent 150deg, transparent 220deg, color-mix(in srgb, var(--accent) 60%, transparent) 290deg, transparent 360deg);
+  animation: xfce-aurora 6s linear infinite;
+}
+@keyframes xfce-aurora { to { --ang: 360deg; } }
+/* the pill replaces the per-item plates */
+.xfce-dock-item, .xfce-dock-item:hover, .xfce-dock-item.active { background: transparent; box-shadow: none; z-index: 1; }
+.xfce-dock-item::before { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .xfce-dock-pill { transition: none; } .xfce-dock-pill.rest::before { animation: none; }
+}
+@media (hover: none) { .xfce-dock-pill { transition: transform .25s ease, width .2s ease; } }
+/* the pill is the hover feedback: no magnification that would pull the item off its pill */
+.xfce-dock-item { transform: none !important; }

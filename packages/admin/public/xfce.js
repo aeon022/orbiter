@@ -1333,6 +1333,37 @@
     return item;
   }
 
+  // Sliding glass pill behind the hovered dock item (spotlight follows the cursor); at rest it sits behind the active item with a slow aurora ring.
+  function initDockPill(inner) {
+    var pill = el('div', 'xfce-dock-pill'); pill.setAttribute('aria-hidden', 'true');
+    inner.insertBefore(pill, inner.firstChild);
+    var hovering = false;
+    function place(item, hover) {
+      if (!item) { pill.style.opacity = '0'; return; }
+      pill.style.opacity = '1';
+      pill.style.width = item.offsetWidth + 'px'; pill.style.height = item.offsetHeight + 'px';
+      pill.style.transform = 'translate(' + item.offsetLeft + 'px,' + item.offsetTop + 'px)';
+      pill.classList.toggle('rest', !hover);
+    }
+    function rest() { if (!hovering) place(inner.querySelector('.xfce-dock-item.active'), false); }
+    inner.addEventListener('mouseover', function (e) {
+      var it = e.target.closest && e.target.closest('.xfce-dock-item'); if (!it) return;
+      hovering = true; place(it, !it.classList.contains('active'));
+    });
+    inner.addEventListener('mousemove', function (e) {
+      var r = pill.getBoundingClientRect();
+      pill.style.setProperty('--px', Math.round(e.clientX - r.left) + 'px'); pill.style.setProperty('--py', Math.round(e.clientY - r.top) + 'px');
+    });
+    inner.addEventListener('mouseleave', function () { hovering = false; rest(); });
+    var queued = false;
+    new MutationObserver(function (m) {
+      if (queued || m.every(function (x) { return x.target === pill || x.target.parentNode === pill; })) return;
+      queued = true; requestAnimationFrame(function () { queued = false; rest(); });
+    }).observe(inner, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    window.addEventListener('resize', rest); window.addEventListener('load', function () { setTimeout(rest, 300); });
+    requestAnimationFrame(rest);
+  }
+
   function buildDock() {
     var dock = el('div', 'xfce-dock');
     dock.id = 'xfce-dock'; dock.setAttribute('role', 'navigation'); dock.setAttribute('aria-label', 'Dock');
@@ -1415,6 +1446,7 @@
     dockInner.appendChild(schemeClone);
 
     document.body.appendChild(dock);
+    initDockPill(dockInner);
 
     dock.addEventListener('click', function () {
       if (focusedEl) exitFocusMode();
