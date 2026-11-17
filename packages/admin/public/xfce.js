@@ -136,7 +136,7 @@
 
     // Logout
     document.getElementById('xfce-sb-logout').addEventListener('click', function () {
-      try { localStorage.removeItem(_infoKey); } catch (e) {}
+      try { localStorage.removeItem(_infoKey); localStorage.removeItem(_visKey); } catch (e) {}
       fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
         .finally(function () { location.href = '/login.html'; });
     });
@@ -526,6 +526,25 @@
     });
   }
 
+  // Pages you opened recently (kept in this browser only; cleared on logout)
+  var _visKey = 'orb_visited:' + location.host;
+  function visited() { try { return JSON.parse(localStorage.getItem(_visKey) || '[]'); } catch (e) { return []; } }
+  function recordVisit() {
+    setTimeout(function () {
+      var path = location.pathname + location.search;
+      if (/login\.html/.test(path)) return;
+      var t = document.getElementById('title-input');
+      var lp = new URLSearchParams(location.search).get('label');
+      var parts = document.title.split(/\s+[—-]\s+/).filter(function (x) { return !/^(Orbiter|Lander)$/i.test(x); });
+      var label = ((t && t.value) || (/entries\.html/.test(path) && lp) || parts[parts.length - 1] || '').trim().slice(0, 60);
+      if (!label) return;
+      var list = visited().filter(function (v) { return v.href !== path; });
+      list.unshift({ href: path, label: label });
+      try { localStorage.setItem(_visKey, JSON.stringify(list.slice(0, 8))); } catch (e) {}
+    }, 1500);
+  }
+  window.addEventListener('orb:navigated', recordVisit);
+
   function renderPalette(q) {
     q = (q || '').trim();
 
@@ -542,6 +561,14 @@
     // Empty input → show recents + nav
     if (!q) {
       var html = '';
+      var here = location.pathname + location.search;
+      var vis = visited().filter(function (v) { return v.href !== here; }).slice(0, 5);
+      if (vis.length) {
+        html += '<div class="xfce-pal-group">Visited</div>';
+        vis.forEach(function (v) {
+          html += '<div class="xfce-pal-item" data-href="' + escHtml(v.href) + '"><span class="xfce-pal-icon xfce-pal-icon-sm">↺</span><span class="xfce-pal-label">' + escHtml(v.label) + '</span></div>';
+        });
+      }
       if (_palRecents.length) {
         html += '<div class="xfce-pal-group">Recent</div>';
         _palRecents.forEach(function (r) {
@@ -556,7 +583,7 @@
             + '</div>';
         });
         html += '<div class="xfce-pal-group">Navigation</div>';
-      }
+      } else if (vis.length) { html += '<div class="xfce-pal-group">Navigation</div>'; }
       var navGroups = {};
       _palItems.forEach(function (it) {
         var g = it.group || 'Nav';
@@ -564,7 +591,7 @@
         navGroups[g].push(it);
       });
       Object.keys(navGroups).forEach(function (g) {
-        if (_palRecents.length) html += '<div class="xfce-pal-group-sub">' + g + '</div>';
+        if (_palRecents.length || vis.length) html += '<div class="xfce-pal-group-sub">' + g + '</div>';
         else html += '<div class="xfce-pal-group">' + g + '</div>';
         navGroups[g].forEach(function (it) {
           html += '<div class="xfce-pal-item" data-href="' + it.href + '">'
@@ -2126,6 +2153,7 @@
     bindKeys();
     initFocusMode();
     observeSavedFlash();
+    recordVisit();
     if (localStorage.getItem('orb_zen') === '1') {
       document.documentElement.dataset.zen = '1';
     }

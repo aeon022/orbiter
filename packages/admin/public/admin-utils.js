@@ -96,7 +96,7 @@
 
   // ── Sign out ─────────────────────────────────────────────────────────
   window.__orbSignOut = async function () {
-    try { localStorage.removeItem('orb_info_v1:' + location.host); } catch (e) {}
+    try { localStorage.removeItem('orb_info_v1:' + location.host); localStorage.removeItem('orb_visited:' + location.host); } catch (e) {}
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(function () {});
     window.location.replace('/login.html');
   };

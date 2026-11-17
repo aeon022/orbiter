@@ -145,6 +145,7 @@
         if (replace) history.replaceState(null, '', href); else history.pushState(null, '', href);
         updateActiveNav(href);
         execModuleScripts(main);
+        window.dispatchEvent(new Event('orb:navigated'));
         main.scrollTop = 0;
         requestAnimationFrame(function () { main.classList.remove('fading'); });
         bar.classList.remove('on'); bar.classList.add('done');
