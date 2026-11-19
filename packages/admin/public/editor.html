@@ -1006,7 +1006,10 @@
           const checked = val===true||val==='true'||val===1;
           fieldsHtml += `<label class="bool-toggle"><input type="checkbox" name="${key}"${checked?' checked':''} /><span class="bool-track"></span><span class="bool-label">${checked?L_ON:L_OFF}</span></label>`;
         } else if (field.type==='datetime') {
-          fieldsHtml += `<input type="datetime-local" class="field-input" name="${key}" value="${escHtml(val??'')}" />`;
+          // ISO-Werte mit Zeitzone (…Z) kann datetime-local nicht anzeigen (Feld blieb leer, beim Speichern ging der Wert verloren): in Ortszeit umrechnen, beim Speichern zurück nach ISO (UTC)
+          const dtTz = /(Z|[+-]\d\d:?\d\d)$/.test(String(val??'')) && !isNaN(new Date(val));
+          const dtLocal = dtTz ? (d => new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,16))(new Date(val)) : String(val??'').slice(0,16);
+          fieldsHtml += `<input type="datetime-local" class="field-input" name="${key}" value="${escHtml(dtLocal)}"${dtTz ? ' data-iso-tz="1"' : ''} />`;
         } else if (field.type==='date') {
           fieldsHtml += `<input type="date" class="field-input" name="${key}" value="${escHtml(val??'')}" />`;
         } else if (field.type==='select') {
@@ -1710,6 +1713,7 @@
         } else {
           const el = document.querySelector(`[name="${key}"]`);
           data[key] = el ? el.value : '';
+          if (el && el.dataset.isoTz && el.value && !isNaN(new Date(el.value))) data[key] = new Date(el.value).toISOString();   // wie gespeichert: ISO mit Zeitzone
         }
       }
 
