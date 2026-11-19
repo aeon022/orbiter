@@ -25,6 +25,7 @@
     schema:    tblr('<path d="M4 6a8 3 0 1 0 16 0a8 3 0 1 0-16 0"/><path d="M4 6v6a8 3 0 0 0 16 0V6"/><path d="M4 12v6a8 3 0 0 0 16 0v-6"/>'),
     build:     tblr('<path d="M4 13a8 8 0 0 1 7 7a6 6 0 0 0 3-5a9 9 0 0 0 6-8a3 3 0 0 0-3-3a9 9 0 0 0-8 6a6 6 0 0 0-5 3"/><path d="M7 14a6 6 0 0 0-3 6a6 6 0 0 0 6-3"/><path d="M14 9a1 1 0 1 0 2 0a1 1 0 1 0-2 0"/>'),
     import:    tblr('<path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M7 11l5 5l5-5"/><path d="M12 4v12"/>'),
+    help:      tblr('<path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="M12 17v.01"/><path d="M12 13.5a1.5 1.5 0 0 1 1-1.4a2.6 2.6 0 1 0-3-4"/>'),
     settings:  tblr('<path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37c1 .608 2.296.07 2.572-1.065"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"/>'),
     notes:     tblr('<path d="M4 20h4l10.5-10.5a2.828 2.828 0 1 0-4-4L4 16v4"/><path d="M13.5 6.5l4 4"/>'),
     todos:     tblr('<path d="M9 11l3 3l8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/>'),
@@ -1463,6 +1464,11 @@
     var settingsDockBtn = makeDockItem(TI.settings, 'Settings', '/settings.html', page === 'settings', false);
     dockInner.appendChild(settingsDockBtn);
 
+    // Help (read-only guides): shown once a collection called "anleitungen" exists (see applyInfo)
+    var helpDockBtn = makeDockItem(TI.help, 'Help', '/hilfe.html', page === 'hilfe', false);
+    helpDockBtn.id = 'xfce-help-btn'; helpDockBtn.style.display = 'none';
+    dockInner.appendChild(helpDockBtn);
+
     dockInner.appendChild(el('div', 'xfce-dock-sep'));
 
     // HUD toggle
@@ -1561,6 +1567,9 @@
         // Site name in status bar
         var siteEl = document.getElementById('xfce-sb-site');
         if (siteEl) siteEl.textContent = info.siteName || (info.podPath || '').split('/').pop().replace('.pod', '');
+
+        var helpBtn = document.getElementById('xfce-help-btn');
+        if (helpBtn) helpBtn.style.display = (info.collections || []).some(function (c) { return c.id === 'anleitungen'; }) ? '' : 'none';
 
         // Collections in dock
         var colGroup = document.getElementById('xfce-dock-cols');

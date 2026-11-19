@@ -2,13 +2,15 @@
 // Every "## Section" becomes an entry (the text before the first ## becomes "Overview"). Safe to re-run (entries with the same title are overwritten).
 //   LANDER_USER=… LANDER_PASS=… node scripts/help-import.mjs <admin-url> Editors=docs/EDITORS.md Technical=docs/TECH.md [--links help-links.json]
 // <admin-url>: the admin (…/ for Orbiter, …/lander for a Lander in a subfolder). The group name before "=" is shown in the Help view.
-// help-links.json: [{"label": "Docs", "url": "https://…"}] — external links in the Hilfe sidebar group (admin only; needs admin 0.3.113+ / Lander 0.7.6+).
+// --overview "Überblick"   title of the text before the first ## (default: Overview)
+// help-links.json: [{"label": "Docs", "url": "https://…"}] — external links in the "Anleitungen" sidebar group (admin only; needs admin 0.3.113+ / Lander 0.7.6+).
 // Entries are saved as drafts, so they are not served by the public API.
 import { readFileSync } from 'node:fs';
 const args = process.argv.slice(2);
+const oi = args.indexOf('--overview'); const overview = oi >= 0 ? args.splice(oi, 2)[1] : 'Overview';   // title of the text before the first ## (e.g. "Überblick")
 const li = args.indexOf('--links'); const linksFile = li >= 0 ? args.splice(li, 2)[1] : null;
 const [base, ...pairs] = args;
-if (!base || !pairs.length) { console.error('Usage: node scripts/help-import.mjs <admin-url> Group=file.md [Group=file.md …] [--links links.json]'); process.exit(1); }
+if (!base || !pairs.length) { console.error('Usage: node scripts/help-import.mjs <admin-url> Group=file.md [Group=file.md …] [--links links.json] [--overview Title]'); process.exit(1); }
 const admin = base.replace(/\/$/, ''), origin = new URL(admin).origin; let cookie = '';
 const { LANDER_USER: user, LANDER_PASS: pass } = process.env;
 async function api(path, method = 'GET', body, soft = false) {
@@ -30,7 +32,7 @@ let n = 0;
 for (const pair of pairs) {
   const [group, file] = [pair.slice(0, pair.indexOf('=')), pair.slice(pair.indexOf('=') + 1)];
   const parts = readFileSync(file, 'utf8').split(/^## /m); const intro = parts.shift().replace(/^# [^\n]*\n*/, '').trim();
-  const list = [...(intro ? [['Overview', intro]] : []), ...parts.map((t) => { const [h, ...r] = t.split('\n'); return [h.replace(/^\d+\.\s*/, '').replace(/`/g, '').trim(), r.join('\n').trim()]; })];
+  const list = [...(intro ? [[overview, intro]] : []), ...parts.map((t) => { const [h, ...r] = t.split('\n'); return [h.replace(/^\d+\.\s*/, '').replace(/`/g, '').trim(), r.join('\n').trim()]; })];
   for (const [title, body] of list) {
     const id = slug(group + '-' + title); n += 1; const data = { title, gruppe: group, reihenfolge: n, body };
     const e = await api(`/api/collections/anleitungen/entries/${id}`, 'GET', undefined, true);
@@ -40,8 +42,9 @@ for (const pair of pairs) {
 }
 const meta = await api('/api/meta'); const g = JSON.parse(meta['nav.groups'] || '{}');
 for (const k of Object.keys(g)) g[k] = g[k].filter((c) => c !== 'anleitungen');
-g.Hilfe = ['anleitungen'];
+delete g.Hilfe;   // older name of the group; the dock now has its own "Hilfe" icon
+g.Anleitungen = ['anleitungen'];
 const put = { 'nav.groups': JSON.stringify(g) };
-if (linksFile) put['nav.links'] = JSON.stringify({ Hilfe: JSON.parse(readFileSync(linksFile, 'utf8')) });
+if (linksFile) put['nav.links'] = JSON.stringify({ Anleitungen: JSON.parse(readFileSync(linksFile, 'utf8')) });
 await api('/api/meta', 'PUT', put);
-console.log(n, 'entries · sidebar group "Hilfe"' + (linksFile ? ' with links' : ''));
+console.log(n, 'entries · sidebar group "Anleitungen"' + (linksFile ? ' with links' : ''));

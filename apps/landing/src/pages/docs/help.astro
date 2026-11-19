@@ -8,7 +8,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 
 <h2>What editors see</h2>
 <ul>
-  <li><strong>Hilfe</strong> in the dock (a drawer): <em>Hilfe lesen</em> on top, then your external links, the collection <em>Anleitungen</em> at the bottom (that one is for editing).</li>
+  <li>A <strong>Help</strong> icon in the dock opens the reading view (it appears once the collection <code>anleitungen</code> exists). The <strong>Anleitungen</strong> drawer next to it holds <em>Hilfe lesen</em>, your external links and the collection itself (for editing) at the bottom.</li>
   <li><code>/hilfe.html</code>: the guides by group on the left, the text on the right (Markdown set like the editor preview). Switching a guide swaps only the text; the dock, the list and the search stay. On a phone the list scrolls on its own and the text jumps into view.</li>
   <li>A guide has its own address: <code>/hilfe.html#editors-publish-a-post</code>.</li>
 </ul>
@@ -20,7 +20,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <p>Run it again after editing the files; guides with the same title are overwritten. Entries are saved as <strong>drafts</strong>, so the public API does not serve them (the Help view shows drafts too).</p>
 
 <h2>Links in the sidebar group</h2>
-<p>The meta <code>nav.links</code> adds external links to a sidebar group, shown as <code>↗</code> entries that open in a new tab: <code>&#123;"Hilfe": [&#123;"label": "Docs", "url": "https://…"&#125;]&#125;</code>. Only admins can set it; addresses must start with <code>https://</code>, <code>http://</code> or <code>/</code>.</p>
+<p>The meta <code>nav.links</code> adds external links to a sidebar group, shown as <code>↗</code> entries that open in a new tab: <code>&#123;"Anleitungen": [&#123;"label": "Docs", "url": "https://…"&#125;]&#125;</code>. Only admins can set it; addresses must start with <code>https://</code>, <code>http://</code> or <code>/</code>.</p>
 
 <h2>Safety</h2>
 <ul>
