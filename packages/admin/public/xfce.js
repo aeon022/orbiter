@@ -1675,7 +1675,7 @@
               var gExtra = [];
               if (grpCols.some(function (c) { return c.id === 'anleitungen'; })) gExtra.push({ label: 'Hilfe lesen', href: '/hilfe.html', icon: '▤' });
               (((info.nav && info.nav.links) || {})[groupLabel] || []).forEach(function (l) {
-                if (l && /^(https?:\/\/|\/(?!\/))/i.test(String(l.url || ''))) gExtra.push({ label: l.label || l.url, href: l.url, icon: '↗', ext: true });
+                if (l && /^(https?:\/\/|\/(?![\/\\]))/i.test(String(l.url || ''))) gExtra.push({ label: l.label || l.url, href: l.url, icon: '↗', ext: true });
               });
               gExtra.forEach(function (x) {
                 var xa = el('a', 'xfce-tools-item' + (!x.ext && page === 'hilfe' ? ' active' : ''));

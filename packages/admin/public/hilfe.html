@@ -100,25 +100,22 @@
       location.replace('/login.html');
     });
 
-    // Markdown (wie die Vorschau im Editor) → HTML, danach über eine Positivliste bereinigt:
-    // Die Anleitungen sind redigierbar, ein Redakteur darf darüber kein Script in der Admin-Oberfläche ausführen.
-    if (!window.marked) await new Promise((ok) => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/marked@12/marked.min.js'; s.onload = s.onerror = ok; document.head.appendChild(s); });
-    const ERLAUBT = new Set('A,B,BLOCKQUOTE,BR,CODE,DEL,DIV,EM,H1,H2,H3,H4,H5,H6,HR,I,IMG,LI,MARK,OL,P,PRE,S,SPAN,STRONG,SUB,SUP,TABLE,TBODY,TD,TH,THEAD,TR,UL'.split(','));
-    const ATTR = new Set(['href', 'src', 'alt', 'title', 'colspan', 'rowspan']);
-    const sicherUrl = (u) => /^(https?:|mailto:|#|\/(?!\/)|[a-z0-9_.~-]+(\/|$))/i.test(String(u).trim());
-    function bereinigen(html) {
-      const doc = new DOMParser().parseFromString('<body>' + html + '</body>', 'text/html');
-      (function walk(n) {
-        [...n.children].forEach((el) => {
-          if (!ERLAUBT.has(el.tagName)) { el.remove(); return; }
-          [...el.attributes].forEach((a) => { if (!ATTR.has(a.name) || ((a.name === 'href' || a.name === 'src') && !sicherUrl(a.value))) el.removeAttribute(a.name); });
-          if (el.tagName === 'A' && el.getAttribute('href') && !el.getAttribute('href').startsWith('#')) { el.target = '_blank'; el.rel = 'noopener noreferrer'; }
-          walk(el);
-        });
-      })(doc.body);
-      return doc.body.innerHTML;
-    }
-    const md = (t) => bereinigen(window.marked ? marked.parse(String(t ?? '')) : '<pre>' + orbEsc(String(t ?? '')) + '</pre>');
+    // Markdown (wie die Vorschau im Editor) → HTML, danach mit DOMPurify bereinigt (Positivliste). Die Anleitungen sind redigierbar:
+    // ein Redakteur darf darüber kein Script in der Admin-Oberfläche ausführen. Beide Bibliotheken liegen lokal in /vendor (kein CDN).
+    const basis = location.pathname.replace(/[^/]*$/, '');
+    const lade = (name) => new Promise((ok) => { const s = document.createElement('script'); s.src = basis + 'vendor/' + name; s.onload = s.onerror = ok; document.head.appendChild(s); });
+    if (!window.marked) await lade('marked.min.js');
+    if (!window.DOMPurify) await lade('purify.min.js');
+    if (window.DOMPurify) DOMPurify.addHook('afterSanitizeAttributes', (n) => {
+      if (n.tagName === 'A' && n.hasAttribute('href') && !n.getAttribute('href').startsWith('#')) { n.setAttribute('target', '_blank'); n.setAttribute('rel', 'noopener noreferrer'); }
+    });
+    const bereinigen = (html) => DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: 'a,b,blockquote,br,code,del,div,em,h1,h2,h3,h4,h5,h6,hr,i,img,li,mark,ol,p,pre,s,span,strong,sub,sup,table,tbody,td,th,thead,tr,ul'.split(','),
+      ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'colspan', 'rowspan'], ALLOW_DATA_ATTR: false, ALLOW_ARIA_ATTR: false,
+      ALLOWED_URI_REGEXP: /^(?:https?:|mailto:|#|\/(?![\/\\])|[a-z0-9_.~-]+(?:\/|$))/i,
+    });
+    // fehlt eine der Bibliotheken, wird der Text nur als Klartext gezeigt (nie ungeprüftes HTML)
+    const md = (t) => (window.marked && window.DOMPurify) ? bereinigen(marked.parse(String(t ?? ''))) : '<pre>' + orbEsc(String(t ?? '')) + '</pre>';
 
     // Einträge der Sammlung «anleitungen» (Entwürfe gehören dazu: sie sind nur nicht öffentlich). «Technik» sehen nur Admins.
     // Beim ersten Zeigen kommen sie aus dem Zwischenspeicher der Sitzung (sofort sichtbar), im Hintergrund wird aktualisiert.

@@ -63,7 +63,7 @@ const previewUrlRejected = (key, value, isAdmin) =>
 const navLinksValid = (v) => {
   let d; try { d = typeof v === 'string' ? JSON.parse(v) : v; } catch { return false; }
   return !!d && typeof d === 'object' && !Array.isArray(d) && Object.entries(d).every(([g, links]) => typeof g === 'string' && Array.isArray(links) &&
-    links.every((l) => l && typeof l.label === 'string' && typeof l.url === 'string' && SAFE_PREVIEW_URL_RE.test(l.url.trim())));
+    links.every((l) => l && typeof l.label === 'string' && typeof l.url === 'string' && /^(https?:\/\/|\/(?![\/\\]))/i.test(l.url.trim())));
 };
 const navLinksRejected = (key, value) => key === 'nav.links' && value != null && String(value) !== '' && !navLinksValid(value);
 const TEMPLATES_RE   = /^templates\.[a-z0-9_-]+$/;

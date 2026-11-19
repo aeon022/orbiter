@@ -181,7 +181,7 @@
               if (col.id === 'anleitungen') anlEl = a; else body.appendChild(a);   // «Anleitungen» ganz unten in der Gruppe
             });
             groupLinks.forEach(function (l) {   // externe Links (neuer Tab)
-              if (!l || !/^(https?:\/\/|\/(?!\/))/i.test(String(l.url || ''))) return;
+              if (!l || !/^(https?:\/\/|\/(?![\/\\]))/i.test(String(l.url || ''))) return;
               var a = document.createElement('a'); a.className = 'nav-item nav-child'; a.href = l.url; a.target = '_blank'; a.rel = 'noopener';
               var ic = document.createElement('span'); ic.className = 'nav-icon'; ic.textContent = '↗';
               var lb = document.createElement('span'); lb.className = 'nav-label'; lb.textContent = l.label || l.url;
