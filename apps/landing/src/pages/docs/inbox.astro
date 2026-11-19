@@ -87,4 +87,6 @@ DELETE /api/forms/:id              — delete submission (auth)</pre>
 
 <div class="callout"><strong>CORS:</strong> The public <code>POST /api/form/:formId</code> endpoint has wide CORS (<code>*</code>) so it can be called from any static site. All other <code>/api/forms/*</code> endpoints require a session cookie.</div>
 
+<div class="callout"><strong>Only known forms (admin 0.3.113+):</strong> by default <code>POST /api/form/:formId</code> accepts any form id, so anyone who guesses a name can fill the inbox (within the rate limit). Set the meta <code>forms.strict</code> to <code>1</code> (admin only) and only forms that exist under <em>Inbox → Forms</em> accept submissions; unknown ids answer 404.</div>
+
 </DocsLayout>

@@ -23,7 +23,7 @@ const ALLOWED_KEYS = [
   'email.smtp_from', 'email.notify_publish', 'email.notify_comment', 'email.notify_form', 'email.notify_to',
   'ftp.host', 'ftp.port', 'ftp.user', 'ftp.password',
   'ftp.remote_path', 'ftp.local_path', 'ftp.secure', 'ftp.auto_deploy',
-  'nav.hidden', 'nav.groups', 'nav.order', 'nav.links',
+  'nav.hidden', 'nav.groups', 'nav.order', 'nav.links', 'forms.strict',
   'llms.collections',
 ];
 
@@ -43,7 +43,7 @@ const ADMIN_ONLY_KEYS = new Set([
   'ftp.host', 'ftp.port', 'ftp.user', 'ftp.remote_path', 'ftp.local_path', 'ftp.secure', 'ftp.auto_deploy',
   'email.smtp_host', 'email.smtp_port', 'email.smtp_user', 'email.smtp_from',
   'email.notify_publish', 'email.notify_comment', 'email.notify_form', 'email.notify_to',
-  'api.enabled', 'workflow.review', 'nav.links',
+  'api.enabled', 'workflow.review', 'nav.links', 'forms.strict',
   // ai.ollama_url makes the server call an arbitrary host (SSRF + prompt leak); the rest steer it / break migrations / feed mails & links
   'ai.provider', 'ai.model', 'ai.ollama_url', 'site.url', 'format_version',
 ]);

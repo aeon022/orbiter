@@ -10,6 +10,7 @@
  */
 import { createHmac, randomUUID, randomBytes } from 'node:crypto';
 import { openPod } from '@a83/orbiter-core';
+import { assertPublicUrl } from './net.js';
 
 const RETRY_MS  = [5_000, 30_000, 300_000];
 const LOG_LIMIT = 50;
@@ -52,6 +53,7 @@ export async function deliver(podPath, hook, event, payload = {}, { retry = true
     };
     let status = 0, error = null;
     try {
+      await assertPublicUrl(hook.url);   // no loopback/private targets (ORBITER_ALLOW_PRIVATE_FETCH=1 for a local receiver)
       const res = await fetch(hook.url, { method: 'POST', headers, body, redirect: 'manual', signal: AbortSignal.timeout(10_000) });
       status = res.status;
     } catch (e) { error = e.message; }

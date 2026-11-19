@@ -26,7 +26,7 @@ export function isPrivateIp(ip) {
   return true; // not an IP → treat as unsafe
 }
 
-async function assertPublicUrl(rawUrl) {
+export async function assertPublicUrl(rawUrl) {
   let u;
   try { u = new URL(rawUrl); } catch { throw new Error('Invalid URL'); }
   if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error('Only http(s) URLs are allowed');

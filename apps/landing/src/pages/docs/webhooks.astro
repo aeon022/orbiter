@@ -50,4 +50,6 @@ function verify(rawBody, headers, secret) &#123;
 <p>Anything other than a <code>2xx</code> answer (or a timeout after 10 s) is retried after 5 seconds, 30 seconds and 5 minutes. Redirects are not followed. The last 50 deliveries — status, attempt, error — are listed under <strong>Recent deliveries</strong>. Retries run in the server process, so a restart drops pending ones.</p>
 <div class="callout"><strong>Older webhooks</strong> created before signing existed keep working but are marked <em>unsigned</em>. Remove and re-add them to get a secret. The secret is encrypted at rest when <a href="/docs/security"><code>ORBITER_SECRET</code></a> is set.</div>
 
+<div class="callout"><strong>Private targets (admin 0.3.113+):</strong> a webhook URL that resolves to a loopback, private or reserved address (127.0.0.1, 10.x, 192.168.x, a cloud metadata address) is refused and logged as an error. For a receiver on the same machine or network set <code>ORBITER_ALLOW_PRIVATE_FETCH=1</code> in the server environment.</div>
+
 </DocsLayout>

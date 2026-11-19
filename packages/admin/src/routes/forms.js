@@ -24,6 +24,11 @@ formPublicRoutes.post('/:formId', async (c) => {
   if (!allow(`form:${ip}`, 10, 60_000)) return c.json({ error: 'Too many submissions' }, 429);
   if (Number(c.req.header('content-length') ?? 0) > MAX_FORM_BYTES) return c.json({ error: 'Payload too large' }, 413);
 
+  // Opt-in (meta forms.strict = 1): only forms that exist under Inbox → Forms accept submissions; unknown form ids are rejected
+  // instead of creating new inbox entries for anyone who guesses a name.
+  { const cdb = openPod(podPath); const strict = cdb.getMeta('forms.strict') === '1'; const known = strict && !!cdb.getFormConfig(formId); cdb.close();
+    if (strict && !known) return c.json({ error: 'Unknown form' }, 404); }
+
   let body;
   const ct = c.req.header('content-type') ?? '';
   if (ct.includes('application/json')) {
