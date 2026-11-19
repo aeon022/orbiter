@@ -1,0 +1,31 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+<DocsLayout title="Help view" current="/docs/help" prev={{ href: '/docs/editor', title: 'Editor' }} next={{ href: '/docs/collections', title: 'Collections' }}>
+
+<h1>Help view</h1>
+<p class="lead">A read-only page in the admin with your own guides for editors: nicely set text instead of a form, a search, one address per guide. The same in Orbiter admin and in Lander.</p>
+
+<h2>What editors see</h2>
+<ul>
+  <li><strong>Hilfe</strong> in the dock (a drawer): <em>Hilfe lesen</em> on top, then your external links, the collection <em>Anleitungen</em> at the bottom (that one is for editing).</li>
+  <li><code>/hilfe.html</code>: the guides by group on the left, the text on the right (Markdown set like the editor preview). Switching a guide swaps only the text; the dock, the list and the search stay. On a phone the list scrolls on its own and the text jumps into view.</li>
+  <li>A guide has its own address: <code>/hilfe.html#editors-publish-a-post</code>.</li>
+</ul>
+
+<h2>Fill it from Markdown</h2>
+<p>The guides live in a collection called <code>anleitungen</code> (fields <em>Titel</em>, <em>Gruppe</em>, <em>Reihenfolge</em>, <em>Text</em>). Fill it from your own Markdown files; every <code>## Heading</code> becomes a guide:</p>
+<pre><code>LANDER_USER=admin LANDER_PASS=… node scripts/help-import.mjs https://admin.example.com \
+  Editors=docs/EDITORS.md Technical=docs/TECH.md --links help-links.json</code></pre>
+<p>Run it again after editing the files; guides with the same title are overwritten. Entries are saved as <strong>drafts</strong>, so the public API does not serve them (the Help view shows drafts too).</p>
+
+<h2>Links in the sidebar group</h2>
+<p>The meta <code>nav.links</code> adds external links to a sidebar group, shown as <code>↗</code> entries that open in a new tab: <code>&#123;"Hilfe": [&#123;"label": "Docs", "url": "https://…"&#125;]&#125;</code>. Only admins can set it; addresses must start with <code>https://</code>, <code>http://</code> or <code>/</code>.</p>
+
+<h2>Safety</h2>
+<ul>
+  <li>The Markdown is turned into HTML and then cleaned with an allow-list (no scripts, no event handlers, no <code>javascript:</code> links). An editor cannot run a script in the admin through a guide.</li>
+  <li><code>/api/help</code> returns the guides to every signed-in user, also to editors who are restricted to other collections. The group <em>Technik</em> is hidden from non-admins in the view (this is a display rule, not access control; do not put secrets in guides).</li>
+</ul>
+
+</DocsLayout>

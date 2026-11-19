@@ -1,8 +1,23 @@
+      <div class="update-card" id="update-help-view" data-date="2026-11-19">
+        <div class="update-date">Nov<br />2026</div>
+        <div class="update-dot"></div>
+        <div class="update-body">
+          <div class="update-tag">admin@0.3.113 · lander@0.7.6 — Latest</div>
+          <div class="update-title">Help view for your editors, and a date fix</div>
+          <ul class="update-items">
+            <li><strong>Help view.</strong> A read-only page (<code>/hilfe.html</code>) shows your own guides, set like the preview in the editor: list by group on the left, text on the right, search, a link per guide. Switching guides only swaps the text; the dock and the list stay. Filled from Markdown with <code>scripts/help-import.mjs</code> (see <a href="/docs/help">Help view</a>).</li>
+            <li><strong>Links in a sidebar group.</strong> The new meta <code>nav.links</code> adds external links to a group (for example to the tutorial of another project). Admin-only, <code>http(s)</code> or site-relative addresses only.</li>
+            <li><strong>Date fields (admin 0.3.112, Lander 0.7.6).</strong> A datetime stored with a time zone (<code>…Z</code>) came up empty in the editor, and saving wiped it, so events dropped off a site. Such values now show in local time and are saved back as ISO.</li>
+            <li><strong>Dock for editors.</strong> Editors without server access saw no collections in the dock (the dock read a path only admins receive). Fixed.</li>
+          </ul>
+        </div>
+      </div>
+
       <div class="update-card" id="update-phone-hotfix" data-date="2026-11-17" style="border-color:color-mix(in srgb,var(--red) 50%,var(--line))">
         <div class="update-date">Nov<br />2026</div>
         <div class="update-dot" style="background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 18%,transparent)"></div>
         <div class="update-body">
-          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.111 · lander@0.7.5 — Latest</div>
+          <div class="update-tag" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)">admin@0.3.111 · lander@0.7.5</div>
           <div class="update-title">Fix: Save and Publish were not tappable in the phone editor</div>
           <ul class="update-items">
             <li><strong>What was wrong.</strong> Since admin 0.3.109 and Lander 0.7.3 the fade at the right edge of the editor toolbar used a CSS mask, which trapped the floating <em>Save · Publish</em> button: it showed, but a tap did not reach it, so the panel could not be opened on a phone. Update to admin 0.3.111 or Lander 0.7.5 (one click in Settings → Pod).</li>
