@@ -1,6 +1,7 @@
 // German interface strings for the Orbiter / Lander admin. Key = the English text exactly as it appears in the UI.
 // Missing keys stay English. Extend by adding lines; i18n.js does the matching.
 window.ORB_DE = {
+  'Highlight (==text==)': 'Hervorheben, rote Schrift (==Text==)',
  // security notice (dashboard)
   'Help': 'Hilfe', 'Turn on two-factor sign-in': 'Zwei-Faktor-Anmeldung einschalten',
   'Your admin account is protected by a password only. A one-time code from an authenticator app makes a stolen password useless.': 'Ihr Admin-Konto ist nur durch ein Passwort geschützt. Ein Einmalcode aus einer Authenticator-App macht ein gestohlenes Passwort nutzlos.',

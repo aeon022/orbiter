@@ -43,6 +43,7 @@
 
     /* Block editor */
     .be-editor { min-height:400px; cursor:text; }
+    .be-editor mark, #preview-body mark { background:none; color:var(--red); }
     .be-block { outline:none; font-family:var(--serif); font-weight:300; font-size:16px; color:var(--text); line-height:2; letter-spacing:.01em; padding:1px 0; min-height:1.6em; position:relative; word-break:break-word; }
     .be-block:focus { outline:none; }
     .be-block:empty::before { content:attr(data-ph); color:var(--line); pointer-events:none; position:absolute; }
@@ -646,6 +647,7 @@
             <button type="button" class="tool-btn" data-on-click="beCmd('bold')" title="Bold (⌘B)"><b style="font-size:11px;">B</b></button>
             <button type="button" class="tool-btn" data-on-click="beCmd('italic')" title="Italic (⌘I)"><i style="font-size:11px;">I</i></button>
             <button type="button" class="tool-btn" data-on-click="beCmd('code')" title="Inline code (⌘E)" style="font-size:9px;">&lt;/&gt;</button>
+            <button type="button" class="tool-btn" data-on-click="beCmd('mark')" title="Highlight (==text==)" aria-label="Highlight (==text==)"><span style="color:var(--red);font-weight:700;font-size:12px;line-height:1;border-bottom:2px solid currentColor;padding:0 1px">A</span></button>
           </div>
           <div class="tool-sep"></div>
           <div class="tool-group" data-on-mousedown="event.preventDefault()">
@@ -2215,7 +2217,8 @@
         .replace(/__(.+?)__/g,'<strong>$1</strong>')
         .replace(/\*(.+?)\*/g,'<em>$1</em>')
         .replace(/_(.+?)_/g,'<em>$1</em>')
-        .replace(/`(.+?)`/g,'<code>$1</code>');
+        .replace(/`(.+?)`/g,'<code>$1</code>')
+        .replace(/==([^=\n]+?)==/g,'<mark>$1</mark>');
       return r.replace(/\x00(\d+)\x00/g, (_,i) => wls[+i]);
     }
 
@@ -2227,6 +2230,7 @@
         .replace(/<em>([\s\S]*?)<\/em>/gi,'_$1_')
         .replace(/<i>([\s\S]*?)<\/i>/gi,'_$1_')
         .replace(/<code>([\s\S]*?)<\/code>/gi,'`$1`')
+        .replace(/<mark[^>]*>([\s\S]*?)<\/mark>/gi,'==$1==')
         .replace(/<br\s*\/?>/gi,' ')
         .replace(/<[^>]+>/g,'')
         .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&nbsp;/g,' ');
@@ -2425,6 +2429,21 @@
         const sel=window.getSelection(); if (!sel||!sel.rangeCount) return;
         const range=sel.getRangeAt(0); const text=range.toString();
         if (text) { const code=document.createElement('code'); code.textContent=text; range.deleteContents(); range.insertNode(code); }
+      } else if (cmd==='mark' && document.activeElement && document.activeElement.tagName==='TEXTAREA' && document.activeElement.closest('.meta-field')) {
+        // a Markdown text field (not the block editor): wrap the selection in == ==, or take the markers off again
+        const ta=document.activeElement, a=ta.selectionStart, b=ta.selectionEnd, v=ta.value, sel=v.slice(a,b);
+        if (sel.length>=4 && sel.startsWith('==') && sel.endsWith('==')) ta.setRangeText(sel.slice(2,-2),a,b,'select');
+        else if (v.slice(a-2,a)==='==' && v.slice(b,b+2)==='==') { ta.value=v.slice(0,a-2)+sel+v.slice(b+2); ta.setSelectionRange(a-2,b-2); }
+        else if (!sel) { ta.setRangeText('====',a,a,'end'); ta.setSelectionRange(a+2,a+2); }
+        else ta.setRangeText('=='+sel+'==',a,b,'select');
+        ta.dispatchEvent(new Event('input',{bubbles:true})); ta.focus(); return;
+      } else if (cmd==='mark') {
+        // highlight: wrap the selection in <mark> (written as ==text== in the Markdown); inside a <mark> already: remove it
+        const sel=window.getSelection(); if (!sel||!sel.rangeCount) return;
+        const range=sel.getRangeAt(0);
+        const host=(range.startContainer.nodeType===3?range.startContainer.parentElement:range.startContainer).closest&&(range.startContainer.nodeType===3?range.startContainer.parentElement:range.startContainer).closest('mark');
+        if (host && beEditor.contains(host)) { const f=document.createDocumentFragment(); while (host.firstChild) f.appendChild(host.firstChild); host.replaceWith(f); }
+        else if (!range.collapsed && beEditor.contains(range.commonAncestorContainer)) { const m=document.createElement('mark'); m.appendChild(range.extractContents()); range.insertNode(m); sel.removeAllRanges(); const r2=document.createRange(); r2.selectNodeContents(m); sel.addRange(r2); }
       } else { document.execCommand(cmd,false,null); }
       syncToHidden(); scheduleAutosave(); updatePreview();
     };
@@ -2645,6 +2664,9 @@
           if (!embed) return `<video src="${url}" controls style="width:100%;border-radius:8px;margin:16px 0;"></video>`;
           return `<div style="position:relative;padding-bottom:56.25%;height:0;margin:16px 0;overflow:hidden;border-radius:8px;"><iframe src="${embed}" frameborder="0" allowfullscreen allow="autoplay;encrypted-media" style="position:absolute;top:0;left:0;width:100%;height:100%;"></iframe></div>`;
         });
+        if (!window.__markExt) { window.__markExt = true; marked.use({ extensions: [{ name: 'mark', level: 'inline', start(src) { return src.indexOf('=='); },
+          tokenizer(src) { const m = /^==([^=\n][^=]*?)==/.exec(src); if (m) return { type: 'mark', raw: m[0], text: m[1], tokens: this.lexer.inlineTokens(m[1]) }; },
+          renderer(t) { return '<mark>' + this.parser.parseInline(t.tokens) + '</mark>'; } }] }); }
         document.getElementById('preview-body').innerHTML=marked.parse(prepped2);
       }
     }
