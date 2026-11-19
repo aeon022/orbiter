@@ -11,9 +11,11 @@ export async function sendNotification(podPath, event, ctx = {}) {
   let db;
   try {
     db = openPod(podPath);
-    const shouldSend = event === 'publish' || event === 'review'
-      ? db.getMeta('email.notify_publish') === '1'
-      : db.getMeta('email.notify_comment') === '1';
+    const shouldSend = event === 'security'
+      ? db.getMeta('email.notify_security') !== '0'   // on by default once mail is set up
+      : event === 'publish' || event === 'review'
+        ? db.getMeta('email.notify_publish') === '1'
+        : db.getMeta('email.notify_comment') === '1';
     if (!shouldSend) { db.close(); return; }
 
     const host = db.getMeta('email.smtp_host') ?? '';
@@ -34,7 +36,10 @@ export async function sendNotification(podPath, event, ctx = {}) {
     });
 
     let subject, text;
-    if (event === 'review') {
+    if (event === 'security') {
+      subject = `[${site}] Security alert: too many failed sign-ins`;
+      text    = `${ctx.kind === 'totp' ? 'Repeated wrong two-factor codes for the account' : 'Repeated failed sign-ins'}${ctx.username ? ` (${String(ctx.username).slice(0, 60)})` : ''} from ${ctx.ip}.\n\nThe address is locked out for 15 minutes. If this was not you, check Account → Sessions and consider turning on two-factor sign-in for every admin.`;
+    } else if (event === 'review') {
       subject = `[${site}] Review requested: ${ctx.collection}/${ctx.slug}`;
       text    = `${ctx.username ?? 'Someone'} submitted "${ctx.slug}" in the "${ctx.collection}" collection for review.`;
     } else if (event === 'publish') {

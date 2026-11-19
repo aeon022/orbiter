@@ -737,6 +737,10 @@
             <div><div class="setting-label">Notify on form submission</div><div class="setting-desc">Send email when a contact form is submitted</div></div>
             <input type="checkbox" name="email.notify_form" value="1" ${get('email.notify_form')==='1'?'checked':''} style="accent-color:var(--accent);width:14px;height:14px;" />
           </div>
+          <div class="setting-row">
+            <div><div class="setting-label">Security alerts</div><div class="setting-desc">Send email when an address is locked out after repeated failed sign-ins</div></div>
+            <input type="checkbox" name="email.notify_security" value="1" ${get('email.notify_security')!=='0'?'checked':''} style="accent-color:var(--accent);width:14px;height:14px;" />
+          </div>
         </div>
 
         <div class="settings-group" style="grid-column:1/-1">
@@ -1178,6 +1182,7 @@
         ['email.notify_publish',     fd.get('email.notify_publish') ? '1' : '0'],
         ['email.notify_comment',     fd.get('email.notify_comment') ? '1' : '0'],
         ['email.notify_form',        fd.get('email.notify_form') ? '1' : '0'],
+        ['email.notify_security',    fd.get('email.notify_security') ? '1' : '0'],
         ['ftp.host',        fd.get('ftp.host')],
         ['ftp.port',        fd.get('ftp.port')],
         ['ftp.user',        fd.get('ftp.user')],

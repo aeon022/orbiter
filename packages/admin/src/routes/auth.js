@@ -3,6 +3,7 @@ import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { openPod, verifyPassword, needsRehash, hashPassword, generateToken, verifyTotp, hashRecoveryCode } from '@a83/orbiter-core';
 import { clientIp } from '../net.js';
 import { allow } from '../ratelimit.js';
+import { sendNotification } from '../email.js';
 
 export const authRoutes = new Hono();
 
@@ -29,9 +30,12 @@ function checkRateLimit(ip) {
   return true;
 }
 
+// returns true when this failure locks the address out (so the admin is told once, not on every further attempt)
 function recordFailure(ip) {
   const rec = loginAttempts.get(ip);
-  if (rec) rec.count++;
+  if (!rec) return false;
+  rec.count++;
+  return rec.count === LOGIN_MAX;
 }
 
 function clearAttempts(ip) {
@@ -55,7 +59,7 @@ authRoutes.post('/login', async (c) => {
   const passwordOk = await verifyPassword(password, user?.password ?? DUMMY_HASH);
   if (!user || !passwordOk) {
     db.close();
-    recordFailure(ip);
+    if (recordFailure(ip)) sendNotification(c.get('podPath'), 'security', { kind: 'password', ip, username }).catch(() => {});
     return c.json({ error: 'Invalid username or password' }, 401);
   }
 
@@ -72,7 +76,7 @@ authRoutes.post('/login', async (c) => {
       if (totp.recovery.includes(h)) { db.setTotpRecovery(user.id, totp.recovery.filter(x => x !== h)); return true; }
       return false;
     })();
-    if (!verified) { db.close(); recordFailure(ip); return c.json({ error: 'Invalid code', totp: true }, 401); }
+    if (!verified) { db.close(); if (recordFailure(ip)) sendNotification(c.get('podPath'), 'security', { kind: 'totp', ip, username }).catch(() => {}); return c.json({ error: 'Invalid code', totp: true }, 401); }
   }
   clearAttempts(ip);
 
@@ -120,7 +124,8 @@ authRoutes.get('/me', (c) => {
   const token = getCookie(c, 'orb_sess') ?? '';
   const db    = openPod(c.get('podPath'));
   const user  = db.checkSession(token);
+  const totp  = user ? !!db.getTotp(user.id)?.enabled : false;
   db.close();
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
-  return c.json({ user });
+  return c.json({ user, totp });
 });

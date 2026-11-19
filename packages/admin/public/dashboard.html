@@ -361,6 +361,21 @@
     });
     const escHtml = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+
+    // Notice for admins whose account has no two-factor sign-in yet (reminds again after 7 days)
+    try {
+      const hidden = parseInt(localStorage.getItem('orb_2fa_hide') || '0', 10);
+      if (me.user.role === 'admin' && me.totp === false && Date.now() - hidden > 7 * 864e5) {
+        const n = document.createElement('div');
+        n.id = 'sec-notice'; n.setAttribute('role', 'status'); n.className = 'glass-card';
+        n.style.cssText = 'display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 16px;margin:0 0 14px;border:1px solid var(--gold)';
+        n.innerHTML = '<div><strong>Turn on two-factor sign-in</strong><div style="color:var(--muted);font-size:12px;margin-top:2px">Your admin account is protected by a password only. A one-time code from an authenticator app makes a stolen password useless.</div></div>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn btn-sm" href="/account.html" style="text-decoration:none">Set up now</a><button type="button" class="btn btn-ghost btn-sm" id="sec-later">Remind me in 7 days</button></div>';
+        document.querySelector('main.main > h1, main.main').after(n);
+        document.getElementById('sec-later').addEventListener('click', () => { try { localStorage.setItem('orb_2fa_hide', String(Date.now())); } catch {} n.remove(); });
+      }
+    } catch {}
+
     // Hero date
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
