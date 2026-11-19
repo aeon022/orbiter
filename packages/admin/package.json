@@ -31,15 +31,15 @@
   },
   "dependencies": {
     "@a83/orbiter-core": "^0.3.22",
-    "@hono/node-server": "^2.1.6",
+    "@hono/node-server": "^2.1.8",
     "@noble/secp256k1": "^3.2.0",
     "zip-stream": "^7.0.5",
     "basic-ftp": "^6.2.6",
     "fast-xml-parser": "^5.12.0",
-    "hono": "^4.13.18",
+    "hono": "^4.13.19",
     "marked": "^15.0.0",
-    "nodemailer": "^10.1.4",
+    "nodemailer": "^10.6.0",
     "sharp": "^0.35.5",
-    "turndown": "^7.2.0"
+    "turndown": "^7.2.5"
   }
 }
