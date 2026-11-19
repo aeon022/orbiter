@@ -32,14 +32,17 @@ infoRoutes.get('/', (c) => {
   const navHidden = db.getMeta('nav.hidden') ?? '';
   const navGroups = db.getMeta('nav.groups') ?? '';
   let navOrder = []; try { const o = JSON.parse(db.getMeta('nav.order') || '[]'); if (Array.isArray(o)) navOrder = o.filter(x => typeof x === 'string'); } catch {}
+  const navLinksRaw = db.getMeta('nav.links') ?? '';
   db.close();
   let navGroupsParsed = null;
   try { navGroupsParsed = navGroups ? JSON.parse(navGroups) : null; } catch {}
+  let navLinks = null; try { navLinks = JSON.parse(navLinksRaw || 'null'); } catch {}
   return c.json({
     podPath: c.get('user')?.role === 'admin' ? podPath : undefined, podSize: statSync(podPath).size, formatVersion: version, adminVersion, collections: cols,
     nav: {
       hidden: navHidden ? navHidden.split(',').map(s => s.trim()).filter(Boolean) : [],
       groups: navGroupsParsed,
+      links: navLinks,
       order: navOrder,
     },
   });

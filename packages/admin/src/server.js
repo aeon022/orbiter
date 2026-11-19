@@ -25,6 +25,7 @@ import { buildRoutes }      from './routes/build.js';
 import { searchRoutes }     from './routes/search.js';
 import { githubRoutes }     from './routes/github.js';
 import { infoRoutes }       from './routes/info.js';
+import { helpRoutes }       from './routes/help.js';
 import { importRoutes }     from './routes/import.js';
 import { commentRoutes }    from './routes/comments.js';
 import { lockRoutes }       from './routes/locks.js';
@@ -150,6 +151,7 @@ export function createApp(podPath) {
   api.route('/search',       searchRoutes);
   api.route('/github',       githubRoutes);
   api.route('/info',         infoRoutes);
+  api.route('/help',         helpRoutes);
   api.route('/import',       importRoutes);
   api.route('/collections',  commentRoutes);
   api.route('/',             commentRoutes);

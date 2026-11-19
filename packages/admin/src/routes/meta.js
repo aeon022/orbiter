@@ -23,7 +23,7 @@ const ALLOWED_KEYS = [
   'email.smtp_from', 'email.notify_publish', 'email.notify_comment', 'email.notify_form', 'email.notify_to',
   'ftp.host', 'ftp.port', 'ftp.user', 'ftp.password',
   'ftp.remote_path', 'ftp.local_path', 'ftp.secure', 'ftp.auto_deploy',
-  'nav.hidden', 'nav.groups', 'nav.order',
+  'nav.hidden', 'nav.groups', 'nav.order', 'nav.links',
   'llms.collections',
 ];
 
@@ -43,7 +43,7 @@ const ADMIN_ONLY_KEYS = new Set([
   'ftp.host', 'ftp.port', 'ftp.user', 'ftp.remote_path', 'ftp.local_path', 'ftp.secure', 'ftp.auto_deploy',
   'email.smtp_host', 'email.smtp_port', 'email.smtp_user', 'email.smtp_from',
   'email.notify_publish', 'email.notify_comment', 'email.notify_form', 'email.notify_to',
-  'api.enabled', 'workflow.review',
+  'api.enabled', 'workflow.review', 'nav.links',
   // ai.ollama_url makes the server call an arbitrary host (SSRF + prompt leak); the rest steer it / break migrations / feed mails & links
   'ai.provider', 'ai.model', 'ai.ollama_url', 'site.url', 'format_version',
 ]);
@@ -59,6 +59,13 @@ const PREVIEW_URL_RE = /^preview_url\.[a-z0-9_-]+$/;
 const SAFE_PREVIEW_URL_RE = /^(https?:\/\/|\/(?!\/))/i;
 const previewUrlRejected = (key, value, isAdmin) =>
   PREVIEW_URL_RE.test(key) && (!isAdmin || (value != null && String(value) !== '' && !SAFE_PREVIEW_URL_RE.test(String(value).trim())));
+// nav.links = {"Group": [{"label": "…", "url": "https://… or /…"}]}: external links in a sidebar group (the URLs end up in an <a href>)
+const navLinksValid = (v) => {
+  let d; try { d = typeof v === 'string' ? JSON.parse(v) : v; } catch { return false; }
+  return !!d && typeof d === 'object' && !Array.isArray(d) && Object.entries(d).every(([g, links]) => typeof g === 'string' && Array.isArray(links) &&
+    links.every((l) => l && typeof l.label === 'string' && typeof l.url === 'string' && SAFE_PREVIEW_URL_RE.test(l.url.trim())));
+};
+const navLinksRejected = (key, value) => key === 'nav.links' && value != null && String(value) !== '' && !navLinksValid(value);
 const TEMPLATES_RE   = /^templates\.[a-z0-9_-]+$/;
 
 function maskSecret(key, val) {
@@ -113,7 +120,7 @@ metaRoutes.put('/', async (c) => {
   for (const [key, value] of Object.entries(body)) {
     if (!ALLOWED_KEYS.includes(key) && !PREVIEW_URL_RE.test(key) && !TEMPLATES_RE.test(key)) continue;
     if (ADMIN_ONLY_KEYS.has(key) && !isAdmin) continue;
-    if (previewUrlRejected(key, value, isAdmin)) continue;
+    if (previewUrlRejected(key, value, isAdmin) || navLinksRejected(key, value)) continue;
     db.setMeta(key, storeValue(key, value));
   }
   db.close();
@@ -128,6 +135,7 @@ metaRoutes.put('/:key', async (c) => {
   if (ADMIN_ONLY_KEYS.has(key) && user?.role !== 'admin') return c.json({ error: 'Forbidden' }, 403);
   const { value } = await c.req.json();
   if (previewUrlRejected(key, value, user?.role === 'admin')) return c.json({ error: 'Preview URL must be admin-set and start with http(s):// or /' }, 400);
+  if (navLinksRejected(key, value)) return c.json({ error: 'nav.links: [{label, url}] per group, URLs start with http(s):// or /' }, 400);
   const db = openPod(c.get('podPath'));
   db.setMeta(key, storeValue(key, value));
   db.close();

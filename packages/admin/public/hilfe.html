@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbiter — Hilfe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+  <script src="/theme.js"></script>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="logo" href="/dashboard.html"><div class="logo-mark">OR</div>Orbiter</a>
+      <div class="topbar-right">
+        <button class="search-trigger" id="search-btn" title="Search (⌘K)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Search <kbd>⌘K</kbd>
+        </button>
+        <button class="scheme-toggle" id="scheme-toggle" title="Toggle scheme">◐</button>
+        <span class="user" id="topbar-user"></span>
+        <span class="logout" id="logout-btn">Sign out</span>
+      </div>
+    </header>
+    <nav class="sidebar">
+      <div class="nav-section">Content</div>
+      <a class="nav-item" href="/dashboard.html"><span class="nav-icon">◈</span>Dashboard</a>
+      <a class="nav-item" href="/collections.html"><span class="nav-icon">⊞</span>Collections</a>
+      <div class="nav-section">Assets</div>
+      <a class="nav-item" href="/media.html"><span class="nav-icon">⊟</span>Media</a>
+      <div class="nav-section">Tools</div>
+      <a class="nav-item" href="/inbox.html"><span class="nav-icon">✉</span>Inbox</a>
+      <a class="nav-item" href="/snippets.html"><span class="nav-icon">⌗</span>Snippets</a>
+
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="/settings.html"><span class="nav-icon">◎</span>Settings</a>
+      <a class="nav-item admin-only" href="/users.html" style="display:none"><span class="nav-icon">◉</span>Users</a>
+            <a class="nav-item admin-only" href="/pods.html" style="display:none"><span class="nav-icon">◈</span>Pods</a>
+      <div class="sidebar-footer">
+        <div class="pod-name" id="pod-name">content.pod</div>
+        <div class="pod-info" id="pod-info"></div>
+        <div class="pod-version" id="pod-version"></div>
+        <div class="pod-status"><span class="pod-dot"></span>pod synced</div>
+      </div>
+    </nav>
+    <main class="main">
+      <div class="page-header glass-card" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div>
+          <h1 class="page-title">Hilfe</h1>
+          <p class="page-sub">Anleitungen zum Nachlesen</p>
+        </div>
+        <input type="search" id="hilfe-suche" class="field-input" placeholder="Suchen …" aria-label="Anleitungen durchsuchen" style="max-width:260px;width:100%;border:1px solid var(--line);background:transparent;color:var(--text);padding:8px 11px;border-radius:var(--radius);font:inherit;font-size:13px" />
+      </div>
+      <div class="hilfe-grid">
+        <nav class="hilfe-liste" id="hilfe-liste" aria-label="Anleitungen"><div class="empty"><div class="spinner"></div></div></nav>
+        <article class="hilfe-text glass-card" id="hilfe-text" tabindex="-1" aria-live="polite"></article>
+      </div>
+      <style>
+        .hilfe-grid { display:grid; grid-template-columns:minmax(200px,280px) minmax(0,1fr); gap:20px; align-items:start; margin-top:16px }
+        .hilfe-liste { position:sticky; top:12px; display:flex; flex-direction:column; gap:2px; max-height:calc(100vh - 140px); overflow:auto }
+        .hilfe-gruppe { margin:14px 0 4px; font:600 11px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--muted) }
+        .hilfe-gruppe:first-child { margin-top:0 }
+        .hilfe-liste a { display:block; padding:7px 10px; border-radius:var(--radius); color:var(--text); text-decoration:none; font-size:13px; line-height:1.35 }
+        .hilfe-liste a:hover { background:var(--hover-bg) }
+        .hilfe-liste a[aria-current="page"] { background:var(--accent-bg); color:var(--heading); font-weight:600 }
+        .hilfe-text { padding:24px 28px; min-height:240px; outline:none }
+        .hilfe-text .hilfe-kopf { margin:0 0 4px; font:600 11px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--muted) }
+        .hilfe-prose { max-width:72ch; font-size:14.5px; line-height:1.65; color:var(--text) }
+        .hilfe-prose h1,.hilfe-prose h2,.hilfe-prose h3,.hilfe-prose h4 { color:var(--heading); line-height:1.25; margin:1.6em 0 .5em }
+        .hilfe-prose h1 { font-size:1.7em; margin-top:.2em } .hilfe-prose h2 { font-size:1.35em } .hilfe-prose h3 { font-size:1.12em }
+        .hilfe-prose p,.hilfe-prose ul,.hilfe-prose ol,.hilfe-prose pre,.hilfe-prose table,.hilfe-prose blockquote { margin:0 0 1em }
+        .hilfe-prose ul,.hilfe-prose ol { padding-left:1.4em } .hilfe-prose li { margin:.25em 0 }
+        .hilfe-prose a { color:var(--accent); text-decoration:underline; text-underline-offset:2px }
+        .hilfe-prose code { font-family:var(--mono); font-size:.88em; background:var(--hover-bg); padding:.1em .35em; border-radius:3px }
+        .hilfe-prose pre { background:var(--hover-bg); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px; overflow:auto }
+        .hilfe-prose pre code { background:none; padding:0 }
+        .hilfe-prose table { border-collapse:collapse; display:block; overflow:auto }
+        .hilfe-prose th,.hilfe-prose td { border:1px solid var(--line); padding:6px 10px; text-align:left; vertical-align:top }
+        .hilfe-prose th { color:var(--heading); background:var(--hover-bg) }
+        .hilfe-prose blockquote { border-left:3px solid var(--accent); padding:2px 14px; color:var(--mid) }
+        .hilfe-prose img { max-width:100%; height:auto }
+        .hilfe-prose mark { background:var(--gold-bg); color:inherit }
+        @keyframes hilfe-ein { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:none } }
+        .hilfe-text.neu .hilfe-prose, .hilfe-text.neu .hilfe-kopf { animation:hilfe-ein .22s ease-out }
+        @media (prefers-reduced-motion: reduce) { .hilfe-text.neu .hilfe-prose, .hilfe-text.neu .hilfe-kopf { animation:none } }
+        .hilfe-leer { color:var(--muted); padding:8px 10px; font-size:13px }
+        @media (max-width: 800px) { .hilfe-grid { grid-template-columns:1fr } .hilfe-liste { position:static; max-height:34vh; overflow:auto; border-bottom:1px solid var(--line); padding-bottom:6px } .hilfe-text { padding:18px } }
+      </style>
+    
+  <script type="module">
+    const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).catch(() => null);
+    if (!me?.user) { location.replace('/login.html'); throw new Error('unauthenticated'); }
+    document.getElementById('topbar-user').textContent = me.user.username;
+    const istAdmin = me.user.role === 'admin';
+    if (istAdmin) document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      location.replace('/login.html');
+    });
+
+    // Markdown (wie die Vorschau im Editor) → HTML, danach über eine Positivliste bereinigt:
+    // Die Anleitungen sind redigierbar, ein Redakteur darf darüber kein Script in der Admin-Oberfläche ausführen.
+    if (!window.marked) await new Promise((ok) => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/marked@12/marked.min.js'; s.onload = s.onerror = ok; document.head.appendChild(s); });
+    const ERLAUBT = new Set('A,B,BLOCKQUOTE,BR,CODE,DEL,DIV,EM,H1,H2,H3,H4,H5,H6,HR,I,IMG,LI,MARK,OL,P,PRE,S,SPAN,STRONG,SUB,SUP,TABLE,TBODY,TD,TH,THEAD,TR,UL'.split(','));
+    const ATTR = new Set(['href', 'src', 'alt', 'title', 'colspan', 'rowspan']);
+    const sicherUrl = (u) => /^(https?:|mailto:|#|\/(?!\/)|[a-z0-9_.~-]+(\/|$))/i.test(String(u).trim());
+    function bereinigen(html) {
+      const doc = new DOMParser().parseFromString('<body>' + html + '</body>', 'text/html');
+      (function walk(n) {
+        [...n.children].forEach((el) => {
+          if (!ERLAUBT.has(el.tagName)) { el.remove(); return; }
+          [...el.attributes].forEach((a) => { if (!ATTR.has(a.name) || ((a.name === 'href' || a.name === 'src') && !sicherUrl(a.value))) el.removeAttribute(a.name); });
+          if (el.tagName === 'A' && el.getAttribute('href') && !el.getAttribute('href').startsWith('#')) { el.target = '_blank'; el.rel = 'noopener noreferrer'; }
+          walk(el);
+        });
+      })(doc.body);
+      return doc.body.innerHTML;
+    }
+    const md = (t) => bereinigen(window.marked ? marked.parse(String(t ?? '')) : '<pre>' + orbEsc(String(t ?? '')) + '</pre>');
+
+    // Einträge der Sammlung «anleitungen» (Entwürfe gehören dazu: sie sind nur nicht öffentlich). «Technik» sehen nur Admins.
+    // Beim ersten Zeigen kommen sie aus dem Zwischenspeicher der Sitzung (sofort sichtbar), im Hintergrund wird aktualisiert.
+    const CACHE = 'orb_hilfe_v1';
+    const aufbereiten = (liste) => liste.filter((e) => e.data?.title && (istAdmin || e.data.gruppe !== 'Technik'))
+      .sort((a, b) => (a.data.gruppe || '').localeCompare(b.data.gruppe || '') || (a.data.reihenfolge ?? 0) - (b.data.reihenfolge ?? 0));
+    let eintraege = [];
+    try { eintraege = aufbereiten(JSON.parse(sessionStorage.getItem(CACHE) || '[]')); } catch {}
+    const holen = async () => {
+      const r = await fetch('/api/help', { credentials: 'include' });
+      let l = r.ok ? await r.json() : null;
+      if (l && !Array.isArray(l)) l = l.entries ?? [];
+      return l;
+    };
+
+    const liste = document.getElementById('hilfe-liste'), text = document.getElementById('hilfe-text'), suche = document.getElementById('hilfe-suche');
+    let aktiv = null;
+    function zeigeListe() {
+      const q = suche.value.trim().toLowerCase();
+      const treffer = eintraege.filter((e) => !q || (e.data.title + ' ' + (e.data.body || '')).toLowerCase().includes(q));
+      if (!treffer.length) { liste.innerHTML = '<div class="hilfe-leer">' + (eintraege.length ? 'Nichts gefunden.' : 'Noch keine Anleitungen.') + '</div>'; return; }
+      let letzte = null, h = '';
+      treffer.forEach((e) => {
+        if (e.data.gruppe !== letzte) { letzte = e.data.gruppe; h += '<div class="hilfe-gruppe">' + orbEsc(letzte || 'Allgemein') + '</div>'; }
+        h += '<a href="#' + encodeURIComponent(e.slug) + '"' + (e.slug === aktiv ? ' aria-current="page"' : '') + '>' + orbEsc(e.data.title) + '</a>';
+      });
+      liste.innerHTML = h;
+    }
+    let gezeigt = null;
+    function zeige(neu) {
+      const slug = decodeURIComponent(location.hash.slice(1));
+      const e = eintraege.find((x) => x.slug === slug) ?? eintraege[0];
+      aktiv = e?.slug ?? null;
+      const stempel = e ? e.slug + '|' + e.updated_at + '|' + (e.data.body || '').length : '';
+      if (stempel !== gezeigt) {   // nur den Text tauschen; Liste, Kopf und Suche bleiben stehen
+        text.innerHTML = e
+          ? '<p class="hilfe-kopf">' + orbEsc(e.data.gruppe || '') + '</p><div class="hilfe-prose"><h1>' + orbEsc(e.data.title) + '</h1>' + md(e.data.body) + '</div>'
+          : '<div class="hilfe-leer">Noch keine Anleitungen. Sie werden unter «Hilfe → Anleitungen» angelegt.</div>';
+        if (neu) { text.classList.remove('neu'); void text.offsetWidth; text.classList.add('neu'); }
+        gezeigt = stempel;
+      }
+      zeigeListe();
+    }
+    suche.addEventListener('input', zeigeListe);
+    window.addEventListener('hashchange', () => { zeige(true); text.focus({ preventScroll: true }); if (innerWidth <= 800) text.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); });
+    zeige(false);
+    if (!eintraege.length) text.innerHTML = '<div class="hilfe-leer">Wird geladen …</div>';
+    holen().then((l) => {
+      if (!l) return;
+      try { sessionStorage.setItem(CACHE, JSON.stringify(l)); } catch {}
+      eintraege = aufbereiten(l); zeige(false);
+    });
+  </script>
+</main>
+  </div>
+  <script src="/search.js"></script>
+  <script src="/sidebar.js"></script>
+  <script src="/router.js"></script>
+</body>
+</html>

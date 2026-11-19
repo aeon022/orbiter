@@ -141,7 +141,8 @@
             var groupCols = colIds.map(function (id) {
               return topLevel.find(function (c) { return c.id === id; });
             }).filter(Boolean);
-            if (!groupCols.length) return;
+            var groupLinks = ((info.nav && info.nav.links) || {})[groupLabel] || [];   // externe Links in der Gruppe
+            if (!groupCols.length && !groupLinks.length) return;
             colIds.forEach(function (id) { groupedIds.add(id); });
 
             var groupWrap = document.createElement('div');
@@ -152,7 +153,7 @@
             groupWrap.classList.add('pinned');
             var header = document.createElement('div');
             header.className = 'nav-group-header open';
-            header.innerHTML = '<span class="nav-group-arrow">▶</span><span class="nav-group-label">' + groupLabel + '</span><span class="nav-group-count">' + groupCols.length + '</span>';
+            header.innerHTML = '<span class="nav-group-arrow">▶</span><span class="nav-group-label">' + groupLabel + '</span><span class="nav-group-count">' + (groupCols.length + groupLinks.length + (groupCols.some(function (c) { return c.id === 'anleitungen'; }) ? 1 : 0)) + '</span>';
             header.addEventListener('click', function () {
               groupWrap.classList.toggle('pinned');
               header.classList.toggle('open', groupWrap.classList.contains('pinned'));
@@ -161,6 +162,11 @@
 
             var body = document.createElement('div');
             body.className = 'nav-group-body';
+            if (groupCols.some(function (c) { return c.id === 'anleitungen'; })) {   // Leseansicht der Anleitungen
+              var rd = document.createElement('a'); rd.className = 'nav-item nav-child' + (page === 'hilfe' ? ' active' : ''); rd.href = '/hilfe.html';
+              rd.innerHTML = '<span class="nav-icon">▤</span><span class="nav-label">Hilfe lesen</span>'; body.appendChild(rd);
+            }
+            var anlEl = null;
             groupCols.forEach(function (col) {
               var isSingleton = !!col.singleton;
               var isActive = isSingleton
@@ -172,8 +178,16 @@
                 ? '/editor.html?collection=' + encodeURIComponent(col.id) + '&singleton=1'
                 : '/entries.html?col=' + encodeURIComponent(col.id) + '&label=' + encodeURIComponent(col.label);
               a.innerHTML = '<span class="nav-icon">' + (isSingleton ? '◈' : '◦') + '</span><span class="nav-label">' + col.label + '</span>';
-              body.appendChild(a);
+              if (col.id === 'anleitungen') anlEl = a; else body.appendChild(a);   // «Anleitungen» ganz unten in der Gruppe
             });
+            groupLinks.forEach(function (l) {   // externe Links (neuer Tab)
+              if (!l || !/^(https?:\/\/|\/(?!\/))/i.test(String(l.url || ''))) return;
+              var a = document.createElement('a'); a.className = 'nav-item nav-child'; a.href = l.url; a.target = '_blank'; a.rel = 'noopener';
+              var ic = document.createElement('span'); ic.className = 'nav-icon'; ic.textContent = '↗';
+              var lb = document.createElement('span'); lb.className = 'nav-label'; lb.textContent = l.label || l.url;
+              a.appendChild(ic); a.appendChild(lb); body.appendChild(a);
+            });
+            if (anlEl) body.appendChild(anlEl);
             groupWrap.appendChild(body);
             frag.appendChild(groupWrap);
           });
