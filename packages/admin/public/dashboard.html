@@ -371,7 +371,7 @@
         n.style.cssText = 'display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 16px;margin:0 0 14px;border:1px solid var(--gold)';
         n.innerHTML = '<div><strong>Turn on two-factor sign-in</strong><div style="color:var(--muted);font-size:12px;margin-top:2px">Your admin account is protected by a password only. A one-time code from an authenticator app makes a stolen password useless.</div></div>' +
           '<div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn btn-sm" href="/account.html" style="text-decoration:none">Set up now</a><button type="button" class="btn btn-ghost btn-sm" id="sec-later">Remind me in 7 days</button></div>';
-        document.querySelector('main.main > h1, main.main').after(n);
+        document.querySelector('main.main').prepend(n);   // first thing on the page (the dashboard re-arranges its cards, so a spot next to one of them can end up behind the dock)
         document.getElementById('sec-later').addEventListener('click', () => { try { localStorage.setItem('orb_2fa_hide', String(Date.now())); } catch {} n.remove(); });
       }
     } catch {}

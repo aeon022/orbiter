@@ -2229,6 +2229,17 @@ html[data-style="xfce"] .main:has(.stats-row) {
     "dash  dash"
     "ws    ws";
 }
+/* Notice for admins without two-factor sign-in (dashboard.html): its own row above the cards */
+html[data-style="xfce"] .main:has(.stats-row):has(#sec-notice) {
+  grid-template-rows: auto auto auto auto auto;
+  grid-template-areas:
+    "note  note"
+    "hero  stats"
+    "cal   stats"
+    "dash  dash"
+    "ws    ws";
+}
+html[data-style="xfce"] #sec-notice { grid-area: note; }
 html[data-style="xfce"] .hero.glass-card       { grid-area: hero; }
 html[data-style="xfce"] .stats-row.glass-card   { grid-area: stats; align-self: stretch; }
 html[data-style="xfce"] .cal-strip.glass-card   { grid-area: cal; }
@@ -3192,6 +3203,15 @@ html[data-zen="1"] .main {
     grid-template-rows: unset !important;
     grid-auto-rows: auto !important;
     grid-template-areas:
+      "hero"
+      "stats"
+      "cal"
+      "dash"
+      "ws" !important;
+  }
+  html[data-style="xfce"] .main:has(.stats-row):has(#sec-notice) {
+    grid-template-areas:
+      "note"
       "hero"
       "stats"
       "cal"
