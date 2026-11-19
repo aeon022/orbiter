@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { openPod } from '@a83/orbiter-core';
 import { clientIp } from '../net.js';
 import { allow } from '../ratelimit.js';
+import { requireAdmin } from '../middleware/auth.js';
 
 const hitLimited = (c) => !allow(`hit:${clientIp(c.env?.incoming?.socket?.remoteAddress, c.req.header('x-forwarded-for'))}`, 120, 60_000);
 
@@ -174,7 +175,7 @@ analyticsRoutes.get('/agent-trend', (c) => {
 });
 
 // DELETE /api/analytics/prune — clean old data (auth required)
-analyticsRoutes.delete('/prune', (c) => {
+analyticsRoutes.delete('/prune', requireAdmin, (c) => {
   const db = openPod(c.get('podPath'));
   const days = parseInt(c.req.query('days') ?? '90');
   const deleted = db.pruneAnalytics(days);

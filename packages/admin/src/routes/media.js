@@ -8,6 +8,10 @@ import { allowedCollectionIds } from '../middleware/auth.js';
 
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/tiff']);
 
+// The MIME type comes from the client (upload) or from a remote server (import) and is shown in the admin and sent back as Content-Type:
+// only a plain type/subtype token is kept, anything else (markup, spaces, quotes) becomes application/octet-stream.
+const cleanMime = (t) => (/^[a-z0-9][a-z0-9!#$&^_.+-]{0,60}\/[a-z0-9][a-z0-9!#$&^_.+-]{0,100}$/i.test(String(t ?? '').trim()) ? String(t).trim().toLowerCase() : 'application/octet-stream');
+
 async function optimizeImage(buffer, mimeType, db) {
   if (!IMAGE_TYPES.has(mimeType)) return { buffer, type: mimeType };
   const maxWidth    = parseInt(db.getMeta('media.img_max_width')    ?? '2400', 10);
@@ -137,8 +141,8 @@ mediaRoutes.post('/', async (c) => {
   const db        = openPod(c.get('podPath'));
 
   try {
-    const { buffer, type: finalType } = await optimizeImage(rawBuffer, file.type, db);
-    const finalName = finalType === 'image/webp' && file.type !== 'image/webp'
+    const { buffer, type: finalType } = await optimizeImage(rawBuffer, cleanMime(file.type), db);
+    const finalName = finalType === 'image/webp' && cleanMime(file.type) !== 'image/webp'
       ? file.name.replace(/\.[^.]+$/, '.webp')
       : file.name;
     const backend = getMediaBackend(db);
@@ -177,7 +181,7 @@ mediaRoutes.post('/import-url', async (c) => {
   }
   if (!resp.ok) return c.json({ error: `Remote returned ${resp.status}` }, 400);
 
-  const mime      = (resp.headers.get('content-type') || 'application/octet-stream').split(';')[0].trim();
+  const mime      = cleanMime((resp.headers.get('content-type') || 'application/octet-stream').split(';')[0]);
   const filename  = url.split('/').pop()?.split('?')[0] || 'imported';
   const id        = randomUUID();
   const db        = openPod(c.get('podPath'));
@@ -212,7 +216,7 @@ mediaRoutes.post('/add-link', async (c) => {
   try {
     const { resp: head } = await safeFetch(url, { method: 'HEAD', headers: { 'User-Agent': 'Orbiter-Admin/1.0' } });
     const ct = head.headers.get('content-type');
-    if (ct) mime = ct.split(';')[0].trim();
+    if (ct) mime = cleanMime(ct.split(';')[0]);
   } catch {
     const ext = url.split('?')[0].split('.').pop()?.toLowerCase();
     const extMap = { jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', gif:'image/gif',

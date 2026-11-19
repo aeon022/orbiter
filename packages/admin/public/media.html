@@ -219,7 +219,7 @@
           ? `<img class="media-thumb" src="/api/media/${m.id}/raw" alt="${esc(m.alt??'')}" loading="lazy" />`
           : isVid
           ? `<video class="media-thumb" src="/api/media/${m.id}/raw" muted preload="metadata"></video>`
-          : `<div class="media-thumb-ph"><div class="media-thumb-icon">${m.mime_type==='application/pdf'?'⊠':'◫'}</div><div class="media-thumb-type">${m.mime_type.split('/')[1]?.toUpperCase()}</div></div>`;
+          : `<div class="media-thumb-ph"><div class="media-thumb-icon">${m.mime_type==='application/pdf'?'⊠':'◫'}</div><div class="media-thumb-type">${esc((m.mime_type.split('/')[1] ?? '').toUpperCase())}</div></div>`;
         return `<div class="media-card" data-id="${m.id}">
           ${thumb}
           <div class="media-info">
