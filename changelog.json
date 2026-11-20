@@ -1,0 +1,329 @@
+{
+  "version": "https://jsonfeed.org/version/1.1",
+  "title": "Orbiter — changelog",
+  "home_page_url": "https://orbiter.sh/changelog/",
+  "feed_url": "https://orbiter.sh/changelog.json",
+  "description": "Releases and notable changes of Orbiter, the CMS in one POD.",
+  "items": [
+    {
+      "id": "https://orbiter.sh/changelog/#update-markdown-fields",
+      "url": "https://orbiter.sh/changelog/#update-markdown-fields",
+      "title": "Markdown text fields",
+      "summary": "admin@0.3.116 · lander@0.7.9 — Latest",
+      "content_html": "<p>admin@0.3.116 · lander@0.7.9 — Latest</p><ul><li><strong>Rich text as an extra field is Markdown now.</strong> A <code>richtext</code> field that is not the main body used to be a bare textarea (people saw raw HTML). It now has a small toolbar (bold, italic, highlight, heading, list, link) and a preview toggle, and sits below the body so the writing stays together. Facts like dates and places stay in the Details card above.</li><li><strong>Show Markdown marks.</strong> A <em>¶</em> button in the toolbar shows the Markdown characters in the margin of each block (<code>##</code>, <code>-</code>, <code>&gt;</code> …) and around bold, italic, highlight, code and links. The choice is remembered.</li><li><strong>Lists, links, raw HTML.</strong> A tight Markdown list opens as one block per item (and is saved tight again), <code>[text](url)</code> links show as links, and raw HTML blocks such as a PDF viewer are kept exactly as written (read-only).</li><li><strong>Files look like files.</strong> An uploaded file block is a small card with a file-type icon (PDF in red), the name and the type, instead of a paperclip. Links whose text or address says PDF get a small PDF badge.</li><li><strong>Blocks, Markdown, HTML.</strong> Three buttons in the toolbar switch the text between the block editor, its Markdown source and an HTML view; the HTML is converted back to Markdown, which stays the stored format. Markdown text fields have the same HTML switch.</li><li><strong>CodeMirror with Vim keys.</strong> The Markdown and HTML views are a real code editor (CodeMirror 6, loaded only when you open them) with Markdown / HTML highlighting. A <em>Vim</em> button turns on Vim keys (modes, <code>hjkl</code>, <code>dd</code>, <code>yy</code>, <code>p</code>, <code>/</code> search, <code>:w</code> saves); the choice is remembered. A mode badge shows NORMAL / INSERT / VISUAL, <code>/</code> and <code>:</code> open a floating command bar inside the editor (never hidden behind the dock), and a <em>?</em> button (or <code>:help</code>) opens a Vim cheat sheet in English or German. The source view fills the window above the dock. The library is served from the admin itself, not from a CDN.</li><li><strong>Paste from Word and the web.</strong> Formatted content is converted to Markdown on paste (headings, bold, italic, links, lists, Word bullet lists, tables); several plain paragraphs become several blocks. It works in the block editor and in the Markdown fields.</li><li><strong>Link picker.</strong> The link button searches pages, events and other entries (or takes a pasted address) instead of asking for a typed URL.</li><li><strong>Image descriptions.</strong> Images without alt text are marked in red, and publishing asks once if some are missing.</li><li><strong>Easy-read helper.</strong> Markdown fields show word count and longest sentence (a warning for easy-read fields above ~15 words), and <em>↧ Main text</em> copies the main text in as a starting point.</li><li><strong>Relations.</strong> A relation field whose collection has no entries is hidden, and schemas written with <code>relationTo</code> work too.</li><li><strong>Escaped asterisks and underscores.</strong> The block editor writes <code>Künstler\\*innen</code> instead of a bare asterisk, so two of them in one paragraph can no longer turn the text between them italic.</li></ul>",
+      "date_published": "2026-11-20T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-highlight",
+      "url": "https://orbiter.sh/changelog/#update-highlight",
+      "title": "Highlight button in the editor",
+      "summary": "admin@0.3.115 · lander@0.7.8",
+      "content_html": "<p>admin@0.3.115 · lander@0.7.8</p><ul><li><strong>Highlight.</strong> A new <em>A</em> button in the editor toolbar wraps the selected text in <code>==text==</code> (shown red in the editor and the preview); click again to take it off. It works in the block editor and in Markdown text fields such as <em>Öffnungszeiten</em>. Sites decide how <code>==text==</code> looks; your own site needs a rule for it (for example a <code>mark</code> style).</li></ul>",
+      "date_published": "2026-11-19T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-help-dock",
+      "url": "https://orbiter.sh/changelog/#update-help-dock",
+      "title": "A Help icon in the dock",
+      "summary": "admin@0.3.114 · lander@0.7.7",
+      "content_html": "<p>admin@0.3.114 · lander@0.7.7</p><ul><li><strong>Help in the dock.</strong> Once a collection called <code>anleitungen</code> exists, the dock shows a <em>Help</em> icon (a question mark) that opens the reading view directly. The sidebar group is now called <em>Anleitungen</em> (it holds <em>Hilfe lesen</em>, your links and the collection for editing). <code>scripts/help-import.mjs</code> sets this up and takes <code>--overview \"Title\"</code> for the first guide.</li></ul>",
+      "date_published": "2026-11-19T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-help-view",
+      "url": "https://orbiter.sh/changelog/#update-help-view",
+      "title": "Help view for your editors, and a date fix",
+      "summary": "admin@0.3.113 · lander@0.7.6",
+      "content_html": "<p>admin@0.3.113 · lander@0.7.6</p><ul><li><strong>Help view.</strong> A read-only page (<code>/hilfe.html</code>) shows your own guides, set like the preview in the editor: list by group on the left, text on the right, search, a link per guide. Switching guides only swaps the text; the dock and the list stay. Filled from Markdown with <code>scripts/help-import.mjs</code> (see <a href=\"/docs/help\">Help view</a>).</li><li><strong>Links in a sidebar group.</strong> The new meta <code>nav.links</code> adds external links to a group (for example to the tutorial of another project). Admin-only, <code>http(s)</code> or site-relative addresses only.</li><li><strong>Date fields (admin 0.3.112, Lander 0.7.6).</strong> A datetime stored with a time zone (<code>…Z</code>) came up empty in the editor, and saving wiped it, so events dropped off a site. Such values now show in local time and are saved back as ISO.</li><li><strong>Security alert and a 2FA notice.</strong> When an address is locked out after five failed sign-ins (or wrong two-factor codes), the admin gets one mail (Settings → Email → Security alerts, on by default once mail is set up). Admins without two-factor sign-in see a notice on the dashboard (it comes back after 7 days).</li><li><strong>Hardening.</strong> Media upload and import keep only a plain <code>type/subtype</code> as MIME type (it was shown unescaped in the media grid). <code>forms.strict</code> makes the public form endpoint accept only configured forms. Webhooks refuse loopback and private targets (<code>ORBITER_ALLOW_PRIVATE_FETCH=1</code> for a local receiver). Pruning analytics is admin-only. The help view uses DOMPurify and a local <code>marked</code> (no CDN).</li><li><strong>Dock for editors.</strong> Editors without server access saw no collections in the dock (the dock read a path only admins receive). Fixed.</li></ul>",
+      "date_published": "2026-11-19T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-phone-hotfix",
+      "url": "https://orbiter.sh/changelog/#update-phone-hotfix",
+      "title": "Fix: Save and Publish were not tappable in the phone editor",
+      "summary": "admin@0.3.111 · lander@0.7.5",
+      "content_html": "<p>admin@0.3.111 · lander@0.7.5</p><ul><li><strong>What was wrong.</strong> Since admin 0.3.109 and Lander 0.7.3 the fade at the right edge of the editor toolbar used a CSS mask, which trapped the floating <em>Save · Publish</em> button: it showed, but a tap did not reach it, so the panel could not be opened on a phone. Update to admin 0.3.111 or Lander 0.7.5 (one click in Settings → Pod).</li><li><strong>Lander also:</strong> tapping a list row opens the entry again (it only worked after “select all” since 0.7.0).</li><li><strong>How it was found.</strong> The admin browser smoke test failed (“meta panel not on screen”); it passes again, and the fix was checked on a live Lander as an editor account.</li></ul>",
+      "date_published": "2026-11-17T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-phone-audit",
+      "url": "https://orbiter.sh/changelog/#update-phone-audit",
+      "title": "Admin on phones and tablets, and a faster dock",
+      "summary": "admin@0.3.110 · lander@0.7.4",
+      "content_html": "<p>admin@0.3.110 · lander@0.7.4</p><ul><li><strong>Dock labels and drawers</strong> — on touch devices every dock item shows its name. A drawer opens as a floating glass panel above the dock (like Notes and To-do) with a close button; tapping outside closes it.</li><li><strong>Lists on a phone</strong> — one main action per row plus a “⋯” menu (edit, duplicate, trash). Swipe left for the menu, swipe right to publish or unpublish (asks first). Slug and repeated names stay out of the card; filter chips scroll in one line.</li><li><strong>Editor</strong> — the floating save button no longer covers the last field, the toolbar fades out where it scrolls, a pulsing dot shows unsaved changes, and <em>Preview</em> opens the site in a sheet.</li><li><strong>Touch targets</strong> — buttons, chips, fields and calendar days are at least 40–44 px high on touch screens; forms use a calmer sans-serif instead of monospace.</li><li><strong>Draft badges</strong> — the dock shows how many drafts a collection or drawer holds. Empty lists get a call to action, loading lists a shimmer.</li><li><strong>Lander</strong> — the admin is German by default (switch under Settings → Admin language). Update with one click in Settings → Pod.</li></ul>",
+      "date_published": "2026-11-17T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-dock-speed",
+      "url": "https://orbiter.sh/changelog/#update-dock-speed",
+      "title": "A dock that glides, and pages that open without a reload",
+      "summary": "admin@0.3.110 · lander@0.7.3",
+      "content_html": "<p>admin@0.3.110 · lander@0.7.3</p><ul><li><strong>Sliding pill</strong> — one glass pill follows the item under the cursor with a spotlight, and rests behind the active item with a slow aurora ring. It stays on a drawer while you reach into it, and returns only after a short grace period.</li><li><strong>Pages swap in place</strong> — dock and status bar stay put, the old page stays until the new one is ready (thin progress bar), pages are prefetched on hover or touch and cached for five minutes. Editor, calendar, users and a few others still reload fully.</li><li><strong>Soft transitions</strong> — a quick fade with a hint of blur and lift; full page loads use the browser’s view transitions where available. Off for “reduce motion”.</li><li><strong>Instant dock</strong> — the dock is drawn from the last <code>/api/info</code> answer on the first frame and rebuilt only if something changed. The cache is cleared on sign-out.</li><li><strong>Versioned assets</strong> — scripts and styles carry <code>?v=…</code> and may stay in the browser cache for a year; the version changes with every file change. Lander needs <code>mod_headers</code> and <code>mod_rewrite</code> for the long cache (it still works without).</li><li><strong>Recently visited</strong> — the command palette (⌘K) lists the last pages you opened. Kept in this browser only.</li><li><strong>Security</strong> — the page cache expires and notices a lost session instead of showing an empty page.</li></ul>",
+      "date_published": "2026-11-17T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-lander-artists",
+      "url": "https://orbiter.sh/changelog/#update-lander-artists",
+      "title": "Lander for artists: music, video, preview, quick-create",
+      "summary": "lander@0.7.0",
+      "content_html": "<p>lander@0.7.0</p><ul><li><strong>Audio and video uploads</strong> — MP3, M4A, AAC, OGG, WAV, FLAC, MP4, WebM and MOV, served with range requests so Safari can play and seek. The upload limit is 40 MB for new installs.</li><li><strong>Preview</strong> — a <em>Preview</em> button opens the real website page for an entry, drafts included while you are signed in (Settings meta <code>site.preview</code> and <code>site.url</code>).</li><li><strong>Quick-create</strong> — the “new entry” dialog asks for the list columns (title, band, date, place) and can publish right away. <strong>Copy with a new date</strong> duplicates an entry and renames its slug.</li><li><strong>Relations</strong> — a relation field can be single-choice (<code>multiple: false</code>), shown as a dropdown; list columns show the related title.</li><li><strong>Editor role</strong> — editors see a short dock (no schema, users, build, import) and the server refuses those actions with 403. Plain-language save errors replace “Error”.</li><li><strong>Installable</strong> — web-app manifest and icons, iOS meta tags and safe areas, so the admin can live on the home screen.</li></ul>",
+      "date_published": "2026-11-17T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-lander-dock",
+      "url": "https://orbiter.sh/changelog/#update-lander-dock",
+      "title": "Lander: the dock copes with many collections",
+      "summary": "lander@0.6.1",
+      "content_html": "<p>lander@0.6.1</p><ul><li><strong>\"More\" drawer</strong> — with more than six ungrouped collections the extra ones move into a drawer instead of stretching the dock.</li><li><strong>Short dock names</strong> — long titles are shortened to their first part (no more \"…\"); the full name stays in the tooltip.</li><li><strong>Never wider than the screen</strong> — long drawers scroll. Group collections by topic in Settings → Navigation. Update with one click in Settings → Pod.</li></ul>",
+      "date_published": "2026-11-16T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-lander-csp",
+      "url": "https://orbiter.sh/changelog/#update-lander-csp",
+      "title": "Lander: strict Content-Security-Policy for the admin",
+      "summary": "lander@0.6.0",
+      "content_html": "<p>lander@0.6.0</p><ul><li><strong>Nonce on every script</strong> — the admin pages are served through PHP with a one-time nonce and a strict policy. An injected <code>&lt;script&gt;</code> or <code>onerror=</code> handler cannot run, the same protection Orbiter got in 0.3.98.</li><li><strong>No inline handlers</strong> — all 81 <code>onclick</code>-style handlers moved to <code>data-on-click</code>. Behaviour is unchanged. Works at the domain root and in a subfolder, in English and German.</li><li><strong>Earlier today (0.5.6):</strong> the pod and its backups are written owner-only (600). If a page looks odd after updating, hard-reload once. <a href=\"/docs/lander\">Docs →</a></li></ul>",
+      "date_published": "2026-11-16T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-desktop-0-2-3",
+      "url": "https://orbiter.sh/changelog/#update-desktop-0-2-3",
+      "title": "Desktop app: no more admin / admin",
+      "summary": "desktop@0.2.3",
+      "content_html": "<p>desktop@0.2.3</p><ul><li><strong>Random start password</strong> — a new pod no longer gets <code>admin / admin</code>. The app creates a random password and shows it once after creating the pod.</li><li><strong>Loopback address</strong> — the app talks to <code>127.0.0.1</code> instead of <code>localhost</code> (you sign in once again after the update, the address is a new site for the browser cookie).</li><li><strong>No browser permissions</strong> — camera, microphone, location and notification requests are always denied.</li><li>Includes the current admin: enforced Content-Security-Policy, German interface, signed backups and Digi-ID sign-in. The macOS app is still unsigned (open it with right-click → Open).</li></ul>",
+      "date_published": "2026-11-16T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-private-backups",
+      "url": "https://orbiter.sh/changelog/#update-private-backups",
+      "title": "Security: backups are owner-only",
+      "summary": "admin@0.3.105 · lander@0.5.6",
+      "content_html": "<p>admin@0.3.105 · lander@0.5.6</p><ul><li><strong>Automatic backups were world-readable.</strong> Since 0.3.96 (Orbiter) the automatic backup landed in a <code>backups/</code> folder next to the pod with default permissions (644). If that folder lies inside a directory the web server serves, the backup (password hashes, saved settings) could be downloaded by anyone who guessed the file name. Backups are now written with mode 600 in a 700 folder.</li><li><strong>What to do:</strong> update, then check that <code>https://your-host/backups/</code> and old <code>*.pod</code> files are not reachable, and delete old backups from a served folder. If one was exposed, change the user passwords and any SMTP, API or FTP secrets stored in the pod. Set <code>ORBITER_BACKUP_DIR</code> to a folder outside the web root for good measure.</li><li><strong>Lander</strong> also writes the pod and its backups owner-only (600), so a host that ignores <code>data/.htaccess</code> does not expose them. Lander's <code>data/.htaccess</code> already blocked the folder on Apache.</li></ul>",
+      "date_published": "2026-11-16T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-autosave-fields",
+      "url": "https://orbiter.sh/changelog/#update-autosave-fields",
+      "title": "Autosave for every field",
+      "summary": "admin@0.3.103 · lander@0.5.5",
+      "content_html": "<p>admin@0.3.103 · lander@0.5.5</p><ul><li>The editor already saved the title and the text two seconds after typing. Now <strong>all other fields</strong> (text fields, dates, switches, dropdowns) autosave the same way, so a notice or a short entry no longer needs a manual save.</li><li>Autosave keeps the entry's current status: a <em>published</em> entry goes live with the change (after the short public cache), a draft stays a draft.</li></ul>",
+      "date_published": "2026-11-16T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-dock-order",
+      "url": "https://orbiter.sh/changelog/#update-dock-order",
+      "title": "Dock: shorter German labels and your own order",
+      "summary": "admin@0.3.102 · lander@0.5.4",
+      "content_html": "<p>admin@0.3.102 · lander@0.5.4</p><ul><li><strong>Shorter dock labels</strong> in German (Start, Nutzer, To-dos, Setup, Auto …), so the dock fits more items.</li><li><strong>Own order for collections</strong> — the setting <code>nav.order</code> (a list of collection IDs) decides the order in the dock and the sidebar; collections not listed follow after. Set it with <code>PUT /api/meta</code> or in the pod.</li></ul>",
+      "date_published": "2026-11-16T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-account-page-fix",
+      "url": "https://orbiter.sh/changelog/#update-account-page-fix",
+      "title": "Fix: Account page (2FA, Digi-ID) did nothing after in-app navigation",
+      "summary": "admin@0.3.101 · lander@0.5.1",
+      "content_html": "<p>admin@0.3.101 · lander@0.5.1</p><ul><li>Opening <strong>Account</strong> through the dock or sidebar swapped the page in place, so its scripts did not run: the 2FA card stayed on “Loading…” and “Link an address” did nothing until a hard refresh. The page now loads normally.</li></ul>",
+      "date_published": "2026-11-16T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-lander-digi-id",
+      "url": "https://orbiter.sh/changelog/#update-lander-digi-id",
+      "title": "Digi-ID sign-in in Lander",
+      "summary": "lander@0.5.0 · admin@0.3.100",
+      "content_html": "<p>lander@0.5.0 · admin@0.3.100</p><ul><li><strong>Digi-ID for Lander</strong> — link a DigiByte address under Account, then scan the QR code on the login page. Same contract as Orbiter 0.3.99. Needs PHP <code>gmp</code> or <code>bcmath</code> (the signature check is done in PHP, no extra library to install).</li><li><strong>Fix (admin 0.3.100, Lander)</strong> — the sign-in request now sends a JSON body: some hosts and proxies answer a body-less POST with 403. <a href=\"/docs/lander\">Docs →</a></li></ul>",
+      "date_published": "2026-11-16T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-digi-id",
+      "url": "https://orbiter.sh/changelog/#update-digi-id",
+      "title": "Sign in with Digi-ID (DigiByte wallet)",
+      "summary": "admin@0.3.100",
+      "content_html": "<p>admin@0.3.100</p><ul><li><strong>Passwordless sign-in</strong> — link a DigiByte address under Account → Digi-ID, then scan the QR code on the login page with a Digi-ID wallet. The password login stays.</li><li><strong>Bound to your domain</strong> — the wallet signs a one-time URI that contains the site address; challenges expire after five minutes and work once. Linking or removing an address needs the password. <a href=\"/docs/security\">Docs →</a></li><li>Needs a public HTTPS address (not <code>localhost</code> or the desktop app). Legacy <code>D…</code> addresses.</li></ul>",
+      "date_published": "2026-11-16T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-lander-webhooks",
+      "url": "https://orbiter.sh/changelog/#update-lander-webhooks",
+      "title": "Lander: webhooks and build trigger",
+      "summary": "lander@0.4.0",
+      "content_html": "<p>lander@0.4.0</p><ul><li><strong>Rebuild on publish</strong> — a build webhook (Settings → Build) is called whenever an entry is published, so a static Astro site on Netlify, Vercel or GitHub Actions rebuilds itself.</li><li><strong>Signed webhooks</strong> — publish and delete events with an HMAC-SHA256 signature, a log of the last 50 deliveries and a test button. Same contract as Orbiter. <a href=\"/docs/lander\">Docs →</a></li></ul>",
+      "date_published": "2026-11-16T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-lander-2fa",
+      "url": "https://orbiter.sh/changelog/#update-lander-2fa",
+      "title": "Lander: two-factor sign-in (TOTP)",
+      "summary": "lander@0.3.3",
+      "content_html": "<p>lander@0.3.3</p><ul><li><strong>2FA for Lander</strong> — Settings → Security. Works with Google Authenticator, 1Password and Aegis; eight one-time recovery codes; a code cannot be replayed; wrong codes are throttled per account.</li><li>Same format as Orbiter, so an Orbiter pod with 2FA users can move to Lander (before, Lander refused to sign these accounts in). Install it with <strong>Update now</strong>.</li></ul>",
+      "date_published": "2026-11-16T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-csp-enforced",
+      "url": "https://orbiter.sh/changelog/#update-csp-enforced",
+      "title": "Security: strict Content-Security-Policy enforced",
+      "summary": "admin@0.3.98",
+      "content_html": "<p>admin@0.3.98</p><ul><li><strong>Scripts need a nonce</strong> — the admin now blocks every script that is not part of its own pages. An injected <code>&lt;script&gt;</code> or <code>onerror=</code> handler in content cannot run, even if it slipped past escaping.</li><li><strong>No inline handlers</strong> — all 95 <code>onclick=\"…\"</code> style handlers are replaced by <code>data-on-click</code> attributes handled by a small dispatcher (no <code>eval</code>). Behaviour is unchanged.</li><li>Custom admin pages that still use inline handlers: switch to <code>data-on-…</code>, or set <code>ORBITER_CSP=report</code> to go back to report-only. <a href=\"/docs/security\">Docs →</a></li></ul>",
+      "date_published": "2026-11-16T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-german-admin",
+      "url": "https://orbiter.sh/changelog/#update-german-admin",
+      "title": "German admin interface",
+      "summary": "admin@0.3.97 · lander@0.3.2",
+      "content_html": "<p>admin@0.3.97 · lander@0.3.2</p><ul><li><strong>Admin language DE</strong> — Settings → General → Admin language now switches the whole interface to German: navigation, dashboard, entries, editor, media, users, settings, import and analytics (about 600 labels and hints). Anything not translated yet stays English.</li><li>The choice is kept per browser. The strings live in <code>i18n-de.js</code>; your own content, the editor text and form fields are never touched. More languages can be added the same way.</li><li>Lander 0.3.2 gets the same German interface. It is the first release installed with the signed one-click update.</li></ul>",
+      "date_published": "2026-11-15T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-lander-0-3-1-one-click-update",
+      "url": "https://orbiter.sh/changelog/#update-lander-0-3-1-one-click-update",
+      "title": "Lander: signed one-click update",
+      "summary": "lander@0.3.1",
+      "content_html": "<p>lander@0.3.1</p><ul><li><strong>Update now</strong> — the Lander admin installs a newer release with one click, from the dashboard hint or Settings → Pod.</li><li><strong>Signed releases</strong> — every release ZIP carries an Ed25519 signature that Lander checks before it writes a file. A tampered download is refused and nothing changes.</li><li><strong>Rollback copy</strong> — the pod and the current code are saved to <code>data/update-rollback/</code> first. Config, <code>data/</code>, media and the subfolder paths stay as they are.</li><li>Needs the PHP <code>zip</code> and <code>sodium</code> extensions; otherwise the admin says why and you replace the files by hand. <code>update_check =&gt; false</code> switches it off. <a href=\"/docs/lander\">Docs →</a></li></ul>",
+      "date_published": "2026-11-15T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-lander-0-3-0",
+      "url": "https://orbiter.sh/changelog/#update-lander-0-3-0",
+      "title": "Lander 0.3: users, installer, subfolders, backups, image sizes",
+      "summary": "lander@0.3.0",
+      "content_html": "<p>lander@0.3.0</p><ul><li><strong>Installer</strong> — open <code>install.php</code> once; it detects a subfolder or domain root, writes the config, creates the first admin and deletes itself.</li><li><strong>Subfolder or subdomain</strong> — <code>example.at/lander/</code> works as well as <code>redaktion.example.at</code>.</li><li><strong>Users</strong> — admins add editors and admins, reset passwords and delete accounts.</li><li><strong>Backup and restore</strong> — weekly automatic backups, SQL file or ZIP with media, restore with validation.</li><li><strong>Image sizes</strong> — <code>?w</code>, <code>?ar</code> and <code>?fmt</code> variants with a cache; public <code>/api/public/media/&lt;id&gt;</code>.</li><li><strong>Inbox</strong> visible in the menu, a short public cache (10 s by default) and an update hint. <a href=\"/lander\">Lander →</a></li></ul>",
+      "date_published": "2026-11-15T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-automatic-backups-pod-size-stronger-passwords",
+      "url": "https://orbiter.sh/changelog/#update-automatic-backups-pod-size-stronger-passwords",
+      "title": "Automatic backups, pod size watch, media out of the pod, stronger password hashing",
+      "summary": "admin@0.3.96 · core@0.3.22",
+      "content_html": "<p>admin@0.3.96 · core@0.3.22</p><ul><li><strong>Automatic backups</strong> — the pod is copied to a <code>backups/</code> folder every 7 days (keeps four), plus <em>Back up now</em>. Configurable with <code>ORBITER_BACKUP_DAYS</code>, <code>_KEEP</code>, <code>_DIR</code>. <a href=\"/docs/backup\">Docs →</a></li><li><strong>Pod size watch</strong> — Settings → Pod shows the file size and the media inside it; the dashboard warns above <code>ORBITER_POD_WARN_MB</code> (default 60) or when no backup exists.</li><li><strong>Move media out of the pod</strong> — with a media backend set (local folder, S3, GitHub), one button moves the files out and shrinks the pod. A file that fails stays where it is.</li><li><strong>Stronger password hashing</strong> — scrypt with a higher cost, stored with the hash; old hashes keep working and are upgraded at the next sign-in. <a href=\"/docs/security\">Docs →</a></li></ul>",
+      "date_published": "2026-11-15T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-backup-restore-from-settings",
+      "url": "https://orbiter.sh/changelog/#update-backup-restore-from-settings",
+      "title": "Backup and restore from Settings",
+      "summary": "admin@0.3.95",
+      "content_html": "<p>admin@0.3.95</p><ul><li><strong>Download a backup</strong> — Settings → Pod → <em>Download SQL file</em> gives you a consistent copy of the live pod (no sessions), and shows the current file size. <a href=\"/docs/backup\">Docs →</a></li><li><strong>Restore or move</strong> — upload a <code>.pod</code>: it is checked first (SQLite, integrity, required tables, at least one admin), the current pod is kept as <code>&lt;pod&gt;.before-restore-…</code>, then swapped in. Works for moving to another server, and for pods from <a href=\"/lander\">Lander</a>.</li></ul>",
+      "date_published": "2026-11-15T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-lander-security-hardening-settings-layout",
+      "url": "https://orbiter.sh/changelog/#update-lander-security-hardening-settings-layout",
+      "title": "Lander for PHP hosting, security hardening, 10 themes and a tidier Settings page",
+      "summary": "admin@0.3.94 · integration@0.3.23 · mcp@0.1.6",
+      "content_html": "<p>admin@0.3.94 · integration@0.3.23 · mcp@0.1.6</p><ul><li><strong>Lander</strong> — the Orbiter admin on ordinary PHP hosting (PHP 8.1+, SQLite, no Node). Same SQL file (<code>.pod</code>), same Station interface, live read API for your site. <a href=\"/lander\">Lander →</a> <a href=\"/docs/lander\">Docs →</a></li><li><strong>Security hardening</strong> — user-supplied values are now escaped everywhere in the admin UI (closes stored-XSS paths), meta writes are limited to admins and size-capped, slugs and usernames are validated server-side, request bodies have a size limit, and GitHub Actions are pinned to commit SHAs. Dependencies updated (hono, nodemailer, fast-xml-parser, zod). Update to 0.3.92 or later.</li><li><strong>10 themes, font choice, custom colors</strong> — a 5×2 palette, your own accent colors and a phone tab bar.</li><li><strong>UI zoom applies immediately</strong>, and static files revalidate (<code>no-cache</code>) so a new admin version shows up without a hard reload.</li><li><strong>Station dock</strong> — drawers are hexagons whose fill level shows how much is in them; the outline turns on hover.</li><li><strong>Settings in sections</strong> — You, General, Content, Publishing and System, two balanced columns, collapsible cards (state is remembered), a jump bar and Expand/Collapse all. The page is less than half as long.</li></ul>",
+      "date_published": "2026-11-15T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-two-factor-sign-in-signed-webhooks-key-limits-ve",
+      "url": "https://orbiter.sh/changelog/#update-two-factor-sign-in-signed-webhooks-key-limits-ve",
+      "title": "Two-factor sign-in, signed webhooks, key limits, version diff and media usage",
+      "summary": "admin@0.3.88 · core@0.3.21 · mcp@0.1.5 · integration@0.3.22 · client@0.1.4 · cli@0.3.15",
+      "content_html": "<p>admin@0.3.88 · core@0.3.21 · mcp@0.1.5 · integration@0.3.22 · client@0.1.4 · cli@0.3.15</p><ul><li><strong>2FA (TOTP)</strong> — turn it on under Account with any authenticator app. Eight one-time recovery codes, codes can't be replayed, and an admin can reset a locked-out user. <a href=\"/docs/security\">Docs →</a></li><li><strong>Active sessions</strong> — see every signed-in device (browser, IP, time) and sign out one or all others.</li><li><strong>API key limits</strong> — restrict a key to collections, give it an expiry date or a requests-per-minute limit. Applies to the REST API and MCP. A new dialog replaces the prompt chain.</li><li><strong>Editor layout</strong> — custom fields now live in a collapsible “Details” card in the main column (grouped, two per row, long inputs full width; remembers open/closed per collection) instead of small boxes in the sidebar, so the body stays the main content. Collections without a body field drop the block-editing tools. Also fixed: validation errors on publish were never shown, the long dock popups in Station mode (many collections / tools) now scroll instead of running off the screen, and the Schema page can be scrolled in Station mode again.</li><li><strong>Webhook recipes</strong> — tested receiver plus copy-paste handlers: Slack/Telegram on review, IndexNow, Cloudflare purge, Mastodon. <a href=\"/docs/webhook-recipes\">Docs →</a></li><li><strong>AI translation of missing locales</strong> — one click in the editor creates the missing language versions as drafts (never overwrites, never publishes). <a href=\"/docs/i18n\">Docs →</a></li><li><strong>Image variants + focal point</strong> — <code>/orbiter/media/&lt;id&gt;?w=800&amp;fmt=webp&amp;ar=16:9</code> serves a resized, re-encoded or cropped version; crops keep the focal point you set in the media library. Bounded and cached. <a href=\"/docs/media\">Docs →</a></li><li><strong>Review workflow</strong> — optional. Editors submit entries for review; admins and the new <em>reviewer</em> role approve or request changes. Enforced on every publishing route. <a href=\"/docs/permissions#review\">Docs →</a></li><li><strong>Preview links</strong> — the editor's Preview button now uses a one-hour token bound to that entry instead of the master preview token (which also fixes previews for editors, who only got a masked token before).</li><li><strong>Version diff</strong> — see field by field what a restore would change. Restoring now keeps the content it replaces, so a restore can be undone (previously the replaced content was lost, and the newest snapshot couldn't be restored at all).</li><li><strong>Media usage</strong> — each file shows where it is used; filter <em>Unused</em> files and <em>Broken refs</em>; deleting a file that is in use warns first.</li><li><strong>Signed webhooks</strong> — HMAC-SHA256 signatures, retries (5 s, 30 s, 5 min) and a delivery log, managed in Settings. Webhook URLs are now admin-only (editors could previously set them). <a href=\"/docs/webhooks\">Docs →</a></li></ul>",
+      "date_published": "2026-10-08T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-security-check-encrypted-secrets-draft-only-agen",
+      "url": "https://orbiter.sh/changelog/#update-security-check-encrypted-secrets-draft-only-agen",
+      "title": "Security check, encrypted secrets, draft-only agent keys, Terminal theme",
+      "summary": "admin@0.3.87 · core@0.3.20 · mcp@0.1.4 · cli@0.3.14",
+      "content_html": "<p>admin@0.3.87 · core@0.3.20 · mcp@0.1.4 · cli@0.3.14</p><ul><li><strong><code>orbiter doctor</code> + dashboard card</strong> — flags a pod tracked by git, plaintext credentials, an open Content API and more, with the fix next to each finding. <a href=\"/docs/security\">Docs →</a></li><li><strong>Encrypted secrets</strong> — set <code>ORBITER_SECRET</code> and stored FTP/SMTP/AI/GitHub/S3 credentials are encrypted at rest (AES-256-GCM). Opt-in; nothing changes without it.</li><li><strong>Draft-only keys for agents</strong> — an API key can be allowed to create and edit <em>drafts</em> over MCP. It can never publish or touch live entries.</li><li><strong>Terminal theme</strong> — a fourth palette: amber phosphor on near-black, with a warm paper light variant.</li><li><strong>Admin polish</strong> — Settings style cards show their active state, the style default matches the app, leaving the XFCE dock reloads cleanly, visible keyboard focus, and reduced-motion support.</li></ul>",
+      "date_published": "2026-10-08T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-security-follow-up-uploaded-files-url-imports-lo",
+      "url": "https://orbiter.sh/changelog/#update-security-follow-up-uploaded-files-url-imports-lo",
+      "title": "Security follow-up: uploaded files, URL imports, login limits, and what gets pushed to GitHub",
+      "summary": "admin@0.3.86 · core@0.3.19 · integration@0.3.21 · mcp@0.1.3",
+      "content_html": "<p>A second pass over the admin and core packages after the previous release. Update @a83/orbiter-admin , @a83/orbiter-core and @a83/orbiter-integration together — the new media headers live in core.</p><ul><li><strong>GitHub push no longer ships secrets</strong> — the GitHub push feature committed the whole <code>.pod</code>, including live session tokens, password hashes and stored credentials (FTP, SMTP, AI and GitHub tokens). It now pushes a scrubbed copy. If you pushed before, rotate those credentials and check your repo history.</li><li><strong>Uploaded files can't run script</strong> — media is served with <code>nosniff</code> and a sandboxing CSP, and anything that isn't an image, video, audio or PDF is forced to download. Applies to the admin and the public <code>/orbiter/media</code> route.</li><li><strong>Server-side request forgery</strong> — importing or linking media by URL could be pointed at internal addresses (localhost, private networks, cloud metadata). Private and reserved targets are now blocked, redirects re-checked, downloads capped at 50 MB. Set <code>ORBITER_ALLOW_PRIVATE_FETCH=1</code> if you need to import from your LAN in development.</li><li><strong>Login rate limit</strong> — it trusted a client-supplied <code>X-Forwarded-For</code> header, so it could be bypassed. The header is now only honoured when the connection comes from a reverse proxy on a private address.</li><li><strong>Restricted editors</strong> — AI suggestions, the collection list/detail, <code>/api/info</code> and the quality report no longer expose collections an editor isn't allowed to see. Form-builder configs are admin-only.</li><li><strong>Content API drafts</strong> — with the API enabled but no token set, <code>?status=draft</code> on <code>/orbiter/api/[collection]</code> returned unpublished entries to anyone. Drafts now require a configured, matching token.</li><li><strong>API token hashed</strong> — the optional single <code>api.token</code> is now stored as a SHA-256 hash like API keys (existing plaintext values keep working and migrate on first use).</li><li><strong>Desktop app</strong> — the embedded server only listens on loopback (it was reachable from your LAN), the window is sandboxed, only http(s) links are handed to the OS, and navigation away from the local admin is blocked.</li><li><strong>Smaller fixes</strong> — CSV export works again and neutralises spreadsheet formulas, the login no longer reveals which usernames exist through timing, WordPress media import is covered by the same SSRF protection, and <code>/health</code> no longer exposes the pod path.</li><li><strong>Sessions and public endpoints</strong> — changing a password signs out all other sessions. The public form and analytics endpoints are rate-limited and size-capped, and notification mails are capped. The Content API token is compared in constant time.</li></ul>",
+      "date_published": "2026-10-08T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-security-hardening-pass-3-privately-disclosed-bu",
+      "url": "https://orbiter.sh/changelog/#update-security-hardening-pass-3-privately-disclosed-bu",
+      "title": "Security hardening pass: 3 privately-disclosed bugs fixed, full-repo audit, 0 known dependency vulnerabilities",
+      "summary": "admin@0.3.85 · core@0.3.18 · mcp@0.1.2 · client@0.1.3 · integration@0.3.20 · cli@0.3.13",
+      "content_html": "<p>A researcher privately reported three vulnerabilities in the admin and core packages. All three are fixed and released. Finding them prompted a broader audit of the rest of the codebase, which turned up more of the same pattern — all fixed below, plus a dependency and process cleanup so the next one is easier to report and faster to close.</p><ul><li><strong>Stored XSS</strong> — unescaped field names/IPs in the Inbox, unescaped media filenames and analytics paths from fully unauthenticated endpoints, and the same pattern in <code>apps/demo</code>'s public post/page/event pages. Fixed with consistent escaping (and DOMPurify on the demo frontend) everywhere user- or visitor-supplied text reaches <code>innerHTML</code>.</li><li><strong>Collection permission bypass</strong> — an editor restricted to specific collections could still reach draft content via the singleton endpoint, the terminal CSV/JSON export, search/calendar widgets, comments, and edit-locks. All now enforce the same <code>requireCollectionAccess</code> check as the main entry routes. See the new <a href=\"/docs/permissions\">permissions docs</a>.</li><li><strong>Path traversal</strong> — the local media backend's <code>folder</code> parameter could write outside the configured media directory; the GitHub and S3 backends had the same unvalidated join. All three now resolve and reject anything that would escape the configured root.</li><li><strong>Plaintext API keys</strong> — Bearer tokens for the Public Content API and MCP server were stored and compared in plaintext, inside a <code>.pod</code> file that Orbiter's own <code>orbiter init</code> template commits to git by design. Now hashed (SHA-256, constant-time compare), with transparent migration for already-issued keys.</li><li><strong>Missing/inverted access checks</strong> — <code>api-keys</code> management, schema field rename/delete, and the embeddable-widget endpoint (<code>/api/widget/:collection</code> — inverted logic made it allow-by-default instead of deny-by-default like every other API gate) each had a broken or missing permission check. All fixed.</li><li><strong>Dependency audit</strong> — <code>npm audit</code> went from 40 vulnerabilities to 0: removed an unused, outdated <code>electron-builder</code> devDependency pulling in most of them on its own, bumped nodemailer/sharp/adm-zip/electron to patched versions, and — the big one — <strong>Astro 5 → 7</strong> and <strong>@astrojs/node 9 → 11</strong> across <code>apps/demo</code>, <code>apps/landing</code>, and the <code>orbiter init</code> scaffold template, closing a critical RCE in Astro's AVIF image optimization.</li><li><strong>Process</strong> — new <a href=\"https://github.com/aeon022/orbiter/security/policy\" target=\"_blank\" rel=\"noopener\">SECURITY.md</a>, GitHub private vulnerability reporting and Dependabot security updates turned on for the repo, and a weekly <code>npm audit</code> CI check.</li></ul>",
+      "date_published": "2026-10-01T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-mcp-server-for-ai-agents-public-content-api-json",
+      "url": "https://orbiter.sh/changelog/#update-mcp-server-for-ai-agents-public-content-api-json",
+      "title": "MCP server for AI agents, Public Content API, JSON-LD, API keys",
+      "summary": "mcp@0.1.0 · admin@0.3.81",
+      "content_html": "<p>mcp@0.1.0 · admin@0.3.81</p><ul><li><strong><code>@a83/orbiter-mcp</code></strong> — new MCP server package. <code>list_collections</code>, <code>get_entries</code>, <code>get_entry</code>, <code>search_content</code> tools for Claude Desktop and other MCP clients. stdio for local trusted access, <code>--http</code> for remote (same auth as the Public Content API).</li><li><strong>Public Content API</strong> — <code>/api/public/[collection]</code> read-only JSON endpoints, opt-in per collection, CORS enabled.</li><li><strong>API keys</strong> — generate/revoke Bearer tokens in Settings, optional enforcement on the Public Content API and MCP HTTP transport, hit counters and last-used tracking.</li><li><strong>JSON-LD / schema.org</strong> — <code>BlogPosting</code> and <code>WebSite</code> structured data on published HTML, both themes.</li><li><strong>OpenAPI spec + API discovery</strong> — auto-generated spec and a discovery endpoint listing available collections and auth requirements.</li><li><strong>Admin panel routing fix</strong> — clean extensionless URLs (<code>/login</code>, <code>/dashboard</code>, etc.) now redirect correctly.</li></ul>",
+      "date_published": "2026-08-01T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-team-ready-content-validation-permissions-qualit",
+      "url": "https://orbiter.sh/changelog/#update-team-ready-content-validation-permissions-qualit",
+      "title": "Team-ready: content validation, permissions, quality dashboard, encryption, SvelteKit",
+      "summary": "admin@0.3.78 · cli@0.3.9",
+      "content_html": "<p>admin@0.3.78 · cli@0.3.9</p><ul><li><strong>Content validation</strong> — schema fields support <code>required</code>, <code>min</code>, <code>max</code>, and <code>regex</code>. Drafts always save freely. Publish/Schedule shows an inline error banner. Server enforces the same rules via 422.</li><li><strong>Collection permissions</strong> — restrict editor users to specific collections. Configured per-user in a checkbox modal. Admins are always unrestricted.</li><li><strong>Content quality dashboard</strong> — sidebar panel scans all published entries for missing body, short body, no image, and no SEO metadata. Issue counts at a glance.</li><li><strong>Schema migration</strong> — rename a field including all entry data in one atomic transaction. Also: change-type and delete-field routes.</li><li><strong>Multi-pod dashboard</strong> — link multiple pod files, see published count, collections, size, and last modified across all projects in one page.</li><li><strong><code>orbiter encrypt/decrypt</code></strong> — AES-256-GCM with scrypt key derivation. Commit the <code>.pod.enc</code> to git, decrypt in CI with a secret.</li><li><strong><code>orbiter sync</code></strong> — rsync push/pull in one command. <strong><code>orbiter status</code></strong> — pod health in the terminal.</li><li><strong>SvelteKit support</strong> — <code>@a83/orbiter-client</code> opens the pod directly from any Node.js framework. <strong><code>&lt;OrbiterImage&gt;</code></strong> Astro component with auto lazy, alt, and dimensions.</li></ul>",
+      "date_published": "2026-06-01T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-standard-astro-content-api-static-site-generator",
+      "url": "https://orbiter.sh/changelog/#update-standard-astro-content-api-static-site-generator",
+      "title": "Standard astro:content API, static site generator, AI suggestions, CLI, UI polish",
+      "summary": "Content Layer + Publish HTML + Suggestions v2",
+      "content_html": "<p>Content Layer + Publish HTML + Suggestions v2</p><ul><li><strong>Astro Content Layer</strong> — <code>orbiterLoader()</code> for build-time, <code>orbiterLiveLoader()</code> for SSR. Use <code>getCollection()</code> from <code>astro:content</code> instead of the custom virtual module. Auto Zod schema, hot reload on pod changes.</li><li><strong>Smart Suggestions v2</strong> — multi-section panel with tags, cross-collection related entries, AI SEO title &amp; description, content quality hints, <code>suggestedPrompts</code>. Manual <code>✦ Suggest</code> button grouped with <code>✦ AI</code>.</li><li><strong>Publish HTML</strong> — one-click static site. Two themes: <em>Orbit</em> (modern) and <em>Canvas</em> (editorial whiteboard). Dark mode, responsive, OG tags, reading time.</li><li><strong>CLI</strong> — <code>orbiter publish</code> generates HTML from terminal, <code>orbiter backup</code> creates timestamped pod copy.</li><li><strong>UI polish</strong> — dashboard greeting, live word count, pulsing autosave dot, favicon badge, pod size in sidebar, collection color dots, relative timestamps, shortcut hints.</li></ul>",
+      "date_published": "2026-06-01T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-calendar-view-simple-analytics-cross-pod-copy-an",
+      "url": "https://orbiter.sh/changelog/#update-calendar-view-simple-analytics-cross-pod-copy-an",
+      "title": "Calendar view, Simple Analytics, cross-pod copy & desktop auto-update",
+      "summary": "admin@0.3.74",
+      "content_html": "<p>admin@0.3.74</p><ul><li><strong>Calendar view</strong> — full month-grid page with color-coded entries (scheduled/expiring/published/draft). Click a day to see entries, filter by status, keyboard nav. Dashboard widget with mini calendar + upcoming list.</li><li><strong>Simple Analytics</strong> — privacy-friendly pageview tracking stored in the POD. No cookies, no external scripts, &lt;500 bytes. Bot detection (GPTBot, ClaudeBot, etc). Dashboard with daily chart, top pages, referrers. Human vs. agent traffic split.</li><li><strong>Cross-pod import/export</strong> — export all collections + entries as JSON. Import from a <code>.pod</code> file or JSON export. Collections created automatically, skip or overwrite duplicates.</li><li><strong>Desktop auto-update</strong> — the Electron app downloads new releases from GitHub in the background. Universal macOS DMG (M1 + Intel in one file). One-click backup (<code>⌘⇧S</code>).</li><li><strong>Table field</strong> — mini-spreadsheet as a schema field type. Header row, data rows, add/remove rows and columns, Tab navigation. Stored as <code>string[][]</code>.</li><li><strong>Dashboard widget toggles</strong> — enable/disable Calendar, Recently Edited, Collections, Notes &amp; To-Do in Settings.</li><li><strong>OG Image picker</strong> — media picker modal in the SEO panel instead of a dropdown. Image preview + clear button.</li></ul>",
+      "date_published": "2026-06-01T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-desktop-app-for-macos-and-windows-pick-a-templat",
+      "url": "https://orbiter.sh/changelog/#update-desktop-app-for-macos-and-windows-pick-a-templat",
+      "title": "Desktop App for macOS & Windows — pick a template, start editing.",
+      "summary": "Desktop v0.2.2",
+      "content_html": "<p>Desktop v0.2.2</p><ul><li><strong>Templates on first launch</strong> — choose Blog, Portfolio, Business, or Events. The app creates all collections and fills them with demo content so you can see how everything works right away.</li><li><strong>macOS</strong> — DMG installer, drag to Applications, double-click. Apple Silicon (arm64) and Intel (x64).</li><li><strong>Windows</strong> — NSIS installer wizard, optional install directory. x64.</li><li><strong>Self-contained</strong> — Electron bundles the full admin server. Runs locally, no internet required after install.</li><li><strong>Multi-site switching</strong> — File → Switch POD (<code>⌘O</code>) switches to a different content database and restarts instantly.</li></ul>",
+      "date_published": "2026-06-01T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-station-dock-overhaul-command-palette-keyboard-n",
+      "url": "https://orbiter.sh/changelog/#update-station-dock-overhaul-command-palette-keyboard-n",
+      "title": "Station dock overhaul — command palette, keyboard nav, notification center & more",
+      "summary": "v0.3.47 — New",
+      "content_html": "<p>v0.3.47 — New</p><ul><li><strong>Command palette</strong> — <code>⌘K</code> or <code>/</code> opens a full-screen palette. Opens with recent entries pre-loaded. Type <code>&gt;</code> to enter command mode: <code>&gt; ls</code>, <code>&gt; go</code>, <code>&gt; new</code>, <code>&gt; search</code>, <code>&gt; build</code>, <code>&gt; export</code>, <code>&gt; random</code>, <code>&gt; = expr</code> (math evaluator). Command history with ↑/↓.</li><li><strong>Vim keyboard navigation</strong> — press <code>g</code> then a letter to jump to any page: <code>g d</code> dashboard, <code>g m</code> media, <code>g h</code> HUD, <code>g s</code> settings, <code>g b</code> build, and more. Animated <code>g ›</code> indicator in the status bar while waiting for the second key.</li><li><strong>Notification center</strong> — bell icon in the status bar. Every save, build trigger, and export is logged automatically. Dropdown panel with unread badge, relative timestamps, and clear-all.</li><li><strong>HUD panel expanded</strong> — Drafts section (last 10 drafts, clickable to editor) and Activity feed (last 8 events as a live timeline). Opens with <code>g h</code> or the dock button.</li><li><strong>Zen / focus mode</strong> — <code>⌘⇧F</code> hides the dock and status bar for distraction-free writing. Persists across reloads. Toast hint on enter.</li><li><strong>Shortcut cheatsheet</strong> — <code>?</code> key or <code>?</code> button in the status bar opens a two-column modal with every shortcut and palette command.</li><li><strong>Live build status</strong> — status bar shows <em>◉ building…</em> with a pulse animation while a build is running, polling every 4 seconds until done.</li><li><strong>Breadcrumb in status bar</strong> — when inside a collection, the center shows <em>Collection › Entries</em> with a clickable link back.</li><li><strong>Left dock mode</strong> — toggle dock position between bottom and left side. All popups, overlays, and magnification axis adapt automatically.</li><li><strong>Hover preview cards</strong> — hovering a collection in the dock shows a card with the 3 most recent entries and quick-action buttons (new entry, view all, export).</li></ul>",
+      "date_published": "2026-06-01T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-space-station-mode-multilingual-i18n-settings-ov",
+      "url": "https://orbiter.sh/changelog/#update-space-station-mode-multilingual-i18n-settings-ov",
+      "title": "Space Station mode, multilingual i18n & settings overhaul",
+      "summary": "v0.3.20",
+      "content_html": "<p>v0.3.20</p><ul><li><strong>Space Station mode</strong> — a distinct admin layout: floating magnification dock (macOS-style), HUD status-bar panel with stats and notes, frosted glass page headers with contextual action buttons. Toggle in Settings → Interface → Layout.</li><li><strong>Mobile tab bar</strong> — in Station mode, the dock collapses to a native-feeling bottom tab bar on screens under 768 px. Stats stack to a 2×2 grid; cards resize automatically.</li><li><strong>Multilingual (i18n)</strong> — per-entry locale variants using a dedicated <code>locale</code> column (not slug suffixes). Configure locales in Settings → Language; locale tabs appear in the editor automatically. <code>getLocaleCollection()</code> and <code>getLocaleEntry()</code> in <code>orbiter:collections</code> with automatic fallback to the default locale.</li><li><strong>Settings two-column layout</strong> — settings groups reflow into a responsive two-column grid to reduce scrolling. Save button pinned to the page header and repeated at the bottom.</li></ul>",
+      "date_published": "2026-06-01T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-scheduled-publishing-comments-rss-sitemap-entry",
+      "url": "https://orbiter.sh/changelog/#update-scheduled-publishing-comments-rss-sitemap-entry",
+      "title": "Scheduled publishing, comments, RSS/sitemap, entry locking & email notifications",
+      "summary": "v0.3.14",
+      "content_html": "<p>v0.3.14</p><ul><li><strong>Scheduled publishing</strong> — set a <code>publish_at</code> date on any entry. A server-side scheduler auto-publishes and fires the build webhook. Also supports <code>unpublish_at</code> to revert published entries to draft at a future date.</li><li><strong>Content comments</strong> — per-entry editorial comment thread directly in the editor. Post, resolve/unresolve, and delete comments. Stored in a <code>_comments</code> table, never mixed with entry data.</li><li><strong>RSS feeds & XML sitemap</strong> — <code>/orbiter/rss/[collection].xml</code> and <code>/orbiter/sitemap.xml</code> injected automatically by the integration. No configuration needed.</li><li><strong>Schema export & import</strong> — download any collection's schema as JSON, re-import to another collection or pod. Export/Import buttons in the schema edit panel.</li><li><strong>CSV import & export</strong> — bulk entry management. Export all entries as CSV, import to create or update by slug.</li><li><strong>Entry locking</strong> — when you open an entry, the editor claims a lock. If another user is already editing, a warning banner appears. Lock expires after 90 s without a heartbeat.</li><li><strong>Email notifications</strong> — configure SMTP in Settings. Get an email on publish and/or new comment. Powered by nodemailer, always async.</li><li><strong>Required field validation</strong> — fields marked <code>required</code> in the schema block saves (non-autosave) until filled.</li><li><strong>Image optimization</strong> — uploaded images are resized and compressed automatically via sharp. Max-width and quality configurable per pod in Settings.</li></ul>",
+      "date_published": "2026-06-01T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-trash-activity-log-draft-preview",
+      "url": "https://orbiter.sh/changelog/#update-trash-activity-log-draft-preview",
+      "title": "Trash, activity log & draft preview",
+      "summary": "v0.3.9",
+      "content_html": "<p>v0.3.9</p><ul><li><strong>Trash / soft delete</strong> — deleted entries move to a recoverable Trash tab. Restore to draft or permanently delete. Bulk restore and bulk purge supported.</li><li><strong>Activity log</strong> — every create, update, publish, unpublish, delete, and restore is recorded with the acting user and timestamp. Visible in the editor's meta panel.</li><li><strong>Draft preview</strong> — generate a preview token in Settings → API and attach it to your preview URL. <code>getPreviewEntry()</code> in <code>orbiter:collections</code> reads any draft directly from the pod, bypassing the published-only snapshot.</li><li><strong>Schema field drag-sort</strong> — reorder fields in the schema editor with a drag handle. Order is preserved in the stored schema.</li><li><strong>Rate limiting</strong> — login endpoint is limited to 5 attempts per 15 minutes per IP. Returns 429 with a human-readable message.</li><li><strong>TypeScript types</strong> — <code>orbiter-env.d.ts</code> is auto-generated at build time with per-collection interfaces and typed overloads for all query functions.</li></ul>",
+      "date_published": "2026-05-01T12:00:00Z"
+    },
+    {
+      "id": "https://orbiter.sh/changelog/#update-singletons-drag-sort-editor-blocks-version-displ",
+      "url": "https://orbiter.sh/changelog/#update-singletons-drag-sort-editor-blocks-version-displ",
+      "title": "Singletons, drag-sort, editor blocks & version display",
+      "summary": "v0.3.3",
+      "content_html": "<p>v0.3.3</p><ul><li><strong>Singleton collections</strong> — mark a collection as singleton to skip the entries list and go straight to the one record. Good for site settings, about pages, or any single-document content.</li><li><strong>Drag-to-sort entries</strong> — reorder entries manually with a drag handle. Order persists in the pod and is reflected in <code>getCollection()</code> output.</li><li><strong>Callout blocks</strong> — type <code>/note</code> in the block picker to insert a tinted info/warning box inline with prose.</li><li><strong>Table blocks</strong> — type <code>/tbl</code> for an editable 2×2 table. Tab to navigate cells, toolbar to add/remove rows and columns.</li><li><strong>Boolean field</strong> — on/off toggle field type for schema definitions.</li><li><strong>Preview URL per collection</strong> — set a URL template with <code>&#123;slug&#125;</code> in Schema; an ↗ Preview button appears in the editor topbar.</li><li><strong>Version display</strong> — admin sidebar footer now shows <em>Orbiter vX.Y.Z · pod vN</em> so you always know what's running.</li></ul>",
+      "date_published": "2026-05-01T12:00:00Z"
+    }
+  ]
+}
