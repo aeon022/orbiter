@@ -5,6 +5,7 @@ window.ORB_DE = {
   'Text view': 'Textansicht', 'Editor': 'Editor', 'Normal editor (formatted text, stored as Markdown)': 'Normaler Editor (formatierter Text, gespeichert als Markdown)', 'Markdown source of the text': 'Markdown-Quelltext des Textes', 'Edit the text as HTML (converted back to Markdown)': 'Text als HTML bearbeiten (wird zurück in Markdown umgewandelt)', 'Text source': 'Quelltext',
   'Describe the image (alt text)…': 'Bild beschreiben (Alternativtext)…', 'Search pages or paste an address…': 'Seiten suchen oder Adresse einfügen…', 'Search pages or paste an address': 'Seiten suchen oder Adresse einfügen', 'Use this address': 'Diese Adresse verwenden', 'Type to search, or paste an address (https://…, mailto:…)': 'Tippen zum Suchen oder Adresse einfügen (https://…, mailto:…)', 'Link': 'Link',
   'Vim keys in the Markdown / HTML view': 'Vim-Tasten in der Markdown-/HTML-Ansicht', 'Vim keys': 'Vim-Tasten',
+  'Vim cheat sheet (:help)': 'Vim-Spickzettel (:help)', 'Vim cheat sheet': 'Vim-Spickzettel',
   'Show Markdown marks': 'Markdown-Zeichen anzeigen',
   'Bold (⌘B)': 'Fett (⌘B)', 'Italic (⌘I)': 'Kursiv (⌘I)', 'Heading': 'Überschrift', 'Bullet list': 'Aufzählung', '• List': '• Liste', 'Insert link': 'Link einfügen', 'Formatting': 'Formatierung', 'Preview': 'Vorschau', 'Show / hide preview': 'Vorschau ein-/ausblenden', 'More texts': 'Weitere Texte',
   'Highlight (==text==)': 'Hervorheben, rote Schrift (==Text==)',

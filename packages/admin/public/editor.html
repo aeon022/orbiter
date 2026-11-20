@@ -88,8 +88,31 @@
     .md-hint { padding:4px 12px 7px; }
     .md-hint.warn { color:var(--red); }
     .md-btn:disabled { opacity:.35; cursor:default; }
-    .be-source { display:block; width:100%; min-height:420px; box-sizing:border-box; border:1px solid var(--line); border-radius:8px; background:transparent; color:var(--text); }
+    .be-source { width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:8px; background:var(--bg,transparent); color:var(--text); }
     .be-source textarea { display:block; width:100%; min-height:420px; box-sizing:border-box; border:0; background:transparent; color:var(--text); font:13px/1.8 var(--mono,monospace); padding:14px 16px; resize:vertical; outline:none; }
+    .be-source { position:relative; scroll-margin-top:76px; display:flex; flex-direction:column; }
+    .be-source .cm-content { padding-right:96px !important; }
+    .be-source .cm-editor { flex:1; min-height:0; }
+    .be-source .cm-scroller { overflow:auto; }
+    .be-source textarea { flex:1; }
+    /* Vim command line (: and /) as a floating bar inside the visible part of the editor, never hidden behind the dock */
+    .be-source .cm-panels { position:absolute !important; left:12px; right:12px; bottom:12px; z-index:6; border:1px solid var(--line) !important; border-radius:10px; box-shadow:0 8px 28px rgba(0,0,0,.2); overflow:hidden; background:var(--bg2,#fff) !important; }
+    .be-source .cm-panels-bottom { border-top:0 !important; }
+    .src-mode { position:absolute; right:14px; top:10px; z-index:5; padding:3px 9px; border-radius:99px; font:600 9px/1.4 var(--mono,monospace); letter-spacing:.1em; background:var(--line2,rgba(128,128,128,.18)); color:var(--muted); pointer-events:none; }
+    .src-mode[hidden] { display:none; }
+    .src-mode[data-mode="insert"] { background:var(--red); color:#fff; }
+    .src-mode[data-mode="visual"], .src-mode[data-mode="replace"] { background:var(--text); color:var(--bg2,#fff); }
+    #vim-cheat { position:fixed; inset:0; z-index:1100; display:flex; align-items:center; justify-content:center; background:rgba(10,14,25,.45); backdrop-filter:blur(3px); }
+    #vim-cheat[hidden] { display:none; }
+    .vc-card { width:min(860px, calc(100vw - 32px)); max-height:calc(100vh - 48px); overflow:auto; background:var(--bg2,#fff); color:var(--text); border:1px solid var(--line); border-radius:14px; box-shadow:0 24px 80px rgba(0,0,0,.35); padding:20px 24px; }
+    .vc-head { display:flex; align-items:center; justify-content:space-between; font:500 15px var(--serif,serif); margin-bottom:14px; }
+    .vc-x { background:none; border:0; color:var(--muted); cursor:pointer; font-size:14px; padding:4px 8px; }
+    .vc-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px 28px; }
+    .vc-grid h4 { margin:0 0 6px; font:600 10px var(--mono,monospace); letter-spacing:.12em; text-transform:uppercase; color:var(--red); }
+    .vc-grid dl { margin:0; display:grid; grid-template-columns:auto 1fr; gap:4px 12px; align-items:baseline; }
+    .vc-grid dt { margin:0; } .vc-grid dd { margin:0; font:13px/1.4 var(--serif,serif); color:var(--text); }
+    .vc-grid kbd { font:11px var(--mono,monospace); background:var(--line2,rgba(128,128,128,.15)); border:1px solid var(--line); border-radius:5px; padding:1px 6px; white-space:nowrap; }
+    .vc-foot { margin-top:16px; padding-top:12px; border-top:1px solid var(--line); font:10px var(--mono,monospace); color:var(--muted); letter-spacing:.04em; }
     .be-source .cm-editor { min-height:420px; }
     .be-source textarea[hidden] { display:none; }
     .be-source:focus-within { border-color:var(--text); }
@@ -744,6 +767,7 @@
               <button type="button" class="tool-btn view-btn" id="view-html" data-on-click="setBodyView('html')" title="Edit the text as HTML (converted back to Markdown)" aria-pressed="false" style="font-size:9px;letter-spacing:.04em;">HTML</button>
             </span>
             <button type="button" class="tool-btn" id="vim-toggle" data-on-click="toggleVim()" title="Vim keys in the Markdown / HTML view" aria-label="Vim keys" aria-pressed="false" hidden style="font-size:9px;letter-spacing:.04em;">Vim</button>
+            <button type="button" class="tool-btn" id="vim-help" data-on-click="openVimCheat()" title="Vim cheat sheet (:help)" aria-label="Vim cheat sheet" hidden style="font-size:10px;">?</button>
             <div class="tool-sep"></div>
             <div class="ai-btn-group">
               <button type="button" class="ai-toolbar-btn" data-on-click="openAiPanel()" title="AI Assistant">✦ AI</button>
@@ -2342,7 +2366,17 @@
     let bodyView = 'blocks', srcCM = null, srcLoading = false, srcSetting = false;
     const srcHost = document.createElement('div'); srcHost.id = 'be-source'; srcHost.className = 'be-source'; srcHost.hidden = true;
     const srcTa = document.createElement('textarea'); srcTa.spellcheck = false; srcTa.setAttribute('aria-label', 'Text source'); srcHost.appendChild(srcTa);
+    const srcMode = document.createElement('div'); srcMode.className = 'src-mode'; srcMode.hidden = true; srcMode.setAttribute('aria-live', 'polite'); srcHost.appendChild(srcMode);
     beEditor.after(srcHost);
+    // The source view fills the window above the station dock, so the Vim command line (/ and :) is always on screen
+    function fitSource() {
+      if (srcHost.hidden) return;
+      const dock = document.getElementById('xfce-dock'), r = dock?.getBoundingClientRect();
+      const reserve = r && r.width > innerWidth / 2 && r.top > innerHeight / 2 ? innerHeight - r.top + 14 : 18;
+      const top = Math.max(srcHost.getBoundingClientRect().top, 76);
+      srcHost.style.height = Math.max(300, innerHeight - reserve - top - 8) + 'px';
+    }
+    addEventListener('resize', fitSource);
     const srcGet = () => srcCM ? srcCM.get() : srcTa.value;
     const srcSet = (text, lang) => { srcSetting = true; try { if (srcCM) srcCM.set(text, lang); else srcTa.value = text; } finally { srcSetting = false; } };
     const srcFocus = () => (srcCM || srcTa).focus();
@@ -2353,13 +2387,48 @@
       const done = () => {
         srcLoading = false; if (!window.OrbCM) return;
         srcCM = OrbCM.createSource({ parent: srcHost, doc: srcTa.value, lang: bodyView === 'html' ? 'html' : 'md', vimOn: vimWanted(), onChange: srcChanged,
-          onSave: () => saveEntry(document.getElementById('status-select')?.value ?? 'draft') });
+          onSave: () => saveEntry(document.getElementById('status-select')?.value ?? 'draft'), onMode: showVimMode, onHelp: () => openVimCheat() });
         srcTa.hidden = true; if (bodyView !== 'blocks') srcCM.focus();
       };
       if (window.OrbCM) return done();
       const sc = document.createElement('script'); sc.src = location.pathname.replace(/[^/]*$/, '') + 'vendor/codemirror-md.js'; sc.onload = done; sc.onerror = () => { srcLoading = false; };
       document.head.appendChild(sc);
     }
+    function showVimMode(mode, sub) {
+      const m = !mode ? '' : mode === 'visual' ? (sub === 'linewise' ? 'V-LINE' : sub === 'blockwise' ? 'V-BLOCK' : 'VISUAL') : mode.toUpperCase();
+      srcMode.hidden = !m; srcMode.textContent = m; srcMode.dataset.mode = (mode || '').toLowerCase();
+    }
+    // Vim cheat sheet (also :help). Shown in German when the admin language is German.
+    window.openVimCheat = function() {
+      let de = false; try { de = localStorage.getItem('orb_lang') === 'de'; } catch {}
+      const T = de ? {
+        title: 'Vim-Spickzettel', close: 'Schließen', foot: ':w oder ⌘S speichert · :help öffnet diesen Zettel · Esc geht zurück in den Normalmodus',
+        sec: [
+          ['Modi', [['Esc', 'Normalmodus'], ['i  a', 'einfügen vor / nach dem Cursor'], ['I  A', 'einfügen am Zeilenanfang / -ende'], ['o  O', 'neue Zeile unter / über'], ['v  V', 'markieren (Zeichen / Zeile)'], ['Ctrl-v', 'Block markieren']]],
+          ['Bewegen', [['h j k l', 'links, runter, hoch, rechts'], ['w  b  e', 'Wort vor, zurück, Wortende'], ['0  ^  $', 'Zeilenanfang, erstes Zeichen, Zeilenende'], ['gg  G', 'Textanfang / Textende'], ['{  }', 'Absatz zurück / vor'], ['Ctrl-d  Ctrl-u', 'halbe Seite runter / hoch'], ['%', 'zur passenden Klammer']]],
+          ['Ändern', [['x', 'Zeichen löschen'], ['dd  D', 'Zeile / Rest der Zeile löschen'], ['dw  cw', 'Wort löschen / ändern'], ['ciw', 'Wort unter dem Cursor ändern'], ['yy  p  P', 'Zeile kopieren, danach / davor einfügen'], ['u  Ctrl-r', 'rückgängig / wiederholen'], ['.', 'letzte Änderung wiederholen'], ['J', 'Zeilen zusammenfügen'], ['~', 'Groß-/Kleinschreibung'], ['>>  <<', 'einrücken / ausrücken']]],
+          ['Suchen', [['/text', 'vorwärts suchen (Enter)'], ['n  N', 'nächster / voriger Treffer'], ['*  #', 'Wort unter dem Cursor suchen'], [':%s/alt/neu/g', 'überall ersetzen'], [':noh', 'Markierung der Treffer aufheben']]],
+          ['Markdown', [['I##␣ Esc', 'Zeile zur Überschrift machen (␣ = Leerzeichen)'], ['ea** Esc bi** Esc', 'Wort unter dem Cursor fett machen'], ['A  Enter', 'neuer Absatz nach der Zeile'], ['dap', 'ganzen Absatz löschen'], ['yap  p', 'Absatz duplizieren']]],
+        ] } : {
+        title: 'Vim cheat sheet', close: 'Close', foot: ':w or ⌘S saves · :help opens this sheet · Esc returns to normal mode',
+        sec: [
+          ['Modes', [['Esc', 'normal mode'], ['i  a', 'insert before / after the cursor'], ['I  A', 'insert at line start / end'], ['o  O', 'new line below / above'], ['v  V', 'select (characters / lines)'], ['Ctrl-v', 'select a block']]],
+          ['Move', [['h j k l', 'left, down, up, right'], ['w  b  e', 'word forward, back, word end'], ['0  ^  $', 'line start, first character, line end'], ['gg  G', 'top / bottom of the text'], ['{  }', 'paragraph back / forward'], ['Ctrl-d  Ctrl-u', 'half a page down / up'], ['%', 'jump to the matching bracket']]],
+          ['Edit', [['x', 'delete a character'], ['dd  D', 'delete the line / the rest of the line'], ['dw  cw', 'delete / change a word'], ['ciw', 'change the word under the cursor'], ['yy  p  P', 'copy the line, paste after / before'], ['u  Ctrl-r', 'undo / redo'], ['.', 'repeat the last change'], ['J', 'join lines'], ['~', 'toggle case'], ['>>  <<', 'indent / outdent']]],
+          ['Search', [['/text', 'search forward (Enter)'], ['n  N', 'next / previous match'], ['*  #', 'search the word under the cursor'], [':%s/old/new/g', 'replace everywhere'], [':noh', 'clear the match highlight']]],
+          ['Markdown', [['I##␣ Esc', 'turn the line into a heading (␣ = space)'], ['ea** Esc bi** Esc', 'make the word under the cursor bold'], ['A  Enter', 'new paragraph after the line'], ['dap', 'delete the whole paragraph'], ['yap  p', 'duplicate a paragraph']]],
+        ] };
+      let box = document.getElementById('vim-cheat');
+      if (!box) { box = document.createElement('div'); box.id = 'vim-cheat'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true'); document.body.appendChild(box);
+        box.addEventListener('mousedown', (e) => { if (e.target === box) closeVimCheat(); }); }
+      box.innerHTML = `<div class="vc-card"><div class="vc-head"><strong>${escHtml(T.title)}</strong><button type="button" class="vc-x" aria-label="${escHtml(T.close)}">✕</button></div>
+        <div class="vc-grid">${T.sec.map(([h, rows]) => `<section><h4>${escHtml(h)}</h4><dl>${rows.map(([k, d]) => `<dt><kbd>${escHtml(k)}</kbd></dt><dd>${escHtml(d)}</dd>`).join('')}</dl></section>`).join('')}</div>
+        <div class="vc-foot">${escHtml(T.foot)}</div></div>`;
+      box.querySelector('.vc-x').addEventListener('click', closeVimCheat);
+      box.hidden = false; box.querySelector('.vc-x').focus();
+    };
+    function closeVimCheat() { const b = document.getElementById('vim-cheat'); if (b) b.hidden = true; if (bodyView !== 'blocks') srcFocus(); }
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.getElementById('vim-cheat') && !document.getElementById('vim-cheat').hidden) { e.preventDefault(); e.stopPropagation(); closeVimCheat(); } }, true);
     window.toggleVim = function(force) {
       const on = typeof force === 'boolean' ? force : !vimWanted();
       try { localStorage.setItem('orb_vim', on ? '1' : '0'); } catch {}
@@ -2377,6 +2446,8 @@
       bodyInput.value = md; updateWc();
       ['blocks', 'md', 'html'].forEach(k => { const b = document.getElementById('view-' + k); if (b) { b.classList.toggle('active', k === v); b.setAttribute('aria-pressed', String(k === v)); } });
       const vb = document.getElementById('vim-toggle'); if (vb) { vb.hidden = v === 'blocks'; vb.classList.toggle('active', vimWanted()); vb.setAttribute('aria-pressed', String(vimWanted())); }
+      const hb = document.getElementById('vim-help'); if (hb) hb.hidden = v === 'blocks';
+      if (v !== 'blocks') { srcHost.style.height = '300px'; srcHost.scrollIntoView({ block: 'start' }); fitSource(); setTimeout(fitSource, 250); }
       try { localStorage.setItem('orb_body_view', v); } catch {}
       if (v !== 'blocks') srcFocus();
     };

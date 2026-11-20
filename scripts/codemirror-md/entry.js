@@ -7,7 +7,7 @@ import { markdown } from '@codemirror/lang-markdown';
 import { html } from '@codemirror/lang-html';
 import { syntaxHighlighting, HighlightStyle } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
-import { vim, Vim } from '@replit/codemirror-vim';
+import { vim, Vim, getCM } from '@replit/codemirror-vim';
 
 const theme = EditorView.theme({
   '&': { color: 'var(--text)', backgroundColor: 'transparent', fontSize: '13px' },
@@ -30,7 +30,7 @@ const colours = HighlightStyle.define([
   { tag: t.comment, color: 'var(--muted)', fontStyle: 'italic' },
 ]);
 
-export function createSource({ parent, doc = '', lang = 'md', vimOn = false, onChange, onSave }) {
+export function createSource({ parent, doc = '', lang = 'md', vimOn = false, onChange, onSave, onMode, onHelp }) {
   const langC = new Compartment(), vimC = new Compartment();
   const langExt = (l) => (l === 'html' ? html() : markdown());
   const view = new EditorView({
@@ -48,11 +48,21 @@ export function createSource({ parent, doc = '', lang = 'md', vimOn = false, onC
     }),
   });
   Vim.defineEx('write', 'w', () => onSave?.());
+  Vim.defineEx('help', 'h', () => onHelp?.());
+  Vim.defineEx('cheat', 'cheat', () => onHelp?.());
+  // mode indicator (NORMAL / INSERT / VISUAL / REPLACE) for the host page
+  const hook = (on) => {
+    const cm = on ? getCM(view) : null;
+    if (cm && !cm.__orbHook) { cm.__orbHook = true; cm.on('vim-mode-change', (e) => { if (vimState.on) onMode?.(e.mode, e.subMode); }); }
+    onMode?.(on ? 'normal' : '');
+  };
+  const vimState = { on: vimOn };
+  if (vimOn) queueMicrotask(() => hook(true));
   return {
     get: () => view.state.doc.toString(),
     set: (text, l) => { view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } }); if (l) view.dispatch({ effects: langC.reconfigure(langExt(l)) }); },
     setLang: (l) => view.dispatch({ effects: langC.reconfigure(langExt(l)) }),
-    setVim: (on) => view.dispatch({ effects: vimC.reconfigure(on ? vim() : []) }),
+    setVim: (on) => { vimState.on = on; view.dispatch({ effects: vimC.reconfigure(on ? vim() : []) }); hook(on); },
     // wrap / unwrap the selection (or insert an empty pair) in Markdown marks: ** _ == `
     wrap: (mark) => { const n = mark.length; view.dispatch(view.state.changeByRange((r) => { const sel = view.state.sliceDoc(r.from, r.to);
       if (sel.length >= 2 * n && sel.startsWith(mark) && sel.endsWith(mark)) return { changes: { from: r.from, to: r.to, insert: sel.slice(n, -n) }, range: EditorSelection.range(r.from, r.to - 2 * n) };
