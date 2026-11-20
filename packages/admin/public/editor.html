@@ -1448,7 +1448,7 @@
             const md = [...dest.querySelectorAll('.meta-field')].filter(f => f.querySelector('.md-field'));
             const host = document.getElementById('be-editor');
             if (md.length && host) {
-              const wrap = document.createElement('section'); wrap.className = 'md-below'; wrap.setAttribute('aria-label', 'Weitere Texte');
+              const wrap = document.createElement('section'); wrap.className = 'md-below'; wrap.setAttribute('aria-label', 'More texts');
               md.forEach(f => wrap.appendChild(f)); host.after(wrap);
             }
           }
@@ -2714,10 +2714,10 @@
     function mdFieldHtml(key, val) {
       const b = (cmd, label, title) => `<button type="button" class="md-btn" data-md="${cmd}" title="${title}" aria-label="${title}">${label}</button>`;
       return `<div class="md-field" data-md-field="${key}">
-        <div class="md-bar" role="toolbar" aria-label="Formatierung">
-          ${b('bold','<b>B</b>','Fett (⌘B)')}${b('italic','<i>I</i>','Kursiv (⌘I)')}${b('mark','<span style="color:var(--red);font-weight:700">H</span>','Hervorheben (==Text==)')}${b('h3','H3','Überschrift')}${b('ul','•&nbsp;Liste','Aufzählung')}${b('link','Link','Link einfügen')}
+        <div class="md-bar" role="toolbar" aria-label="Formatting">
+          ${b('bold','<b>B</b>','Bold (⌘B)')}${b('italic','<i>I</i>','Italic (⌘I)')}${b('mark','<span style="color:var(--red);font-weight:700">H</span>','Highlight (==text==)')}${b('h3','H3','Heading')}${b('ul','• List','Bullet list')}${b('link','Link','Insert link')}
           <span class="md-sp"></span>
-          <button type="button" class="md-btn md-prev" data-md="preview" aria-pressed="false" title="Vorschau ein-/ausblenden">Vorschau</button>
+          <button type="button" class="md-btn md-prev" data-md="preview" aria-pressed="false" title="Show / hide preview">Preview</button>
         </div>
         <textarea class="field-input md-ta" name="${key}" rows="8">${escHtml(val??'')}</textarea>
         <div class="md-view" hidden></div>
@@ -2743,7 +2743,7 @@
         renderer(t) { return '<mark>' + this.parser.parseInline(t.tokens) + '</mark>'; } }] }); }
       const doc=new DOMParser().parseFromString(marked.parse(src||''),'text/html');
       const OK=new Set(['A','B','BLOCKQUOTE','BR','CODE','DEL','EM','H1','H2','H3','H4','H5','H6','HR','I','IMG','LI','MARK','OL','P','PRE','STRONG','SUB','SUP','TABLE','TBODY','TD','TH','THEAD','TR','UL','BODY']);
-      const walk=(n)=>{ [...n.children].forEach(c=>{ if(!OK.has(c.tagName)){c.remove();return;} [...c.attributes].forEach(at=>{ const k=at.name.toLowerCase(); if(!(k==='href'||k==='src'||k==='alt'||k==='title')||/^\s*(javascript|data|vbscript):/i.test(at.value)) c.removeAttribute(at.name); }); walk(c); }); };
+      const walk=(n)=>{ [...n.children].forEach(c=>{ if(!OK.has(c.tagName)){c.remove();return;} [...c.attributes].forEach(at=>{ const k=at.name.toLowerCase(); if(!(k==='href'||k==='src'||k==='alt'||k==='title')||/^(javascript|data|vbscript):/i.test(at.value.replace(/[\u0000- ]/g,''))) c.removeAttribute(at.name); }); walk(c); }); };
       walk(doc.body); return doc.body.innerHTML;
     }
     document.addEventListener('click', (e) => {

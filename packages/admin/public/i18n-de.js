@@ -1,6 +1,7 @@
 // German interface strings for the Orbiter / Lander admin. Key = the English text exactly as it appears in the UI.
 // Missing keys stay English. Extend by adding lines; i18n.js does the matching.
 window.ORB_DE = {
+  'Bold (⌘B)': 'Fett (⌘B)', 'Italic (⌘I)': 'Kursiv (⌘I)', 'Heading': 'Überschrift', 'Bullet list': 'Aufzählung', '• List': '• Liste', 'Insert link': 'Link einfügen', 'Formatting': 'Formatierung', 'Preview': 'Vorschau', 'Show / hide preview': 'Vorschau ein-/ausblenden', 'More texts': 'Weitere Texte',
   'Highlight (==text==)': 'Hervorheben, rote Schrift (==Text==)',
  // security notice (dashboard)
   'Help': 'Hilfe', 'Turn on two-factor sign-in': 'Zwei-Faktor-Anmeldung einschalten',

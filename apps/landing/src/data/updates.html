@@ -1,8 +1,21 @@
+      <div class="update-card" id="update-markdown-fields" data-date="2026-11-20">
+        <div class="update-date">Nov<br />2026</div>
+        <div class="update-dot"></div>
+        <div class="update-body">
+          <div class="update-tag">admin@0.3.116 · lander@0.7.9 — Latest</div>
+          <div class="update-title">Markdown text fields</div>
+          <ul class="update-items">
+            <li><strong>Rich text as an extra field is Markdown now.</strong> A <code>richtext</code> field that is not the main body used to be a bare textarea (people saw raw HTML). It now has a small toolbar (bold, italic, highlight, heading, list, link) and a preview toggle, and sits below the body so the writing stays together. Facts like dates and places stay in the Details card above.</li>
+            <li><strong>Escaped asterisks and underscores.</strong> The block editor writes <code>Künstler\*innen</code> instead of a bare asterisk, so two of them in one paragraph can no longer turn the text between them italic.</li>
+          </ul>
+        </div>
+      </div>
+
       <div class="update-card" id="update-highlight" data-date="2026-11-19">
         <div class="update-date">Nov<br />2026</div>
         <div class="update-dot"></div>
         <div class="update-body">
-          <div class="update-tag">admin@0.3.115 · lander@0.7.8 — Latest</div>
+          <div class="update-tag">admin@0.3.115 · lander@0.7.8</div>
           <div class="update-title">Highlight button in the editor</div>
           <ul class="update-items">
             <li><strong>Highlight.</strong> A new <em>A</em> button in the editor toolbar wraps the selected text in <code>==text==</code> (shown red in the editor and the preview); click again to take it off. It works in the block editor and in Markdown text fields such as <em>Öffnungszeiten</em>. Sites decide how <code>==text==</code> looks; your own site needs a rule for it (for example a <code>mark</code> style).</li>
