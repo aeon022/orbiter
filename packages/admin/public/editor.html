@@ -88,9 +88,12 @@
     .md-hint { padding:4px 12px 7px; }
     .md-hint.warn { color:var(--red); }
     .md-btn:disabled { opacity:.35; cursor:default; }
-    .be-source { display:block; width:100%; min-height:420px; box-sizing:border-box; border:1px solid var(--line); border-radius:8px; background:transparent; color:var(--text); font:13px/1.8 var(--mono,monospace); padding:14px 16px; resize:vertical; }
-    .be-source:focus { outline:none; border-color:var(--text); }
-    .be-source[hidden], .be-editor[hidden] { display:none; }
+    .be-source { display:block; width:100%; min-height:420px; box-sizing:border-box; border:1px solid var(--line); border-radius:8px; background:transparent; color:var(--text); }
+    .be-source textarea { display:block; width:100%; min-height:420px; box-sizing:border-box; border:0; background:transparent; color:var(--text); font:13px/1.8 var(--mono,monospace); padding:14px 16px; resize:vertical; outline:none; }
+    .be-source .cm-editor { min-height:420px; }
+    .be-source textarea[hidden] { display:none; }
+    .be-source:focus-within { border-color:var(--text); }
+    .be-source[hidden], .be-editor[hidden], .tool-btn[hidden] { display:none; }
     .view-btn.active { background:var(--text); color:var(--bg2,#fff); }
     .be-img-cap:placeholder-shown { border-bottom:1px solid var(--red) !important; }
     .be-img-cap:placeholder-shown::placeholder { color:var(--red); opacity:.8; }
@@ -740,6 +743,7 @@
               <button type="button" class="tool-btn view-btn" id="view-md" data-on-click="setBodyView('md')" title="Markdown source of the text" aria-pressed="false" style="font-size:9px;letter-spacing:.04em;">MD</button>
               <button type="button" class="tool-btn view-btn" id="view-html" data-on-click="setBodyView('html')" title="Edit the text as HTML (converted back to Markdown)" aria-pressed="false" style="font-size:9px;letter-spacing:.04em;">HTML</button>
             </span>
+            <button type="button" class="tool-btn" id="vim-toggle" data-on-click="toggleVim()" title="Vim keys in the Markdown / HTML view" aria-label="Vim keys" aria-pressed="false" hidden style="font-size:9px;letter-spacing:.04em;">Vim</button>
             <div class="tool-sep"></div>
             <div class="ai-btn-group">
               <button type="button" class="ai-toolbar-btn" data-on-click="openAiPanel()" title="AI Assistant">✦ AI</button>
@@ -2333,24 +2337,50 @@
         .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&nbsp;/g,' ');
     }
 
-    // Text view: blocks (default), Markdown source, or HTML source. The Markdown in #body-input stays the single source of truth.
-    let bodyView = 'blocks';
-    const srcTa = document.createElement('textarea'); srcTa.id = 'be-source'; srcTa.className = 'be-source'; srcTa.spellcheck = false; srcTa.hidden = true; srcTa.setAttribute('aria-label', 'Text source');
-    beEditor.after(srcTa);
+    // Text view: Editor (default), Markdown source, or HTML source. The Markdown in #body-input stays the single source of truth.
+    // The source views use CodeMirror 6 (loaded on demand from vendor/, with an optional Vim mode); a plain textarea is the fallback.
+    let bodyView = 'blocks', srcCM = null, srcLoading = false, srcSetting = false;
+    const srcHost = document.createElement('div'); srcHost.id = 'be-source'; srcHost.className = 'be-source'; srcHost.hidden = true;
+    const srcTa = document.createElement('textarea'); srcTa.spellcheck = false; srcTa.setAttribute('aria-label', 'Text source'); srcHost.appendChild(srcTa);
+    beEditor.after(srcHost);
+    const srcGet = () => srcCM ? srcCM.get() : srcTa.value;
+    const srcSet = (text, lang) => { srcSetting = true; try { if (srcCM) srcCM.set(text, lang); else srcTa.value = text; } finally { srcSetting = false; } };
+    const srcFocus = () => (srcCM || srcTa).focus();
+    const vimWanted = () => { try { return localStorage.getItem('orb_vim') === '1'; } catch { return false; } };
+    function srcChanged(text) { if (srcSetting) return; bodyInput.value = bodyView === 'md' ? text : htmlToMarkdown(text); updateWc(); scheduleAutosave(); updatePreview(); }
+    function loadSourceEditor() {
+      if (srcCM || srcLoading) return; srcLoading = true;
+      const done = () => {
+        srcLoading = false; if (!window.OrbCM) return;
+        srcCM = OrbCM.createSource({ parent: srcHost, doc: srcTa.value, lang: bodyView === 'html' ? 'html' : 'md', vimOn: vimWanted(), onChange: srcChanged,
+          onSave: () => saveEntry(document.getElementById('status-select')?.value ?? 'draft') });
+        srcTa.hidden = true; if (bodyView !== 'blocks') srcCM.focus();
+      };
+      if (window.OrbCM) return done();
+      const sc = document.createElement('script'); sc.src = location.pathname.replace(/[^/]*$/, '') + 'vendor/codemirror-md.js'; sc.onload = done; sc.onerror = () => { srcLoading = false; };
+      document.head.appendChild(sc);
+    }
+    window.toggleVim = function(force) {
+      const on = typeof force === 'boolean' ? force : !vimWanted();
+      try { localStorage.setItem('orb_vim', on ? '1' : '0'); } catch {}
+      srcCM?.setVim(on);
+      const b = document.getElementById('vim-toggle'); if (b) { b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on)); }
+      if (bodyView !== 'blocks') srcFocus();
+    };
     window.setBodyView = function(v) {
       if (v === bodyView) return;
       let md;
-      if (bodyView === 'blocks') { syncToHidden(); md = bodyInput.value; } else if (bodyView === 'md') md = srcTa.value; else md = htmlToMarkdown(srcTa.value);
+      if (bodyView === 'blocks') { syncToHidden(); md = bodyInput.value; } else if (bodyView === 'md') md = srcGet(); else md = htmlToMarkdown(srcGet());
       bodyView = v;
-      if (v === 'blocks') parseMd(md); else srcTa.value = v === 'md' ? md : mdToHtml(md);
-      srcTa.classList.toggle('html', v === 'html');
-      beEditor.hidden = v !== 'blocks'; srcTa.hidden = v === 'blocks';
+      if (v === 'blocks') parseMd(md); else { srcSet(v === 'md' ? md : mdToHtml(md), v === 'html' ? 'html' : 'md'); loadSourceEditor(); }
+      beEditor.hidden = v !== 'blocks'; srcHost.hidden = v === 'blocks';
       bodyInput.value = md; updateWc();
       ['blocks', 'md', 'html'].forEach(k => { const b = document.getElementById('view-' + k); if (b) { b.classList.toggle('active', k === v); b.setAttribute('aria-pressed', String(k === v)); } });
+      const vb = document.getElementById('vim-toggle'); if (vb) { vb.hidden = v === 'blocks'; vb.classList.toggle('active', vimWanted()); vb.setAttribute('aria-pressed', String(vimWanted())); }
       try { localStorage.setItem('orb_body_view', v); } catch {}
-      if (v !== 'blocks') srcTa.focus();
+      if (v !== 'blocks') srcFocus();
     };
-    srcTa.addEventListener('input', () => { bodyInput.value = bodyView === 'md' ? srcTa.value : htmlToMarkdown(srcTa.value); updateWc(); scheduleAutosave(); updatePreview(); });
+    srcTa.addEventListener('input', () => srcChanged(srcTa.value));
 
     function serialize() {
       if (bodyView !== 'blocks') return bodyInput.value;
@@ -2576,9 +2606,8 @@
     window.beCmd = function(cmd) {
       if (bodyView !== 'blocks') {   // in the Markdown view the toolbar edits the source; in the HTML view it does nothing
         if (bodyView === 'md') {
-          srcTa.focus();
-          if (cmd==='bold') mdWrap(srcTa,'**'); else if (cmd==='italic') mdWrap(srcTa,'_'); else if (cmd==='mark') mdWrap(srcTa,'=='); else if (cmd==='code') mdWrap(srcTa,'`'); else return;
-          srcTa.dispatchEvent(new Event('input',{bubbles:true}));
+          const mk = cmd==='bold' ? '**' : cmd==='italic' ? '_' : cmd==='mark' ? '==' : cmd==='code' ? '`' : '';
+          if (mk) { if (srcCM) srcCM.wrap(mk); else { srcTa.focus(); mdWrap(srcTa, mk); srcTa.dispatchEvent(new Event('input',{bubbles:true})); } }
         }
         return;
       }
