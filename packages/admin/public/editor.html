@@ -82,6 +82,7 @@
     .be-block[data-type="raw"] { padding:10px 14px; border-radius:6px; background:var(--line2,rgba(128,128,128,.12)); cursor:default; }
     .be-block[data-type="raw"] .be-raw { display:block; white-space:pre-wrap; word-break:break-all; font:11px/1.6 var(--mono,monospace); color:var(--muted); background:none; padding:0; }
     .be-block[data-type="raw"]::after { content:'HTML'; position:absolute; right:10px; top:6px; font:500 9px var(--mono,monospace); letter-spacing:.1em; color:var(--muted); }
+    .be-editor a[data-file="pdf"]::before { content:'PDF'; display:inline-block; margin-right:.5em; padding:0 .4em; border-radius:3px; background:var(--red); color:#fff; font:700 .6em/1.9 var(--mono,monospace); letter-spacing:.06em; vertical-align:.15em; }
     .md-below { margin:36px 0 64px; padding-top:22px; border-top:1px solid var(--line); }
     .md-below .meta-field { margin-bottom:18px; }
     .md-hint { margin:4px 2px 0; font:400 10px/1.4 var(--mono,monospace); color:var(--muted); }
@@ -520,10 +521,13 @@
     .be-block[data-type="video"].vid-sel .be-vid-url { border-color:var(--line2); }
     /* File download block */
     .be-block[data-type="file"] { padding:4px 0; }
-    .be-file-block { display:inline-flex; align-items:center; gap:8px; background:var(--bg2); border:1px solid var(--line); border-radius:6px; padding:7px 12px; cursor:default; max-width:100%; }
-    .be-file-icon { font-size:14px; flex-shrink:0; }
-    .be-file-name { font-size:11px; font-family:var(--mono); color:var(--text); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:320px; }
-    .be-file-del { background:none; border:none; color:var(--muted); cursor:pointer; font-size:11px; padding:0 4px; flex-shrink:0; line-height:1; }
+    .be-file-block { display:flex; align-items:center; gap:14px; background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:10px 14px; cursor:default; max-width:440px; transition:border-color .2s; }
+    .be-file-block:hover { border-color:var(--text); }
+    .be-file-icon { flex:none; color:var(--muted); display:flex; }
+    .be-file-text { display:flex; flex-direction:column; gap:2px; min-width:0; flex:1; }
+    .be-file-name { font-size:14px; font-family:var(--serif); color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .be-file-meta { font-size:9px; font-family:var(--mono); letter-spacing:.08em; color:var(--muted); text-transform:uppercase; }
+    .be-file-del { background:none; border:none; color:var(--muted); cursor:pointer; font-size:11px; padding:4px 6px; flex-shrink:0; line-height:1; }
     .be-file-del:hover { color:#e05; }
     /* File picker list (inside img-pick-sheet Files tab) */
     .file-pick-item { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:5px; cursor:pointer; transition:background .12s; }
@@ -2267,8 +2271,8 @@
     function inlineMd(text) {
       const esc = [];   // \* \_ … : Backslash-Maskierung (z. B. Künstler\*innen) bleibt als Zeichen stehen
       text = text.replace(/\\([\\*_`=\[\]])/g, (_,c) => { esc.push(c); return `\x01${esc.length-1}\x01`; });
-      const hrefs = [];   // [text](url) → <a href="url">text</a>; the url is kept out of the bold/italic handling
-      text = text.replace(/\[([^\[\]]+)\]\(([^()\s]+)\)/g, (_,t,u) => { hrefs.push(u); return `\x02${hrefs.length-1}\x02${t}\x03`; });
+      const hrefs = [], pdfs = [];   // [text](url) → <a href="url">text</a>; the url is kept out of the bold/italic handling
+      text = text.replace(/\[([^\[\]]+)\]\(([^()\s]+)\)/g, (_,t,u) => { hrefs.push(u); pdfs.push(/\bpdf\b/i.test(t) || /\.pdf($|[?#])/i.test(u)); return `\x02${hrefs.length-1}\x02${t}\x03`; });
       const wls = [];
       text = text.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, (_,t,h) => { wls.push(wlSpan(t,h)); return `\x00${wls.length-1}\x00`; });
       let r = text
@@ -2279,7 +2283,7 @@
         .replace(/_(.+?)_/g,'<em>$1</em>')
         .replace(/`(.+?)`/g,'<code>$1</code>')
         .replace(/==([^=\n]+?)==/g,'<mark>$1</mark>');
-      return r.replace(/\x00(\d+)\x00/g, (_,i) => wls[+i]).replace(/\x02(\d+)\x02/g, (_,i) => `<a href="${hrefs[+i].replace(/&/g,'&amp;').replace(/"/g,'&quot;')}">`).replace(/\x03/g, '</a>').replace(/\x01(\d+)\x01/g, (_,i) => esc[+i]);
+      return r.replace(/\x00(\d+)\x00/g, (_,i) => wls[+i]).replace(/\x02(\d+)\x02/g, (_,i) => `<a href="${hrefs[+i].replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"${pdfs[+i] ? ' data-file="pdf"' : ''}>`).replace(/\x03/g, '</a>').replace(/\x01(\d+)\x01/g, (_,i) => esc[+i]);
     }
 
     function htmlToMd(html) {
@@ -2392,15 +2396,20 @@
       return el;
     }
 
+    function fileIconSvg(ext) {
+      const e = (ext || 'file').slice(0, 4).toUpperCase(), c = e === 'PDF' ? 'var(--red)' : 'var(--muted)';
+      return `<svg class="be-file-svg" viewBox="0 0 36 44" width="30" height="37" aria-hidden="true"><path d="M4 1.5h19l11 11V40a2.5 2.5 0 0 1-2.5 2.5h-27A2.5 2.5 0 0 1 2 40V4A2.5 2.5 0 0 1 4 1.5z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M23 1.5v11h11" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="2" y="24" width="${e.length>3?32:30}" height="12" rx="1.5" fill="${c}"/><text x="${e.length>3?18:17}" y="33" font-size="8" font-weight="700" text-anchor="middle" fill="#fff" font-family="ui-monospace,monospace">${escHtml(e)}</text></svg>`;
+    }
     function createFileBlock(mediaId, filename) {
       const el = document.createElement('div');
       el.className='be-block'; el.dataset.type='file';
       el.dataset.mediaId=mediaId; el.dataset.filename=filename;
       el.contentEditable='false';
+      const dot = String(filename).lastIndexOf('.'), ext = dot > 0 ? String(filename).slice(dot + 1) : '', base = dot > 0 ? String(filename).slice(0, dot) : String(filename);
       el.innerHTML=`<div class="be-file-block">
-        <span class="be-file-icon">📎</span>
-        <span class="be-file-name">${escHtml(filename)}</span>
-        <button class="be-file-del" data-on-click="fileBlockDelete(this)" title="Remove">✕</button>
+        <span class="be-file-icon">${fileIconSvg(ext)}</span>
+        <span class="be-file-text"><span class="be-file-name">${escHtml(base)}</span><span class="be-file-meta">${escHtml(ext ? ext.toUpperCase() : 'File')} · download</span></span>
+        <button class="be-file-del" data-on-click="fileBlockDelete(this)" title="Remove" aria-label="Remove">✕</button>
       </div>`;
       return el;
     }
