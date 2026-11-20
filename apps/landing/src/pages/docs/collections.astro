@@ -18,7 +18,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
   <thead><tr><th>Type</th><th>Input</th><th>Stored as</th></tr></thead>
   <tbody>
     <tr><td><code>string</code></td><td>Single-line text</td><td>TEXT</td></tr>
-    <tr><td><code>richtext</code></td><td>Block editor — Markdown output</td><td>TEXT (Markdown)</td></tr>
+    <tr><td><code>richtext</code></td><td>The <code>body</code> field: block editor. Any other richtext field: Markdown field with toolbar and preview</td><td>TEXT (Markdown)</td></tr>
     <tr><td><code>number</code></td><td>Numeric input</td><td>TEXT</td></tr>
     <tr><td><code>url</code></td><td>URL with validation</td><td>TEXT</td></tr>
     <tr><td><code>email</code></td><td>Email with validation</td><td>TEXT</td></tr>
@@ -92,7 +92,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
   updated_at: '2025-06-01 09:15:00',
   data: &#123;
     title:  'My first post',
-    body:   '&lt;p&gt;...&lt;/p&gt;',       // richtext → rendered HTML
+    body:   '## Heading\n\nText…',     // richtext → Markdown (render it in your front end)
     image:  '3fa85f64-...',      // media UUID
     author: &#123; ... &#125;,            // resolved Entry object (relation)
     tags:   ['astro', 'cms'],    // array field

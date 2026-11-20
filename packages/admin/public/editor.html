@@ -2330,7 +2330,7 @@
       const esc = [];   // \* \_ … : Backslash-Maskierung (z. B. Künstler\*innen) bleibt als Zeichen stehen
       text = text.replace(/\\([\\*_`=\[\]])/g, (_,c) => { esc.push(c); return `\x01${esc.length-1}\x01`; });
       const hrefs = [], pdfs = [];   // [text](url) → <a href="url">text</a>; the url is kept out of the bold/italic handling
-      text = text.replace(/\[([^\[\]]+)\]\(([^()\s]+)\)/g, (_,t,u) => { hrefs.push(u); pdfs.push(/\bpdf\b/i.test(t) || /\.pdf($|[?#])/i.test(u)); return `\x02${hrefs.length-1}\x02${t}\x03`; });
+      text = text.replace(/\[([^\[\]]+)\]\(([^()\s]+)\)/g, (_,t,u) => { if (/^(javascript|data|vbscript):/i.test(u.replace(/[\u0000-\u0020]/g,''))) u = '#'; hrefs.push(u); pdfs.push(/\bpdf\b/i.test(t) || /\.pdf($|[?#])/i.test(u)); return `\x02${hrefs.length-1}\x02${t}\x03`; });
       const wls = [];
       text = text.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, (_,t,h) => { wls.push(wlSpan(t,h)); return `\x00${wls.length-1}\x00`; });
       let r = text
@@ -2381,7 +2381,7 @@
     const srcSet = (text, lang) => { srcSetting = true; try { if (srcCM) srcCM.set(text, lang); else srcTa.value = text; } finally { srcSetting = false; } };
     const srcFocus = () => (srcCM || srcTa).focus();
     const vimWanted = () => { try { return localStorage.getItem('orb_vim') === '1'; } catch { return false; } };
-    function srcChanged(text) { if (srcSetting) return; bodyInput.value = bodyView === 'md' ? text : htmlToMarkdown(text); updateWc(); scheduleAutosave(); updatePreview(); }
+    function srcChanged(text) { if (srcSetting) return; bodyInput.value = bodyView === 'md' ? text : htmlToMarkdown(text, true); updateWc(); scheduleAutosave(); updatePreview(); }
     function loadSourceEditor() {
       if (srcCM || srcLoading) return; srcLoading = true;
       const done = () => {
@@ -2439,7 +2439,7 @@
     window.setBodyView = function(v) {
       if (v === bodyView) return;
       let md;
-      if (bodyView === 'blocks') { syncToHidden(); md = bodyInput.value; } else if (bodyView === 'md') md = srcGet(); else md = htmlToMarkdown(srcGet());
+      if (bodyView === 'blocks') { syncToHidden(); md = bodyInput.value; } else if (bodyView === 'md') md = srcGet(); else md = htmlToMarkdown(srcGet(), true);
       bodyView = v;
       if (v === 'blocks') parseMd(md); else { srcSet(v === 'md' ? md : mdToHtml(md), v === 'html' ? 'html' : 'md'); loadSourceEditor(); }
       beEditor.hidden = v !== 'blocks'; srcHost.hidden = v === 'blocks';
@@ -2706,6 +2706,8 @@
     };
 
     beEditor.addEventListener('keydown',e=>{
+      // ⌘⇧K everywhere (⌘K is the command palette in Station mode)
+      if ((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='k') { e.preventDefault(); e.stopPropagation(); window.beLink(); return; }
       if (wlOpen) {
         const n=wlResults.length||1;
         if (e.key==='ArrowDown') { e.preventDefault(); wlIdx=(wlIdx+1)%n; wlRender(); return; }
@@ -2961,7 +2963,7 @@
     // ── HTML ⇄ Markdown (paste from Word / web, HTML view of a text) ─────────────
     // One converter for everything that arrives as HTML: clipboard (Word, Google Docs, web pages), the HTML view and legacy HTML text.
     function mdText(t) { return t.replace(/[ ​]/g, ' ').replace(/\s+/g, ' ').replace(/([*_])/g, '\\$1'); }
-    function htmlToMarkdown(html) {
+    function htmlToMarkdown(html, trusted = false) {   // trusted = our own HTML view (may carry data-md-raw blocks); clipboard HTML never is
       const doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
       doc.querySelectorAll('script,style,meta,link,title,xml,iframe,noscript,object,head').forEach(e => e.remove());
       const style = (el, prop) => { const m = new RegExp('(?:^|;)\\s*' + prop + '\\s*:\\s*([^;]+)', 'i').exec(el.getAttribute?.('style') || ''); return m ? m[1].trim().toLowerCase() : ''; };
@@ -2971,7 +2973,7 @@
         if (node.nodeType === 3) return mdText(node.nodeValue);
         if (node.nodeType !== 1) return '';
         const tag = node.tagName.toLowerCase();
-        if (node.dataset?.mdRaw) return '';
+        if (node.dataset?.mdRaw !== undefined) return '';
         if (tag === 'br') return ' ';
         if (tag === 'img') { const src = node.getAttribute('src') || ''; if (/^data:/i.test(src)) return ''; return '![' + (node.getAttribute('alt') || '').replace(/[\[\]]/g, '') + '](' + (mediaId(src) || src) + ')'; }
         let inner = [...node.childNodes].map(inline).join('');
@@ -3005,10 +3007,10 @@
         const flushRun = () => { const t = run.replace(/\s+/g, ' ').trim(); if (t) out.push(t); run = ''; };
         const flushList = () => { if (pendingList) { out.push(pendingList.join('\n')); pendingList = null; } };
         [...parent.childNodes].forEach(n => {
-          if (!isBlock(n)) { if (n.nodeType === 1 && n.dataset?.mdRaw) { flushRun(); flushList(); out.push(n.dataset.mdRaw); } else run += inline(n); return; }
+          if (!isBlock(n)) { if (trusted && n.nodeType === 1 && n.dataset?.mdRaw) { flushRun(); flushList(); out.push(n.dataset.mdRaw); } else run += inline(n); return; }
           flushRun();
           const tag = n.tagName.toLowerCase();
-          if (n.dataset?.mdRaw) { flushList(); out.push(n.dataset.mdRaw); return; }
+          if (n.dataset?.mdRaw !== undefined) { flushList(); if (trusted) out.push(n.dataset.mdRaw); return; }
           if (tag === 'ul' || tag === 'ol') { flushList(); const l = listLines(n, tag === 'ol'); if (l.length) out.push(l.join('\n')); return; }
           if (tag === 'li') { const t = [...n.childNodes].map(inline).join('').replace(/\s+/g, ' ').trim(); if (t) (pendingList ||= []).push('- ' + t); return; }
           // Word "lists" are plain paragraphs with a bullet character and a MsoList class
@@ -3098,7 +3100,7 @@
       if (cmd==='html') {
         const hta=box.querySelector('.md-html-ta'), on=hta.hidden;
         if (on) { hta.value=mdToHtml(ta.value); ta.hidden=true; hta.hidden=false; view.hidden=true; box.querySelector('.md-prev').setAttribute('aria-pressed','false'); }
-        else { ta.value=htmlToMarkdown(hta.value); hta.hidden=true; ta.hidden=false; ta.dispatchEvent(new Event('input',{bubbles:true})); }
+        else { ta.value=htmlToMarkdown(hta.value, true); hta.hidden=true; ta.hidden=false; ta.dispatchEvent(new Event('input',{bubbles:true})); }
         btn.setAttribute('aria-pressed',String(on));
         box.querySelectorAll('.md-btn:not(.md-htmlbtn)').forEach(x=>x.disabled=on);
         return;
@@ -3132,7 +3134,7 @@
     document.addEventListener('input', (e) => {
       const t=e.target; if (!(t instanceof HTMLTextAreaElement)) return;
       const box=t.closest('.md-field'); if (!box) return;
-      if (t.classList.contains('md-html-ta')) { const ta=box.querySelector('textarea.md-ta'); ta.value=htmlToMarkdown(t.value); ta.dispatchEvent(new Event('input',{bubbles:true})); }
+      if (t.classList.contains('md-html-ta')) { const ta=box.querySelector('textarea.md-ta'); ta.value=htmlToMarkdown(t.value, true); ta.dispatchEvent(new Event('input',{bubbles:true})); }
       else mdStats(box);
     });
     document.addEventListener('paste', (e) => {   // paste from Word / the web into a Markdown field → Markdown
@@ -3171,6 +3173,7 @@
     };
     lpInput.addEventListener('input', () => {
       const q = lpInput.value.trim(); clearTimeout(lpTimer);
+      if (/^(javascript|data|vbscript):/i.test(q.replace(/[\u0000-\u0020]/g,''))) { lpRows = []; lpRender(); return; }
       if (/^(https?:\/\/|mailto:|tel:|\/)/i.test(q)) { lpRows = [{ title: q, meta: 'Use this address', url: q }]; lpIdx = 0; lpRender(); return; }
       if (!q) { lpRows = []; lpRender(); return; }
       lpTimer = setTimeout(async () => {

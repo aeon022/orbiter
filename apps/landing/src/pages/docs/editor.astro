@@ -4,14 +4,33 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 <DocsLayout title="Editor" current="/docs/editor" prev={{ href: '/docs/collections', title: 'Collections & fields' }} next={{ href: '/docs/ai-assistant', title: 'AI Assistant' }}>
 
 <h1>Editor</h1>
-<p class="lead">The block editor handles text, images, and video in a single <code>contenteditable</code> surface. Content is serialized to and from Markdown.</p>
+<p class="lead">The block editor handles text, images, and video in a single <code>contenteditable</code> surface. Content is serialized to and from Markdown, and you can look at (and edit) that Markdown — or its HTML — whenever you like.</p>
 
 <h2>Custom fields: the Details card</h2>
 <p>Fields you define in the schema sit in one <strong>collapsible “Details” card</strong> in the main column, between the title and the body — grouped as in your schema, two per row, with long inputs (text areas, tables, lists, media, relations) using the full width. The header shows how many fields there are and how many are filled in. Collapse the card and the body gets the whole page; the choice is remembered per collection. If saving fails because a field is invalid, the card opens by itself.</p>
 <p>The sidebar keeps what describes the entry itself: status, slug, history, activity, comments. A collection <em>without</em> a <code>body</code> field shows no block-editing tools at all; its groups start open, because the fields are the content.</p>
 
 <h2>Text blocks</h2>
-<p>Plain paragraphs, headings (<code>##</code>, <code>###</code>), bold, italic, inline code, and links. Standard keyboard shortcuts apply: <kbd>⌘B</kbd> bold, <kbd>⌘I</kbd> italic, <kbd>⌘K</kbd> link.</p>
+<p>Plain paragraphs, headings (<code>##</code>, <code>###</code>), bold, italic, inline code, and links. Standard keyboard shortcuts apply: <kbd>⌘B</kbd> bold, <kbd>⌘I</kbd> italic, <kbd>⌘⇧K</kbd> link.</p>
+
+<h2>Editor, Markdown and HTML views</h2>
+<p>Three buttons in the toolbar — <strong>Editor | MD | HTML</strong> — switch the same text between the formatted block editor, its Markdown source, and an HTML view. The HTML you edit is converted back to Markdown, which stays the stored format, so nothing about your content or your site changes. The <strong>¶</strong> button shows the Markdown characters right in the editor: <code>##</code>, <code>-</code>, <code>&gt;</code> in the margin of each block, and the marks around bold, italic, highlight, code and links.</p>
+
+<h2>Markdown text fields</h2>
+<p>A <code>richtext</code> field that is not the main <code>body</code> (for example a second, easy-read version of a text) is a <strong>Markdown field</strong>: a small toolbar (bold, italic, highlight, heading, list, link), a <strong>Preview</strong> toggle and an <strong>HTML</strong> switch. It sits <em>below</em> the body, so the writing stays together while the Details card keeps the short facts. Under each field you see the word count and the longest sentence; in a field whose name contains <code>leicht</code> or <code>easy</code> a sentence over about 15 words is flagged. <strong>↧ Main text</strong> copies the body in as a starting point.</p>
+<p>Texts that were imported as HTML (for example from WordPress) can be converted once: <code>node scripts/scan-pod-html.mjs your.pod</code> lists the fields that still hold HTML. Your front end must render Markdown for those fields before you convert them.</p>
+
+<h2>Paste from Word and the web</h2>
+<p>Pasting formatted content converts it to Markdown: headings, bold, italic, links, lists (including Word’s bullet “lists”, which are really plain paragraphs), and tables. Pasted markup is cleaned: scripts, <code>javascript:</code> links and embedded images are dropped. Several plain paragraphs become several blocks. This works in the block editor and in Markdown fields.</p>
+
+<h2>Links</h2>
+<p><kbd>⌘⇧K</kbd> (or <kbd>⌘K</kbd> outside Station mode, where it opens the command palette) or the link button opens the <strong>link picker</strong>: search pages, events and other entries by title, or paste an address (<code>https://…</code>, <code>mailto:…</code>, <code>/path</code>). Entries link to <code>/collection/slug</code> (pages to <code>/slug</code>). Links to a PDF show a small PDF badge.</p>
+
+<h2>Files and images</h2>
+<p>An uploaded file is a small card with a file-type icon (PDF in red), the name and the type. Images without a description (alt text) are marked in red, and publishing asks once if some are missing — the text is what a screen reader reads out.</p>
+
+<h2>Source view with Vim keys</h2>
+<p>The <strong>MD</strong> and <strong>HTML</strong> views are a code editor (CodeMirror 6) with syntax highlighting. A <strong>Vim</strong> button turns on Vim keys: normal / insert / visual mode (shown as a badge), <code>hjkl</code>, <code>w b</code>, <code>dd yy p</code>, <code>u</code>, <code>/</code> search, <code>:%s/old/new/g</code>, and <code>:w</code> to save. <code>/</code> and <code>:</code> open a floating command bar inside the editor. The <strong>?</strong> button (or <code>:help</code>) shows a cheat sheet in English or German. The editor library is loaded only when you open the source view and is served by the admin itself — no CDN.</p>
 
 <h2>Image blocks</h2>
 <p>Images are first-class blocks. Insert via the <strong>/</strong> picker (<code>/img</code>) or drag-and-drop a file. Once inserted, an alignment toolbar appears:</p>
@@ -78,7 +97,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
     <tr><td><kbd>⌘ S</kbd></td><td>Save</td></tr>
     <tr><td><kbd>⌘ B</kbd></td><td>Bold</td></tr>
     <tr><td><kbd>⌘ I</kbd></td><td>Italic</td></tr>
-    <tr><td><kbd>⌘ K</kbd></td><td>Insert link</td></tr>
+    <tr><td><kbd>⌘ ⇧ K</kbd></td><td>Insert link (opens the link picker)</td></tr>
     <tr><td><kbd>⌘ Z</kbd></td><td>Undo</td></tr>
     <tr><td><kbd>⌘ Shift Z</kbd></td><td>Redo</td></tr>
   </tbody>
