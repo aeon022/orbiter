@@ -50,7 +50,7 @@
     .md-bar { display:flex; align-items:center; gap:2px; padding:4px 6px; border-bottom:1px solid var(--line2,var(--line)); flex-wrap:wrap; }
     .md-btn { min-width:30px; height:28px; padding:0 8px; border:0; background:none; color:var(--text); border-radius:5px; cursor:pointer; font:500 12px/1 var(--mono,monospace); }
     .md-btn:hover { background:var(--line2,rgba(128,128,128,.15)); }
-    .md-btn[aria-pressed="true"] { background:var(--text); color:var(--bg); }
+    .md-btn[aria-pressed="true"] { background:var(--text); color:var(--bg2,#fff); }
     .md-sp { flex:1; }
     .md-field textarea.md-ta { border:0; border-radius:0 0 8px 8px; resize:vertical; min-height:9em; width:100%; box-sizing:border-box; font-family:var(--serif,inherit); font-size:15px; line-height:1.7; padding:10px 12px; background:transparent; color:var(--text); }
     .md-field textarea.md-ta:focus { outline:none; }
@@ -83,6 +83,23 @@
     .be-block[data-type="raw"] .be-raw { display:block; white-space:pre-wrap; word-break:break-all; font:11px/1.6 var(--mono,monospace); color:var(--muted); background:none; padding:0; }
     .be-block[data-type="raw"]::after { content:'HTML'; position:absolute; right:10px; top:6px; font:500 9px var(--mono,monospace); letter-spacing:.1em; color:var(--muted); }
     .be-editor a[data-file="pdf"]::before { content:'PDF'; display:inline-block; margin-right:.5em; padding:0 .4em; border-radius:3px; background:var(--red); color:#fff; font:700 .6em/1.9 var(--mono,monospace); letter-spacing:.06em; vertical-align:.15em; }
+    .md-field textarea.md-html-ta { border:0; border-radius:0 0 8px 8px; resize:vertical; min-height:9em; width:100%; box-sizing:border-box; font:12px/1.7 var(--mono,monospace); padding:10px 12px; background:transparent; color:var(--text); }
+    .md-field textarea.md-html-ta:focus { outline:none; }
+    .md-hint { padding:4px 12px 7px; }
+    .md-hint.warn { color:var(--red); }
+    .md-btn:disabled { opacity:.35; cursor:default; }
+    .be-source { display:block; width:100%; min-height:420px; box-sizing:border-box; border:1px solid var(--line); border-radius:8px; background:transparent; color:var(--text); font:13px/1.8 var(--mono,monospace); padding:14px 16px; resize:vertical; }
+    .be-source:focus { outline:none; border-color:var(--text); }
+    .be-source[hidden], .be-editor[hidden] { display:none; }
+    .view-btn.active { background:var(--text); color:var(--bg2,#fff); }
+    .be-img-cap:placeholder-shown { border-bottom:1px solid var(--red) !important; }
+    .be-img-cap:placeholder-shown::placeholder { color:var(--red); opacity:.8; }
+    .link-picker { position:fixed; z-index:1000; width:340px; background:var(--bg2,#fff); border:1px solid var(--line); border-radius:10px; box-shadow:0 10px 40px rgba(0,0,0,.18); overflow:hidden; }
+    .link-picker[hidden] { display:none; }
+    .lp-input { width:100%; box-sizing:border-box; border:0; border-bottom:1px solid var(--line); padding:11px 14px; background:transparent; color:var(--text); font:13px var(--mono,monospace); outline:none; }
+    .lp-list { max-height:240px; overflow:auto; }
+    .lp-row { padding:8px 14px; cursor:pointer; } .lp-row.active, .lp-row:hover { background:var(--line2,rgba(128,128,128,.14)); }
+    .lp-title { font:14px var(--serif,serif); color:var(--text); } .lp-meta, .lp-empty { font:10px var(--mono,monospace); color:var(--muted); letter-spacing:.03em; } .lp-empty { padding:12px 14px; }
     .md-below { margin:36px 0 64px; padding-top:22px; border-top:1px solid var(--line); }
     .md-below .meta-field { margin-bottom:18px; }
     .md-hint { margin:4px 2px 0; font:400 10px/1.4 var(--mono,monospace); color:var(--muted); }
@@ -693,6 +710,7 @@
             <button type="button" class="tool-btn" data-on-click="beCmd('italic')" title="Italic (⌘I)"><i style="font-size:11px;">I</i></button>
             <button type="button" class="tool-btn" data-on-click="beCmd('code')" title="Inline code (⌘E)" style="font-size:9px;">&lt;/&gt;</button>
             <button type="button" class="tool-btn" data-on-click="beCmd('mark')" title="Highlight (==text==)" aria-label="Highlight (==text==)"><span style="color:var(--red);font-weight:700;font-size:12px;line-height:1;border-bottom:2px solid currentColor;padding:0 1px">A</span></button>
+            <button type="button" class="tool-btn" data-on-click="beLink()" title="Link" aria-label="Link" style="font-size:11px;">⛓</button>
           </div>
           <div class="tool-sep"></div>
           <div class="tool-group" data-on-mousedown="event.preventDefault()">
@@ -716,6 +734,12 @@
             </button>
             <button type="button" class="tool-btn" data-on-click="exportMarkdown()" title="Export Markdown (⌘⇧E)" style="font-size:9px;letter-spacing:.04em;">↓ md</button>
             <button type="button" class="tool-btn" id="md-toggle" data-on-click="toggleMdMarks()" title="Show Markdown marks" aria-label="Show Markdown marks" aria-pressed="false" style="font-size:11px;">¶</button>
+            <span class="tool-sep"></span>
+            <span class="tool-group" role="group" aria-label="Text view">
+              <button type="button" class="tool-btn view-btn active" id="view-blocks" data-on-click="setBodyView('blocks')" title="Block editor" aria-pressed="true" style="font-size:9px;letter-spacing:.04em;">Blocks</button>
+              <button type="button" class="tool-btn view-btn" id="view-md" data-on-click="setBodyView('md')" title="Edit the text as Markdown" aria-pressed="false" style="font-size:9px;letter-spacing:.04em;">MD</button>
+              <button type="button" class="tool-btn view-btn" id="view-html" data-on-click="setBodyView('html')" title="Edit the text as HTML (converted back to Markdown)" aria-pressed="false" style="font-size:9px;letter-spacing:.04em;">HTML</button>
+            </span>
             <div class="tool-sep"></div>
             <div class="ai-btn-group">
               <button type="button" class="ai-toolbar-btn" data-on-click="openAiPanel()" title="AI Assistant">✦ AI</button>
@@ -1479,9 +1503,10 @@
             const host = document.getElementById('be-editor');
             if (md.length && host) {
               const wrap = document.createElement('section'); wrap.className = 'md-below'; wrap.setAttribute('aria-label', 'More texts');
-              md.forEach(f => wrap.appendChild(f)); host.after(wrap);
+              md.forEach(f => wrap.appendChild(f)); (document.getElementById('be-source') || host).after(wrap);
             }
           }
+          document.querySelectorAll('.md-field').forEach(mdStats);
         }
         if (!hasBody) document.getElementById('editor-main')?.classList.add('no-body');
       }
@@ -1756,6 +1781,11 @@
       const title = document.getElementById('title-input').value;
       syncToHidden();
       const body = document.getElementById('body-input').value;
+      // Accessibility: images without a description (alt text) are flagged before a real publish
+      if (!isAutosave && (status === 'published' || status === 'scheduled')) {
+        const missing = (body.match(/!\[\]\(/g) || []).length;
+        if (missing && !confirm(`${missing} image${missing>1?'s have':' has'} no description (alt text). People using a screen reader get nothing for them.\n\nPublish anyway?`)) return;
+      }
       const slugInput = document.getElementById('slug-input');
       const slug = isAutosave ? (currentSlug || slugify(title) || 'untitled') : (slugInput.value.trim() || slugify(title) || 'untitled');
 
@@ -2303,7 +2333,27 @@
         .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&nbsp;/g,' ');
     }
 
+    // Text view: blocks (default), Markdown source, or HTML source. The Markdown in #body-input stays the single source of truth.
+    let bodyView = 'blocks';
+    const srcTa = document.createElement('textarea'); srcTa.id = 'be-source'; srcTa.className = 'be-source'; srcTa.spellcheck = false; srcTa.hidden = true; srcTa.setAttribute('aria-label', 'Text source');
+    beEditor.after(srcTa);
+    window.setBodyView = function(v) {
+      if (v === bodyView) return;
+      let md;
+      if (bodyView === 'blocks') { syncToHidden(); md = bodyInput.value; } else if (bodyView === 'md') md = srcTa.value; else md = htmlToMarkdown(srcTa.value);
+      bodyView = v;
+      if (v === 'blocks') parseMd(md); else srcTa.value = v === 'md' ? md : mdToHtml(md);
+      srcTa.classList.toggle('html', v === 'html');
+      beEditor.hidden = v !== 'blocks'; srcTa.hidden = v === 'blocks';
+      bodyInput.value = md; updateWc();
+      ['blocks', 'md', 'html'].forEach(k => { const b = document.getElementById('view-' + k); if (b) { b.classList.toggle('active', k === v); b.setAttribute('aria-pressed', String(k === v)); } });
+      try { localStorage.setItem('orb_body_view', v); } catch {}
+      if (v !== 'blocks') srcTa.focus();
+    };
+    srcTa.addEventListener('input', () => { bodyInput.value = bodyView === 'md' ? srcTa.value : htmlToMarkdown(srcTa.value); updateWc(); scheduleAutosave(); updatePreview(); });
+
     function serialize() {
+      if (bodyView !== 'blocks') return bodyInput.value;
       const lines = [];
       beEditor.querySelectorAll('.be-block').forEach(b=>{
         const type = b.dataset.type||'p';
@@ -2427,6 +2477,11 @@
     function parseMd(md) {
       beEditor.innerHTML='';
       if (!md) { beEditor.appendChild(createBlock('p','')); return; }
+      fillBlocks(md, beEditor);
+      if (!beEditor.querySelector('.be-block')) beEditor.appendChild(createBlock('p',''));
+    }
+    // Markdown → blocks, appended to target (the editor itself, or a fragment when pasting)
+    function fillBlocks(md, target) {
       md.split(/\n{2,}/).forEach(chunk=>{
         chunk=chunk.trim(); if (!chunk) return;
         // Raw HTML block (e.g. a PDF viewer <object>, an iframe): kept exactly as written, shown read-only
@@ -2434,24 +2489,24 @@
           const rb = createBlock('p','');
           rb.dataset.type = 'raw'; rb.dataset.raw = chunk; rb.contentEditable = 'false';
           const code = document.createElement('code'); code.className = 'be-raw'; code.textContent = chunk; rb.appendChild(code);
-          beEditor.appendChild(rb); return;
+          target.appendChild(rb); return;
         }
         // A tight list ("- a\n- b" or "1. a\n2. b") becomes one block per item
         const items = chunk.split('\n');
         if (items.length > 1 && (items.every(l=>/^- /.test(l)) || items.every(l=>/^\d+\.\s/.test(l)))) {
           const ul = /^- /.test(items[0]);
-          items.forEach(l=>beEditor.appendChild(createBlock(ul?'ul':'ol', inlineMd(ul ? l.slice(2) : l.replace(/^\d+\.\s/,'')))));
+          items.forEach(l=>target.appendChild(createBlock(ul?'ul':'ol', inlineMd(ul ? l.slice(2) : l.replace(/^\d+\.\s/,'')))));
           return;
         }
         // Video block: ::video[url]
         const vidM = chunk.match(/^::video\[(.+)\]$/);
-        if (vidM) { beEditor.appendChild(createVideoBlock(vidM[1])); return; }
+        if (vidM) { target.appendChild(createVideoBlock(vidM[1])); return; }
         // Callout block: ::callout[html]
         const calloutM = chunk.match(/^::callout\[([\s\S]*)\]$/);
         if (calloutM) {
           const b = createBlock('callout', '');
           b.innerHTML = calloutM[1];
-          beEditor.appendChild(b);
+          target.appendChild(b);
           return;
         }
         // Table block: ::table[<table>...</table>]
@@ -2463,16 +2518,16 @@
           if (tbl) {
             tbl.className = 'be-table';
             tbl.querySelectorAll('th,td').forEach(c=>c.setAttribute('contenteditable','true'));
-            beEditor.appendChild(createTableBlock(tbl));
+            target.appendChild(createTableBlock(tbl));
           }
           return;
         }
         // File block: ::file[mediaId|filename]
         const fileM = chunk.match(/^::file\[([^|]+)\|(.+)\]$/);
-        if (fileM) { beEditor.appendChild(createFileBlock(fileM[1], fileM[2])); return; }
+        if (fileM) { target.appendChild(createFileBlock(fileM[1], fileM[2])); return; }
         // Image block: ![alt](mediaId) or ![alt](mediaId){.align}
         const imgM = chunk.match(/^!\[([^\]]*)\]\(([^)]+)\)(?:\{\.(\w+)\})?$/);
-        if (imgM) { beEditor.appendChild(createImgBlock(imgM[2], imgM[1], imgM[3]||'center')); return; }
+        if (imgM) { target.appendChild(createImgBlock(imgM[2], imgM[1], imgM[3]||'center')); return; }
         let type='p', content=chunk;
         if      (chunk.startsWith('# '))   { type='h1';         content=inlineMd(chunk.slice(2)); }
         else if (chunk.startsWith('## '))  { type='h2';         content=inlineMd(chunk.slice(3)); }
@@ -2483,9 +2538,8 @@
         else if (/^\d+\.\s/.test(chunk))   { type='ol';         content=inlineMd(chunk.replace(/^\d+\.\s/,'')); }
         else if (chunk==='---')            { type='hr';         content=''; }
         else                               { type='p';          content=inlineMd(chunk); }
-        beEditor.appendChild(createBlock(type,content));
+        target.appendChild(createBlock(type,content));
       });
-      if (!beEditor.querySelector('.be-block')) beEditor.appendChild(createBlock('p',''));
     }
 
     function focusStart(el) { if (!el||el.contentEditable==='false') return; el.focus(); const r=document.createRange();r.setStart(el,0);r.collapse(true);const s=window.getSelection();s.removeAllRanges();s.addRange(r); }
@@ -2520,6 +2574,14 @@
     };
     try { if (localStorage.getItem('orb_show_md') === '1') window.toggleMdMarks(true); } catch {}
     window.beCmd = function(cmd) {
+      if (bodyView !== 'blocks') {   // in the Markdown view the toolbar edits the source; in the HTML view it does nothing
+        if (bodyView === 'md') {
+          srcTa.focus();
+          if (cmd==='bold') mdWrap(srcTa,'**'); else if (cmd==='italic') mdWrap(srcTa,'_'); else if (cmd==='mark') mdWrap(srcTa,'=='); else if (cmd==='code') mdWrap(srcTa,'`'); else return;
+          srcTa.dispatchEvent(new Event('input',{bubbles:true}));
+        }
+        return;
+      }
       if (cmd==='code') {
         const sel=window.getSelection(); if (!sel||!sel.rangeCount) return;
         const range=sel.getRangeAt(0); const text=range.toString();
@@ -2654,9 +2716,34 @@
         }
         syncToHidden(); scheduleAutosave(); updatePreview(); return;
       }
+      // Formatted content (Word, Google Docs, web pages) → Markdown; plain text with blank lines → paragraphs
+      const html=(e.clipboardData||window.clipboardData).getData('text/html');
+      const cur=getFocusedBlock(), special=cur&&/^(pre|table|callout|raw)$/.test(cur.dataset.type||'');
+      let md='';
+      if (!special) {
+        if (html) md=htmlToMarkdown(html);
+        else if (/\n\s*\n/.test(text)) md=text.replace(/\r/g,'').trim();
+      }
+      if (md) { pasteMarkdown(md); return; }
       if (text) document.execCommand('insertText',false,text);
       syncToHidden(); scheduleAutosave(); updatePreview();
     });
+    // Insert Markdown at the cursor: one plain paragraph → inline at the caret; anything else → blocks after the current block
+    function pasteMarkdown(md) {
+      const chunks=md.split(/\n{2,}/).filter(c=>c.trim());
+      const blockLike=(c)=>/^(#{1,6} |- |\d+\.\s|> |```|<|!\[|::)/.test(c);
+      if (chunks.length===1 && !blockLike(chunks[0]) && !/\n/.test(chunks[0])) {
+        document.execCommand('insertHTML',false,inlineMd(chunks[0]));
+      } else {
+        const frag=document.createDocumentFragment(); fillBlocks(md.replace(/(^|\n\n)<table/g,'$1::table[<table').replace(/<\/table>(?=\n\n|$)/g,'</table>]'), frag);
+        const blocks=[...frag.children]; if (!blocks.length) return;
+        const cur=getFocusedBlock();
+        if (cur) { const empty=!cur.innerText.replace(/\u200b/g,'').trim() && !/^(image|file|video|table|raw|hr)$/.test(cur.dataset.type||''); cur.after(frag); if (empty) cur.remove(); }
+        else beEditor.appendChild(frag);
+        const last=blocks[blocks.length-1]; if (last.contentEditable!=='false') focusEnd(last);
+      }
+      syncToHidden(); scheduleAutosave(); updatePreview();
+    }
 
     beEditor.addEventListener('click',e=>{
       if (e.target===beEditor) {
@@ -2771,6 +2858,91 @@
       document.getElementById('preview-iframe').src=window.location.origin+'/'+COLLECTION+'/'+slug;
     }
 
+    // ── HTML ⇄ Markdown (paste from Word / web, HTML view of a text) ─────────────
+    // One converter for everything that arrives as HTML: clipboard (Word, Google Docs, web pages), the HTML view and legacy HTML text.
+    function mdText(t) { return t.replace(/[ ​]/g, ' ').replace(/\s+/g, ' ').replace(/([*_])/g, '\\$1'); }
+    function htmlToMarkdown(html) {
+      const doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
+      doc.querySelectorAll('script,style,meta,link,title,xml,iframe,noscript,object,head').forEach(e => e.remove());
+      const style = (el, prop) => { const m = new RegExp('(?:^|;)\\s*' + prop + '\\s*:\\s*([^;]+)', 'i').exec(el.getAttribute?.('style') || ''); return m ? m[1].trim().toLowerCase() : ''; };
+      const wrap = (inner, mark) => { const m = /^(\s*)([\s\S]*?)(\s*)$/.exec(inner); return m[2] ? m[1] + mark + m[2] + mark + m[3] : inner; };
+      const mediaId = (src) => { const m = /\/(?:api\/media|media|orbiter\/media)\/([0-9a-f]{8}(?:-?[0-9a-f]{4}){3}-?[0-9a-f]{12})/i.exec(src || ''); return m ? m[1] : ''; };
+      function inline(node) {
+        if (node.nodeType === 3) return mdText(node.nodeValue);
+        if (node.nodeType !== 1) return '';
+        const tag = node.tagName.toLowerCase();
+        if (node.dataset?.mdRaw) return '';
+        if (tag === 'br') return ' ';
+        if (tag === 'img') { const src = node.getAttribute('src') || ''; if (/^data:/i.test(src)) return ''; return '![' + (node.getAttribute('alt') || '').replace(/[\[\]]/g, '') + '](' + (mediaId(src) || src) + ')'; }
+        let inner = [...node.childNodes].map(inline).join('');
+        const w = style(node, 'font-weight'), it = style(node, 'font-style'), bg = style(node, 'background');
+        let out = inner;
+        if (tag === 'code') return inner.trim() ? '`' + node.textContent.replace(/`/g, '') + '`' : '';
+        if (tag === 'a') { const h = node.getAttribute('href'); out = (h && !/^(javascript|data|vbscript):/i.test(h.replace(/[\u0000- ]/g, '')) && inner.trim() && !/^#/.test(h)) ? '[' + inner.trim() + '](' + h + ')' : inner; return out; }
+        if (tag === 'mark' || /yellow|#ff0|highlight/.test(bg)) out = wrap(out, '==');
+        if (tag === 'strong' || tag === 'b' || /^(bold|[6-9]00)$/.test(w)) out = wrap(out, '**');
+        if (tag === 'em' || tag === 'i' || it === 'italic') out = wrap(out, '_');
+        return out;
+      }
+      const isBlock = (n) => n.nodeType === 1 && /^(address|article|aside|blockquote|dd|div|dl|dt|fieldset|figure|footer|form|h[1-6]|header|hr|li|main|nav|ol|p|pre|section|table|ul)$/i.test(n.tagName);
+      function listLines(list, ordered) {
+        const lines = [];
+        [...list.children].forEach(li => {
+          if (li.tagName.toLowerCase() !== 'li') return;
+          const text = [...li.childNodes].filter(c => !(c.nodeType === 1 && /^(ul|ol)$/i.test(c.tagName))).map(inline).join('').replace(/\s+/g, ' ').trim();
+          if (text) lines.push((ordered ? '1. ' : '- ') + text);
+          li.querySelectorAll(':scope > ul, :scope > ol').forEach(sub => lines.push(...listLines(sub, sub.tagName.toLowerCase() === 'ol')));
+        });
+        return lines;
+      }
+      function tableHtml(t) {
+        const rows = [...t.querySelectorAll('tr')].map(tr => '<tr>' + [...tr.children].filter(c => /^t[dh]$/i.test(c.tagName)).map(c => { const tg = c.tagName.toLowerCase(); return '<' + tg + '>' + c.textContent.replace(/\s+/g, ' ').trim().replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</' + tg + '>'; }).join('') + '</tr>');
+        return rows.length ? '<table>' + rows.join('') + '</table>' : '';
+      }
+      const BULLET = /^[\s ]*([·•o§\-–—*]|\d{1,2}[.)])[\s ]+/;
+      function blocks(parent) {
+        const out = []; let run = '', pendingList = null;
+        const flushRun = () => { const t = run.replace(/\s+/g, ' ').trim(); if (t) out.push(t); run = ''; };
+        const flushList = () => { if (pendingList) { out.push(pendingList.join('\n')); pendingList = null; } };
+        [...parent.childNodes].forEach(n => {
+          if (!isBlock(n)) { if (n.nodeType === 1 && n.dataset?.mdRaw) { flushRun(); flushList(); out.push(n.dataset.mdRaw); } else run += inline(n); return; }
+          flushRun();
+          const tag = n.tagName.toLowerCase();
+          if (n.dataset?.mdRaw) { flushList(); out.push(n.dataset.mdRaw); return; }
+          if (tag === 'ul' || tag === 'ol') { flushList(); const l = listLines(n, tag === 'ol'); if (l.length) out.push(l.join('\n')); return; }
+          if (tag === 'li') { const t = [...n.childNodes].map(inline).join('').replace(/\s+/g, ' ').trim(); if (t) (pendingList ||= []).push('- ' + t); return; }
+          // Word "lists" are plain paragraphs with a bullet character and a MsoList class
+          if (tag === 'p' && /MsoList/i.test(n.className || '')) { const t = [...n.childNodes].map(inline).join('').replace(/\s+/g, ' ').trim().replace(BULLET, ''); if (t) (pendingList ||= []).push((/^\d/.test((n.textContent || '').trim()) ? '1. ' : '- ') + t); return; }
+          flushList();
+          if (/^h[1-6]$/.test(tag)) { const t = [...n.childNodes].map(inline).join('').replace(/\s+/g, ' ').trim().replace(/^\*\*([\s\S]*)\*\*$/, '$1'); if (t) out.push('#'.repeat(Math.min(3, +tag[1])) + ' ' + t); return; }
+          if (tag === 'hr') { out.push('---'); return; }
+          if (tag === 'pre') { out.push('```\n' + n.textContent.replace(/\n+$/, '') + '\n```'); return; }
+          if (tag === 'blockquote') { const t = blocks(n).join(' ').replace(/\s+/g, ' ').trim(); if (t) out.push('> ' + t); return; }
+          if (tag === 'table') { const t = tableHtml(n); if (t) out.push(t); return; }
+          if ([...n.childNodes].some(isBlock)) { out.push(...blocks(n)); return; }
+          const t = [...n.childNodes].map(inline).join('').replace(/\s+/g, ' ').trim();
+          if (t) out.push(t);
+        });
+        flushRun(); flushList();
+        return out;
+      }
+      // consecutive lists of the same kind form one tight list
+      const merged = [];
+      blocks(doc.body).forEach(b => { const prev = merged[merged.length - 1]; if (prev && ((/^- /.test(prev) && /^- /.test(b)) || (/^1\. /.test(prev) && /^1\. /.test(b)))) merged[merged.length - 1] = prev + '\n' + b; else merged.push(b); });
+      return merged.join('\n\n').replace(/\n{3,}/g, '\n\n').trim();
+    }
+    function mdToHtml(md) {
+      if (!window.marked) return '';
+      if (!window.__markExt) { window.__markExt = true; marked.use({ extensions: [{ name: 'mark', level: 'inline', start(s) { return s.indexOf('=='); },
+        tokenizer(s) { const m = /^==([^=\n][^=]*?)==/.exec(s); if (m) return { type: 'mark', raw: m[0], text: m[1], tokens: this.lexer.inlineTokens(m[1]) }; },
+        renderer(t) { return '<mark>' + this.parser.parseInline(t.tokens) + '</mark>'; } }] }); }
+      const esc = (t) => t.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+      const prepared = String(md || '').split(/\n{2,}/).map(c => /^::(file|video|callout|table)\[/.test(c.trim()) ? `<div class="md-raw" data-md-raw="${esc(c.trim())}">${esc(c.trim().slice(0, 60))}</div>` : c).join('\n\n')
+        .replace(/!\[([^\]]*)\]\(([0-9a-f]{8}(?:-?[0-9a-f]{4}){3}-?[0-9a-f]{12})\)(?:\{\.\w+\})?/gi, (_, alt, id) => `![${alt}](/api/media/${id}/raw)`);
+      return marked.parse(prepared).trim();
+    }
+    window.orbMd = { htmlToMarkdown, mdToHtml };
+
     // ── Markdown text fields (richtext as an extra field) ─────────────────
     function mdFieldHtml(key, val) {
       const b = (cmd, label, title) => `<button type="button" class="md-btn" data-md="${cmd}" title="${title}" aria-label="${title}">${label}</button>`;
@@ -2778,11 +2950,24 @@
         <div class="md-bar" role="toolbar" aria-label="Formatting">
           ${b('bold','<b>B</b>','Bold (⌘B)')}${b('italic','<i>I</i>','Italic (⌘I)')}${b('mark','<span style="color:var(--red);font-weight:700">H</span>','Highlight (==text==)')}${b('h3','H3','Heading')}${b('ul','• List','Bullet list')}${b('link','Link','Insert link')}
           <span class="md-sp"></span>
+          ${'body' in schema ? b('frombody','↧ Main text','Copy the main text into this field as a starting point') : ''}
+          <button type="button" class="md-btn md-htmlbtn" data-md="html" aria-pressed="false" title="Edit as HTML (converted back to Markdown)">HTML</button>
           <button type="button" class="md-btn md-prev" data-md="preview" aria-pressed="false" title="Show / hide preview">Preview</button>
         </div>
         <textarea class="field-input md-ta" name="${key}" rows="8">${escHtml(val??'')}</textarea>
+        <textarea class="field-input md-html-ta" rows="8" spellcheck="false" aria-label="HTML" hidden></textarea>
         <div class="md-view" hidden></div>
+        <div class="md-hint" data-md-hint></div>
       </div>`;
+    }
+    function mdStats(box) {   // words and longest sentence under a Markdown field (a hint for easy-read texts)
+      const ta = box.querySelector('textarea.md-ta'), hint = box.querySelector('[data-md-hint]'); if (!ta || !hint) return;
+      const plain = ta.value.replace(/!\[[^\]]*\]\([^)]*\)/g, ' ').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[#>*_=`\\-]/g, ' ');
+      const sentences = plain.split(/[.!?:\n]+/).map(t => t.trim().split(/\s+/).filter(Boolean).length).filter(Boolean);
+      const words = sentences.reduce((a, b) => a + b, 0), longest = sentences.length ? Math.max(...sentences) : 0;
+      const easy = /leicht|easy/i.test(box.dataset.mdField || '');
+      hint.textContent = words ? `${words} words · longest sentence ${longest} words` + (easy && longest > 15 ? ' — easy-read: keep sentences under ~15 words' : '') : '';
+      hint.classList.toggle('warn', easy && longest > 15);
     }
     function mdWrap(ta, mark) {
       const a=ta.selectionStart, b=ta.selectionEnd, v=ta.value, sel=v.slice(a,b), n=mark.length;
@@ -2810,6 +2995,18 @@
     document.addEventListener('click', (e) => {
       const btn=e.target.closest?.('.md-btn'); if (!btn) return;
       const box=btn.closest('.md-field'); const ta=box.querySelector('textarea'); const view=box.querySelector('.md-view'); const cmd=btn.dataset.md;
+      if (cmd==='html') {
+        const hta=box.querySelector('.md-html-ta'), on=hta.hidden;
+        if (on) { hta.value=mdToHtml(ta.value); ta.hidden=true; hta.hidden=false; view.hidden=true; box.querySelector('.md-prev').setAttribute('aria-pressed','false'); }
+        else { ta.value=htmlToMarkdown(hta.value); hta.hidden=true; ta.hidden=false; ta.dispatchEvent(new Event('input',{bubbles:true})); }
+        btn.setAttribute('aria-pressed',String(on));
+        box.querySelectorAll('.md-btn:not(.md-htmlbtn)').forEach(x=>x.disabled=on);
+        return;
+      }
+      if (cmd==='frombody') {
+        if (ta.value.trim() && !confirm('Replace the text in this field with the main text?')) return;
+        syncToHidden(); ta.value=bodyInput.value; ta.dispatchEvent(new Event('input',{bubbles:true})); return;
+      }
       if (cmd==='preview') {
         const on=view.hidden; view.hidden=!on; ta.hidden=on; btn.setAttribute('aria-pressed',String(on));
         if (on) view.innerHTML=mdSafeHtml(ta.value).replace(/(<img[^>]*src=")([0-9a-f-]{32,36})(")/g,'$1/api/media/$2/raw$3');
@@ -2819,7 +3016,11 @@
       ta.focus();
       if (cmd==='bold') mdWrap(ta,'**'); else if (cmd==='italic') mdWrap(ta,'_'); else if (cmd==='mark') mdWrap(ta,'==');
       else if (cmd==='h3') mdLines(ta,'### '); else if (cmd==='ul') mdLines(ta,'- ');
-      else if (cmd==='link') { const a=ta.selectionStart,b=ta.selectionEnd,sel=ta.value.slice(a,b)||'Text'; ta.setRangeText('['+sel+'](https://)',a,b,'end'); const e2=ta.selectionStart-1; ta.setSelectionRange(e2-8,e2); }
+      else if (cmd==='link') {
+        const a=ta.selectionStart,b2=ta.selectionEnd, selText=ta.value.slice(a,b2);
+        openLinkPicker(btn.getBoundingClientRect(), (url,title)=>{ ta.focus(); ta.setRangeText('['+(selText||title)+']('+url+')',a,b2,'end'); ta.dispatchEvent(new Event('input',{bubbles:true})); });
+        return;
+      }
       ta.dispatchEvent(new Event('input',{bubbles:true}));
     });
     document.addEventListener('keydown', (e) => {
@@ -2827,6 +3028,79 @@
       const k=e.key.toLowerCase(); if (k!=='b' && k!=='i') return;
       e.preventDefault(); e.stopPropagation(); mdWrap(ta, k==='b'?'**':'_'); ta.dispatchEvent(new Event('input',{bubbles:true}));
     }, true);
+
+    document.addEventListener('input', (e) => {
+      const t=e.target; if (!(t instanceof HTMLTextAreaElement)) return;
+      const box=t.closest('.md-field'); if (!box) return;
+      if (t.classList.contains('md-html-ta')) { const ta=box.querySelector('textarea.md-ta'); ta.value=htmlToMarkdown(t.value); ta.dispatchEvent(new Event('input',{bubbles:true})); }
+      else mdStats(box);
+    });
+    document.addEventListener('paste', (e) => {   // paste from Word / the web into a Markdown field → Markdown
+      const ta=e.target; if (!(ta instanceof HTMLTextAreaElement) || !ta.classList.contains('md-ta')) return;
+      const html=e.clipboardData?.getData('text/html'); if (!html) return;
+      const md=htmlToMarkdown(html); if (!md) return;
+      e.preventDefault(); ta.setRangeText(md, ta.selectionStart, ta.selectionEnd, 'end'); ta.dispatchEvent(new Event('input',{bubbles:true}));
+    }, true);
+
+    // ── Link picker (search pages / events / files, or paste an address) ─────────
+    const lpEl = document.createElement('div');
+    lpEl.id = 'link-picker'; lpEl.className = 'link-picker'; lpEl.hidden = true; lpEl.setAttribute('role', 'dialog'); lpEl.setAttribute('aria-label', 'Insert link');
+    lpEl.innerHTML = '<input type="text" class="lp-input" placeholder="Search pages or paste an address…" aria-label="Search pages or paste an address" autocomplete="off"><div class="lp-list" role="listbox"></div>';
+    document.body.appendChild(lpEl);
+    const lpInput = lpEl.querySelector('.lp-input'), lpList = lpEl.querySelector('.lp-list');
+    let lpPick = null, lpRows = [], lpIdx = 0, lpTimer = null;
+    const lpUrl = (r) => '/' + (r.collection === 'pages' ? '' : r.collection + '/') + r.slug;   // pages live at /slug, everything else at /collection/slug
+    function lpRender() {
+      lpList.innerHTML = '';
+      if (!lpRows.length) { lpList.innerHTML = '<div class="lp-empty">Type to search, or paste an address (https://…, mailto:…)</div>'; return; }
+      lpRows.forEach((r, i) => {
+        const row = document.createElement('div'); row.className = 'lp-row' + (i === lpIdx ? ' active' : ''); row.setAttribute('role', 'option');
+        row.innerHTML = `<div class="lp-title">${escHtml(r.title)}</div><div class="lp-meta">${escHtml(r.meta)}</div>`;
+        row.addEventListener('mousedown', ev => { ev.preventDefault(); lpChoose(i); });
+        lpList.appendChild(row);
+      });
+    }
+    function lpChoose(i) { const r = lpRows[i]; const cb = lpPick; lpClose(); if (r && cb) cb(r.url, r.title); }
+    function lpClose() { lpEl.hidden = true; lpPick = null; clearTimeout(lpTimer); }
+    window.openLinkPicker = function(rect, onPick) {
+      lpPick = onPick; lpRows = []; lpIdx = 0; lpInput.value = ''; lpRender();
+      lpEl.hidden = false;
+      const top = Math.min((rect?.bottom ?? 120) + 6, window.innerHeight - 300), left = Math.max(12, Math.min(rect?.left ?? 120, window.innerWidth - 360));
+      lpEl.style.top = top + 'px'; lpEl.style.left = left + 'px';
+      lpInput.focus();
+    };
+    lpInput.addEventListener('input', () => {
+      const q = lpInput.value.trim(); clearTimeout(lpTimer);
+      if (/^(https?:\/\/|mailto:|tel:|\/)/i.test(q)) { lpRows = [{ title: q, meta: 'Use this address', url: q }]; lpIdx = 0; lpRender(); return; }
+      if (!q) { lpRows = []; lpRender(); return; }
+      lpTimer = setTimeout(async () => {
+        try {
+          const data = await (await fetch('/api/search?q=' + encodeURIComponent(q), { credentials: 'include' })).json();
+          lpRows = (Array.isArray(data) ? data : data.entries || []).slice(0, 8).map(r => ({ title: r.title || r.slug, meta: `${r.label || r.collection} · ${lpUrl(r)}`, url: lpUrl(r) }));
+        } catch { lpRows = []; }
+        lpIdx = 0; lpRender();
+      }, 120);
+    });
+    lpInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); const cb = lpPick; lpClose(); return; }
+      if (e.key === 'ArrowDown') { e.preventDefault(); lpIdx = Math.min(lpIdx + 1, lpRows.length - 1); lpRender(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); lpIdx = Math.max(lpIdx - 1, 0); lpRender(); }
+      else if (e.key === 'Enter') { e.preventDefault(); lpChoose(lpIdx); }
+    });
+    document.addEventListener('mousedown', (e) => { if (!lpEl.hidden && !lpEl.contains(e.target)) lpClose(); });
+    // Link in the block editor: selected text becomes the link text (or the entry title)
+    window.beLink = function() {
+      if (bodyView !== 'blocks') return;
+      const sel = getSelection(); if (!sel || !sel.rangeCount || !beEditor.contains(sel.anchorNode)) return;
+      const range = sel.getRangeAt(0).cloneRange(), text = range.toString(), rect = range.getBoundingClientRect();
+      const blk = getFocusedBlock();
+      openLinkPicker(rect.width || rect.height ? rect : (blk || beEditor).getBoundingClientRect(), (url, title) => {
+        blk?.focus(); const s2 = getSelection(); s2.removeAllRanges(); s2.addRange(range);
+        const label = escHtml(text || title);
+        document.execCommand('insertHTML', false, `<a href="${escHtml(url)}"${/\bpdf\b|\.pdf($|[?#])/i.test(label + url) ? ' data-file="pdf"' : ''}>${label}</a>`);
+        syncToHidden(); scheduleAutosave(); updatePreview();
+      });
+    };
 
     // ── Block picker ──────────────────────────────────────────────────
     const BP_BLOCKS = [
@@ -3009,7 +3283,7 @@
           <button class="img-ab del" title="Remove image" data-on-click="imgDelete(this)">✕</button>
         </div>
         <img class="be-img" src="/api/media/${mediaId}/raw" alt="">
-        <input class="be-img-cap" type="text" placeholder="Caption / alt text…" value="">
+        <input class="be-img-cap" type="text" placeholder="Describe the image (alt text)…" value="">
       `;
       el.querySelector('.be-img').alt = alt;
       el.querySelector('.be-img-cap').value = alt;
