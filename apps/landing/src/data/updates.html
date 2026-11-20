@@ -6,6 +6,9 @@
           <div class="update-title">Markdown text fields</div>
           <ul class="update-items">
             <li><strong>Rich text as an extra field is Markdown now.</strong> A <code>richtext</code> field that is not the main body used to be a bare textarea (people saw raw HTML). It now has a small toolbar (bold, italic, highlight, heading, list, link) and a preview toggle, and sits below the body so the writing stays together. Facts like dates and places stay in the Details card above.</li>
+            <li><strong>Show Markdown marks.</strong> A <em>¶</em> button in the toolbar shows the Markdown characters in the margin of each block (<code>##</code>, <code>-</code>, <code>&gt;</code> …) and around bold, italic, highlight, code and links. The choice is remembered.</li>
+            <li><strong>Lists, links, raw HTML.</strong> A tight Markdown list opens as one block per item (and is saved tight again), <code>[text](url)</code> links show as links, and raw HTML blocks such as a PDF viewer are kept exactly as written (read-only).</li>
+            <li><strong>Relations.</strong> A relation field whose collection has no entries is hidden, and schemas written with <code>relationTo</code> work too.</li>
             <li><strong>Escaped asterisks and underscores.</strong> The block editor writes <code>Künstler\*innen</code> instead of a bare asterisk, so two of them in one paragraph can no longer turn the text between them italic.</li>
           </ul>
         </div>

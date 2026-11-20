@@ -60,6 +60,28 @@
     .md-view img { max-width:100%; height:auto; }
     .md-view mark { background:none; color:var(--red); }
     .md-view a { text-decoration:underline; }
+    /* "Show Markdown marks": the Markdown characters of each block in the margin, and around bold / italic / highlight / code / links */
+    .be-editor.show-md { --md-c:var(--red); }
+    .be-editor.show-md .be-block:not(:empty)::before { position:absolute; left:-4.4em; width:3.8em; text-align:right; top:0; font:500 10px/2.6 var(--mono,monospace); color:var(--md-c); opacity:.75; letter-spacing:0; pointer-events:none; }
+    .be-editor.show-md .be-block[data-type="h1"]::before { content:'#'; }
+    .be-editor.show-md .be-block[data-type="h2"]::before { content:'##'; }
+    .be-editor.show-md .be-block[data-type="h3"]::before { content:'###'; }
+    .be-editor.show-md .be-block[data-type="ul"]::before { content:'-'; }
+    .be-editor.show-md .be-block[data-type="ol"]::before { content:'1.'; }
+    .be-editor.show-md .be-block[data-type="blockquote"]::before { content:'>'; }
+    .be-editor.show-md .be-block[data-type="pre"]::before { content:'```'; }
+    .be-editor.show-md .be-block[data-type="callout"]::before { content:'::callout'; }
+    .be-editor.show-md .be-block[data-type="hr"]::before { content:'---'; }
+    .be-editor.show-md .be-block[data-type="image"]::before { content:'![]()'; }
+    .be-editor.show-md strong::before, .be-editor.show-md strong::after, .be-editor.show-md b::before, .be-editor.show-md b::after { content:'**'; color:var(--md-c); opacity:.75; font:500 .72em var(--mono,monospace); }
+    .be-editor.show-md em::before, .be-editor.show-md em::after, .be-editor.show-md i::before, .be-editor.show-md i::after { content:'_'; color:var(--md-c); opacity:.75; font:500 .85em var(--mono,monospace); }
+    .be-editor.show-md mark::before, .be-editor.show-md mark::after { content:'=='; color:var(--md-c); opacity:.75; font:500 .72em var(--mono,monospace); }
+    .be-editor.show-md code::before, .be-editor.show-md code::after { content:'`'; color:var(--md-c); opacity:.75; }
+    .be-editor.show-md a::before { content:'['; color:var(--md-c); opacity:.75; }
+    .be-editor.show-md a::after { content:'](' attr(href) ')'; color:var(--md-c); opacity:.75; font:500 .72em var(--mono,monospace); }
+    .be-block[data-type="raw"] { padding:10px 14px; border-radius:6px; background:var(--line2,rgba(128,128,128,.12)); cursor:default; }
+    .be-block[data-type="raw"] .be-raw { display:block; white-space:pre-wrap; word-break:break-all; font:11px/1.6 var(--mono,monospace); color:var(--muted); background:none; padding:0; }
+    .be-block[data-type="raw"]::after { content:'HTML'; position:absolute; right:10px; top:6px; font:500 9px var(--mono,monospace); letter-spacing:.1em; color:var(--muted); }
     .md-below { margin:36px 0 64px; padding-top:22px; border-top:1px solid var(--line); }
     .md-below .meta-field { margin-bottom:18px; }
     .md-hint { margin:4px 2px 0; font:400 10px/1.4 var(--mono,monospace); color:var(--muted); }
@@ -689,6 +711,7 @@
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="display:block"><path d="M3.5 1.5h4l3 3V11a.5.5 0 01-.5.5h-6.5a.5.5 0 01-.5-.5V2a.5.5 0 01.5-.5z" stroke="currentColor" stroke-width="1.1"/><path d="M7.5 1.5V4.5H10.5" stroke="currentColor" stroke-width="1.1"/><line x1="5" y1="7" x2="8.5" y2="7" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><line x1="5" y1="9" x2="8.5" y2="9" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>
             </button>
             <button type="button" class="tool-btn" data-on-click="exportMarkdown()" title="Export Markdown (⌘⇧E)" style="font-size:9px;letter-spacing:.04em;">↓ md</button>
+            <button type="button" class="tool-btn" id="md-toggle" data-on-click="toggleMdMarks()" title="Show Markdown marks" aria-label="Show Markdown marks" aria-pressed="false" style="font-size:11px;">¶</button>
             <div class="tool-sep"></div>
             <div class="ai-btn-group">
               <button type="button" class="ai-toolbar-btn" data-on-click="openAiPanel()" title="AI Assistant">✦ AI</button>
@@ -939,6 +962,7 @@
     document.title = `${_initTitle} — Editor — Orbiter`;
 
     const schema = colData.schema ? (typeof colData.schema==='string'?JSON.parse(colData.schema):colData.schema) : {};
+    for (const f of Object.values(schema)) if (f && f.type==='relation' && !f.collection && f.relationTo) f.collection = f.relationTo;   // schemas written with relationTo
     const extraFields = Object.entries(schema).filter(([k])=>k!=='title'&&k!=='body');
 
     // Load relation entries for any relation fields
@@ -1009,6 +1033,8 @@
       const hasGroups = extraFields.some(([,f]) => f.group);
       for (const [key, field] of extraFields) {
         const val = entryData?.data?.[key];
+        // A relation to a collection that has no entries (and nothing chosen yet) is not shown: nothing to pick, only clutter
+        if (field.type==='relation' && !(relationEntries[field.collection]??[]).length && !(Array.isArray(val)?val.length:val)) continue;
         if (SEO_TITLE_KEYS.has(key)) seoFields.titleKey = key;
         if (SEO_DESC_KEYS.has(key))  seoFields.descKey  = key;
         const isSeoTitle = SEO_TITLE_KEYS.has(key);
@@ -2241,6 +2267,8 @@
     function inlineMd(text) {
       const esc = [];   // \* \_ … : Backslash-Maskierung (z. B. Künstler\*innen) bleibt als Zeichen stehen
       text = text.replace(/\\([\\*_`=\[\]])/g, (_,c) => { esc.push(c); return `\x01${esc.length-1}\x01`; });
+      const hrefs = [];   // [text](url) → <a href="url">text</a>; the url is kept out of the bold/italic handling
+      text = text.replace(/\[([^\[\]]+)\]\(([^()\s]+)\)/g, (_,t,u) => { hrefs.push(u); return `\x02${hrefs.length-1}\x02${t}\x03`; });
       const wls = [];
       text = text.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, (_,t,h) => { wls.push(wlSpan(t,h)); return `\x00${wls.length-1}\x00`; });
       let r = text
@@ -2251,12 +2279,12 @@
         .replace(/_(.+?)_/g,'<em>$1</em>')
         .replace(/`(.+?)`/g,'<code>$1</code>')
         .replace(/==([^=\n]+?)==/g,'<mark>$1</mark>');
-      return r.replace(/\x00(\d+)\x00/g, (_,i) => wls[+i]).replace(/\x01(\d+)\x01/g, (_,i) => esc[+i]);
+      return r.replace(/\x00(\d+)\x00/g, (_,i) => wls[+i]).replace(/\x02(\d+)\x02/g, (_,i) => `<a href="${hrefs[+i].replace(/&/g,'&amp;').replace(/"/g,'&quot;')}">`).replace(/\x03/g, '</a>').replace(/\x01(\d+)\x01/g, (_,i) => esc[+i]);
     }
 
     function htmlToMd(html) {
       // Zeichen, die Markdown als Formatierung lesen würde, im Fließtext maskieren (Künstler*innen → Künstler\*innen)
-      html = html.replace(/(<code>[\s\S]*?<\/code>)|(^|>)([^<]+)/g, (m, code, pre, t) => code ? code : pre + t.replace(/([*_])/g, '\\$1'));
+      html = html.replace(/(<code>[\s\S]*?<\/code>)|(<[^>]+>)|([^<]+)/g, (m, code, tag, t) => t ? t.replace(/([*_])/g, '\\$1') : m);
       return html
         .replace(/<span[^>]*class="be-wikilink"[^>]*data-wiki="([^"]+)"[^>]*>[\s\S]*?<\/span>/g, (_,w) => `[[${w.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"')}]]`)
         .replace(/<strong>([\s\S]*?)<\/strong>/gi,'**$1**')
@@ -2264,6 +2292,7 @@
         .replace(/<em>([\s\S]*?)<\/em>/gi,'_$1_')
         .replace(/<i>([\s\S]*?)<\/i>/gi,'_$1_')
         .replace(/<code>([\s\S]*?)<\/code>/gi,'`$1`')
+        .replace(/<a\s[^>]*?href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi,(_,h,t)=>`[${t}](${h.replace(/&amp;/g,'&').replace(/&quot;/g,'"')})`)
         .replace(/<mark[^>]*>([\s\S]*?)<\/mark>/gi,'==$1==')
         .replace(/<br\s*\/?>/gi,' ')
         .replace(/<[^>]+>/g,'')
@@ -2282,6 +2311,7 @@
           lines.push(`![${alt}](${id})${suf}`);
           return;
         }
+        if (type==='raw') { lines.push(b.dataset.raw ?? ''); return; }
         if (type==='video') {
           lines.push(`::video[${b.dataset.videoUrl ?? ''}]`);
           return;
@@ -2315,7 +2345,8 @@
         else if (type==='hr')         lines.push('---');
         else                          lines.push(text);
       });
-      return lines.join('\n\n');
+      // consecutive list items form one tight list ("- a\n- b"), everything else is separated by a blank line
+      return lines.join('\n\n').replace(/((?:^|\n)- [^\n]*)\n\n(?=- )/g, '$1\n').replace(/((?:^|\n)\d+\. [^\n]*)\n\n(?=\d+\. )/g, '$1\n');
     }
 
     function syncToHidden() { bodyInput.value = serialize(); updateWc(); }
@@ -2389,6 +2420,20 @@
       if (!md) { beEditor.appendChild(createBlock('p','')); return; }
       md.split(/\n{2,}/).forEach(chunk=>{
         chunk=chunk.trim(); if (!chunk) return;
+        // Raw HTML block (e.g. a PDF viewer <object>, an iframe): kept exactly as written, shown read-only
+        if (/^<(div|object|table|figure|iframe|section|aside|p|ul|ol|h[1-6])\b/i.test(chunk)) {
+          const rb = createBlock('p','');
+          rb.dataset.type = 'raw'; rb.dataset.raw = chunk; rb.contentEditable = 'false';
+          const code = document.createElement('code'); code.className = 'be-raw'; code.textContent = chunk; rb.appendChild(code);
+          beEditor.appendChild(rb); return;
+        }
+        // A tight list ("- a\n- b" or "1. a\n2. b") becomes one block per item
+        const items = chunk.split('\n');
+        if (items.length > 1 && (items.every(l=>/^- /.test(l)) || items.every(l=>/^\d+\.\s/.test(l)))) {
+          const ul = /^- /.test(items[0]);
+          items.forEach(l=>beEditor.appendChild(createBlock(ul?'ul':'ol', inlineMd(ul ? l.slice(2) : l.replace(/^\d+\.\s/,'')))));
+          return;
+        }
         // Video block: ::video[url]
         const vidM = chunk.match(/^::video\[(.+)\]$/);
         if (vidM) { beEditor.appendChild(createVideoBlock(vidM[1])); return; }
@@ -2458,6 +2503,13 @@
       focusStart(next); syncToHidden(); scheduleAutosave(); updatePreview();
     };
 
+    window.toggleMdMarks = function(force) {
+      const on = typeof force === 'boolean' ? force : !beEditor.classList.contains('show-md');
+      beEditor.classList.toggle('show-md', on);
+      const b = document.getElementById('md-toggle'); if (b) { b.setAttribute('aria-pressed', String(on)); b.classList.toggle('active', on); }
+      try { localStorage.setItem('orb_show_md', on ? '1' : '0'); } catch {}
+    };
+    try { if (localStorage.getItem('orb_show_md') === '1') window.toggleMdMarks(true); } catch {}
     window.beCmd = function(cmd) {
       if (cmd==='code') {
         const sel=window.getSelection(); if (!sel||!sel.rangeCount) return;
