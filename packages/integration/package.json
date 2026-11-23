@@ -39,13 +39,13 @@
   },
   "homepage": "https://github.com/aeon022/orbiter#readme",
   "peerDependencies": {
-    "astro": ">=6.0.0",
+    "astro": "^7.4.13",
     "sharp": ">=0.33.0"
   },
   "dependencies": {
     "@a83/orbiter-core": "^0.3.21",
     "fast-xml-parser": "^5.12.0",
-    "turndown": "^7.2.2"
+    "turndown": "^7.2.5"
   },
   "peerDependenciesMeta": {
     "sharp": {
